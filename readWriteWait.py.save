@@ -1,0 +1,14 @@
+import csv
+
+# do something
+# every X amount of time read and print file content
+# erase current file
+# write new content
+
+def updateData(heat, hum)
+	with open('data.csv', 'wb') as file:
+		writer = csv.writer(file)
+		writer.writerow([heat, hum])
+
+
+u

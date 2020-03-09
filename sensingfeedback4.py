@@ -32,24 +32,6 @@ pid.SetPoint = targetT
 pid.setSampleTime(1)
 
 #define operating functions
-def condisionReport(hum, heat): #summarize conditions
-    #humidity
-    if hum > 75:
-        print('moist')
-    elif hum <  25:
-        print('dry')
-    else:
-        print('normal humidity')
-
-
-    #heat
-    if heat > 90:
-        print('hot')
-    elif heat < 50:
-        print('cold')
-    else:
-        print('normal temp')
-
 def listen():
 
     global line,ser,sensorInfo,heat #load in global vars
@@ -63,7 +45,6 @@ def listen():
         print(sensorInfo) #print and save out data
         hum =float( sensorInfo[0])
         heat = float(sensorInfo[1])
-        condisionReport(hum, heat) #summary, consider removing)
 
         ser.reset_input_buffer()
 
@@ -97,7 +78,6 @@ readConfig()
 while 1:
 	#initialize program
 	listen()
-	#readConfig()
 
 	#read data
 	temperature = heat
