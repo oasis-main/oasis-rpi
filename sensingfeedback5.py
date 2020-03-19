@@ -1,7 +1,7 @@
 #Sensor pkgs
 import serial
 import time
-import subprocess
+import subprocess32
 
 #PID pkgs
 import PID
@@ -70,7 +70,7 @@ while 1:
 	if time.time() - start > 5:
 		try:
 			start = time.time()
-			requests.post('http://18.191.255.9:3000/api/heartbeat',json={'heat':temperature})
+			requests.post('http://18.191.255.9:3000/api/heartbeat',json={'heat':heat})
 			params = eval(requests.get('http://18.191.255.9:3000/api/params').content)
 			targetT = params['TempDes']
 			pid_temp.SetPoint = targetT
