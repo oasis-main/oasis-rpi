@@ -83,12 +83,9 @@ def actuate(tempCtrl):
 		time.sleep(10) #on for 10
 
 try:
-	while True:
-		try:
-			PIDinput = int(sys.stdin.readline)
-			print(PIDinput)
-		except:
-			pass
+	while 1:
+		temp_pid = int(sys.argv[1])
+		actuate(temp_pid)
 except KeyboardInterrupt:
         print 'Interrupted'
 	GPIO.cleanup()

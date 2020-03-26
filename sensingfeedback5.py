@@ -44,7 +44,7 @@ def listen():
         pass
     else:
         print(sensorInfo) #print and save our data
-        hum =float( sensorInfo[0])
+        hum =float(sensorInfo[0])
         heat =float(sensorInfo[1])
 
         ser.reset_input_buffer()
@@ -53,7 +53,7 @@ def listen():
 start = time.time()
 
 #launch actuator subprocesses
-heat_process = Popen(['python', 'heatingElement.py'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+heat_process = Popen(['python', 'heatingElement.py', str(80)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
 while 1:
 	#initialize program
@@ -77,9 +77,6 @@ while 1:
 			pid_temp.SetPoint = targetT
 		except:
 			pass
-
-	#update subprocess main input
-	heat_process.stdin.write(str(tempPID_out))
 
 	# Set PWM expansion channel 0 to the target setting
 	time.sleep(0.5)
