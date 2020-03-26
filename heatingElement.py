@@ -1,6 +1,7 @@
 import sys
 import RPi.GPIO as GPIO
 import time
+import json
 
 GPIO.setmode(GPIO.BCM) #GPIO Numbers instead of board numbers
 Heat_GPIO = 2 #heater is going to be triggered with pin 2
@@ -84,8 +85,9 @@ def actuate(tempCtrl):
 
 try:
 	while 1:
-		temp_pid = int(sys.argv[1])
-		actuate(temp_pid)
+		with open('pid_out.json') as pid_in: #read pid feedback from .json
+  			pid_commands = json.load(pid_in)
+		actuate(pid_commands["heat"]) #trigger appropriate response
 except KeyboardInterrupt:
         print 'Interrupted'
 	GPIO.cleanup()

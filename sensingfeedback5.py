@@ -12,6 +12,12 @@ import os.path
 #communicating with AWS
 import requests
 
+#mechanism for PID outputs
+import json
+
+#refresh pid_output bank
+feedback_levels = {'heat':0}
+
 #start serial RPi<-Arduino
 ser = serial.Serial('/dev/ttyACM0',9600)
 line = 0
@@ -21,9 +27,9 @@ hum = 0
 
 #set PID targets
 targetT = 80  #target temperature
-P = 10
-I = 1
-D = 1
+P = 20
+I = .5
+D = .5
 
 #create PID controllers
 pid_temp = PID.PID(P, I, D)
@@ -53,8 +59,9 @@ def listen():
 start = time.time()
 
 #launch actuator subprocesses
-heat_process = Popen(['python', 'heatingElement.py', str(80)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+heat_process = Popen(['python', 'heatingElement.py'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
+#start the loop
 while 1:
 	#initialize program
 	listen()
@@ -78,6 +85,12 @@ while 1:
 		except:
 			pass
 
-	# Set PWM expansion channel 0 to the target setting
-	time.sleep(0.5)
+	#update json with pid feedback so they can be read into actuators
+	feedback_levels = {'heat': tempPID_out}
+
+	with open('pid_out.json', 'w') as pid_out:
+    		json.dump(feedback_levels, pid_out)
+
+	#Set PWM expansion channel 0 to the target setting (what is this?)
+	time.sleep(0.5) #(what is this?)
 
