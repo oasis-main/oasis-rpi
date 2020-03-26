@@ -2,6 +2,7 @@
 import serial
 import time
 import subprocess32
+from subprocess import Popen, PIPE, STDOUT
 
 #PID pkgs
 import PID
@@ -19,7 +20,7 @@ heat = 0
 hum = 0
 
 #set PID targets
-targetT = 75 #target temperature
+targetT = 80  #target temperature
 P = 10
 I = 1
 D = 1
@@ -38,7 +39,6 @@ def listen():
     global line,ser,sensorInfo,heat,hum #load in global vars
 
     if(ser.in_waiting > 0): #listen for data
-    	print('----')
         sensorInfo = str.strip(ser.readline()).split(' ')
     if len(sensorInfo)<2:
         pass
@@ -53,6 +53,7 @@ def listen():
 start = time.time()
 
 #launch actuator subprocesses
+heat_process = Popen(['python', 'heatingElement.py'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
 while 1:
 	#initialize program
@@ -77,7 +78,8 @@ while 1:
 		except:
 			pass
 
-	#update actuator subprocess inputs
+	#update subprocess main input
+	heat_process.stdin.write(str(tempPID_out))
 
 	# Set PWM expansion channel 0 to the target setting
 	time.sleep(0.5)
