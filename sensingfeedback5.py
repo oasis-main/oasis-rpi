@@ -26,18 +26,18 @@ heat = 0
 hum = 0
 
 #set PID targets
-targetT = 80  #target temperature
-P = 20
-I = .5
-D = .5
+targetT = 76  #target temperature
+P_temp = 20
+I_temp = .5
+D_temp = .5
 
 #create PID controllers
-pid_temp = PID.PID(P, I, D)
+pid_temp = PID.PID(P_temp, I_temp, D_temp)
 pid_temp.SetPoint = targetT
 pid_temp.setSampleTime(1)
-pid_temp.setKp(10)
-pid_temp.setKi(1)
-pid_temp.setKd(1)
+#pid_temp.setKp(10)
+#pid_temp.setKi(1)
+#pid_temp.setKd(1)
 
 #define operating functions
 def listen():
@@ -76,10 +76,12 @@ while 1:
 	print "Target: %.1f F | Current: %.1f F | Temp_PID: %s %%"%(targetT, heat, tempPID_out)
 
 	if time.time() - start > 5:
+
+		start = time.time()
+
 		try:
-			start = time.time()
-			requests.post('http://18.191.255.9:3000/api/heartbeat',json={'heat':heat})
-			params = eval(requests.get('http://18.191.255.9:3000/api/params').content)
+			requests.post('http://18.218.2.179:3000/api/heartbeat',json={'heat':heat})
+			params = eval(requests.get('http://18.218.2.179:3000/api/params').content)
 			targetT = params['TempDes']
 			pid_temp.SetPoint = targetT
 		except:
