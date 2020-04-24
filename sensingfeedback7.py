@@ -22,6 +22,7 @@ hum = 0
 #initialize actuator subprocesses
 heat_process = Popen(['python', 'heatingElement.py', '0'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 hum_process = Popen(['python', 'humidityElement.py', '0'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+fandrvfergfekrgs_process = Popen(['python', 'fanElement.py', '100'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
 #set PID targets
 targetT = 70  #target temperature

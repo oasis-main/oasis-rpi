@@ -1,7 +1,6 @@
 import sys
 import RPi.GPIO as GPIO
 import time
-import json
 
 GPIO.setmode(GPIO.BCM) #GPIO Numbers instead of board numbers
 Hum_GPIO = 3 #humidifier is going to be triggered with pin 3
@@ -17,79 +16,83 @@ def actuate(humCtrl):
 
 	if (humCtrl >= 1) and (humCtrl < 10):
 		print("level 1")
+		GPIO.output(Hum_GPIO, GPIO.LOW)
+                time.sleep(.1) #on
 		GPIO.output(Hum_GPIO, GPIO.HIGH)
                 time.sleep(4.9) #off
-                GPIO.output(Hum_GPIO, GPIO.LOW)
-                time.sleep(.1) #on
 
 	if (humCtrl >= 10) and (humCtrl < 20):
 		print("level 2")
-		GPIO.output(Hum_GPIO, GPIO.HIGH)
-                time.sleep(4.8) #off
-                GPIO.output(Hum_GPIO, GPIO.LOW)
+		GPIO.output(Hum_GPIO, GPIO.LOW)
                 time.sleep(.2) #on
+                GPIO.output(Hum_GPIO, GPIO.HIGH)
+                time.sleep(4.8) #off
+
 
 	if (humCtrl >= 20) and (humCtrl < 30):
 		print("level 3")
-		GPIO.output(Hum_GPIO, GPIO.HIGH)
-                time.sleep(4.7) #off
-                GPIO.output(Hum_GPIO, GPIO.LOW)
+		GPIO.output(Hum_GPIO, GPIO.LOW)
                 time.sleep(.3) #on
+                GPIO.output(Hum_GPIO, GPIO.HIGH)
+                time.sleep(4.7) #off
+
 
 	if (humCtrl >= 30) and (humCtrl < 40):
 		print("level 4")
-		GPIO.output(Hum_GPIO, GPIO.HIGH)
-                time.sleep(4.6) #off
-                GPIO.output(Hum_GPIO, GPIO.LOW)
+		GPIO.output(Hum_GPIO, GPIO.LOW)
                 time.sleep(.4) #on
+                GPIO.output(Hum_GPIO, GPIO.HIGH)
+                time.sleep(4.6) #off
+
 
 	if (humCtrl >= 40) and (humCtrl < 50):
 		print("level 5")
-		GPIO.output(Hum_GPIO, GPIO.HIGH)
-                time.sleep(4.5) #off
-                GPIO.output(Hum_GPIO, GPIO.LOW)
+		GPIO.output(Hum_GPIO, GPIO.LOW)
                 time.sleep(.5) #on
+                GPIO.output(Hum_GPIO, GPIO.HIGH)
+                time.sleep(4.5) #off
+
 
 	if (humCtrl >= 50) and (humCtrl < 60):
 		print("level 6")
-		GPIO.output(Hum_GPIO, GPIO.HIGH)
-                time.sleep(4.4) #off
-                GPIO.output(Hum_GPIO, GPIO.LOW)
+		GPIO.output(Hum_GPIO, GPIO.LOW)
                 time.sleep(.6) #on
+                GPIO.output(Hum_GPIO, GPIO.HIGH)
+                time.sleep(4.4) #off
 
 	if (humCtrl >= 60) and (humCtrl < 70):
 		print("level 7")
-		GPIO.output(Hum_GPIO, GPIO.HIGH)
-                time.sleep(4.3) #off
-                GPIO.output(Hum_GPIO, GPIO.LOW)
+		GPIO.output(Hum_GPIO, GPIO.LOW)
                 time.sleep(.7) #on
+                GPIO.output(Hum_GPIO, GPIO.HIGH)
+                time.sleep(4.3) #off
 
 	if (humCtrl >= 70) and (humCtrl < 80):
 		print("level 8")
+		GPIO.output(Hum_GPIO, GPIO.LOW)
+                time.sleep(.8) #on
                 GPIO.output(Hum_GPIO, GPIO.HIGH)
                 time.sleep(4.2) #off
-                GPIO.output(Hum_GPIO, GPIO.LOW)
-                time.sleep(.8) #on
+
 
 	if (humCtrl >= 80) and (humCtrl < 90):
 		print("level 9")
-		GPIO.output(Hum_GPIO, GPIO.HIGH)
-		time.sleep(4.1) #off
 		GPIO.output(Hum_GPIO, GPIO.LOW)
-		time.sleep(.9) #on
+                time.sleep(.9) #on
+                GPIO.output(Hum_GPIO, GPIO.HIGH)
+                time.sleep(4.1) #off
+
 
 	if (humCtrl >= 90) and (humCtrl <= 100):
 		print("level 10")
-		GPIO.output(Hum_GPIO, GPIO.HIGH)
-                time.sleep(4) #off
-                GPIO.output(Hum_GPIO, GPIO.LOW)
+		GPIO.output(Hum_GPIO, GPIO.LOW)
                 time.sleep(1) #on
+                GPIO.output(Hum_GPIO, GPIO.HIGH)
+                time.sleep(4) #off
 
 try:
-	while 1:
-		with open('pid_out.json') as pid_in: #read pid feedback from .json
-  			pid_commands = json.load(pid_in)
-		actuate(pid_commands["hum"]) #trigger appropriate response
+	actuate(float(sys.argv[1]))
+	GPIO.cleanup()
 except KeyboardInterrupt:
         print 'Interrupted'
 	GPIO.cleanup()
