@@ -60,10 +60,10 @@ last_hum = 0
 last_targetT = 0
 last_targetH = 0
 
-Kpt = 15
-Kph = 35
+Kpt = 10
+Kph = 30
 Kdt = 1
-Kdh = 1
+Kdh = 5
 
 def fan_pd(temp, hum, targetT, targetH, last_temp, last_hum, last_targetT, last_targetH, Kpt, Kph, Kdt, Kdh):
 	err_temp = temp-targetT
