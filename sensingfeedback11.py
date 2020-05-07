@@ -23,14 +23,12 @@ line = 0
 sensorInfo = " "
 temp = 0
 hum = 0
-lux = 0
 
 #initialize actuator subprocesses
-heat_process = Popen(['python', 'heatingElement.py', '0'], stdout=PIPE, stdin=PIPE, stderr=PIPE) 		#heater
-hum_process = Popen(['python', 'humidityElement.py', '0'], stdout=PIPE, stdin=PIPE, stderr=PIPE) 		#humidifier
-fan_process = Popen(['python', 'fanElement.py', '100'], stdout=PIPE, stdin=PIPE, stderr=PIPE) 			#fan
-light_process = Popen(['python', 'lightElement.py', 'off', '0', '0'], stdout=PIPE, stdin=PIPE, stderr=PIPE)	#light												#light
-		#camera
+heat_process = Popen(['python', 'heatingElement.py', '0'], stdout=PIPE, stdin=PIPE, stderr=PIPE) 					#heater
+hum_process = Popen(['python', 'humidityElement.py', '0'], stdout=PIPE, stdin=PIPE, stderr=PIPE) 					#humidifier
+fan_process = Popen(['python', 'fanElement.py', '100'], stdout=PIPE, stdin=PIPE, stderr=PIPE) 						#fan
+light_camera_process = Popen(['python', 'lightingCameraElement.py', 'off', '0', '0', '0'], stdout=PIPE, stdin=PIPE, stderr=PIPE)	#light & camera
 
 #set parameter  targets
 targetT = 0  #target temperature
@@ -38,6 +36,7 @@ targetH = 0  #target humidity
 targetL = "off" #light mode
 LtimeOn = 0
 LtimeOff = 0
+lightCameraInterval = 60
 
 #create controllers:
 P_temp = 50 #heater: PID Library on temperature
@@ -87,11 +86,11 @@ def fan_pd(temp, hum, targetT, targetH, last_temp, last_hum, last_targetT, last_
 #define event listener to collect data and kick off the transfer
 def listen():
 
-    global line,ser,sensorInfo,temp,hum,lux,last_temp,last_hum #load in global vars
+    global line,ser,sensorInfo,temp,hum,last_temp,last_hum #load in global vars
 
     if(ser.in_waiting > 0): #listen for data
         sensorInfo = str.strip(ser.readline()).split(' ')
-    if len(sensorInfo)<3:
+    if len(sensorInfo)<2:
         pass
     else:
         #print(sensorInfo) #print and save our data
@@ -100,8 +99,6 @@ def listen():
 
 	last_temp = temp
         temp =float(sensorInfo[1])
-
-	lux = float(sensorInfo[2])
 
         ser.reset_input_buffer()
 
@@ -131,9 +128,11 @@ try:
 		print "Fan PD: %s %%"%(fanPD_out)
 
 		if targetL == "on":
-                	print "Light Mode: %s | Turns on at: %i hours  | Turns off at: %i hours | Current Lux: %.1f Lx"%(targetL, LtimeOn, LtimeOff, lux)
+                	print "Light Mode: %s | Turns on at: %i hours  | Turns off at: %i hours"%(targetL, LtimeOn, LtimeOff)
 		else:
-			print "Light Mode: %s | Current Lux: %.1f Lx"%(targetL, lux)
+			print "Light Mode: %s "%(targetL)
+
+		print "Camera+Light Reset Interval: every %i seconds"%(lightCameraInterval)
 
 		#exchange data with server
 		if time.time() - start > 5:
@@ -141,7 +140,7 @@ try:
 				#start clock
 				start = time.time()
 				#data out
-				requests.post('http://54.172.134.78:3000/api/heartbeat', json={'temp':temp, 'hum':hum, 'lux':lux }, timeout=10)
+				requests.post('http://54.172.134.78:3000/api/heartbeat', json={'temp':temp, 'hum':hum}, timeout=10)
 				#parameters in
 				params = requests.get('http://54.172.134.78:3000/api/params', timeout=10).json()
 				#pass old targets to derivative bank and update
@@ -172,9 +171,9 @@ try:
 		if poll_fan is not None:
                         fan_process = Popen(['python', 'fanElement.py', str(fanPD_out)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
-		poll_light = light_process.poll() #light
-                if poll_light is not None:
-                        light_process = Popen(['python', 'lightingElement.py', str(targetL), str(LtimeOn), str(LtimeOff)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+		poll_light_camera = light_camera_process.poll() #light
+                if poll_light_camera is not None:
+                        light_camera_process = Popen(['python', 'lightingCameraElement.py', str(targetL), str(LtimeOn), str(LtimeOff), str(lightCameraInterval)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
 		#line marks one interation of main loop
 		print '----------------------------------------'
@@ -189,6 +188,6 @@ except KeyboardInterrupt:
 	hum_process.wait()
 	fan_process.kill()
         fan_process.wait()
-	light_process.kill()
-	light_process.wait()
+	light_camera_process.kill()
+	light_camera_process.wait()
 
