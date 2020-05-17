@@ -36,7 +36,10 @@ def actuate(lightingMode, timeOn = 0, timeOff = 0, interval = 0): #time on must 
                 	image_data = 'custom_image'
         	json={'image':image_data}
         	#print(image_data)
-        	requests.post('http://'+ip+':'+str(port)+'/upload/image', json) #send: post to /upload/image endpoint
+        	try:
+			requests.post('http://'+ip+':'+str(port)+'/upload/image', json, timeout=20) #send: post to /upload/image endpoint
+		except: 
+    			pass
 		time.sleep(interval)
 	if lightingMode == "on":
 		if HoD >= timeOn and HoD < timeOff:
@@ -51,8 +54,11 @@ def actuate(lightingMode, timeOn = 0, timeOff = 0, interval = 0): #time on must 
                         	image_data = 'custom_image'
                 	json={'image':image_data}
                 	#print(image_data)
-                	requests.post('http://'+ip+':'+str(port)+'/upload/image', json) #send: post to /upload/image endpoint
-                	time.sleep(interval)
+                	try:
+				requests.post('http://'+ip+':'+str(port)+'/upload/image', json, timeout=20) #send: post to /upload/image endpoint
+                	except: 
+    				pass
+			time.sleep(interval)
 		if HoD < timeOn or HoD >= timeOff:
                         GPIO.output(Light_GPIO, GPIO.LOW) #light on (relay closed)
                         still = Popen('sudo raspistill -o ~/Desktop/output.jpg', stdout = None, shell = True) #snap: call the camera
@@ -66,8 +72,11 @@ def actuate(lightingMode, timeOn = 0, timeOff = 0, interval = 0): #time on must 
                                 image_data = 'custom_image'
                         json={'image':image_data}
                         #print(image_data)
-                        requests.post('http://'+ip+':'+str(port)+'/upload/image', json) #send: post to /upload/image endpoint
-                        time.sleep(interval)
+                        try:
+				requests.post('http://'+ip+':'+str(port)+'/upload/image', json, timeout=20) #send: post to /upload/image endpoint
+                        except: 
+    				pass
+			time.sleep(interval)
 
 try:
         actuate(str(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]))
