@@ -1,6 +1,11 @@
+
+#---------------------------------------------------------------------------------------
+#IMPORTS
+#Shell, PID, Communication, Time
+#---------------------------------------------------------------------------------------
+
 #Shell pkgs
 import serial
-import time
 import subprocess32
 from subprocess32 import Popen, PIPE, STDOUT
 import os
@@ -14,7 +19,15 @@ import PID
 import requests
 
 #dealing with specific times of the day
+import time
 import datetime
+
+
+
+#---------------------------------------------------------------------------------------
+#INITIALIZATION
+#setting up variables, sensors, controlers
+#---------------------------------------------------------------------------------------
 
 #start serial RPi<-Arduino
 ser = serial.Serial('/dev/ttyACM0',9600)
@@ -26,21 +39,27 @@ temp = 0
 hum = 0
 
 #placeholder for set parameter  targets
-targetT = 0  #target temperature
-targetH = 0  #target humidity
+targetT = 70  #target temperature
+targetH = 50  #target humidity
 targetL = "off" #light mode
 LtimeOn = 0
 LtimeOff = 0
 lightCameraInterval = 60
 
 #initialize actuator subprocesses
-heat_process = Popen(['python', 'heatingElement.py', targetT], stdout=PIPE, stdin=PIPE, stderr=PIPE) 					#heater: params = on/off frequency
-hum_process = Popen(['python', 'humidityElement.py', targetH], stdout=PIPE, stdin=PIPE, stderr=PIPE) 					#humidifier: params = on/off frequency 
-fan_process = Popen(['python', 'fanElement.py', '100'], stdout=PIPE, stdin=PIPE, stderr=PIPE) 						#fan: params = on/off frequency
-light_camera_process = Popen(['python', 'lightingCameraElement.py', 'off', '0', '0', '0'], stdout=PIPE, stdin=PIPE, stderr=PIPE)	#light & camera: params = light mode, time on, time off, interval
+#heater: params = on/off frequency
+heat_process = Popen(['python', 'heatingElement.py', targetT], stdout=PIPE, stdin=PIPE, stderr=PIPE) 
+#humidifier: params = on/off frequency 
+hum_process = Popen(['python', 'humidityElement.py', targetH], stdout=PIPE, stdin=PIPE, stderr=PIPE) 		
+#fan: params = on/off frequency
+fan_process = Popen(['python', 'fanElement.py', '100'], stdout=PIPE, stdin=PIPE, stderr=PIPE) 		
+#light & camera: params = light mode, time on, time off, interval
+light_camera_process = Popen(['python', 'lightingCameraElement.py', 'off', '0', '0', '0'], stdout=PIPE, stdin=PIPE, stderr=PIPE)	
 
 #create controllers:
-P_temp = 50 #heater: PID Library on temperature
+
+#heater: PID Library on temperature
+P_temp = 50 
 I_temp = 0
 D_temp = 1
 
@@ -48,7 +67,8 @@ pid_temp = PID.PID(P_temp, I_temp, D_temp)
 pid_temp.SetPoint = targetT
 pid_temp.setSampleTime(1)
 
-P_hum = .1 #humidifier: PID library on humidity
+#humidifier: PID library on humidity
+P_hum = .1 
 I_hum = 0
 D_hum = 2.5
 
@@ -56,7 +76,8 @@ pid_hum = PID.PID(P_hum, I_hum, D_hum)
 pid_hum.SetPoint = targetH
 pid_hum.setSampleTime(1)
 
-last_temp = 0 #fan: custom proportional and derivative gain on both temperature and humidity
+#fan: custom proportional and derivative gain on both temperature and humidity
+last_temp = 0 
 last_hum = 0
 last_targetT = 0
 last_targetH = 0
@@ -84,17 +105,25 @@ def fan_pd(temp, hum, targetT, targetH, last_temp, last_hum, last_targetT, last_
 
 	return fan_level
 
+
+#---------------------------------------------------------------------------------------
+# Listen
+#---------------------------------------------------------------------------------------
+
 #define event listener to collect data and kick off the transfer
 def listen():
+    #load in global vars
+    global line,ser,sensorInfo,temp,hum,last_temp,last_hum 
 
-    global line,ser,sensorInfo,temp,hum,last_temp,last_hum #load in global vars
-
-    if(ser.in_waiting > 0): #listen for data
+    #listen for data from aurdino 
+    if(ser.in_waiting > 0): 
         sensorInfo = str.strip(ser.readline()).split(' ')
+    
+    #If data is "whole" update variables and clear serial buffer
     if len(sensorInfo)<2:
         pass
     else:
-        #print(sensorInfo) #print and save our data
+        #print and save our data
         last_hum = hum
 	hum =float(sensorInfo[0])
 
@@ -103,10 +132,20 @@ def listen():
 
         ser.reset_input_buffer()
 
-#start the clock
+#start the clock for timimg data exchanges with server
 start = time.time()
 
-#start the loop
+
+#---------------------------------------------------------------------------------------
+#MAIN LOOP
+#listen, update, show, send, receive, actuate, wait, -- else die
+#
+#TODO:
+#	Generalize IP
+#	Consolidate Shutdown processes and energy managment
+#	Energy Meter (for both us and users)
+#---------------------------------------------------------------------------------------
+
 try:
 	while True:
 		#initialize program
@@ -135,7 +174,7 @@ try:
 
 		print "Camera+Light Reset Interval: every %i seconds"%(lightCameraInterval)
 
-		#exchange data with server
+		#exchange data with server after set time elapses
 		if time.time() - start > 5:
 			try:
 				#start clock
