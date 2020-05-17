@@ -31,12 +31,12 @@ fan_process = Popen(['python', 'fanElement.py', '100'], stdout=PIPE, stdin=PIPE,
 light_camera_process = Popen(['python', 'lightingCameraElement.py', 'off', '0', '0', '0'], stdout=PIPE, stdin=PIPE, stderr=PIPE)	#light & camera
 
 #set parameter  targets
-targetT = 0  #target temperature
-targetH = 0  #target humidity
+targetT = 75  #target temperature
+targetH = 45  #target humidity
 targetL = "off" #light mode
 LtimeOn = 0
 LtimeOff = 0
-lightCameraInterval = 60
+lightCameraInterval = 1800
 
 #create controllers:
 P_temp = 50 #heater: PID Library on temperature

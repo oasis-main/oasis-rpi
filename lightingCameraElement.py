@@ -9,7 +9,6 @@ import os
 import subprocess32
 from subprocess32 import Popen, PIPE, STDOUT
 
-
 GPIO.setmode(GPIO.BCM) #GPIO Numbers instead of board numbers
 Light_GPIO = 17 #light is going to be triggered with pin 17
 GPIO.setup(Light_GPIO, GPIO.OUT) #GPIO setup relay open = GPIO.HIGH, closed = GPIO.LOW
