@@ -17,6 +17,5 @@
 - images
 
 #V1 Bugs/Pain Points:
-- 
-
+ 
 
