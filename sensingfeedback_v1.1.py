@@ -34,14 +34,10 @@ LtimeOff = 0
 lightCameraInterval = 60
 
 #initialize actuator subprocesses
-heat_process = Popen(['python', 'heatingElement.py', targetT], stdout=PIPE, stdin=PIPE, stderr=PIPE) 					#heater
-hum_process = Popen(['python', 'humidityElement.py', targetH], stdout=PIPE, stdin=PIPE, stderr=PIPE) 					#humidifier					#humidifier
-fan_process = Popen(['python', 'fanElement.py', '100'], stdout=PIPE, stdin=PIPE, stderr=PIPE) 						#fan
-
-	#params: light mode, time on, time off, 
-light_camera_process = Popen(['python', 'lightingCameraElement.py', 'off', '0', '0', '0'], stdout=PIPE, stdin=PIPE, stderr=PIPE)	#light & camera
-
-
+heat_process = Popen(['python', 'heatingElement.py', targetT], stdout=PIPE, stdin=PIPE, stderr=PIPE) 					#heater: params = on/off frequency
+hum_process = Popen(['python', 'humidityElement.py', targetH], stdout=PIPE, stdin=PIPE, stderr=PIPE) 					#humidifier: params = on/off frequency 
+fan_process = Popen(['python', 'fanElement.py', '100'], stdout=PIPE, stdin=PIPE, stderr=PIPE) 						#fan: params = on/off frequency
+light_camera_process = Popen(['python', 'lightingCameraElement.py', 'off', '0', '0', '0'], stdout=PIPE, stdin=PIPE, stderr=PIPE)	#light & camera: params = light mode, time on, time off, interval
 
 #create controllers:
 P_temp = 50 #heater: PID Library on temperature
