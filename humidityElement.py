@@ -1,3 +1,9 @@
+#---------------------------------------------------------------------------------------
+#Manages Hardware for Humidity 
+#TODO:
+#	(possible) define one function to handle various behavior
+#---------------------------------------------------------------------------------------
+
 import sys
 import RPi.GPIO as GPIO
 import time
