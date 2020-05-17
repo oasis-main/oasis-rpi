@@ -1,8 +1,22 @@
 # grow-ctrl
-modular urban micro-farming by Oasis 
+# modular urban micro-farming by Oasis 
 
-#new features
+#V1 Code Review:
+- reorganized packages
+- added comments for subprocesses 
+- added comments for data placeholder variables
+- generally added comments explaining stuff
+- flagged repetitive and redundant code
 
-#bugs
+#V1 New Features:
+- web interface
+- cloud data exchange
+- temperature
+- humidity
+- ventilation
+- images
+
+#V1 Bugs/Pain Points:
+- 
 
 
