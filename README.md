@@ -1,5 +1,5 @@
 # grow-ctrl
-# modular urban micro-farming by Oasis 
+# modular micro-farming unit by Oasis 
 
 #V1 Code Review:
 - reorganized packages
