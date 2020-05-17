@@ -1,3 +1,12 @@
+#---------------------------------------------------------------------------------------
+#Manages Hardware for Humidity 
+#TODO:
+# - generalize IP, pass in as argumen from main file and take as input function to
+# - functionalize image capture and posting capability
+# - adjust light timing to allow for and type of window
+#---------------------------------------------------------------------------------------
+
+#import libraries
 import sys
 import RPi.GPIO as GPIO
 import time
@@ -9,6 +18,7 @@ import os
 import subprocess32
 from subprocess32 import Popen, PIPE, STDOUT
 
+#hardware setup
 GPIO.setmode(GPIO.BCM) #GPIO Numbers instead of board numbers
 Light_GPIO = 17 #light is going to be triggered with pin 17
 GPIO.setup(Light_GPIO, GPIO.OUT) #GPIO setup relay open = GPIO.HIGH, closed = GPIO.LOW
@@ -33,9 +43,10 @@ def actuate(lightingMode, timeOn = 0, timeOff = 0, interval = 0): #time on must 
                         	image_data = base64.b64encode(imageFile.read()) #encode in base64 for sending
         	else:
                 	print('fail')
-                	image_data = 'custom_image'
-        	json={'image':image_data}
-        	#print(image_data)
+                	image_data = 'custom_image' #TODO: remove from code if useless
+        	
+		json={'image':image_data}
+        	
         	try:
 			requests.post('http://'+ip+':'+str(port)+'/upload/image', json, timeout=20) #send: post to /upload/image endpoint
 		except: 
@@ -51,9 +62,10 @@ def actuate(lightingMode, timeOn = 0, timeOff = 0, interval = 0): #time on must 
                                 	image_data = base64.b64encode(imageFile.read()) #encode in base64 for sending
                 	else:
                         	print('fail')
-                        	image_data = 'custom_image'
-                	json={'image':image_data}
-                	#print(image_data)
+                        	image_data = 'custom_image' #remember to verify this is necessary
+                	
+			json={'image':image_data}
+                	
                 	try:
 				requests.post('http://'+ip+':'+str(port)+'/upload/image', json, timeout=20) #send: post to /upload/image endpoint
                 	except: 
