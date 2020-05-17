@@ -1,15 +1,14 @@
-#Sensor pkgs
+#Shell pkgs
 import serial
 import time
 import subprocess32
 from subprocess32 import Popen, PIPE, STDOUT
 import os
+import os.path
 import signal
 
 #PID pkgs
 import PID
-import time
-import os.path
 
 #communicating with AWS
 import requests
@@ -21,22 +20,28 @@ import datetime
 ser = serial.Serial('/dev/ttyACM0',9600)
 line = 0
 sensorInfo = " "
+
+#place holder for sensor data
 temp = 0
 hum = 0
 
-#initialize actuator subprocesses
-heat_process = Popen(['python', 'heatingElement.py', '0'], stdout=PIPE, stdin=PIPE, stderr=PIPE) 					#heater
-hum_process = Popen(['python', 'humidityElement.py', '0'], stdout=PIPE, stdin=PIPE, stderr=PIPE) 					#humidifier
-fan_process = Popen(['python', 'fanElement.py', '100'], stdout=PIPE, stdin=PIPE, stderr=PIPE) 						#fan
-light_camera_process = Popen(['python', 'lightingCameraElement.py', 'off', '0', '0', '0'], stdout=PIPE, stdin=PIPE, stderr=PIPE)	#light & camera
-
-#set parameter  targets
-targetT = 75  #target temperature
-targetH = 45  #target humidity
+#placeholder for set parameter  targets
+targetT = 0  #target temperature
+targetH = 0  #target humidity
 targetL = "off" #light mode
 LtimeOn = 0
 LtimeOff = 0
-lightCameraInterval = 1800
+lightCameraInterval = 60
+
+#initialize actuator subprocesses
+heat_process = Popen(['python', 'heatingElement.py', targetT], stdout=PIPE, stdin=PIPE, stderr=PIPE) 					#heater
+hum_process = Popen(['python', 'humidityElement.py', targetH], stdout=PIPE, stdin=PIPE, stderr=PIPE) 					#humidifier					#humidifier
+fan_process = Popen(['python', 'fanElement.py', '100'], stdout=PIPE, stdin=PIPE, stderr=PIPE) 						#fan
+
+	#params: light mode, time on, time off, 
+light_camera_process = Popen(['python', 'lightingCameraElement.py', 'off', '0', '0', '0'], stdout=PIPE, stdin=PIPE, stderr=PIPE)	#light & camera
+
+
 
 #create controllers:
 P_temp = 50 #heater: PID Library on temperature
