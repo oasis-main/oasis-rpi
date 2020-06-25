@@ -23,7 +23,6 @@ import time
 import datetime
 
 
-
 #---------------------------------------------------------------------------------------
 #INITIALIZATION
 #setting up variables, sensors, controlers
@@ -39,11 +38,11 @@ temp = 0
 hum = 0
 
 #placeholder for set parameter  targets
-targetT = 70  #target temperature
-targetH = 50  #target humidity
-targetL = "off" #light mode
-LtimeOn = 0
-LtimeOff = 0
+targetT = 72.5  #target temperature
+targetH = 90  #target humidity
+targetL = "on" #light mode
+LtimeOn = 8
+LtimeOff = 20
 lightCameraInterval = 60
 
 #initialize actuator subprocesses
@@ -149,7 +148,10 @@ start = time.time()
 try:
 	while True:
 		#initialize program
-		listen()
+		try:
+			listen()
+		except:
+			print "Serial Port Failure"
 
 		#feed the data into our PIDs
 		pid_temp.update(temp)
