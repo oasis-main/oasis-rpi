@@ -38,12 +38,12 @@ temp = 0
 hum = 0
 
 #placeholder for set parameter  targets
-targetT = 72.5  #target temperature
+targetT = 76  #target temperature
 targetH = 90  #target humidity
 targetL = "on" #light mode
 LtimeOn = 8
 LtimeOff = 20
-lightCameraInterval = 60
+lightCameraInterval = 3600
 
 #initialize actuator subprocesses
 #heater: params = on/off frequency
@@ -81,8 +81,8 @@ last_hum = 0
 last_targetT = 0
 last_targetH = 0
 
-Kpt = 25
-Kph = 50
+Kpt = 18
+Kph = 75
 Kdt = 1
 Kdh = 1
 
@@ -116,7 +116,10 @@ def listen():
 
     last_hum = hum
     last_temp = temp
-    hum, temp = Adafruit_DHT.read_retry(DHT_SENSOR, DHT_PIN)
+    humidity, temperature = Adafruit_DHT.read_retry(DHT_SENSOR, DHT_PIN)
+    if (type(humidity) is int) and (type(temperature) is int):
+        hum = humidity
+        temp = temperature
     temp = (temp*1.8)+32
 
 #start the clock for timimg data exchanges with server
@@ -136,7 +139,7 @@ start_comms = time.time()
 try:
     while True:
         #if enough time has passed, poll the sensor
-        if time.time() - start_DHT > 2:
+        if time.time() - start_DHT > 5:
             try:
                 #reset sensor timer
                 start_DHT = time.time()

@@ -11,6 +11,7 @@ from subprocess32 import Popen, PIPE, STDOUT
 import os
 import os.path
 import signal
+import sys
 
 #PID pkgs
 import PID
@@ -41,8 +42,8 @@ hum = 0
 targetT = 76  #target temperature
 targetH = 90  #target humidity
 targetL = "on" #light mode
-LtimeOn = 0
-LtimeOff = 23
+LtimeOn = 8
+LtimeOff = 20
 lightCameraInterval = 60
 
 #initialize actuator subprocesses
@@ -69,7 +70,7 @@ pid_temp.setSampleTime(1)
 #humidifier: PID library on humidity
 P_hum = .1
 I_hum = 0
-D_hum = 20
+D_hum = 1
 
 pid_hum = PID.PID(P_hum, I_hum, D_hum)
 pid_hum.SetPoint = targetH
@@ -182,9 +183,9 @@ try:
 			    #start clock
 			    start = time.time()
 			    #data out
-			    requests.post('http://54.172.134.78:3000/api/heartbeat', json={'temp':temp, 'hum':hum}, timeout=10)
+			    #requests.post('http://54.172.134.78:3000/api/heartbeat', json={'temp':temp, 'hum':hum}, timeout=10)
 			    #parameters in
-			    params = requests.get('http://54.172.134.78:3000/api/params', timeout=10).json()
+			    #params = requests.get('http://54.172.134.78:3000/api/params', timeout=10).json()
 			    #pass old targets to derivative bank and update
 			    last_targetT = targetT
 			    last_targetH = targetH
@@ -234,7 +235,7 @@ try:
 		print '----------------------------------------'
 		time.sleep(0.5)
 
-except KeyboardInterrupt:
+except:
 	print " "
 	print "Terminating Program..."
 	heat_process.kill()

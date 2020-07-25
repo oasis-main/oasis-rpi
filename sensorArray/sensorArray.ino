@@ -1,3 +1,4 @@
+
 // Sensor Sketch for Oasis Grow Device
 
 // REQUIRES the following Arduino libraries:
@@ -25,20 +26,6 @@
 // Initialize DHT sensor (temp & hum)
 DHT dht(DHTPIN, DHTTYPE);
 
-//Initialize GY-30 sensor (lux)
-#include <Wire.h>
-int BH1750_address = 0x23; // i2c Addresses
-byte buff[2];
-
-void setup() {
-  Wire.begin(); //start wire
-  BH1750_Init(BH1750_address); //start GY-30 on i2c
-  delay(200); //wait so nothing weird happens
-  Serial.begin(9600); //start the serial monitor
-  dht.begin(); //start DHT
-  
-}
-
 void loop() {
   // Wait a few seconds between measurements.
   delay(1000);
@@ -50,17 +37,7 @@ void loop() {
   // Read temperature as Celsius (the default)
   //float t = dht.readTemperature();
   // Read temperature as Fahrenheit (isFahrenheit = true)
-  float f = dht.readTemperature(true);
-
-  //GY-30
-  float valf=0;
-  float l = 0;
-  if(BH1750_Read(BH1750_address)==2){
-    
-    valf=((buff[0]<<8)|buff[1])/1.2;
-    
-    if(valf<0) l = -1;
-    else l = (int)valf; 
+  float f = dht.readTemperature(true); 
   }
 
 
@@ -76,26 +53,8 @@ void loop() {
   Serial.print(' ');
   Serial.print(f);
   Serial.print(' ');
-  Serial.println(l);
 
 }
 
-void BH1750_Init(int address){
-  
-  Wire.beginTransmission(address);
-  Wire.write(0x10); // 1 [lux] aufloesung
-  Wire.endTransmission();
-}
 
-byte BH1750_Read(int address){
-  
-  byte i=0;
-  Wire.beginTransmission(address);
-  Wire.requestFrom(address, 2);
-  while(Wire.available()){
-    buff[i] = Wire.read(); 
-    i++;
-  }
-  Wire.endTransmission();  
-  return i;
-}
+ 
