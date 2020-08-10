@@ -68,7 +68,7 @@ pid_temp.SetPoint = targetT
 pid_temp.setSampleTime(1)
 
 #humidifier: PID library on humidity
-P_hum = .1
+P_hum = .5
 I_hum = 0
 D_hum = 1
 
