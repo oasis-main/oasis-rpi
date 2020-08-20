@@ -16,8 +16,8 @@ import sys
 #PID pkgs
 import PID
 
-#communicating with AWS
-import requests
+#communicating with firebase
+from firebase import firebase
 
 #dealing with specific times of the day
 import time
@@ -26,8 +26,11 @@ import datetime
 
 #---------------------------------------------------------------------------------------
 #INITIALIZATION
-#setting up variables, sensors, controlers
+#setting up variables, sensors, controlers, database
 #---------------------------------------------------------------------------------------
+
+#initialize firebase
+firebase = firebase.FirebaseApplication('https://oasis-test-8acee.firebaseio.com/')
 
 #start serial RPi<-Arduino
 ser = serial.Serial('/dev/ttyACM0',9600)
@@ -39,22 +42,26 @@ temp = 0
 hum = 0
 
 #placeholder for set parameter  targets
-targetT = 76  #target temperature
+targetT = 70  #target temperature
 targetH = 90  #target humidity
 targetL = "on" #light mode
 LtimeOn = 8
 LtimeOff = 20
-lightCameraInterval = 60
+lightInterval = 60
+cameraInterval = 60
 
 #initialize actuator subprocesses
 #heater: params = on/off frequency
-heat_process = Popen(['python', 'heatingElement.py', str(0)], stdout=PIPE, stdin=PIPE, stderr=PIPE) 
+heat_process = Popen(['python', 'heatingElement.py', str(0)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 #humidifier: params = on/off frequency
-hum_process = Popen(['python', 'humidityElement.py', str(0)], stdout=PIPE, stdin=PIPE, stderr=PIPE) 		
+hum_process = Popen(['python', 'humidityElement.py', str(0)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 #fan: params = on/off frequency
 fan_process = Popen(['python', 'fanElement.py', '100'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 #light & camera: params = light mode, time on, time off, interval
-light_camera_process = Popen(['python', 'lightingCameraElement.py', 'off', '0', '0', '0'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+light_process = Popen(['python', 'lightingElement.py', 'on', '0', '0', '10'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+#light & camera: params = light mode, time on, time off, interval
+camera_process = Popen(['python', 'cameraElement.py', '10'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+
 
 #create controllers:
 
@@ -68,7 +75,7 @@ pid_temp.SetPoint = targetT
 pid_temp.setSampleTime(1)
 
 #humidifier: PID library on humidity
-P_hum = .5
+P_hum = .25
 I_hum = 0
 D_hum = 1
 
@@ -82,8 +89,8 @@ last_hum = 0
 last_targetT = 0
 last_targetH = 0
 
-Kpt = 15
-Kph = 75
+Kpt = 5
+Kph = 100
 Kdt = 1
 Kdh = 1
 
@@ -152,8 +159,8 @@ try:
 		try:
 			listen()
 		except Exception as e:
-			print e
-			print "Serial Port Failure"
+			print(e)
+			print("Serial Port Failure")
 
 		#feed the data into our PIDs
 		pid_temp.update(temp)
@@ -162,40 +169,42 @@ try:
 		#Controller response
 		tempPID_out = pid_temp.output
 		tempPID_out = max( min( int(tempPID_out), 100 ),0)
-		print "Target Temperature: %.1f F | Current: %.1f F | Temp_PID: %s %%"%(targetT, temp, tempPID_out)
+		print("Target Temperature: %.1f F | Current: %.1f F | Temp_PID: %s %%"%(targetT, temp, tempPID_out))
 
 		humPID_out = pid_hum.output
         	humPID_out = max( min( int(humPID_out), 100 ),0)
-        	print "Target Humidity: %.1f %% | Current: %.1f %% | Hum_PID: %s %%"%(targetH, hum, humPID_out)
+        	print("Target Humidity: %.1f %% | Current: %.1f %% | Hum_PID: %s %%"%(targetH, hum, humPID_out))
 
 		fanPD_out = fan_pd(temp, hum, targetT, targetH, last_temp, last_hum, last_targetT, last_targetH, Kpt, Kph, Kdt, Kdh)
-		print "Fan PD: %s %%"%(fanPD_out)
+		print("Fan PD: %s %%"%(fanPD_out))
 
 		if targetL == "on":
-                	print "Light Mode: %s | Turns on at: %i hours  | Turns off at: %i hours"%(targetL, LtimeOn, LtimeOff)
+                	print("Light Mode: %s | Turns on at: %i hours  | Turns off at: %i hours"%(targetL, LtimeOn, LtimeOff))
 		else:
-			print "Light Mode: %s "%(targetL)
+			print("Light Mode: %s "%(targetL))
 
-		print "Camera+Light Reset Interval: every %i seconds"%(lightCameraInterval)
+		print("Camera every %i seconds"%(cameraInterval))
 
 		#exchange data with server after set time elapses
 		if time.time() - start > 5:
 			try:
 			    #start clock
 			    start = time.time()
-			    #data out
-			    #requests.post('http://54.172.134.78:3000/api/heartbeat', json={'temp':temp, 'hum':hum}, timeout=10)
+
+                            #sensor data out
+			    data = firebase.post('Oasis Test', {'Temperature':str(temp),'Humidity':str(hum)})
+
 			    #parameters in
 			    #params = requests.get('http://54.172.134.78:3000/api/params', timeout=10).json()
 			    #pass old targets to derivative bank and update
-			    last_targetT = targetT
-			    last_targetH = targetH
-			    targetT = params['tempDes']
-			    targetH = params['humDes']
-			    targetL = params['lightMode']
-			    LtimeOn = params['timeOn']
-			    LtimeOff = params['timeOff']
-			    lightCameraInterval = params['cameraInterval']
+			    #last_targetT = targetT
+			    #last_targetH = targetH
+			    #targetT = params['tempDes']
+			    #targetH = params['humDes']
+			    #targetL = params['lightMode']
+			    #LtimeOn = params['timeOn']
+			    #LtimeOff = params['timeOff']
+			    #cameraInterval = params['cameraInterval']
 			    #change PID module setpoints to target
 			    pid_temp.SetPoint = targetT
 			    pid_hum.SetPoint = targetH
@@ -208,11 +217,13 @@ try:
                             hum_process.wait()
                             fan_process.kill()
                             fan_process.wait()
-                            light_camera_process.kill()
-                            light_camera_process.wait()
+                            light_process.kill()
+                            light_process.wait()
+			    camera_process.kill()
+			    camera_process.wait()
                             sys.exit()
                         except Exception as e:
-			    print e
+			    print(e)
 			    pass
 
 
@@ -229,25 +240,32 @@ try:
 		if poll_fan is not None:
                         fan_process = Popen(['python', 'fanElement.py', str(fanPD_out)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
-		poll_light_camera = light_camera_process.poll() #light
-                if poll_light_camera is not None:
-                        light_camera_process = Popen(['python', 'lightingCameraElement.py', str(targetL), str(LtimeOn), str(LtimeOff), str(lightCameraInterval)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+		poll_light = light_process.poll() #light
+                if poll_light is not None:
+                        light_process = Popen(['python', 'lightingElement.py', str(targetL), str(LtimeOn), str(LtimeOff), str(lightInterval)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+
+		poll_camera = camera_process.poll() #light
+                if poll_camera is not None:
+                        camera_process = Popen(['python', 'lightingElement.py', str(cameraInterval)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+
 
 		#line marks one interation of main loop
-		print '----------------------------------------'
+		print('----------------------------------------')
 		time.sleep(0.5)
 
 except Exception as e:
-	print e
-	print " "
-	print "Terminating Program..."
+	print(e)
+	print(" ")
+	print("Terminating Program...")
 	heat_process.kill()
 	heat_process.wait()
 	hum_process.kill()
 	hum_process.wait()
 	fan_process.kill()
         fan_process.wait()
-	light_camera_process.kill()
-	light_camera_process.wait()
+	light_process.kill()
+	light_process.wait()
+	camera_process.kill()
+        camera_process.wait()
         sys.exit()
 

@@ -39,22 +39,26 @@ temp = 0
 hum = 0
 
 #placeholder for set parameter  targets
-targetT = 76  #target temperature
+targetT = 70  #target temperature
 targetH = 90  #target humidity
 targetL = "on" #light mode
 LtimeOn = 8
 LtimeOff = 20
-lightCameraInterval = 60
+lightInterval = 60
+cameraInterval = 60
 
 #initialize actuator subprocesses
 #heater: params = on/off frequency
-heat_process = Popen(['python', 'heatingElement.py', str(0)], stdout=PIPE, stdin=PIPE, stderr=PIPE) 
+heat_process = Popen(['python', 'heatingElement.py', str(0)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 #humidifier: params = on/off frequency
-hum_process = Popen(['python', 'humidityElement.py', str(0)], stdout=PIPE, stdin=PIPE, stderr=PIPE) 		
+hum_process = Popen(['python', 'humidityElement.py', str(0)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 #fan: params = on/off frequency
 fan_process = Popen(['python', 'fanElement.py', '100'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 #light & camera: params = light mode, time on, time off, interval
-light_camera_process = Popen(['python', 'lightingCameraElement.py', 'off', '0', '0', '0'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+light_process = Popen(['python', 'lightingElement.py', 'on', '0', '0', '10'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+#light & camera: params = light mode, time on, time off, interval
+camera_process = Popen(['python', 'cameraElement.py', '10'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+
 
 #create controllers:
 
@@ -176,7 +180,7 @@ try:
 		else:
 			print "Light Mode: %s "%(targetL)
 
-		print "Camera+Light Reset Interval: every %i seconds"%(lightCameraInterval)
+		print "Camera every %i seconds"%(cameraInterval)
 
 		#exchange data with server after set time elapses
 		if time.time() - start > 5:
@@ -188,14 +192,14 @@ try:
 			    #parameters in
 			    #params = requests.get('http://54.172.134.78:3000/api/params', timeout=10).json()
 			    #pass old targets to derivative bank and update
-			    last_targetT = targetT
-			    last_targetH = targetH
-			    targetT = params['tempDes']
-			    targetH = params['humDes']
-			    targetL = params['lightMode']
-			    LtimeOn = params['timeOn']
-			    LtimeOff = params['timeOff']
-			    lightCameraInterval = params['cameraInterval']
+			    #last_targetT = targetT
+			    #last_targetH = targetH
+			    #targetT = params['tempDes']
+			    #targetH = params['humDes']
+			    #targetL = params['lightMode']
+			    #LtimeOn = params['timeOn']
+			    #LtimeOff = params['timeOff']
+			    #cameraInterval = params['cameraInterval']
 			    #change PID module setpoints to target
 			    pid_temp.SetPoint = targetT
 			    pid_hum.SetPoint = targetH
@@ -208,8 +212,10 @@ try:
                             hum_process.wait()
                             fan_process.kill()
                             fan_process.wait()
-                            light_camera_process.kill()
-                            light_camera_process.wait()
+                            light_process.kill()
+                            light_process.wait()
+			    camera_process.kill()
+			    camera_process.wait()
                             sys.exit()
                         except Exception as e:
 			    print e
@@ -229,9 +235,14 @@ try:
 		if poll_fan is not None:
                         fan_process = Popen(['python', 'fanElement.py', str(fanPD_out)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
-		poll_light_camera = light_camera_process.poll() #light
-                if poll_light_camera is not None:
-                        light_camera_process = Popen(['python', 'lightingCameraElement.py', str(targetL), str(LtimeOn), str(LtimeOff), str(lightCameraInterval)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+		poll_light = light_process.poll() #light
+                if poll_light is not None:
+                        light_process = Popen(['python', 'lightingElement.py', str(targetL), str(LtimeOn), str(LtimeOff), str(lightInterval)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+
+		poll_camera = camera_process.poll() #light
+                if poll_camera is not None:
+                        camera_process = Popen(['python', 'lightingElement.py', str(cameraInterval)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+
 
 		#line marks one interation of main loop
 		print '----------------------------------------'
@@ -247,7 +258,9 @@ except Exception as e:
 	hum_process.wait()
 	fan_process.kill()
         fan_process.wait()
-	light_camera_process.kill()
-	light_camera_process.wait()
+	light_process.kill()
+	light_process.wait()
+	camera_process.kill()
+        camera_process.wait()
         sys.exit()
 
