@@ -1,4 +1,3 @@
-
 #---------------------------------------------------------------------------------------
 #IMPORTS
 #Shell, PID, Communication, Time
@@ -53,13 +52,13 @@ temp = 0
 hum = 0
 
 #placeholder for set parameter  targets
-targetT = 70  #target temperature
+targetT = 75  #target temperature
 targetH = 90  #target humidity
 targetL = "on" #light mode
 LtimeOn = 8
 LtimeOff = 20
 lightInterval = 60
-cameraInterval = 60
+cameraInterval = 3600
 
 #initialize actuator subprocesses
 #heater: params = on/off frequency
@@ -260,7 +259,7 @@ try:
 
             poll_camera = camera_process.poll() #light
             if poll_camera is not None:
-                camera_process = Popen(['python3', 'lightingElement.py', str(cameraInterval)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+                camera_process = Popen(['python3', 'cameraElement.py', str(cameraInterval)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
             #line marks one interation of main loop
             #print('Tx/Rx Confirmed')
