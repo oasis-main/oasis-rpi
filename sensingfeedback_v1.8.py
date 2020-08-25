@@ -1,3 +1,9 @@
+#TODO:
+#- add watering
+#- add circle-lights
+#- integrate with firebase user-data scheme
+#- add water-level sensing
+
 #---------------------------------------------------------------------------------------
 #IMPORTS
 #Shell, PID, Communication, Time
@@ -43,7 +49,7 @@ firebase = pyrebase.initialize_app(config)
 db = firebase.database()
 
 #start serial RPi<-Arduino
-ser = serial.Serial('/dev/ttyACM0',9600)
+ser = serial.Serial('/dev/ttyUSB0',9600)
 line = 0
 sensorInfo = " "
 
@@ -191,7 +197,7 @@ try:
             print("Light Mode: %s "%(targetL))
 
         print("Camera every %i seconds"%(cameraInterval))
-        print("--------------------------------------------------------------------")
+        print("------------------------------------------------------------------------------------------------------------")
 
         #exchange data with server after set time elapses
         if time.time() - start > 5:
