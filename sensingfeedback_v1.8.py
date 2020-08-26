@@ -1,8 +1,6 @@
 #TODO:
-#- add watering
 #- add circle-lights
 #- integrate with firebase user-data scheme
-#- add water-level sensing
 
 #---------------------------------------------------------------------------------------
 #IMPORTS
@@ -56,6 +54,7 @@ sensorInfo = " "
 #place holder for sensor data
 temp = 0
 hum = 0
+waterLow = 0
 
 #placeholder for set parameter  targets
 targetT = 75  #target temperature
@@ -65,6 +64,9 @@ LtimeOn = 8
 LtimeOff = 20
 lightInterval = 60
 cameraInterval = 3600
+waterMode = "on"
+waterDuration = 30
+waterInterval = 43200
 
 #initialize actuator subprocesses
 #heater: params = on/off frequency
@@ -75,9 +77,10 @@ hum_process = Popen(['python3', 'humidityElement.py', str(0)], stdout=PIPE, stdi
 fan_process = Popen(['python3', 'fanElement.py', '100'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 #light & camera: params = light mode, time on, time off, interval
 light_process = Popen(['python3', 'lightingElement.py', 'on', '0', '0', '10'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
-#light & camera: params = light mode, time on, time off, interval
+#camera: params = interval
 camera_process = Popen(['python3', 'cameraElement.py', '10'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
-
+#watering: params = mode duration interval
+water_process = Popen(['python3', 'wateringElement.py', 'off', '0', '10'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
 #create controllers:
 
@@ -136,13 +139,13 @@ def fan_pd(temp, hum, targetT, targetH, last_temp, last_hum, last_targetT, last_
 #define event listener to collect data and kick off the transfer
 def listen():
     #load in global vars
-    global line,ser,sensorInfo,temp,hum,last_temp,last_hum
+    global line,ser,sensorInfo,temp,hum,last_temp,last_hum,waterLow
 
     #listen for data from aurdino
     sensorInfo = ser.readline().decode('UTF-8').strip().split(' ')
     #print(sensorInfo)
 
-    if len(sensorInfo)<2:
+    if len(sensorInfo)<3:
         pass
     else:
         #print and save our data
@@ -151,6 +154,8 @@ def listen():
 
         last_temp = temp
         temp =float(sensorInfo[1])
+
+        waterLow = int(sensorInfo[2])
 
 #start the clock for timimg data exchanges with server
 start = time.time()
@@ -196,6 +201,9 @@ try:
         else:
             print("Light Mode: %s "%(targetL))
 
+        if waterLow == 1:
+            print("Water Level Low!")
+
         print("Camera every %i seconds"%(cameraInterval))
         print("------------------------------------------------------------------------------------------------------------")
 
@@ -207,7 +215,7 @@ try:
 
                 #sensor data out
                 #try:
-                data = {'Temperature':str(temp),'Humidity':str(hum)}
+                data = {'Temperature':str(temp),'Humidity':str(hum),'Water Low':str(waterLow)}
                 db.child("users").child("Mike Lee").child("sensorData").update(data)
 
                 #except:
@@ -240,6 +248,8 @@ try:
                 light_process.wait()
                 camera_process.kill()
                 camera_process.wait()
+                water_process.kill()
+                water_process.wait()
                 sys.exit()
             except Exception as e:
                 print(e)
@@ -263,9 +273,13 @@ try:
             if poll_light is not None:
                 light_process = Popen(['python3', 'lightingElement.py', str(targetL), str(LtimeOn), str(LtimeOff), str(lightInterval)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
-            poll_camera = camera_process.poll() #light
+            poll_camera = camera_process.poll() #camera
             if poll_camera is not None:
                 camera_process = Popen(['python3', 'cameraElement.py', str(cameraInterval)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+
+            poll_water = water_process.poll() #light
+            if poll_water is not None:
+                camera_process = Popen(['python3', 'wateringElement.py', str(waterMode), str(waterDuration), str(waterInterval)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
             #line marks one interation of main loop
             #print('Tx/Rx Confirmed')
@@ -285,5 +299,7 @@ except Exception as e:
     light_process.wait()
     camera_process.kill()
     camera_process.wait()
+    water_process.kill()
+    water_process.wait()
     sys.exit()
 

@@ -24,26 +24,26 @@ def actuate(lightingMode, timeOn = 0, timeOff = 0, interval = 900): #time on mus
     HoD = now.hour
 
     if lightingMode == "off":
-        GPIO.output(Light_GPIO, GPIO.HIGH) #light off (relay open)
+        GPIO.output(Light_GPIO, GPIO.LOW) #light off (relay open)
         time.sleep(interval)
 
     if lightingMode == "on":
         if timeOn < timeOff:
             if HoD >= timeOn and HoD < timeOff:
-                GPIO.output(Light_GPIO, GPIO.LOW) #light on (relay closed)
+                GPIO.output(Light_GPIO, GPIO.HIGH) #light on (relay closed)
                 time.sleep(interval)
             if HoD < timeOn or HoD >= timeOff:
-                GPIO.output(Light_GPIO, GPIO.HIGH) #light on (relay closed)
+                GPIO.output(Light_GPIO, GPIO.LOW)
                 time.sleep(interval)
         if timeOn > timeOff:
             if HoD >=  timeOn or HoD < timeOff:
-                GPIO.output(Light_GPIO, GPIO.LOW) #light on (relay closed)
-                time.sleep(interval)
-            if HoD < timeOn and  HoD >= timeOff:
                 GPIO.output(Light_GPIO, GPIO.HIGH) #light on (relay closed)
                 time.sleep(interval)
+            if HoD < timeOn and  HoD >= timeOff:
+                GPIO.output(Light_GPIO, GPIO.LOW) #light on (relay closed)
+                time.sleep(interval)
         if timeOn == timeOff:
-            GPIO.output(Light_GPIO, GPIO.LOW) #light on (relay closed)
+            GPIO.output(Light_GPIO, GPIO.HIGH)
             time.sleep(interval)
 
 try:
