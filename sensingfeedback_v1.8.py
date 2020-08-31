@@ -65,7 +65,7 @@ LtimeOff = 20
 lightInterval = 60
 cameraInterval = 3600
 waterMode = "on"
-waterDuration = 30
+waterDuration = 15
 waterInterval = 43200
 
 #initialize actuator subprocesses
@@ -205,7 +205,7 @@ try:
             print("Water Level Low!")
 
         print("Camera every %i seconds"%(cameraInterval))
-        print("------------------------------------------------------------------------------------------------------------")
+        print("------------------------------------------------------------")
 
         #exchange data with server after set time elapses
         if time.time() - start > 5:
@@ -279,7 +279,7 @@ try:
 
             poll_water = water_process.poll() #light
             if poll_water is not None:
-                camera_process = Popen(['python3', 'wateringElement.py', str(waterMode), str(waterDuration), str(waterInterval)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+                water_process = Popen(['python3', 'wateringElement.py', str(waterMode), str(waterDuration), str(waterInterval)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
             #line marks one interation of main loop
             #print('Tx/Rx Confirmed')
