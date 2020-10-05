@@ -3,7 +3,7 @@ import RPi.GPIO as GPIO
 import time
 
 GPIO.setmode(GPIO.BCM) #GPIO Numbers instead of board numbers
-Fan_GPIO = 4 #fan will be triggered with gpio #4
+Fan_GPIO = 18 #fan will be triggered with gpio #4
 GPIO.setup(Fan_GPIO, GPIO.OUT) #GPIO setup
 GPIO.output(Fan_GPIO, GPIO.LOW)
 

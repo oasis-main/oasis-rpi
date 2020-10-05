@@ -9,7 +9,7 @@ import RPi.GPIO as GPIO
 import time
 
 GPIO.setmode(GPIO.BCM) #GPIO Numbers instead of board numbers
-Heat_GPIO = 10 #heater is going to be triggered with pin 2
+Heat_GPIO = 14 #heater is going to be triggered with pin 2
 GPIO.setup(Heat_GPIO, GPIO.OUT) #GPIO setup
 GPIO.output(Heat_GPIO, GPIO.LOW)
 
