@@ -7,9 +7,15 @@
 import sys
 import RPi.GPIO as GPIO
 import time
+import json
 
+#get hardware config
+with open('/home/pi/hardware_config.json') as f:
+  hardware_config = json.load(f)
+
+#setup GPIO
 GPIO.setmode(GPIO.BCM) #GPIO Numbers instead of board numbers
-Heat_GPIO = 14 #heater is going to be triggered with pin 2
+Heat_GPIO = hardware_config["actuatorGPIOmap"]["heatingElement"] #heater pin pulls from config file
 GPIO.setup(Heat_GPIO, GPIO.OUT) #GPIO setup
 GPIO.output(Heat_GPIO, GPIO.LOW)
 

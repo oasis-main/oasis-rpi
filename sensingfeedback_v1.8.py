@@ -59,14 +59,14 @@ waterLow = 0
 #placeholder for set parameter  targets
 targetT = 75  #target temperature
 targetH = 90  #target humidity
-targetL = "on" #light mode
+targetL = "off" #light mode
 LtimeOn = 8
 LtimeOff = 20
 lightInterval = 60
 cameraInterval = 3600
-waterMode = "on"
+waterMode = "off"
 waterDuration = 15
-waterInterval = 43200
+waterInterval = 3600
 
 #initialize actuator subprocesses
 #heater: params = on/off frequency
@@ -94,9 +94,9 @@ pid_temp.SetPoint = targetT
 pid_temp.setSampleTime(1)
 
 #humidifier: PID library on humidity
-P_hum = .25
+P_hum = 25
 I_hum = 0
-D_hum = 1
+D_hum = 10
 
 pid_hum = PID.PID(P_hum, I_hum, D_hum)
 pid_hum.SetPoint = targetH
@@ -108,10 +108,10 @@ last_hum = 0
 last_targetT = 0
 last_targetH = 0
 
-Kpt = 5
-Kph = 100
+Kpt = 50
+Kph = 1000
 Kdt = 1
-Kdh = 1
+Kdh = 15
 
 def fan_pd(temp, hum, targetT, targetH, last_temp, last_hum, last_targetT, last_targetH, Kpt, Kph, Kdt, Kdh):
     err_temp = temp-targetT

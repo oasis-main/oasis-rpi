@@ -1,0 +1,15 @@
+{
+"actuatorGPIOmap": {
+                   "heatingElement": 14,
+                   "humidityElement": 15,
+                   "fanElement": 18,
+                   "lightingElement": 23,
+                   "wateringElement": 24,
+                   "decorativeElement": 26
+                   },
+"buttonGPIOmap": {
+                 "startStop": 17,
+                 "connectInternet": 27,
+                 "resetParams": 22
+                 }
+}

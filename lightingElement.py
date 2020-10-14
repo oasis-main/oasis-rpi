@@ -11,11 +11,17 @@ import RPi.GPIO as GPIO
 import time
 import datetime
 import sys
+import json
 
-#hardware setup
+#get hardware config
+with open('/home/pi/hardware_config.json') as f:
+  hardware_config = json.load(f)
+
+#setup GPIO
 GPIO.setmode(GPIO.BCM) #GPIO Numbers instead of board numbers
-Light_GPIO = 23 #light is going to be triggered with pin 17
+Light_GPIO = hardware_config["actuatorGPIOmap"]["lightingElement"] #heater pin pulls from config file 
 GPIO.setup(Light_GPIO, GPIO.OUT) #GPIO setup relay open = GPIO.HIGH, closed = GPIO.LOW
+GPIO.output(Light_GPIO, GPIO.LOW) #relay open = GPIO.HIGH, closed = GPIO.LOW
 
 #define a function to actuate element
 def actuate(lightingMode, timeOn = 0, timeOff = 0, interval = 900): #time on must be less than time off
