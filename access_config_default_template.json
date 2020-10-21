@@ -1,6 +1,9 @@
 {
-"email": "",
 "wifi network name": "",
 "wifi network pass": "",
-"firebase":""
+"firebase": {
+             "wak":"",
+	     "local_id":"",
+	     "id_token":""
+            }
 }
