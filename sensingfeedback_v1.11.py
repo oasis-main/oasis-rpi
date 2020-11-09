@@ -36,8 +36,8 @@ import datetime
 
 try:
     #use refresh token to get new id token
-    id_token = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjBlM2FlZWUyYjVjMDhjMGMyODFhNGZmN2RjMmRmOGIyMzgyOGQ1YzYiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vb2FzaXMtMTc1N2YiLCJhdWQiOiJvYXNpcy0xNzU3ZiIsImF1dGhfdGltZSI6MTYwMzM5NzgyNywidXNlcl9pZCI6InhmZGZoeHdaZEJkZmZVdnc2N1ZVSnpIeVFuMzIiLCJzdWIiOiJ4ZmRmaHh3WmRCZGZmVXZ3NjdWVUp6SHlRbjMyIiwiaWF0IjoxNjAzMzk4MDA1LCJleHAiOjE2MDM0MDE2MDUsImVtYWlsIjoiYXNkZkBhc2RmLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwiZmlyZWJhc2UiOnsiaWRlbnRpdGllcyI6eyJlbWFpbCI6WyJhc2RmQGFzZGYuY29tIl19LCJzaWduX2luX3Byb3ZpZGVyIjoicGFzc3dvcmQifX0.khg2Z2rlkzdUXuk1cznuutPMLN9CDl2z7OlirlNQSorGMxzD7fGjEwGNRXAPhJlRQEBKhhfjuTmR736gL4Gz1SA_4KOWQCbDeg76ru_DHnB8ZdJoDP6gYs1vsDxgQN2vp2gDY9zW4Go_Cl7lVgdWAdNsG0_CKXLXt28fStsmKVdotCFrSHDZa3j0Q45Q4vIr1aFHB74vjRLQrftULI9-b7tdkNkRBYKVLTYq1xnVtmRbQRbYSoI0Xge2H82oDaZN0KM58tPvH-t5s5Z0xdE1NOWNJFbqvgjQFWqPeaSs53B4hIApr1t_LUUVlGwZfn34txV8koUcrJbMRNw1vkPoCQ"
-    local_id = "xfdfhxwZdBdffUvw67VUJzHyQn32"
+    #id_token = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjBlM2FlZWUyYjVjMDhjMGMyODFhNGZmN2RjMmRmOGIyMzgyOGQ1YzYiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vb2FzaXMtMTc1N2YiLCJhdWQiOiJvYXNpcy0xNzU3ZiIsImF1dGhfdGltZSI6MTYwMzM5NzgyNywidXNlcl9pZCI6InhmZGZoeHdaZEJkZmZVdnc2N1ZVSnpIeVFuMzIiLCJzdWIiOiJ4ZmRmaHh3WmRCZGZmVXZ3NjdWVUp6SHlRbjMyIiwiaWF0IjoxNjAzMzk4MDA1LCJleHAiOjE2MDM0MDE2MDUsImVtYWlsIjoiYXNkZkBhc2RmLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwiZmlyZWJhc2UiOnsiaWRlbnRpdGllcyI6eyJlbWFpbCI6WyJhc2RmQGFzZGYuY29tIl19LCJzaWduX2luX3Byb3ZpZGVyIjoicGFzc3dvcmQifX0.khg2Z2rlkzdUXuk1cznuutPMLN9CDl2z7OlirlNQSorGMxzD7fGjEwGNRXAPhJlRQEBKhhfjuTmR736gL4Gz1SA_4KOWQCbDeg76ru_DHnB8ZdJoDP6gYs1vsDxgQN2vp2gDY9zW4Go_Cl7lVgdWAdNsG0_CKXLXt28fStsmKVdotCFrSHDZa3j0Q45Q4vIr1aFHB74vjRLQrftULI9-b7tdkNkRBYKVLTYq1xnVtmRbQRbYSoI0Xge2H82oDaZN0KM58tPvH-t5s5Z0xdE1NOWNJFbqvgjQFWqPeaSs53B4hIApr1t_LUUVlGwZfn34txV8koUcrJbMRNw1vkPoCQ"
+    #local_id = "xfdfhxwZdBdffUvw67VUJzHyQn32"
 
     #get database data
     #result = requests.get("https://oasis-1757f.firebaseio.com/"+str(local_id)+".json?auth="+ str(id_token))
@@ -85,7 +85,7 @@ fan_process = Popen(['python3', 'fanElement.py', '100'], stdout=PIPE, stdin=PIPE
 #light & camera: params = light mode, time on, time off, interval
 light_process = Popen(['python3', 'lightingElement.py', 'on', '0', '0', '10'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 #camera: params = interval
-#camera_process = Popen(['python3', 'cameraElement.py', '10'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+camera_process = Popen(['python3', 'cameraElement.py', '10'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 #watering: params = mode duration interval
 water_process = Popen(['python3', 'wateringElement.py', 'off', '0', '10'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
@@ -239,7 +239,7 @@ try:
                 waterDuration = get_from_firebase(id_token, local_id, 'water_duration')['water_duration']
                 waterInterval = get_from_firebase(id_token, local_id, 'water_interval')['water_interval']
 
-                #cameraInterval = params['cameraInterval']
+                cameraInterval = params['cameraInterval']
                 #change PID module setpoints to target
                 pid_temp.SetPoint = targetT
                 pid_hum.SetPoint = targetH
@@ -281,16 +281,15 @@ try:
             if poll_light is not None:
                 light_process = Popen(['python3', 'lightingElement.py', str(targetL), str(LtimeOn), str(LtimeOff), str(lightInterval)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
-            #poll_camera = camera_process.poll() #camera
-            #if poll_camera is not None:
-            #    camera_process = Popen(['python3', 'cameraElement.py', str(cameraInterval)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+            poll_camera = camera_process.poll() #camera
+            if poll_camera is not None:
+                camera_process = Popen(['python3', 'cameraElement.py', str(cameraInterval)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
             poll_water = water_process.poll() #light
             if poll_water is not None:
                 water_process = Popen(['python3', 'wateringElement.py', str(waterMode), str(waterDuration), str(waterInterval)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
             #line marks one interation of main loop
-            #print('Tx/Rx Confirmed')
             time.sleep(0.5)
 
 except Exception as e:
@@ -305,8 +304,8 @@ except Exception as e:
     fan_process.wait()
     light_process.kill()
     light_process.wait()
-    #camera_process.kill()
-    #camera_process.wait()
+    camera_process.kill()
+    camera_process.wait()
     water_process.kill()
     water_process.wait()
     sys.exit()

@@ -10,6 +10,6 @@
 "buttonGPIOmap": {
                  "startStop": 17,
                  "connectInternet": 27,
-                 "resetParams": 22
+                 "runWater": 22
                  }
 }
