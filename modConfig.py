@@ -26,7 +26,7 @@ def modWifiConfig(SSID, password):
     ]
 
     config = '\n'.join(config_lines)
-    print(config)
+    #print(config)
 
     with open("/etc/wpa_supplicant/wpa_supplicant.conf", "r+") as wifi:
         wifi.seek(0)

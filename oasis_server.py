@@ -3,6 +3,9 @@
 
 import socket, select, sys
 from _thread import *
+import os
+import json
+import pickle
 
 #keep list of all sockets
 CONNECTION_LIST = []
@@ -14,34 +17,92 @@ server_socket.bind(("0.0.0.0", PORT))
 server_socket.listen(10)
 CONNECTION_LIST.append(server_socket)
 
+#update wpa_supplicant.conf
+def modWiFiConfig(SSID, password):
+    config_lines = [
+    'ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev',
+    'update_config=1',
+    'country=US',
+    '\n',
+    'network={',
+    '\tssid="{}"'.format(SSID),
+    '\tpsk="{}"'.format(password),
+    '\tkey_mgmt=WPA-PSK',
+    '}'
+    ]
+
+    config = '\n'.join(config_lines)
+    #print(config)
+
+    with open("/etc/wpa_supplicant/wpa_supplicant.conf", "r+") as wifi:
+        wifi.seek(0)
+        wifi.write(config)
+        wifi.truncate()
+
+    print("WiFi configs added")
+
+#update access_config.json
+def modAccessConfig(wak, local_id, id_token):
+    data = {}
+    data["wak"] = str(wak)
+    data["local_id"] = str(local_id)
+    data["id_token"] = str(id_token)
+
+    with open("/home/pi/access_config.json", "w") as outfile:
+        json.dump(data, outfile)
+
+    print("Access configs added")
+
+modWiFiConfig(" "," ")
+modAccessConfig(" "," "," ")
+
+
 ##https://stackoverflow.com/questions/166506/finding-local-ip-addresses-using-pythons-stdlib
 print("Oasis server started on Port: " + str(PORT)+' on IP: '+socket.gethostbyname(socket.gethostname()))
 
 while True:
     read_sockets, write_sockets, error_sockets = select.select(CONNECTION_LIST, [], [])
-    
+
     for sock in read_sockets:
         #new connection
         if sock == server_socket:
             sockfd, addr = server_socket.accept()
             CONNECTION_LIST.append(sockfd)
             print("Client (%s, %s) connected" % addr)
-                
+
         #incoming message from client
         else:
             try:
                 data = sock.recv(RECV_BUFFER)
-                data = data.decode()
-                print('received data from [%s:%s]: ' % addr + data)
+                data = pickle.loads(data)
+                print(data)
+                print(type(data))
+                #print('received data from [%s:%s]: ' % addr + data)
                 ##THIS IS WHERE YOU NEED TO VERIFY THAT THE INFORMATION IS RIGHT
+                modWiFiConfig(str(data['wifi_name']), str(data['wifi_pass']))
+                print("Wifi Added")
+                modAccessConfig(str(data['wak']), str(data['local_id']), str(data['id_token']))
+                print('Access Added')
                 sock.send('connected'.encode())
                 sock.close()
                 CONNECTION_LIST.remove(sock)
-                
+                os.system("sudo cp /etc/dhcpcd_WiFi.conf /etc/dhcpcd.conf")
+                os.system("sudo cp /etc/dnsmasq_WiFi.conf /etc/dnsmasq.conf")
+                os.system("sudo systemctl disable hostapd")
+                #set AccessPoint state to "0" before rebooting
+                with open('/home/pi/device_state.json', 'r+') as f:
+                    data = json.load(f)
+                    data['AccessPoint'] = "0" # <--- add `id` value.
+                    f.seek(0) # <--- should reset file position to the beginning.
+                    json.dump(data, f)
+                    f.truncate() # remove remaining part
+                #exit
+                os.system("sudo systemctl reboot")
+
             #disconnect
             except:
                 sock.close()
                 CONNECTION_LIST.remove(sock)
 
 server_socket.close()
-                
+
