@@ -1,21 +1,31 @@
 #TODO:
 #- add circle-lights
-#- integrate with firebase user-data scheme
 
 #---------------------------------------------------------------------------------------
 #IMPORTS
 #Shell, PID, Communication, Time
 #---------------------------------------------------------------------------------------
+#Setup Path
+#import shell modules
+import os
+import os.path
+import sys
+
+#set proper path for modules
+sys.path.append('/home/pi/grow-ctrl')
+sys.path.append('/usr/lib/python37.zip')
+sys.path.append('/usr/lib/python3.7')
+sys.path.append('/usr/lib/python3.7/lib-dynload')
+sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
+sys.path.append('/usr/local/lib/python3.7/dist-packages')
+sys.path.append('/usr/lib/python3/dist-packages')
+
 
 #Shell pkgs
 import serial
 import subprocess32
 from subprocess32 import Popen, PIPE, STDOUT
-import os
-import os.path
 import signal
-import sys
-print(sys.path)
 
 #PID pkgs
 import PID
@@ -27,6 +37,33 @@ import json
 #dealing with specific times of the day
 import time
 import datetime
+
+#-----------------------------------------------------------------------------
+#Exit early if opening subprocess daemon
+#-----------------------------------------------------------------------------
+
+if str(sys.argv[1]) == "daemon":
+    print("sensingfeedback daemon started")
+    #log daemon start
+    with open('/home/pi//logs/growCtrl_log.json', 'r+') as m:
+        data = json.load(m)
+        data['last_start_mode'] = "daemon" # <--- add `id` value.
+        m.seek(0) # <--- should reset file position to the beginning.
+        json.dump(data, m)
+        m.truncate() # remove remaining part
+    sys.exit()
+if str(sys.argv[1]) == "main":
+    print("sensingfeedback main started")
+    #log main start
+    with open('/home/pi/logs/growCtrl_log.json', 'r+') as m:
+        data = json.load(m)
+        data['last_start_mode'] = "main" # <--- add `id` value.
+        m.seek(0) # <--- should reset file position to the beginning.
+        json.dump(data, m)
+        m.truncate() # remove remaining part
+else:
+    print("please offer valid run parameters")
+    sys.exit()
 
 #---------------------------------------------------------------------------------------
 #INITIALIZATION
@@ -255,7 +292,7 @@ try:
                 fan_process.wait()
                 light_process.kill()
                 light_process.wait()
-                #camera_process.kill()
+                camera_process.kill()
                 camera_process.wait()
                 water_process.kill()
                 water_process.wait()

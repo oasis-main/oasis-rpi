@@ -1,9 +1,22 @@
 # TCP Chat server which listens for incoming connections from chat clients
 # uses port 8000
-
-import socket, select, sys
-from _thread import *
+#import shell modules
 import os
+import os.path
+import sys
+
+#set proper path for modules
+sys.path.append('/home/pi/grow-ctrl')
+sys.path.append('/usr/lib/python37.zip')
+sys.path.append('/usr/lib/python3.7')
+sys.path.append('/usr/lib/python3.7/lib-dynload')
+sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
+sys.path.append('/usr/local/lib/python3.7/dist-packages')
+sys.path.append('/usr/lib/python3/dist-packages')
+
+
+import socket, select
+from _thread import *
 import json
 import pickle
 
