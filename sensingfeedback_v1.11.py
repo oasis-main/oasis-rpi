@@ -1,6 +1,3 @@
-#TODO:
-#- add circle-lights
-
 #---------------------------------------------------------------------------------------
 #IMPORTS
 #Shell, PID, Communication, Time
@@ -19,7 +16,6 @@ sys.path.append('/usr/lib/python3.7/lib-dynload')
 sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
 sys.path.append('/usr/local/lib/python3.7/dist-packages')
 sys.path.append('/usr/lib/python3/dist-packages')
-
 
 #Shell pkgs
 import serial
@@ -115,17 +111,17 @@ waterInterval = 3600
 
 #initialize actuator subprocesses
 #heater: params = on/off frequency
-heat_process = Popen(['python3', 'heatingElement.py', str(0)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+heat_process = Popen(['python3', '/home/pi/grow-ctrl/heatingElement.py', str(0)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 #humidifier: params = on/off frequency
-hum_process = Popen(['python3', 'humidityElement.py', str(0)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+hum_process = Popen(['python3', '/home/pi/grow-ctrl/humidityElement.py', str(0)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 #fan: params = on/off frequency
-fan_process = Popen(['python3', 'fanElement.py', '100'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+fan_process = Popen(['python3', '/home/pi/grow-ctrl/fanElement.py', '100'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 #light & camera: params = light mode, time on, time off, interval
-light_process = Popen(['python3', 'lightingElement.py', 'on', '0', '0', '10'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+light_process = Popen(['python3', '/home/pi/grow-ctrl/lightingElement.py', 'on', '0', '0', '10'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 #camera: params = interval
-camera_process = Popen(['python3', 'cameraElement.py', '10'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+camera_process = Popen(['python3', '/home/pi/grow-ctrl/cameraElement.py', '10'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 #watering: params = mode duration interval
-water_process = Popen(['python3', 'wateringElement.py', 'off', '0', '10'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+water_process = Popen(['python3', '/home/pi/grow-ctrl/wateringElement.py', 'off', '0', '10'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
 #create controllers:
 
@@ -254,78 +250,82 @@ try:
 
         #exchange data with server after set time elapses
         if time.time() - start > 5:
-            try:
-                #start clock
-                start = time.time()
+            #get device_state
+            with open('/home/pi/device_state.json') as d:
+                device_state = json.load(d)
+            if device_state["connected"] == "1":
+                try:
+                    #start clock
+                    start = time.time()
 
-                #sensor data out
-                url = "https://oasis-1757f.firebaseio.com/"+str(local_id)+".json?auth="+str(id_token)
-                data = json.dumps({"temp": str(int(temp)), "humid": str(int(hum)), "waterLow": str(int(waterLow))})
-                result = requests.patch(url,data)
-                print(result)
+                    #sensor data out
+                    url = "https://oasis-1757f.firebaseio.com/"+str(local_id)+".json?auth="+str(id_token)
+                    data = json.dumps({"temp": str(int(temp)), "humid": str(int(hum)), "waterLow": str(int(waterLow))})
+                    result = requests.patch(url,data)
+                    print(result)
 
-                #pass old targets to derivative bank and update
-                last_targetT = targetT
-                last_targetH = targetH
+                    #pass old targets to derivative bank and update
+                    last_targetT = targetT
+                    last_targetH = targetH
 
-                targetT = get_from_firebase(id_token, local_id, 'set_temp')['set_temp'] #last argumentmust be an explicit string
-                targetH = get_from_firebase(id_token, local_id, 'set_humid')['set_humid']
-                targetL = get_from_firebase(id_token, local_id, 'light_mode')['light_mode']
-                LtimeOn = get_from_firebase(id_token, local_id, 'light_time_on')['light_time_on']
-                LtimeOff = get_from_firebase(id_token, local_id, 'light_time_off')['light_time_off']
-                waterMode = get_from_firebase(id_token, local_id, 'water_mode')['water_mode']
-                waterDuration = get_from_firebase(id_token, local_id, 'water_duration')['water_duration']
-                waterInterval = get_from_firebase(id_token, local_id, 'water_interval')['water_interval']
+                    targetT = get_from_firebase(id_token, local_id, 'set_temp')['set_temp'] #last argumentmust be an explicit string
+                    targetH = get_from_firebase(id_token, local_id, 'set_humid')['set_humid']
+                    targetL = get_from_firebase(id_token, local_id, 'light_mode')['light_mode']
+                    LtimeOn = get_from_firebase(id_token, local_id, 'light_time_on')['light_time_on']
+                    LtimeOff = get_from_firebase(id_token, local_id, 'light_time_off')['light_time_off']
+                    waterMode = get_from_firebase(id_token, local_id, 'water_mode')['water_mode']
+                    waterDuration = get_from_firebase(id_token, local_id, 'water_duration')['water_duration']
+                    waterInterval = get_from_firebase(id_token, local_id, 'water_interval')['water_interval']
 
-                cameraInterval = params['cameraInterval']
-                #change PID module setpoints to target
-                pid_temp.SetPoint = targetT
-                pid_hum.SetPoint = targetH
-            except (KeyboardInterrupt):
-                print(" ")
-                print("Terminating Program...")
-                heat_process.kill()
-                heat_process.wait()
-                hum_process.kill()
-                hum_process.wait()
-                fan_process.kill()
-                fan_process.wait()
-                light_process.kill()
-                light_process.wait()
-                camera_process.kill()
-                camera_process.wait()
-                water_process.kill()
-                water_process.wait()
-                sys.exit()
-            except Exception as e:
-                print(e)
-                pass
+                    cameraInterval = params['cameraInterval']
+                    #change PID module setpoints to target
+                    pid_temp.SetPoint = targetT
+                    pid_hum.SetPoint = targetH
+                except (KeyboardInterrupt):
+                    print(" ")
+                    print("Terminating Program...")
+                    heat_process.kill()
+                    heat_process.wait()
+                    hum_process.kill()
+                    hum_process.wait()
+                    fan_process.kill()
+                    fan_process.wait()
+                    light_process.kill()
+                    light_process.wait()
+                    camera_process.kill()
+                    camera_process.wait()
+                    water_process.kill()
+                    water_process.wait()
+                    sys.exit()
+                except Exception as e:
+                    print(e)
+                    pass
 
 
             #poll subprocesses if applicable and relaunch/update actuators
             poll_heat = heat_process.poll() #heat
             if poll_heat is not None:
-                heat_process = Popen(['python3', 'heatingElement.py', str(tempPID_out)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+                heat_process = Popen(['python3', '/home/pi/grow-ctrl/heatingElement.py', str(tempPID_out)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
             poll_hum = hum_process.poll() #hum
             if poll_hum is not None:
-                hum_process = Popen(['python3', 'humidityElement.py', str(humPID_out)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+                hum_process = Popen(['python3', '/home/pi/grow-ctrl/humidityElement.py', str(humPID_out)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
             poll_fan = fan_process.poll() #fan
             if poll_fan is not None:
-                fan_process = Popen(['python3', 'fanElement.py', str(fanPD_out)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+                fan_process = Popen(['python3', '/home/pi/grow-ctrl/fanElement.py', str(fanPD_out)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
             poll_light = light_process.poll() #light
             if poll_light is not None:
-                light_process = Popen(['python3', 'lightingElement.py', str(targetL), str(LtimeOn), str(LtimeOff), str(lightInterval)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+                light_process = Popen(['python3', '/home/pi/grow-ctrl/lightingElement.py', str(targetL), str(LtimeOn), str(LtimeOff), str(lightInterval)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
             poll_camera = camera_process.poll() #camera
             if poll_camera is not None:
-                camera_process = Popen(['python3', 'cameraElement.py', str(cameraInterval)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+                camera_process = Popen(['python3', '/home/pi/grow-ctrl/cameraElement.py', str(cameraInterval)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
             poll_water = water_process.poll() #light
             if poll_water is not None:
-                water_process = Popen(['python3', 'wateringElement.py', str(waterMode), str(waterDuration), str(waterInterval)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+                water_process = Popen(['python3', '/home/pi/grow-ctrl/wateringElement.py', str(waterMode), str(waterDuration), str(waterInterval)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
             #line marks one interation of main loop
             time.sleep(0.5)

@@ -19,6 +19,11 @@ import socket, select
 from _thread import *
 import json
 import pickle
+import serial
+
+#open serial port
+ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
+ser.flush()
 
 #keep list of all sockets
 CONNECTION_LIST = []
@@ -116,6 +121,11 @@ while True:
             except:
                 sock.close()
                 CONNECTION_LIST.remove(sock)
+    #update LED
+    with open('/home/pi/device_state.json') as d:
+        device_state = json.load(d)
+    ser.flush()
+    ser.write(bytes(str(device_state["LEDstatus"])+"\n", 'utf-8'))
 
 server_socket.close()
 

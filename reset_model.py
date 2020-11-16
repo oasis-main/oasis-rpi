@@ -5,8 +5,8 @@ with open('/home/pi/device_state.json', 'r+') as r:
                         data['connected'] = "0" # <--- reset to 0
                         data['running'] = "0"
                         data['LEDstatus'] = "off"
-                        data['LEDtimeon'] = 8
-                        data['LEDtimeoff'] = 20
+                        data['LEDtimeon'] = "0"
+                        data['LEDtimeoff'] = "0"
                         data['AccessPoint'] = "0"
                         r.seek(0) # <--- should reset file position to the beginning.
                         json.dump(data, r)
