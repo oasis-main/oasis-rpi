@@ -18,7 +18,7 @@ sys.path.append('/usr/lib/python3/dist-packages')
 import socket, select
 from _thread import *
 import json
-import pickle
+import pickle5 as pickle
 import serial
 
 #open serial port
