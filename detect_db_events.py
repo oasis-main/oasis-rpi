@@ -22,6 +22,7 @@
 import pyrebase
 from multiprocessing import Process, Queue
 import json
+import os
 
 
 def initialize_user(RefreshToken):
@@ -81,9 +82,18 @@ def detect_multiple_feild_events(user, db, feilds):
 #make change to config file
 def act_on_event(feild, new_data):
 	#get data and feild info
+	
+	#checks if file exists and makes a blank one if not
+	#the path has to be set for box
+	path = '/Users/avielstein/Desktop/config.json'
+	if os.path.exists(path) == False:
+		f = open(path, "w")
+		f.write("{}")
+		f.close()
+
 	#open data config file
 	#edit appropriate spot
-	with open('/Users/avielstein/Desktop/config.json', 'r+') as r:
+	with open(path, 'r+') as r:
 		data = json.load(r)
 		data[feild] = new_data
 		r.seek(0) # <--- should reset file position to the begi$
