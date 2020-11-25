@@ -1,0 +1,13 @@
+{
+"targetT": "72",
+"targetH": "90",
+"targetL": "off",
+"LtimeOn": "8",
+"LtimeOff": "20",
+"lightInterval": "60",
+"cameraInterval": "3600",
+"waterMode": "off",
+"waterDuration": "15",
+"waterInterval": "3600"
+}
+

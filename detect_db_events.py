@@ -8,7 +8,7 @@
 #https://pypi.org/project/FirebaseData/
 
 
-#This may be the thing to do 
+#This may be the thing to do
 #https://github.com/thisbejim/Pyrebase/issues/341
 
 #OTHER
@@ -26,7 +26,7 @@ import os
 
 
 def initialize_user(RefreshToken):
-	
+
 	#app configuration information
 	config = {
 	  "apiKey": "AIzaSyD-szNCnHbvC176y5K6haapY1J7or8XtKc",
@@ -59,33 +59,41 @@ def stream_handler(m):
 	if m['event']=='put':
 		act_on_event(m['stream_id'],m['data'])
 
-	#something else 
+	#something else
 	else:
 		pass
-		#if this happens... theres a problem... 
+		#if this happens... theres a problem...
 		#should be handled for
 		print('something wierd...')
 
-def detect_feild_event(user, db, feild):
-	my_stream = db.child(user['userId']+'/'+feild).stream(stream_handler, user['idToken'], stream_id=feild)
+def detect_field_event(user, db, field):
+	my_stream = db.child(user['userId']+'/'+field).stream(stream_handler, user['idToken'], stream_id=field)
 
 
 #https://stackoverflow.com/questions/2046603/is-it-possible-to-run-function-in-a-subprocess-without-threading-or-writing-a-se
 #https://stackoverflow.com/questions/200469/what-is-the-difference-between-a-process-and-a-thread#:~:text=A%20process%20is%20an%20execution,sometimes%20called%20a%20lightweight%20process.
 #run multiprocesser to handle database listener
 #could use threads in future? would it be better?
-def detect_multiple_feild_events(user, db, feilds):
-	for feild in feilds:
-		p = Process(target=detect_feild_event, args=(user, db, feild))
+def detect_multiple_field_events(user, db, fields):
+	for field in fields:
+		p = Process(target=detect_field_event, args=(user, db, field))
 		p.start()
 
 #make change to config file
-def act_on_event(feild, new_data):
-	#get data and feild info
-	
+def act_on_event(field, new_data):
+	#get data and field info
+
 	#checks if file exists and makes a blank one if not
 	#the path has to be set for box
-	path = '/Users/avielstein/Desktop/config.json'
+	device_state_fields = ["connected", "running", "LEDstatus", "AccessPoint", "LEDtimeon", "LEDtimeoff"]
+
+        grow_params_fields = ["targetT", "targetH", "targetL", "LtimeOn", "LtimeOff", "lightInterval", "cameraInterval", "waterMode", "waterDuration", "waterInterval"]
+
+        if str(field) in device_state_fields:
+            path = '/home/pi/device_state.json'
+        if str(field) in grow_params_fields:
+            path = '/home/pi/grow_params.json'
+
 	if os.path.exists(path) == False:
 		f = open(path, "w")
 		f.write("{}")
@@ -95,8 +103,8 @@ def act_on_event(feild, new_data):
 	#edit appropriate spot
 	with open(path, 'r+') as r:
 		data = json.load(r)
-		data[feild] = new_data
-		r.seek(0) # <--- should reset file position to the begi$
+		data[str(field)] = str(new_data)
+		r.seek(0) # <--- should reset file position to the beginning
 		json.dump(data, r)
 	r.close()
 
@@ -105,9 +113,9 @@ if __name__ == '__main__':
 	RefreshToken = 'AG8BCnc3HIku8dmoofrvTZ6Ib3NBLgc6r1GlinahFadxnTvk6DqpoDUdb3w2FklbfNMozHDJHideuDTksEI8GgbwH9ixQtPkZDZ0xwUyLS9EBJuIv0Fn4TaBPO1aSciWIqhfJrp_YFtLkUfMimXkDny7UtA3NnYtHaWmorZsiFc-hmGj0XzXkjOQmUXOg1lc21qoxVbOHgUq'
 	user, db = initialize_user(RefreshToken)
 	#print(get_user_data(user, db))
-	#detect_feild_event(user, db, 'set_temp')
-	feilds = ['set_temp','set_humid']
-	detect_multiple_feild_events(user, db, feilds)
+	#detect_field_event(user, db, 'set_temp')
+	fields = ['set_temp','set_humid']
+	detect_multiple_field_events(user, db, fields)
 
 
 

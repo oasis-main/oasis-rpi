@@ -22,8 +22,8 @@ import pickle5 as pickle
 import serial
 
 #open serial port
-ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
-ser.flush()
+ser_server = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
+ser_server.flush()
 
 #keep list of all sockets
 CONNECTION_LIST = []
@@ -52,27 +52,32 @@ def modWiFiConfig(SSID, password):
     config = '\n'.join(config_lines)
     #print(config)
 
-    with open("/etc/wpa_supplicant/wpa_supplicant.conf", "r+") as wifi:
-        wifi.seek(0)
-        wifi.write(config)
-        wifi.truncate()
-
+    with open("/etc/wpa_supplicant/wpa_supplicant.conf", "r+") as w:
+        w.seek(0)
+        w.write(config)
+        w.truncate()
+    w.close()
     print("WiFi configs added")
 
 #update access_config.json
 def modAccessConfig(wak, local_id, id_token):
-    data = {}
-    data["wak"] = str(wak)
-    data["local_id"] = str(local_id)
-    data["id_token"] = str(id_token)
+    access_config = {}
+    access_config["wak"] = str(wak)
+    access_config["local_id"] = str(local_id)
+    access_config["id_token"] = str(id_token)
 
-    with open("/home/pi/access_config.json", "w") as outfile:
-        json.dump(data, outfile)
-
+    with open("/home/pi/access_config.json", "r+") as a:
+        json.dump(access_config, a)
+    a.close()
     print("Access configs added")
 
 modWiFiConfig(" "," ")
 modAccessConfig(" "," "," ")
+
+#update LED state
+with open('/home/pi/device_state.json','r+') as d:
+    device_state = json.load(d)
+d.close()
 
 
 ##https://stackoverflow.com/questions/166506/finding-local-ip-addresses-using-pythons-stdlib
@@ -80,6 +85,9 @@ print("Oasis server started on Port: " + str(PORT)+' on IP: '+socket.gethostbyna
 
 while True:
     read_sockets, write_sockets, error_sockets = select.select(CONNECTION_LIST, [], [])
+
+    #update LED serial
+    ser_server.write(bytes(str(device_state["LEDstatus"])+"\n", 'utf-8'))
 
     for sock in read_sockets:
         #new connection
@@ -108,12 +116,13 @@ while True:
                 os.system("sudo cp /etc/dnsmasq_WiFi.conf /etc/dnsmasq.conf")
                 os.system("sudo systemctl disable hostapd")
                 #set AccessPoint state to "0" before rebooting
-                with open('/home/pi/device_state.json', 'r+') as f:
-                    data = json.load(f)
-                    data['AccessPoint'] = "0" # <--- add `id` value.
-                    f.seek(0) # <--- should reset file position to the beginning.
-                    json.dump(data, f)
-                    f.truncate() # remove remaining part
+                with open('/home/pi/device_state.json', 'r+') as d:
+                    device_state = json.load(d)
+                    device_state['AccessPoint'] = "0" # <--- add `id` value.
+                    d.seek(0) # <--- should reset file position to the beginning.
+                    json.dump(device_state, d)
+                    d.truncate() # remove remaining part
+                d.close()
                 #exit
                 os.system("sudo systemctl reboot")
 
@@ -121,11 +130,6 @@ while True:
             except:
                 sock.close()
                 CONNECTION_LIST.remove(sock)
-    #update LED
-    with open('/home/pi/device_state.json') as d:
-        device_state = json.load(d)
-    ser.flush()
-    ser.write(bytes(str(device_state["LEDstatus"])+"\n", 'utf-8'))
 
 server_socket.close()
 

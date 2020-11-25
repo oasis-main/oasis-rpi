@@ -34,13 +34,16 @@ print("Initializing...")
 #Load Model
 with open('/home/pi/device_state.json') as d:
     device_state = json.load(d) #get device state
+d.close()
+
 with open('/home/pi/hardware_config.json') as h:
     hardware_config = json.load(h) #get hardware state
+h.close()
 print("Loaded state.")
 
 #Launch Serial Port
-ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
-ser.flush()
+ser_out = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
+ser_out.flush()
 print("Started serial communication.")
 
 #check for connection
@@ -51,38 +54,44 @@ try:
     prin("Call FireBase verification function HERE")
 
     #write device state as connectd if successful
-    with open('/home/pi/device_state.json', 'r+') as r:
-        data = json.load(r)
-        data['connected'] = "1"
-        r.seek(0) # <--- should reset file position to the begi$
-        json.dump(data, r)
-        r.truncate() # remove remaining part
+    with open('/home/pi/device_state.json', 'r+') as d:
+        device_state = json.load(d)
+        device_state['connected'] = "1"
+        d.seek(0) # <--- should reset file position to the begi$
+        json.dump(device_state, d)
+        d.truncate() # remove remaining part
+    d.close()
     print("Device is connected to the Oasis Network")
 
 except:
 
     #Write state as not connected
-    with open('/home/pi/device_state.json', 'r+') as r:
-        data = json.load(r)
-        data['connected'] = "0"
-        r.seek(0) # <--- should reset file position to the begi$
-        json.dump(data, r)
-        r.truncate() # remove remaining part
-
+    with open('/home/pi/device_state.json', 'r+') as d:
+        device_state = json.load(d)
+        device_state['connected'] = "0"
+        d.seek(0) # <--- should reset file position to the begi$
+        json.dump(device_state, d)
+        d.truncate() # remove remaining part
+    d.close()
     print("Could not connect to Oasis Network")
 
 #Case for when the device boots in Access Point Mode
+with open('/home/pi/device_state.json') as d: #it is important to refresh the state for any operation after a change
+    device_state = json.load(d) #get device state
+d.close()
+
 if device_state["AccessPoint"] == "1":
 
     print("Access Point Mode enabled")
 
     #set LEDstatus = "connectWifi"
-    with open('/home/pi/device_state.json', 'r+') as r:
-        data = json.load(r)
-        data['LEDstatus'] = "connectWifi"
-        r.seek(0) # <--- should reset file position to the begi$
-        json.dump(data, r)
-        r.truncate() # remove remaining part
+    with open('/home/pi/device_state.json', 'r+') as d:
+        device_state = json.load(d)
+        device_state['LEDstatus'] = "connectWifi"
+        d.seek(0) # <--- should reset file position to the begi$
+        json.dump(device_state, d)
+        d.truncate() # remove remaining part
+    d.close()
 
     #launch server subprocess to accept credentials over Oasis wifi network
     server_process = Popen('sudo python3 /home/pi/grow-ctrl/oasis_server.py', shell=True)
@@ -101,26 +110,24 @@ else:
         #launch sensingfeedback main
         sensingfeedback_process = Popen(['python3', '/home/pi/grow-ctrl/sensingfeedback_v1.11.py', 'main'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
-        #get device_state, write the appropriate LED state
-        with open('/home/pi/device_state.json') as d:
-            device_state = json.load(d)
         if device_state["connected"] == "1": #if connected
             #send LEDmode = "connectedRunning"
-            with open('/home/pi/device_state.json', 'r+') as r:
-                data = json.load(r)
-                data['LEDstatus'] = "connectedRunning"
-                r.seek(0) # <--- should reset file position to the begi$
-                json.dump(data, r)
-                r.truncate() # remove remaining part
-        if device_state["connected"] == "0": #if not connected
+            with open('/home/pi/device_state.json', 'r+') as d:
+                device_state = json.load(d)
+                device_state['LEDstatus'] = "connectedRunning"
+                d.seek(0) # <--- should reset file position to the begi$
+                json.dump(device_state, d)
+                d.truncate() # remove remaining part
+            d.close()
+        else: #if not connected
             #send LEDmode = "islandRunning"
-            with open('/home/pi/device_state.json', 'r+') as r:
-                data = json.load(r)
-                data['LEDstatus'] = "islandRunning"
-                r.seek(0)
-                json.dump(data, r)
-                r.truncate()
-
+            with open('/home/pi/device_state.json', 'r+') as d:
+                device_state = json.load(d)
+                device_state['LEDstatus'] = "islandRunning"
+                d.seek(0)
+                json.dump(device_state, d)
+                d.truncate()
+            d.close()
         print("launched grow-ctrl main")
 
     else:
@@ -128,23 +135,24 @@ else:
         #launch sensing-feedback subprocess in daemon mode
         sensingfeedback_process = Popen(['python3', '/home/pi/grow-ctrl/sensingfeedback_v1.11.py', 'daemon'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
 
-        #load device state to get the running mode of the device
-        with open('/home/pi/device_state.json') as d:
-            device_state = json.load(d)
+
         if device_state["connected"] == "1":
-            with open('/home/pi/device_state.json', 'r+') as r:
-                data = json.load(r)
-                data['LEDstatus'] = "connectedIdle"
-                r.seek(0) # <--- should reset file position to the begi$
-                json.dump(data, r)
-                r.truncate() # remove remaining part
-        if device_state["connected"] == "0":
-            with open('/home/pi/device_state.json', 'r+') as r:
-                data = json.load(r)
-                data['LEDstatus'] = "islandIdle"
-                r.seek(0) # <--- should reset file position to the begi$
-                json.dump(data, r)
-                r.truncate() # remove remaining part
+            with open('/home/pi/device_state.json', 'r+') as d:
+                device_state = json.load(d)
+                device_state['LEDstatus'] = "connectedIdle"
+                d.seek(0) # <--- should reset file position to the begi$
+                json.dump(device_state, d)
+                d.truncate() # remove remaining part
+            d.close()
+
+        else:
+            with open('/home/pi/device_state.json', 'r+') as d:
+                device_state = json.load(d)
+                device_state['LEDstatus'] = "islandIdle"
+                d.seek(0) # <--- should reset file position to the begi$
+                json.dump(device_state, d)
+                d.truncate() # remove remaining part
+            d.close()
 
         print("launched grow-ctrl daemon")
 
@@ -169,11 +177,11 @@ else:
     try:
 
        while True:
-
-            sbutton_state = GPIO.input(StartButton) #Start Button
-
             with open('/home/pi/device_state.json') as d:
                 device_state = json.load(d)
+            d.close()
+
+            sbutton_state = GPIO.input(StartButton) #Start Button
 
             if sbutton_state == 0:
                 print("you hit the start button")
@@ -181,76 +189,83 @@ else:
                 if device_state["running"] == "1":
 
                     #set running state to off = 0
-                    with open('/home/pi/device_state.json', 'r+') as r:
-                        data = json.load(r)
-                        data['running'] = "0" # <--- add `id` value.
-                        r.seek(0) # <--- should reset file position to the beginning.
-                        json.dump(data, r)
-                        r.truncate() # remove remaining part
-
+                    with open('/home/pi/device_state.json', 'r+') as d:
+                        device_state = json.load(d)
+                        device_state['running'] = "0" # <--- add `id` value.
+                        d.seek(0) # <--- should reset file position to the beginning.
+                        json.dump(device_state, d)
+                        d.truncate() # remove remaining part
+                    d.close()
                     #Kill sensingfeedback_main, launch daemon
                     try:
                         sensingfeedback_process.kill() #if it is running, kill it and launch the daemon
                         sensingfeedback_process.wait()
                         sensingfeedback_process = Popen(['python3', '/home/pi/grow-ctrl/sensingfeedback_v1.11.py', 'daemon'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+                        print("sensingfeedback daemon mode activated")
                     except:
-                        pass
+                        print("sensingfeedback_process not running")
 
                     #Switch LED to idle mode
                     with open('/home/pi/device_state.json') as d:
                         device_state = json.load(d)
+                    d.close()
                     if device_state["connected"] == "1":
-                        with open('/home/pi/device_state.json', 'r+') as r:
-                            data = json.load(r)
-                            data['LEDstatus'] = "connectedIdle"
-                            r.seek(0) # <--- should reset file position to the begi$
-                            json.dump(data, r)
-                            r.truncate() # remove remaining part
-                    if device_state["connected"] == "0":
-                        with open('/home/pi/device_state.json', 'r+') as r:
-                            data = json.load(r)
-                            data['LEDstatus'] = "islandIdle"
-                            r.seek(0) # <--- should reset file position to the$
-                            json.dump(data, r)
-                            r.truncate() # remove remaining part
-
+                        with open('/home/pi/device_state.json', 'r+') as d:
+                            device_state = json.load(d)
+                            device_state['LEDstatus'] = "connectedIdle"
+                            d.seek(0) # <--- should reset file position to the begi$
+                            json.dump(device_state, d)
+                            d.truncate() # remove remaining part
+                        d.close()
+                    else:
+                        with open('/home/pi/device_state.json', 'r+') as d:
+                            device_state = json.load(d)
+                            device_state['LEDstatus'] = "islandIdle"
+                            d.seek(0) # <--- should reset file position to the$
+                            json.dump(device_state, d)
+                            d.truncate() # remove remaining part
+                        d.close()
                 else:
 
                     #set running state to on = 1
-                    with open('/home/pi/device_state.json', 'r+') as r:
-                        data = json.load(r)
-                        data['running'] = "1" # <--- update model
-                        r.seek(0) # <--- should reset file position to the beginning.
-                        json.dump(data, r)
-                        r.truncate() # remove remaining part
+                    with open('/home/pi/device_state.json', 'r+') as d:
+                        device_state = json.load(d)
+                        device_state['running'] = "1" # <--- update model
+                        d.seek(0) # <--- should reset file position to the beginning.
+                        json.dump(device_state, d)
+                        d.truncate() # remove remaining part
+                    d.close()
 
                     #try kill daemon & start sensingfeedback main
                     try:
                         sensingfeedback_process.kill() #kill daemon, launch main
                         sensingfeedback_process.wait()
                         sensingfeedback_process = Popen(['python3', '/home/pi/grow-ctrl/sensingfeedback_v1.11.py', 'main'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+                        print("sensingfeedback main activated")
                     except:
-                        pass
+                        print("sensing_feedback process not running")
 
 
                     #Switch LED to running mode
                     with open('/home/pi/device_state.json') as d:
                         device_state = json.load(d)
+                    d.close()
                     if device_state["connected"] == "1":
-                        with open('/home/pi/device_state.json', 'r+') as r:
-                            data = json.load(r)
-                            data['LEDstatus'] = "connectedRunning"
-                            r.seek(0) # <--- should reset file position to the$
-                            json.dump(data, r)
-                            r.truncate() # remove remaining part
-                    if device_state["connected"] == "0":
-                        with open('/home/pi/device_state.json', 'r+') as r:
-                            data = json.load(r)
-                            data['LEDstatus'] = "islandRunning"
-                            r.seek(0) # <--- should reset file position to the$
-                            json.dump(data, r)
-                            r.truncate() # remove remaining part
-
+                        with open('/home/pi/device_state.json', 'r+') as d:
+                            device_state= json.load(d)
+                            device_state['LEDstatus'] = "connectedRunning"
+                            d.seek(0) # <--- should reset file position to the$
+                            json.dump(device_state, d)
+                            d.truncate() # remove remaining part
+                        d.close()
+                    else:
+                        with open('/home/pi/device_state.json', 'r+') as d:
+                            device_state = json.load(d)
+                            device_state['LEDstatus'] = "islandRunning"
+                            d.seek(0) # <--- should reset file position to the$
+                            json.dump(device_state, d)
+                            d.truncate() # remove remaining part
+                        d.close()
                 sleep(1) #give the buttons some time to breathe
 
             cbutton_state = GPIO.input(ConnectButton) #Connect Button
@@ -265,13 +280,13 @@ else:
                 os.system("sudo systemctl enable hostapd")
 
                 #set AccessPoint state to "1" before rebooting
-                with open('/home/pi/device_state.json', 'r+') as c:
-                    data = json.load(c)
-                    data['AccessPoint'] = "1" # <--- add `id` value.
-                    c.seek(0) # <--- should reset file position to the beginning.
-                    json.dump(data, c)
-                    c.truncate() # remove remaining part
-
+                with open('/home/pi/device_state.json', 'r+') as d:
+                    device_state = json.load(d)
+                    device_state['AccessPoint'] = "1" # <--- add `id` value.
+                    d.seek(0) # <--- should reset file position to the beginning.
+                    json.dump(device_state, d)
+                    d.truncate() # remove remaining part
+                d.close()
                 #exit
                 os.system("sudo systemctl reboot")
 
@@ -282,16 +297,16 @@ else:
                #turn on the pump
                GPIO.output(WaterElement, GPIO.HIGH)
                #wait 60 seconds
-               sleep(10)
+               sleep(60)
                #turn off the pump
                GPIO.output(WaterElement, GPIO.LOW)
 
             #get device_state
             with open('/home/pi/device_state.json') as d:
                 device_state = json.load(d)
+            d.close()
 
             #write the LED config to serial port
-            ser.flush()
 
             #write "off" or write status depending on ToD + settings
             now = datetime.datetime.now()
@@ -299,18 +314,19 @@ else:
 
             if int(device_state["LEDtimeon"]) < int(device_state['LEDtimeoff']):
                 if HoD >= int(device_state["LEDtimeon"]) and HoD < int(device_state["LEDtimeoff"]):
-                    ser.write(bytes(str(device_state["LEDstatus"]+"\n"), 'utf-8')) #write status
+                    ser_out.write(bytes(str(device_state["LEDstatus"]+"\n"), 'utf-8')) #write status
                 if HoD < int(device_state["LEDtimeon"]) or HoD >= int(device["LEDtimeoff"]):
-                    ser.write(bytes(str("off"+"\n"), 'utf-8')) #write off
+                    ser_out.write(bytes(str("off"+"\n"), 'utf-8')) #write off
             if int(device_state["LEDtimeon"]) >int(device_state["LEDtimeoff"]):
                 if HoD >=  int(device_state["LEDtimeon"]) or HoD < int(device_state["LEDtimeoff"]):
-                    ser.write(bytes(str(device_state["LEDstatus"]+"\n"), 'utf-8')) #write status
+                    ser_out.write(bytes(str(device_state["LEDstatus"]+"\n"), 'utf-8')) #write status
                 if HoD < int(device_state["LEDtimeon"]) and  HoD >= int(device_state["LEDtimeoff"]):
-                    ser.write(bytes(str("off"+"\n"), 'utf-8')) #write off
+                    ser_out.write(bytes(str("off"+"\n"), 'utf-8')) #write off
             if int(device_state["LEDtimeon"]) == int(device_state["LEDtimeoff"]):
-                ser.write(bytes(str(device_state["LEDstatus"]+"\n"), 'utf-8')) #write status
+                ser_out.write(bytes(str(device_state["LEDstatus"]+"\n"), 'utf-8')) #write status
 
+            #debug main subprocess
+            print(sensingfeedback_process.stderr.read(20))
+            sleep(.25)
     except(KeyboardInterrupt):
         GPIO.cleanup()
-
-

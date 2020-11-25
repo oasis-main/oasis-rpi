@@ -41,22 +41,24 @@ import datetime
 if str(sys.argv[1]) == "daemon":
     print("sensingfeedback daemon started")
     #log daemon start
-    with open('/home/pi//logs/growCtrl_log.json', 'r+') as m:
-        data = json.load(m)
-        data['last_start_mode'] = "daemon" # <--- add `id` value.
-        m.seek(0) # <--- should reset file position to the beginning.
-        json.dump(data, m)
-        m.truncate() # remove remaining part
+    with open('/home/pi//logs/growCtrl_log.json', 'r+') as l:
+        log = json.load(l)
+        log['last_start_mode'] = "daemon" # <--- add `id` value.
+        l.seek(0) # <--- should reset file position to the beginning.
+        json.dump(log, l)
+        l.truncate() # remove remaining part
+    l.close()
     sys.exit()
 if str(sys.argv[1]) == "main":
     print("sensingfeedback main started")
     #log main start
-    with open('/home/pi/logs/growCtrl_log.json', 'r+') as m:
-        data = json.load(m)
-        data['last_start_mode'] = "main" # <--- add `id` value.
-        m.seek(0) # <--- should reset file position to the beginning.
-        json.dump(data, m)
-        m.truncate() # remove remaining part
+    with open('/home/pi/logs/growCtrl_log.json', 'r+') as l:
+        log = json.load(l)
+        log['last_start_mode'] = "main" # <--- add `id` value.
+        l.seek(0) # <--- should reset file position to the beginning.
+        json.dump(log, l)
+        l.truncate() # remove remaining part
+    l.close
 else:
     print("please offer valid run parameters")
     sys.exit()
@@ -88,7 +90,7 @@ else:
 #    print(e)
 
 #start serial RPi<-Arduino
-ser = serial.Serial('/dev/ttyUSB0',9600)
+ser_in = serial.Serial('/dev/ttyUSB0',9600)
 line = 0
 sensorInfo = " "
 
@@ -97,17 +99,23 @@ temp = 0
 hum = 0
 waterLow = 0
 
-#placeholder for set parameter  targets
-targetT = 75  #target temperature
-targetH = 90  #target humidity
-targetL = "off" #light mode
-LtimeOn = 8
-LtimeOff = 20
-lightInterval = 60
-cameraInterval = 3600
-waterMode = "off"
-waterDuration = 15
-waterInterval = 3600
+#import grow_params
+with open('/home/pi/grow_params.json', "r+") as g:
+  grow_params = json.load(g)
+g.close()
+
+
+#load grow parameters
+targetT = int(grow_params["targetT"])  #temperature set to?
+targetH = int(grow_params["targetH"]) #humidity set to?
+targetL = grow_params["targetL"] #lights on yes or no?
+LtimeOn = int(grow_params["LtimeOn"]) #when turn on 0-23 hr time?
+LtimeOff = int(grow_params["LtimeOff"]) #when turn off 0-23 hr time?
+lightInterval = int(grow_params["lightInterval"]) #how long until update?
+cameraInterval = int(grow_params["cameraInterval"]) #how long until next pic?
+waterMode = grow_params["waterMode"] #watering on yes or no?
+waterDuration = int(grow_params["waterDuration"]) #how long water?
+waterInterval = int(grow_params["waterInterval"]) #how often water?
 
 #initialize actuator subprocesses
 #heater: params = on/off frequency
@@ -135,9 +143,9 @@ pid_temp.SetPoint = targetT
 pid_temp.setSampleTime(1)
 
 #humidifier: PID library on humidity
-P_hum = 25
+P_hum = 50
 I_hum = 0
-D_hum = 10
+D_hum = 5
 
 pid_hum = PID.PID(P_hum, I_hum, D_hum)
 pid_hum.SetPoint = targetH
@@ -180,10 +188,10 @@ def fan_pd(temp, hum, targetT, targetH, last_temp, last_hum, last_targetT, last_
 #define event listener to collect data and kick off the transfer
 def listen():
     #load in global vars
-    global line,ser,sensorInfo,temp,hum,last_temp,last_hum,waterLow
+    global line,ser_in,sensorInfo,temp,hum,last_temp,last_hum,waterLow
 
     #listen for data from aurdino
-    sensorInfo = ser.readline().decode('UTF-8').strip().split(' ')
+    sensorInfo = ser_in.readline().decode('UTF-8').strip().split(' ')
     #print(sensorInfo)
 
     if len(sensorInfo)<3:
@@ -253,34 +261,43 @@ try:
             #get device_state
             with open('/home/pi/device_state.json') as d:
                 device_state = json.load(d)
+            d.close()
             if device_state["connected"] == "1":
                 try:
                     #start clock
                     start = time.time()
 
-                    #sensor data out
-                    url = "https://oasis-1757f.firebaseio.com/"+str(local_id)+".json?auth="+str(id_token)
-                    data = json.dumps({"temp": str(int(temp)), "humid": str(int(hum)), "waterLow": str(int(waterLow))})
-                    result = requests.patch(url,data)
-                    print(result)
+                    #sensor data out, needs editin
+                    #url = "https://oasis-1757f.firebaseio.com/"+str(local_id)+".json?auth="+str(id_token)
+                    #data = json.dumps({"temp": str(int(temp)), "humid": str(int(hum)), "waterLow": str(int(waterLow))})
+                    #result = requests.patch(url,data)
+                    #print(result)
 
                     #pass old targets to derivative bank and update
                     last_targetT = targetT
                     last_targetH = targetH
 
-                    targetT = get_from_firebase(id_token, local_id, 'set_temp')['set_temp'] #last argumentmust be an explicit string
-                    targetH = get_from_firebase(id_token, local_id, 'set_humid')['set_humid']
-                    targetL = get_from_firebase(id_token, local_id, 'light_mode')['light_mode']
-                    LtimeOn = get_from_firebase(id_token, local_id, 'light_time_on')['light_time_on']
-                    LtimeOff = get_from_firebase(id_token, local_id, 'light_time_off')['light_time_off']
-                    waterMode = get_from_firebase(id_token, local_id, 'water_mode')['water_mode']
-                    waterDuration = get_from_firebase(id_token, local_id, 'water_duration')['water_duration']
-                    waterInterval = get_from_firebase(id_token, local_id, 'water_interval')['water_interval']
+                    #refresh grow_params
+                    with open('/home/pi/grow_params.json') as g:
+                        grow_params = json.load(g)
+                    g.close()
 
-                    cameraInterval = params['cameraInterval']
+                    #load grow parameters
+                    targetT = int(grow_params["targetT"])  #temperature set to?
+                    targetH = int(grow_params["targetH"]) #humidity set to?
+                    targetL = grow_params["targetL"] #lights on yes or no?
+                    LtimeOn = int(grow_params["LtimeOn"]) #when turn on 0-23 hr time?
+                    LtimeOff = int(grow_params["LtimeOff"]) #when turn off 0-23 hr time?
+                    lightInterval = int(grow_params["lightInterval"]) #how long until update?
+                    cameraInterval = int(grow_params["cameraInterval"]) #how long until next pic?
+                    waterMode = grow_params["waterMode"] #watering on yes or no?
+                    waterDuration = int(grow_params["waterDuration"]) #how long water?
+                    waterInterval = int(grow_params["waterInterval"]) #how often water?
+
                     #change PID module setpoints to target
                     pid_temp.SetPoint = targetT
                     pid_hum.SetPoint = targetH
+
                 except (KeyboardInterrupt):
                     print(" ")
                     print("Terminating Program...")

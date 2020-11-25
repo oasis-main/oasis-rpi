@@ -29,6 +29,7 @@ import json
 #get device_state
 with open('/home/pi/device_state.json') as d:
     device_state = json.load(d)
+d.close()
 
 #define a function to actuate element
 def actuate(interval = 3600): #amoubnt of time between shots
