@@ -22,7 +22,7 @@ import time
 import base64
 from PIL import Image
 import subprocess32
-from subprocess32 import Popen, PIPE, STDOUT
+from subprocess32 import Popen
 import requests
 import json
 

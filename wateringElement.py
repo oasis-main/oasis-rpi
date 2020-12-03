@@ -27,7 +27,7 @@ h.close()
 
 #setup GPIO
 GPIO.setmode(GPIO.BCM) #GPIO Numbers instead of board numbers
-H2o_GPIO = hardware_config["actuatorGPIOmap"]["wateringElement"] #heater pin pulls from config file 
+H2o_GPIO = hardware_config["actuatorGPIOmap"]["wateringElement"] #heater pin pulls from config file
 GPIO.setup(H2o_GPIO, GPIO.OUT) #GPIO setup
 GPIO.output(H2o_GPIO, GPIO.LOW) #relay open = GPIO.HIGH, closed = GPIO.LOW
 

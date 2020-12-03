@@ -16,8 +16,8 @@ sys.path.append('/usr/lib/python3/dist-packages')
 from time import sleep
 import RPi.GPIO as GPIO
 import serial
-import subprocess32
-from subprocess32 import Popen, PIPE, STDOUT
+import subprocess
+from subprocess import Popen, PIPE, STDOUT
 import signal
 import json
 
@@ -26,6 +26,7 @@ import requests
 import json
 
 #dealing with specific times of the day
+import time
 import datetime
 
 #Initialize Oasis:
@@ -99,7 +100,6 @@ if device_state["AccessPoint"] == "1":
     if server_process.returncode != 0:
         print("Failure " + str(server_process.returncode)+ " " +str(output)++str(error))
 
-
 #Otherwise, run in Interface mode
 else:
     print("Interface Mode enabled")
@@ -107,8 +107,8 @@ else:
     #if the device is supposed to be running
     if device_state["running"] == "1":
 
-        #launch sensingfeedback main
-        sensingfeedback_process = Popen(['python3', '/home/pi/grow-ctrl/sensingfeedback_v1.11.py', 'main'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+        #launch grow_ctrl main
+        grow_ctrl_process = Popen(['python3', '/home/pi/grow-ctrl/grow_ctrl.py', 'main'])
 
         if device_state["connected"] == "1": #if connected
             #send LEDmode = "connectedRunning"
@@ -120,7 +120,6 @@ else:
                 d.truncate() # remove remaining part
             d.close()
         else: #if not connected
-            #send LEDmode = "islandRunning"
             with open('/home/pi/device_state.json', 'r+') as d:
                 device_state = json.load(d)
                 device_state['LEDstatus'] = "islandRunning"
@@ -133,14 +132,13 @@ else:
     else:
 
         #launch sensing-feedback subprocess in daemon mode
-        sensingfeedback_process = Popen(['python3', '/home/pi/grow-ctrl/sensingfeedback_v1.11.py', 'daemon'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
-
+        grow_ctrl_process = Popen(['python3', '/home/pi/grow-ctrl/grow_ctrl.py', 'daemon'])
 
         if device_state["connected"] == "1":
             with open('/home/pi/device_state.json', 'r+') as d:
                 device_state = json.load(d)
                 device_state['LEDstatus'] = "connectedIdle"
-                d.seek(0) # <--- should reset file position to the begi$
+                d.seek(0)
                 json.dump(device_state, d)
                 d.truncate() # remove remaining part
             d.close()
@@ -149,7 +147,7 @@ else:
             with open('/home/pi/device_state.json', 'r+') as d:
                 device_state = json.load(d)
                 device_state['LEDstatus'] = "islandIdle"
-                d.seek(0) # <--- should reset file position to the begi$
+                d.seek(0)
                 json.dump(device_state, d)
                 d.truncate() # remove remaining part
             d.close()
@@ -174,6 +172,9 @@ else:
     GPIO.setup(WaterElement, GPIO.OUT) #GPIO setup
     GPIO.output(WaterElement, GPIO.LOW) #relay open = GPIO.HIGH, closed = GPIO.LOW
 
+    #start the clock for timimg data exchanges with Arduino LED
+    start = time.time()
+
     try:
 
        while True:
@@ -196,14 +197,14 @@ else:
                         json.dump(device_state, d)
                         d.truncate() # remove remaining part
                     d.close()
-                    #Kill sensingfeedback_main, launch daemon
+                    #Kill grow_ctrl_main, launch daemon
                     try:
-                        sensingfeedback_process.kill() #if it is running, kill it and launch the daemon
-                        sensingfeedback_process.wait()
-                        sensingfeedback_process = Popen(['python3', '/home/pi/grow-ctrl/sensingfeedback_v1.11.py', 'daemon'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
-                        print("sensingfeedback daemon mode activated")
+                        grow_ctrl_process.kill() #if it is running, kill it and launch the daemon
+                        grow_ctrl_process.wait()
+                        grow_ctrl_process = Popen(['python3', '/home/pi/grow-ctrl/grow_ctrl.py', 'daemon'])
+                        print("grow_ctrl daemon mode activated")
                     except:
-                        print("sensingfeedback_process not running")
+                        print("grow_ctrl_process not running")
 
                     #Switch LED to idle mode
                     with open('/home/pi/device_state.json') as d:
@@ -236,14 +237,14 @@ else:
                         d.truncate() # remove remaining part
                     d.close()
 
-                    #try kill daemon & start sensingfeedback main
+                    #try kill daemon & start grow_ctrl main
                     try:
-                        sensingfeedback_process.kill() #kill daemon, launch main
-                        sensingfeedback_process.wait()
-                        sensingfeedback_process = Popen(['python3', '/home/pi/grow-ctrl/sensingfeedback_v1.11.py', 'main'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
-                        print("sensingfeedback main activated")
+                        grow_ctrl_process.kill() #kill daemon, launch main
+                        grow_ctrl_process.wait()
+                        grow_ctrl_process = Popen(['python3', '/home/pi/grow-ctrl/grow_ctrl.py', 'main'])
+                        print("grow_ctrl main activated")
                     except:
-                        print("sensing_feedback process not running")
+                        print("grow_ctrl process not running")
 
 
                     #Switch LED to running mode
@@ -312,21 +313,23 @@ else:
             now = datetime.datetime.now()
             HoD = now.hour
 
-            if int(device_state["LEDtimeon"]) < int(device_state['LEDtimeoff']):
-                if HoD >= int(device_state["LEDtimeon"]) and HoD < int(device_state["LEDtimeoff"]):
+            #exchange data with arduino for LED after set time elapses
+            if time.time() - start > 5:
+                if int(device_state["LEDtimeon"]) < int(device_state['LEDtimeoff']):
+                    if HoD >= int(device_state["LEDtimeon"]) and HoD < int(device_state["LEDtimeoff"]):
+                        ser_out.write(bytes(str(device_state["LEDstatus"]+"\n"), 'utf-8')) #write status
+                    if HoD < int(device_state["LEDtimeon"]) or HoD >= int(device["LEDtimeoff"]):
+                        ser_out.write(bytes(str("off"+"\n"), 'utf-8')) #write off
+                if int(device_state["LEDtimeon"]) >int(device_state["LEDtimeoff"]):
+                    if HoD >=  int(device_state["LEDtimeon"]) or HoD < int(device_state["LEDtimeoff"]):
+                        ser_out.write(bytes(str(device_state["LEDstatus"]+"\n"), 'utf-8')) #write status
+                    if HoD < int(device_state["LEDtimeon"]) and  HoD >= int(device_state["LEDtimeoff"]):
+                        ser_out.write(bytes(str("off"+"\n"), 'utf-8')) #write off
+                if int(device_state["LEDtimeon"]) == int(device_state["LEDtimeoff"]):
                     ser_out.write(bytes(str(device_state["LEDstatus"]+"\n"), 'utf-8')) #write status
-                if HoD < int(device_state["LEDtimeon"]) or HoD >= int(device["LEDtimeoff"]):
-                    ser_out.write(bytes(str("off"+"\n"), 'utf-8')) #write off
-            if int(device_state["LEDtimeon"]) >int(device_state["LEDtimeoff"]):
-                if HoD >=  int(device_state["LEDtimeon"]) or HoD < int(device_state["LEDtimeoff"]):
-                    ser_out.write(bytes(str(device_state["LEDstatus"]+"\n"), 'utf-8')) #write status
-                if HoD < int(device_state["LEDtimeon"]) and  HoD >= int(device_state["LEDtimeoff"]):
-                    ser_out.write(bytes(str("off"+"\n"), 'utf-8')) #write off
-            if int(device_state["LEDtimeon"]) == int(device_state["LEDtimeoff"]):
-                ser_out.write(bytes(str(device_state["LEDstatus"]+"\n"), 'utf-8')) #write status
 
-            #debug main subprocess
-            print(sensingfeedback_process.stderr.read(20))
-            sleep(.25)
+                #restart the clock
+                start = time.time()
+
     except(KeyboardInterrupt):
         GPIO.cleanup()

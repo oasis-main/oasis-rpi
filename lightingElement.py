@@ -33,7 +33,7 @@ h.close()
 
 #setup GPIO
 GPIO.setmode(GPIO.BCM) #GPIO Numbers instead of board numbers
-Light_GPIO = hardware_config["actuatorGPIOmap"]["lightingElement"] #heater pin pulls from config file 
+Light_GPIO = hardware_config["actuatorGPIOmap"]["lightingElement"] #heater pin pulls from config file
 GPIO.setup(Light_GPIO, GPIO.OUT) #GPIO setup relay open = GPIO.HIGH, closed = GPIO.LOW
 GPIO.output(Light_GPIO, GPIO.LOW) #relay open = GPIO.HIGH, closed = GPIO.LOW
 

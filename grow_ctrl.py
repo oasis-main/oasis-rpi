@@ -19,8 +19,8 @@ sys.path.append('/usr/lib/python3/dist-packages')
 
 #Shell pkgs
 import serial
-import subprocess32
-from subprocess32 import Popen, PIPE, STDOUT
+import subprocess
+from subprocess import Popen, PIPE, STDOUT
 import signal
 
 #PID pkgs
@@ -39,7 +39,7 @@ import datetime
 #-----------------------------------------------------------------------------
 
 if str(sys.argv[1]) == "daemon":
-    print("sensingfeedback daemon started")
+    print("grow_ctrl daemon started")
     #log daemon start
     with open('/home/pi//logs/growCtrl_log.json', 'r+') as l:
         log = json.load(l)
@@ -50,7 +50,7 @@ if str(sys.argv[1]) == "daemon":
     l.close()
     sys.exit()
 if str(sys.argv[1]) == "main":
-    print("sensingfeedback main started")
+    print("grow_ctrl main started")
     #log main start
     with open('/home/pi/logs/growCtrl_log.json', 'r+') as l:
         log = json.load(l)
@@ -119,17 +119,17 @@ waterInterval = int(grow_params["waterInterval"]) #how often water?
 
 #initialize actuator subprocesses
 #heater: params = on/off frequency
-heat_process = Popen(['python3', '/home/pi/grow-ctrl/heatingElement.py', str(0)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+heat_process = Popen(['python3', '/home/pi/grow-ctrl/heatingElement.py', str(0)])
 #humidifier: params = on/off frequency
-hum_process = Popen(['python3', '/home/pi/grow-ctrl/humidityElement.py', str(0)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+hum_process = Popen(['python3', '/home/pi/grow-ctrl/humidityElement.py', str(0)])
 #fan: params = on/off frequency
-fan_process = Popen(['python3', '/home/pi/grow-ctrl/fanElement.py', '100'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+fan_process = Popen(['python3', '/home/pi/grow-ctrl/fanElement.py', '100'])
 #light & camera: params = light mode, time on, time off, interval
-light_process = Popen(['python3', '/home/pi/grow-ctrl/lightingElement.py', 'on', '0', '0', '10'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+light_process = Popen(['python3', '/home/pi/grow-ctrl/lightingElement.py', 'on', '0', '0', '10'])
 #camera: params = interval
-camera_process = Popen(['python3', '/home/pi/grow-ctrl/cameraElement.py', '10'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+camera_process = Popen(['python3', '/home/pi/grow-ctrl/cameraElement.py', '10'])
 #watering: params = mode duration interval
-water_process = Popen(['python3', '/home/pi/grow-ctrl/wateringElement.py', 'off', '0', '10'], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+water_process = Popen(['python3', '/home/pi/grow-ctrl/wateringElement.py', 'off', '0', '10'])
 
 #create controllers:
 
@@ -157,10 +157,10 @@ last_hum = 0
 last_targetT = 0
 last_targetH = 0
 
-Kpt = 50
-Kph = 1000
+Kpt = 60
+Kph = 1100
 Kdt = 1
-Kdh = 15
+Kdh = 20
 
 def fan_pd(temp, hum, targetT, targetH, last_temp, last_hum, last_targetT, last_targetH, Kpt, Kph, Kdt, Kdh):
     err_temp = temp-targetT
@@ -253,7 +253,7 @@ try:
         if waterLow == 1:
             print("Water Level Low!")
 
-        print("Camera every %i seconds"%(cameraInterval))
+        print("Image every %i seconds"%(cameraInterval))
         print("------------------------------------------------------------")
 
         #exchange data with server after set time elapses
@@ -322,27 +322,27 @@ try:
             #poll subprocesses if applicable and relaunch/update actuators
             poll_heat = heat_process.poll() #heat
             if poll_heat is not None:
-                heat_process = Popen(['python3', '/home/pi/grow-ctrl/heatingElement.py', str(tempPID_out)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+                heat_process = Popen(['python3', '/home/pi/grow-ctrl/heatingElement.py', str(tempPID_out)])
 
             poll_hum = hum_process.poll() #hum
             if poll_hum is not None:
-                hum_process = Popen(['python3', '/home/pi/grow-ctrl/humidityElement.py', str(humPID_out)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+                hum_process = Popen(['python3', '/home/pi/grow-ctrl/humidityElement.py', str(humPID_out)])
 
             poll_fan = fan_process.poll() #fan
             if poll_fan is not None:
-                fan_process = Popen(['python3', '/home/pi/grow-ctrl/fanElement.py', str(fanPD_out)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+                fan_process = Popen(['python3', '/home/pi/grow-ctrl/fanElement.py', str(fanPD_out)])
 
             poll_light = light_process.poll() #light
             if poll_light is not None:
-                light_process = Popen(['python3', '/home/pi/grow-ctrl/lightingElement.py', str(targetL), str(LtimeOn), str(LtimeOff), str(lightInterval)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+                light_process = Popen(['python3', '/home/pi/grow-ctrl/lightingElement.py', str(targetL), str(LtimeOn), str(LtimeOff), str(lightInterval)])
 
             poll_camera = camera_process.poll() #camera
             if poll_camera is not None:
-                camera_process = Popen(['python3', '/home/pi/grow-ctrl/cameraElement.py', str(cameraInterval)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+                camera_process = Popen(['python3', '/home/pi/grow-ctrl/cameraElement.py', str(cameraInterval)])
 
             poll_water = water_process.poll() #light
             if poll_water is not None:
-                water_process = Popen(['python3', '/home/pi/grow-ctrl/wateringElement.py', str(waterMode), str(waterDuration), str(waterInterval)], stdout=PIPE, stdin=PIPE, stderr=PIPE)
+                water_process = Popen(['python3', '/home/pi/grow-ctrl/wateringElement.py', str(waterMode), str(waterDuration), str(waterInterval)])
 
             #line marks one interation of main loop
             time.sleep(0.5)
