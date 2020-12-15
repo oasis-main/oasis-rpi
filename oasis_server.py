@@ -60,11 +60,10 @@ def modWiFiConfig(SSID, password):
     print("WiFi configs added")
 
 #update access_config.json
-def modAccessConfig(wak, local_id, id_token):
+def modAccessConfig(wak, refresh_token):
     access_config = {}
     access_config["wak"] = str(wak)
-    access_config["local_id"] = str(local_id)
-    access_config["id_token"] = str(id_token)
+    access_config["refresh_token"] = str(refresh_token)
 
     with open("/home/pi/access_config.json", "r+") as a:
         json.dump(access_config, a)
@@ -72,9 +71,9 @@ def modAccessConfig(wak, local_id, id_token):
     print("Access configs added")
 
 modWiFiConfig(" "," ")
-modAccessConfig(" "," "," ")
+modAccessConfig(" "," ")
 
-#update LED state
+#get LED state
 with open('/home/pi/device_state.json','r+') as d:
     device_state = json.load(d)
 d.close()
@@ -107,7 +106,7 @@ while True:
                 ##THIS IS WHERE YOU NEED TO VERIFY THAT THE INFORMATION IS RIGHT
                 modWiFiConfig(str(data['wifi_name']), str(data['wifi_pass']))
                 print("Wifi Added")
-                modAccessConfig(str(data['wak']), str(data['local_id']), str(data['id_token']))
+                modAccessConfig(str(data['wak']), str(data['refresh_token']))
                 print('Access Added')
                 sock.send('connected'.encode())
                 sock.close()
