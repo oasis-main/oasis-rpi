@@ -40,6 +40,11 @@ d.close()
 with open('/home/pi/hardware_config.json') as h:
     hardware_config = json.load(h) #get hardware state
 h.close()
+
+with open('/home/pi/access_config.json') as a:
+    access_config = json.load(a) #get hardware state
+a.close()
+
 print("Loaded state.")
 
 #Launch Serial Port
@@ -52,9 +57,16 @@ print("Checking for connection...")
 try:
 
     #call connection
-    prin("Call FireBase verification function HERE")
+    print("FireBase verification...")
+    #must define wak, refresh_token
+    refresh_token = access_config['refresh_token']
+    wak = access_config['wak']
+    refresh_url = "https://securetoken.googleapis.com/v1/token?key=" + wak
+    refresh_payload = '{"grant_type": "refresh_token", "refresh_token": "%s"}' % refresh_token
+    refresh_req = requests.post(refresh_url, data=refresh_payload)
+    #print(refresh_req)
 
-    #write device state as connectd if successful
+    #write device state as connected if successful
     with open('/home/pi/device_state.json', 'r+') as d:
         device_state = json.load(d)
         device_state['connected'] = "1"
@@ -63,6 +75,17 @@ try:
         d.truncate() # remove remaining part
     d.close()
     print("Device is connected to the Oasis Network")
+
+   #write device state as connected if successful
+    with open('/home/pi/access_config.json', 'r+') as a:
+        access_config = json.load(a)
+        access_config['id_token'] = refresh_req.json()['id_token']
+        access_config['local_id'] = refresh_req.json()['user_id']
+        a.seek(0) # <--- should reset file position to the begi$
+        json.dump(access_config, a)
+        d.truncate() # remove remaining part
+    d.close()
+    print("Obtained fresh credentials")
 
 except:
 
