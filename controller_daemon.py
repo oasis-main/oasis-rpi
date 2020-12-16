@@ -43,7 +43,7 @@ h.close()
 print("Loaded state.")
 
 #Launch Serial Port
-ser_out = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
+ser_out = serial.Serial('/dev/ttyUSB0', 9600)
 ser_out.flush()
 print("Started serial communication.")
 

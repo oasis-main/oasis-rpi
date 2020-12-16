@@ -22,7 +22,7 @@ import pickle5 as pickle
 import serial
 
 #open serial port
-ser_server = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
+ser_server = serial.Serial('/dev/ttyUSB0', 9600)
 ser_server.flush()
 
 #keep list of all sockets
