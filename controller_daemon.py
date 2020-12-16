@@ -31,6 +31,7 @@ import datetime
 
 #Initialize Oasis:
 print("Initializing...")
+time.sleep(20)
 
 #Load Model
 with open('/home/pi/device_state.json') as d:
@@ -42,13 +43,13 @@ with open('/home/pi/hardware_config.json') as h:
 h.close()
 
 with open('/home/pi/access_config.json') as a:
-    access_config = json.load(a) #get hardware state
+    access_config = json.load(a) #get access state
 a.close()
 
 print("Loaded state.")
 
 #Launch Serial Port
-ser_out = serial.Serial('/dev/ttyUSB0', 9600)
+ser_out = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
 ser_out.flush()
 print("Started serial communication.")
 
@@ -66,6 +67,17 @@ try:
     refresh_req = requests.post(refresh_url, data=refresh_payload)
     #print(refresh_req)
 
+   #write credentials to access config if successful
+    with open('/home/pi/access_config.json', 'r+') as a:
+        access_config = json.load(a)
+        access_config['id_token'] = refresh_req.json()['id_token']
+        access_config['local_id'] = refresh_req.json()['user_id']
+        a.seek(0) # <--- should reset file position to the begi$
+        json.dump(access_config, a)
+        a.truncate() # remove remaining part
+    a.close()
+    print("Obtained fresh credentials")
+
     #write device state as connected if successful
     with open('/home/pi/device_state.json', 'r+') as d:
         device_state = json.load(d)
@@ -76,19 +88,9 @@ try:
     d.close()
     print("Device is connected to the Oasis Network")
 
-   #write device state as connected if successful
-    with open('/home/pi/access_config.json', 'r+') as a:
-        access_config = json.load(a)
-        access_config['id_token'] = refresh_req.json()['id_token']
-        access_config['local_id'] = refresh_req.json()['user_id']
-        a.seek(0) # <--- should reset file position to the begi$
-        json.dump(access_config, a)
-        d.truncate() # remove remaining part
-    d.close()
-    print("Obtained fresh credentials")
-
-except:
-
+except Exception as e:
+    print(e)
+    #sys.exit()
     #Write state as not connected
     with open('/home/pi/device_state.json', 'r+') as d:
         device_state = json.load(d)

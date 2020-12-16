@@ -69,25 +69,12 @@ else:
 #---------------------------------------------------------------------------------------
 
 #initialize firebase
-
-#try:
-    #use refresh token to get new id token
-    #id_token = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjBlM2FlZWUyYjVjMDhjMGMyODFhNGZmN2RjMmRmOGIyMzgyOGQ1YzYiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vb2FzaXMtMTc1N2YiLCJhdWQiOiJvYXNpcy0xNzU3ZiIsImF1dGhfdGltZSI6MTYwMzM5NzgyNywidXNlcl9pZCI6InhmZGZoeHdaZEJkZmZVdnc2N1ZVSnpIeVFuMzIiLCJzdWIiOiJ4ZmRmaHh3WmRCZGZmVXZ3NjdWVUp6SHlRbjMyIiwiaWF0IjoxNjAzMzk4MDA1LCJleHAiOjE2MDM0MDE2MDUsImVtYWlsIjoiYXNkZkBhc2RmLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwiZmlyZWJhc2UiOnsiaWRlbnRpdGllcyI6eyJlbWFpbCI6WyJhc2RmQGFzZGYuY29tIl19LCJzaWduX2luX3Byb3ZpZGVyIjoicGFzc3dvcmQifX0.khg2Z2rlkzdUXuk1cznuutPMLN9CDl2z7OlirlNQSorGMxzD7fGjEwGNRXAPhJlRQEBKhhfjuTmR736gL4Gz1SA_4KOWQCbDeg76ru_DHnB8ZdJoDP6gYs1vsDxgQN2vp2gDY9zW4Go_Cl7lVgdWAdNsG0_CKXLXt28fStsmKVdotCFrSHDZa3j0Q45Q4vIr1aFHB74vjRLQrftULI9-b7tdkNkRBYKVLTYq1xnVtmRbQRbYSoI0Xge2H82oDaZN0KM58tPvH-t5s5Z0xdE1NOWNJFbqvgjQFWqPeaSs53B4hIApr1t_LUUVlGwZfn34txV8koUcrJbMRNw1vkPoCQ"
-    #local_id = "xfdfhxwZdBdffUvw67VUJzHyQn32"
-
-    #get database data
-    #result = requests.get("https://oasis-1757f.firebaseio.com/"+str(local_id)+".json?auth="+ str(id_token))
-    #data = json.loads(result.content.decode())
-    #print("Firebase Initialization: SUCCESS")
-    #print(data)
-
-#    def get_from_firebase(id_token,local_id, data_name):
-#        result = requests.get("https://oasis-1757f.firebaseio.com/"+str(local_id)+"/"+str(data_name)+".json?auth="+str(id_token))
-#        data = json.loads(result.content.decode())
-#        return data
-#except Exception as e:
-#    print("Firebase Initialization: FAILURE")
-#    print(e)
+#import grow_params
+with open('/home/pi/access_config.json', "r+") as a:
+  access_config = json.load(a)
+  id_token = access_config['id_token']
+  local_id = access_config['local_id']
+a.close()
 
 #start serial RPi<-Arduino
 ser_in = serial.Serial('/dev/ttyUSB0',9600)
@@ -268,10 +255,10 @@ try:
                     start = time.time()
 
                     #sensor data out, needs editin
-                    #url = "https://oasis-1757f.firebaseio.com/"+str(local_id)+".json?auth="+str(id_token)
-                    #data = json.dumps({"temp": str(int(temp)), "humid": str(int(hum)), "waterLow": str(int(waterLow))})
-                    #result = requests.patch(url,data)
-                    #print(result)
+                    url = "https://oasis-1757f.firebaseio.com/"+str(local_id)+".json?auth="+str(id_token)
+                    data = json.dumps({"temp": str(int(temp)), "humid": str(int(hum))})
+                    result = requests.patch(url,data)
+                    print(result)
 
                     #pass old targets to derivative bank and update
                     last_targetT = targetT

@@ -31,6 +31,13 @@ with open('/home/pi/device_state.json') as d:
     device_state = json.load(d)
 d.close()
 
+with open('/home/pi/access_config.json', "r+") as a:
+  access_config = json.load(a)
+  id_token = access_config['id_token']
+  local_id = access_config['local_id']
+a.close()
+
+
 #define a function to actuate element
 def actuate(interval = 3600): #amoubnt of time between shots
 
