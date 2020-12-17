@@ -64,9 +64,13 @@ def modAccessConfig(wak, refresh_token):
     access_config = {}
     access_config["wak"] = str(wak)
     access_config["refresh_token"] = str(refresh_token)
+    access_config["id_token"] = " "
+    access_config["local_id"] = " "
 
     with open("/home/pi/access_config.json", "r+") as a:
+        a.seek(0)
         json.dump(access_config, a)
+        a.truncate()
     a.close()
     print("Access configs added")
 
@@ -85,10 +89,11 @@ print("Oasis server started on Port: " + str(PORT)+' on IP: '+socket.gethostbyna
 while True:
     read_sockets, write_sockets, error_sockets = select.select(CONNECTION_LIST, [], [])
 
-    #update LED serial
-    ser_server.write(bytes(str(device_state["LEDstatus"])+"\n", 'utf-8'))
-
     for sock in read_sockets:
+
+        #update LED serial
+        ser_server.write(bytes(str(device_state["LEDstatus"])+"\n", 'utf-8'))
+
         #new connection
         if sock == server_socket:
             sockfd, addr = server_socket.accept()
