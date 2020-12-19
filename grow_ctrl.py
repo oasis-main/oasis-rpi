@@ -28,7 +28,11 @@ import PID
 
 #communicating with firebase
 import requests
+
+#data handling
 import json
+import csv
+import pandas
 
 #dealing with specific times of the day
 import time
@@ -169,7 +173,7 @@ def fan_pd(temp, hum, targetT, targetH, last_temp, last_hum, last_targetT, last_
 
 
 #---------------------------------------------------------------------------------------
-# Listen
+# Data Management
 #---------------------------------------------------------------------------------------
 
 #define event listener to collect data and kick off the transfer
@@ -193,7 +197,7 @@ def listen():
 
         waterLow = int(sensorInfo[2])
 
-#start the clock for timimg data exchanges with server
+#start the clock for timimg data exchanges with server, you'll have to extend this for update management
 start = time.time()
 
 
@@ -254,11 +258,21 @@ try:
                     #start clock
                     start = time.time()
 
-                    #sensor data out, needs editin
+                    #for use in python operations
+                    dict =  {"temp": str(int(temp)), "humid": str(int(hum))}
+
+                    #load dict into dataframe
+                    df = pandas.DataFrame(dict)
+
+                    #sensor data out, needs editing
                     url = "https://oasis-1757f.firebaseio.com/"+str(local_id)+".json?auth="+str(id_token)
-                    data = json.dumps({"temp": str(int(temp)), "humid": str(int(hum))})
+                    data = json.dumps({dict})
                     result = requests.patch(url,data)
                     print(result)
+
+                    #stage field names for .csv write
+                    field_names = ['temp','humid']
+                    df.to_csv('/home/pi/Documents/sensor_data.csv', sep='\t', header=None, mode='a')
 
                     #pass old targets to derivative bank and update
                     last_targetT = targetT
@@ -272,12 +286,12 @@ try:
                     #load grow parameters
                     targetT = int(grow_params["targetT"])  #temperature set to?
                     targetH = int(grow_params["targetH"]) #humidity set to?
-                    targetL = grow_params["targetL"] #lights on yes or no?
+                    targetL = str(grow_params["targetL"]) #lights on yes or no?
                     LtimeOn = int(grow_params["LtimeOn"]) #when turn on 0-23 hr time?
                     LtimeOff = int(grow_params["LtimeOff"]) #when turn off 0-23 hr time?
                     lightInterval = int(grow_params["lightInterval"]) #how long until update?
                     cameraInterval = int(grow_params["cameraInterval"]) #how long until next pic?
-                    waterMode = grow_params["waterMode"] #watering on yes or no?
+                    waterMode = str(grow_params["waterMode"]) #watering on yes or no?
                     waterDuration = int(grow_params["waterDuration"]) #how long water?
                     waterInterval = int(grow_params["waterInterval"]) #how often water?
 

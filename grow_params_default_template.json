@@ -1,7 +1,7 @@
 {
-"targetT": "72",
+"targetT": "70",
 "targetH": "90",
-"targetL": "off",
+"targetL": "on",
 "LtimeOn": "8",
 "LtimeOff": "20",
 "lightInterval": "60",

@@ -41,9 +41,12 @@ a.close()
 #define a function to actuate element
 def actuate(interval = 3600): #amoubnt of time between shots
 
-    image_path = '/home/pi/Desktop/output.jpg'
+    #add USB path
 
-    still = Popen('sudo raspistill -o ~/Desktop/output.jpg', shell=True) #snap: call the camera
+    #set timestamp file name
+    image_path = '/home/pi/Pictures/culture_image'+str(time.time())+'.jpg'
+
+    still = Popen('sudo raspistill -o ' + str(image_path), shell=True) #snap: call the camera
     still.wait()
 
     if image_path != '':
