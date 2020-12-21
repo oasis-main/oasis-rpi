@@ -1,3 +1,4 @@
+
 #import shell modules
 import os
 import os.path
@@ -106,6 +107,19 @@ with open('/home/pi/device_state.json') as d: #it is important to refresh the st
     device_state = json.load(d) #get device state
 d.close()
 
+#If connected, then launch the db event listener to monitor for changes
+if device_state["connected"] == "1":
+    #db_monitor_process = Popen(['python3', '/home/pi/grow-ctrl/detect_db_events.py'])
+    print("Listening for parameter changes on firebase")
+
+if device_state["connected"] == "1" and device_state["running"] == "0" and device_state["awaiting_update"] == "1": #replicated in the main loop
+    #launch update.py and wait to complete
+    update_process = Popen('sudo python3 /home/pi/grow-ctrl/update.py', shell=True)
+    output, error = update_process.communicate()
+    if update_process.returncode != 0:
+        print("Failure " + str(update_process.returncode)+ " " +str(output)+str(error))
+
+#Case, check whether the program should boot in Access Point Mode
 if device_state["AccessPoint"] == "1":
 
     print("Access Point Mode enabled")
@@ -123,7 +137,7 @@ if device_state["AccessPoint"] == "1":
     server_process = Popen('sudo python3 /home/pi/grow-ctrl/oasis_server.py', shell=True)
     output, error = server_process.communicate()
     if server_process.returncode != 0:
-        print("Failure " + str(server_process.returncode)+ " " +str(output)++str(error))
+        print("Failure " + str(server_process.returncode)+ " " +str(output)+str(error))
 
 #Otherwise, run in Interface mode
 else:
@@ -199,6 +213,7 @@ else:
 
     #start the clock for timimg data exchanges with Arduino LED
     start = time.time()
+    token_timer = time.time()
 
     try:
 
@@ -206,6 +221,36 @@ else:
             with open('/home/pi/device_state.json') as d:
                 device_state = json.load(d)
             d.close()
+
+            with open('/home/pi/access_config.json') as a:
+                access_config = json.load(a)
+            a.close()
+
+            if device_state["connected"] == "1" and device_state["running"] == "0" and device_state["awaiting_update"] == "1": #replicated in the main loop
+                #launch update.py and wait to complete
+                update_process = Popen('sudo python3 /home/pi/grow-ctrl/update.py', shell=True)
+                output, error = update_process.communicate()
+                if update_process.returncode != 0:
+                    print("Failure " + str(update_process.returncode)+ " " +str(output)+str(error))
+
+            if device_state["connected"] == "1":
+                if time.time() - token_timer > 600:
+                    refresh_token = access_config['refresh_token']
+                    wak = access_config['wak']
+                    refresh_url = "https://securetoken.googleapis.com/v1/token?key=" + wak
+                    refresh_payload = '{"grant_type": "refresh_token", "refresh_token": "%s"}' % refresh_token
+                    refresh_req = requests.post(refresh_url, data=refresh_payload)
+
+                    #write credentials to access config if successful
+                    with open('/home/pi/access_config.json', 'r+') as a:
+                        access_config = json.load(a)
+                        access_config['id_token'] = refresh_req.json()['id_token']
+                        access_config['local_id'] = refresh_req.json()['user_id']
+                        a.seek(0) # <--- should reset file position to the begi$
+                        json.dump(access_config, a)
+                        a.truncate() # remove remaining part
+                    a.close()
+                    print("Obtained fresh credentials")
 
             sbutton_state = GPIO.input(StartButton) #Start Button
 

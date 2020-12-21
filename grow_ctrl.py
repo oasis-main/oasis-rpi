@@ -253,26 +253,34 @@ try:
             with open('/home/pi/device_state.json') as d:
                 device_state = json.load(d)
             d.close()
+
+            #if connected, grab the most recent credentials, exchange data with server
             if device_state["connected"] == "1":
                 try:
                     #start clock
                     start = time.time()
 
+                    #get new id_token & local_id
+                    with open('/home/pi/access_config.json', "r+") as a:
+                        access_config = json.load(a)
+                        id_token = access_config['id_token']
+                        local_id = access_config['local_id']
+                    a.close()
+
                     #for use in python operations
-                    dict =  {"temp": str(int(temp)), "humid": str(int(hum))}
+                    dict =  {"temp": [int(temp)], "humid": [int(hum)]}
 
                     #load dict into dataframe
                     df = pandas.DataFrame(dict)
+
+                    #.csv write
+                    df.to_csv('/home/pi/Documents/sensor_data.csv', sep='\t', header=None, mode='a')
 
                     #sensor data out, needs editing
                     url = "https://oasis-1757f.firebaseio.com/"+str(local_id)+".json?auth="+str(id_token)
                     data = json.dumps({dict})
                     result = requests.patch(url,data)
                     print(result)
-
-                    #stage field names for .csv write
-                    field_names = ['temp','humid']
-                    df.to_csv('/home/pi/Documents/sensor_data.csv', sep='\t', header=None, mode='a')
 
                     #pass old targets to derivative bank and update
                     last_targetT = targetT
