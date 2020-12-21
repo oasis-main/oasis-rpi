@@ -2,6 +2,8 @@
 import os
 import os.path
 import sys
+import json
+from subprocess import Popen
 
 #set proper path for modules
 sys.path.append('/home/pi/grow-ctrl')
@@ -28,7 +30,7 @@ os.system("cp hardware_config_default_template.json /home/pi/hardware_config.jso
 os.system("cp access_config_default_template.json /home/pi/access_config.json")
 os.system("cp device_state_default_template.json /home/pi/device_state.json")
 os.system("cp grow_params_default_template.json /home/pi/grow_params.json")
-os.system("cp growCtrl_log_default.json /home/pi/logs/growCtrl_log.json"))
+os.system("cp growCtrl_log_default.json /home/pi/logs/growCtrl_log.json")
 
 #preserve existing configs if fields remain the same
 #HARDWARE
@@ -154,12 +156,12 @@ with open("/home/pi/logs/growCtrl_log.json", "r+") as l: #write data to config
         l.truncate()
 l.close()
 
-os.system("sudo rm home/pi/grow_params_temp.json")
+os.system("sudo rm home/pi/growCtrl_log_temp.json")
 
 
 #run external update commands
 update_commands = Popen('sudo python3 /home/pi/grow-ctrl/update_commands.py', shell=True)
-    output, error = update_commands.communicate()
+output, error = update_commands.communicate()
 
 #change awaiting_update to "O"
 

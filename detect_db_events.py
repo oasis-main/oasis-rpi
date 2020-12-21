@@ -17,8 +17,6 @@
 #https://medium.com/@parasmani300/pyrebase-firebase-in-flask-d249a065e0df
 #https://stackoverflow.com/questions/54838847/pyrebase-stream-retrived-data-access
 
-print("update test")
-
 import pyrebase
 from multiprocessing import Process, Queue
 import json
