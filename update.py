@@ -28,7 +28,7 @@ os.system("cp /home/pi/logs/growCtrl_log.json /home/pi/logs/growCtrl_log_temp.js
 
 os.system("cp hardware_config_default_template.json /home/pi/hardware_config.json")
 os.system("cp access_config_default_template.json /home/pi/access_config.json")
-os.system("cp device_state_default_template.json /home/pi/device_state.json")
+os.system("cp device_state_default.json /home/pi/device_state.json")
 os.system("cp grow_params_default_template.json /home/pi/grow_params.json")
 os.system("cp growCtrl_log_default.json /home/pi/logs/growCtrl_log.json")
 
@@ -56,7 +56,7 @@ with open("/home/pi/hardware_config.json", "r+") as h: #write data to config
         h.truncate()
 h.close()
 
-os.system("sudo rm home/pi/hardware_config_temp.json")
+os.system("sudo rm ~/hardware_config_temp.json")
 
 #ACCESS
 with open('/home/pi/access_config.json') as a: #get new format
@@ -81,7 +81,7 @@ with open("/home/pi/access_config.json", "r+") as a: #write data to config
         a.truncate()
 a.close()
 
-os.system("sudo rm home/pi/access_config_temp.json")
+os.system("sudo rm ~/access_config_temp.json")
 
 #DEVICE STATE
 with open('/home/pi/device_state.json') as d: #get new format
@@ -106,7 +106,7 @@ with open("/home/pi/device_state.json", "r+") as d: #write data to config
         d.truncate()
 d.close()
 
-os.system("sudo rm home/pi/device_state_temp.json")
+os.system("sudo rm ~/device_state_temp.json")
 
 #GROW PARAMS
 with open('/home/pi/grow_params.json') as g: #get new format
@@ -131,7 +131,7 @@ with open("/home/pi/grow_params.json", "r+") as g: #write data to config
         g.truncate()
 g.close()
 
-os.system("sudo rm home/pi/grow_params_temp.json")
+os.system("sudo rm ~/grow_params_temp.json")
 
 #GROW CTRL LOGS
 with open('/home/pi/logs/growCtrl_log.json') as l: #get new format
@@ -156,7 +156,7 @@ with open("/home/pi/logs/growCtrl_log.json", "r+") as l: #write data to config
         l.truncate()
 l.close()
 
-os.system("sudo rm home/pi/growCtrl_log_temp.json")
+os.system("sudo rm ~/logs/growCtrl_log_temp.json")
 
 
 #run external update commands
@@ -164,7 +164,6 @@ update_commands = Popen('sudo python3 /home/pi/grow-ctrl/update_commands.py', sh
 output, error = update_commands.communicate()
 
 #change awaiting_update to "O"
-
 
 #reboot
 os.system("sudo reboot")
