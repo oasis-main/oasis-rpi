@@ -268,7 +268,7 @@ try:
                     a.close()
 
                     #for use in python operations
-                    dict =  {"temp": [int(temp)], "humid": [int(hum)]}
+                    dict =  {"temp": [int(temp)], "hum": [int(hum)], "waterLow": [int(waterLow)]}
 
                     #load dict into dataframe
                     df = pandas.DataFrame(dict)

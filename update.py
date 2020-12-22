@@ -3,6 +3,7 @@ import os
 import os.path
 import sys
 import json
+import requests
 from subprocess import Popen
 
 #set proper path for modules
@@ -15,22 +16,44 @@ sys.path.append('/usr/local/lib/python3.7/dist-packages')
 sys.path.append('/usr/lib/python3/dist-packages')
 
 #pull repository
-os.system("cd ~/grow-ctrl")
-os.system("git pull")
+changedir = Popen("cd ~/grow-ctrl", shell = True)
+changedir.wait()
+
+gitpull = Popen("git pull", shell = True)
+gitpull.wait()
+
 print("Pulled most recent production repo")
 
-#copy new configs
-os.system("cp /home/pi/hardware_config.json /home/pi/hardware_config_temp.json")
-os.system("cp /home/pi/access_config.json /home/pi/access_config_temp.json")
-os.system("cp /home/pi/device_state.json /home/pi/device_state_temp.json")
-os.system("cp /home/pi/grow_params.json /home/pi/grow_params_temp.json")
-os.system("cp /home/pi/logs/growCtrl_log.json /home/pi/logs/growCtrl_log_temp.json")
+#save existing data into temps, copy new config formats
+savehardware = Popen("cp /home/pi/hardware_config.json /home/pi/hardware_config_temp.json", shell = True)
+savehardware.wait()
 
-os.system("cp hardware_config_default_template.json /home/pi/hardware_config.json")
-os.system("cp access_config_default_template.json /home/pi/access_config.json")
-os.system("cp device_state_default.json /home/pi/device_state.json")
-os.system("cp grow_params_default_template.json /home/pi/grow_params.json")
-os.system("cp growCtrl_log_default.json /home/pi/logs/growCtrl_log.json")
+saveaccess = Popen("cp /home/pi/access_config.json /home/pi/access_config_temp.json", shell = True)
+saveaccess.wait()
+
+savestate = Popen("cp /home/pi/device_state.json /home/pi/device_state_temp.json", shell = True)
+savestate.wait()
+
+saveparams = Popen("cp /home/pi/grow_params.json /home/pi/grow_params_temp.json", shell = True)
+saveparams.wait()
+
+savelog = Popen("cp /home/pi/logs/growCtrl_log.json /home/pi/logs/growCtrl_log_temp.json", shell = True)
+savelog.wait()
+
+newhardware = Popen("cp hardware_config_default_template.json /home/pi/hardware_config.json", shell = True)
+newhardware.wait()
+
+newaccess = Popen("cp access_config_default_template.json /home/pi/access_config.json", shell = True)
+newaccess.wait()
+
+newstate = Popen("cp device_state_default.json /home/pi/device_state.json", shell = True)
+newstate.wait()
+
+newparams = Popen("cp grow_params_default_template.json /home/pi/grow_params.json", shell = True)
+newparams.wait()
+
+newlogs = Popen("cp growCtrl_log_default.json /home/pi/logs/growCtrl_log.json", shell = True)
+newlogs.wait()
 
 #preserve existing configs if fields remain the same
 #HARDWARE
@@ -56,7 +79,8 @@ with open("/home/pi/hardware_config.json", "r+") as h: #write data to config
         h.truncate()
 h.close()
 
-os.system("sudo rm ~/hardware_config_temp.json")
+removehwtemp = Popen("sudo rm ~/hardware_config_temp.json", shell = True)
+removehwtemp.wait()
 
 #ACCESS
 with open('/home/pi/access_config.json') as a: #get new format
@@ -81,7 +105,8 @@ with open("/home/pi/access_config.json", "r+") as a: #write data to config
         a.truncate()
 a.close()
 
-os.system("sudo rm ~/access_config_temp.json")
+removeatemp = Popen("sudo rm ~/access_config_temp.json", shell = True)
+removeatemp.wait()
 
 #DEVICE STATE
 with open('/home/pi/device_state.json') as d: #get new format
@@ -106,7 +131,8 @@ with open("/home/pi/device_state.json", "r+") as d: #write data to config
         d.truncate()
 d.close()
 
-os.system("sudo rm ~/device_state_temp.json")
+removestemp = Popen("sudo rm ~/device_state_temp.json", shell = True)
+removestemp.wait()
 
 #GROW PARAMS
 with open('/home/pi/grow_params.json') as g: #get new format
@@ -131,7 +157,8 @@ with open("/home/pi/grow_params.json", "r+") as g: #write data to config
         g.truncate()
 g.close()
 
-os.system("sudo rm ~/grow_params_temp.json")
+removeptemp = Popen("sudo rm ~/grow_params_temp.json", shell = True)
+removeptemp.wait()
 
 #GROW CTRL LOGS
 with open('/home/pi/logs/growCtrl_log.json') as l: #get new format
@@ -156,14 +183,27 @@ with open("/home/pi/logs/growCtrl_log.json", "r+") as l: #write data to config
         l.truncate()
 l.close()
 
-os.system("sudo rm ~/logs/growCtrl_log_temp.json")
-
+removeltemp = Popen("sudo rm ~/logs/growCtrl_log_temp.json", shell=True)
+removeltemp.wait()
 
 #run external update commands
 update_commands = Popen('sudo python3 /home/pi/grow-ctrl/update_commands.py', shell=True)
 output, error = update_commands.communicate()
 
-#change awaiting_update to "O"
+
+#load local_id & id_token
+with open('/home/pi/access_config.json', "r+") as a:
+  access_config = json.load(a)
+  id_token = access_config['id_token']
+  local_id = access_config['local_id']
+a.close()
+
+#change awaiting_update to "O", needs editing, also used in grow-ctrl
+#url = "https://oasis-1757f.firebaseio.com/"+str(local_id)+".json?auth="+str(id_token)
+#data = json.dumps({dict})
+#result = requests.patch(url,data)
+#print(result)
 
 #reboot
-os.system("sudo reboot")
+reboot = Popen("sudo reboot", shell = True)
+reboot.wait()
