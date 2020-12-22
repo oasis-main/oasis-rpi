@@ -1,4 +1,3 @@
-
 #import shell modules
 import os
 import os.path
@@ -135,9 +134,8 @@ if device_state["AccessPoint"] == "1":
 
     #launch server subprocess to accept credentials over Oasis wifi network
     server_process = Popen('sudo python3 /home/pi/grow-ctrl/oasis_server.py', shell=True)
-    output, error = server_process.communicate()
-    if server_process.returncode != 0:
-        print("Failure " + str(server_process.returncode)+ " " +str(output)+str(error))
+    while True:
+        ser_out.write(bytes(str(device_state["LEDstatus"]+"\n"), 'utf-8')) #write status
 
 #Otherwise, run in Interface mode
 else:
@@ -166,12 +164,12 @@ else:
                 json.dump(device_state, d)
                 d.truncate()
             d.close()
-        print("launched grow-ctrl main")
+        print("launched grow-ctrl")
 
     else:
 
         #launch sensing-feedback subprocess in daemon mode
-        grow_ctrl_process = Popen(['python3', '/home/pi/grow-ctrl/grow_ctrl.py', 'daemon'])
+        #grow_ctrl_process = Popen(['python3', '/home/pi/grow-ctrl/grow_ctrl.py', 'daemon'])
 
         if device_state["connected"] == "1":
             with open('/home/pi/device_state.json', 'r+') as d:
@@ -191,7 +189,7 @@ else:
                 d.truncate() # remove remaining part
             d.close()
 
-        print("launched grow-ctrl daemon")
+        print("grow_ctrl not launched")
 
     #setup GPIO
     GPIO.setmode(GPIO.BCM)
@@ -246,11 +244,70 @@ else:
                         access_config = json.load(a)
                         access_config['id_token'] = refresh_req.json()['id_token']
                         access_config['local_id'] = refresh_req.json()['user_id']
-                        a.seek(0) # <--- should reset file position to the begi$
+                        a.seek(0) # <--- should reset file position
                         json.dump(access_config, a)
                         a.truncate() # remove remaining part
                     a.close()
                     print("Obtained fresh credentials")
+
+            #if the device is supposed to be running
+            if device_state["running"] == "1":
+
+                poll_grow_ctrl = grow_ctrl_process.poll() #heat
+                if poll_grow_ctrl is not None:
+                    #launch grow_ctrl main
+                    grow_ctrl_process = Popen(['python3', '/home/pi/grow-ctrl/grow_ctrl.py', 'main'])
+                    print("launched grow-ctrl")
+
+                if device_state["connected"] == "1": #if connected
+                    #send LEDmode = "connectedRunning"
+                    with open('/home/pi/device_state.json', 'r+') as d:
+                        device_state = json.load(d)
+                        device_state['LEDstatus'] = "connectedRunning"
+                        d.seek(0) # <--- should reset file position to the begi$
+                        json.dump(device_state, d)
+                        d.truncate() # remove remaining part
+                    d.close()
+                else: #if not connected
+                    with open('/home/pi/device_state.json', 'r+') as d:
+                        device_state = json.load(d)
+                        device_state['LEDstatus'] = "islandRunning"
+                        d.seek(0)
+                        json.dump(device_state, d)
+                        d.truncate()
+                    d.close()
+
+            else:
+
+                #try to kill grow_ctrl process
+                try:
+                    grow_ctrl_process.kill() #if it is running, kill it and launch the daemon
+                    grow_ctrl_process.wait()
+                    #grow_ctrl_process = Popen(['python3', '/home/pi/grow-ctrl/grow_ctrl.py', 'daemon'])
+                    print("grow_ctrl_process deactivated")
+                except:
+                   pass
+
+                #launch sensing-feedback subprocess in daemon mode
+                #grow_ctrl_process = Popen(['python3', '/home/pi/grow-ctrl/grow_ctrl.py', 'daemon'])
+
+                if device_state["connected"] == "1":
+                    with open('/home/pi/device_state.json', 'r+') as d:
+                        device_state = json.load(d)
+                        device_state['LEDstatus'] = "connectedIdle"
+                        d.seek(0)
+                        json.dump(device_state, d)
+                        d.truncate() # remove remaining part
+                    d.close()
+
+                else:
+                    with open('/home/pi/device_state.json', 'r+') as d:
+                        device_state = json.load(d)
+                        device_state['LEDstatus'] = "islandIdle"
+                        d.seek(0)
+                        json.dump(device_state, d)
+                        d.truncate() # remove remaining part
+                    d.close()
 
             sbutton_state = GPIO.input(StartButton) #Start Button
 
@@ -267,12 +324,13 @@ else:
                         json.dump(device_state, d)
                         d.truncate() # remove remaining part
                     d.close()
-                    #Kill grow_ctrl_main, launch daemon
+
+                    #try to kill grow_ctrl process
                     try:
                         grow_ctrl_process.kill() #if it is running, kill it and launch the daemon
                         grow_ctrl_process.wait()
-                        grow_ctrl_process = Popen(['python3', '/home/pi/grow-ctrl/grow_ctrl.py', 'daemon'])
-                        print("grow_ctrl daemon mode activated")
+                        #grow_ctrl_process = Popen(['python3', '/home/pi/grow-ctrl/grow_ctrl.py', 'daemon'])
+                        print("grow_ctrl_process deactivated")
                     except:
                         print("grow_ctrl_process not running")
 
@@ -307,15 +365,14 @@ else:
                         d.truncate() # remove remaining part
                     d.close()
 
-                    #try kill daemon & start grow_ctrl main
+                    #start grow_ctrl
                     try:
-                        grow_ctrl_process.kill() #kill daemon, launch main
-                        grow_ctrl_process.wait()
+                        #grow_ctrl_process.kill() #kill daemon, launch main
+                        #grow_ctrl_process.wait()
                         grow_ctrl_process = Popen(['python3', '/home/pi/grow-ctrl/grow_ctrl.py', 'main'])
-                        print("grow_ctrl main activated")
+                        print("grow_ctrl process activated")
                     except:
-                        print("grow_ctrl process not running")
-
+                        print("failed to start grow_ctrl")
 
                     #Switch LED to running mode
                     with open('/home/pi/device_state.json') as d:

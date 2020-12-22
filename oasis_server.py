@@ -19,11 +19,6 @@ import socket, select
 from _thread import *
 import json
 import pickle5 as pickle
-import serial
-
-#open serial port
-ser_server = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
-ser_server.flush()
 
 #keep list of all sockets
 CONNECTION_LIST = []
@@ -77,12 +72,6 @@ def modAccessConfig(wak, refresh_token):
 modWiFiConfig(" "," ")
 modAccessConfig(" "," ")
 
-#get LED state
-with open('/home/pi/device_state.json','r+') as d:
-    device_state = json.load(d)
-d.close()
-
-
 ##https://stackoverflow.com/questions/166506/finding-local-ip-addresses-using-pythons-stdlib
 print("Oasis server started on Port: " + str(PORT)+' on IP: '+socket.gethostbyname(socket.gethostname()))
 
@@ -90,9 +79,6 @@ while True:
     read_sockets, write_sockets, error_sockets = select.select(CONNECTION_LIST, [], [])
 
     for sock in read_sockets:
-
-        #update LED serial
-        ser_server.write(bytes(str(device_state["LEDstatus"])+"\n", 'utf-8'))
 
         #new connection
         if sock == server_socket:
