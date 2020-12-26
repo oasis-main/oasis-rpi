@@ -66,6 +66,8 @@ try:
     refresh_payload = '{"grant_type": "refresh_token", "refresh_token": "%s"}' % refresh_token
     refresh_req = requests.post(refresh_url, data=refresh_payload)
     #print(refresh_req)
+    
+    ###THIS IS WHERE WE USE "GET NEW REFESH TOKEN" FUNCTION
 
    #write credentials to access config if successful
     with open('/home/pi/access_config.json', 'r+') as a:
