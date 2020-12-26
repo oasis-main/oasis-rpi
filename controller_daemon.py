@@ -78,6 +78,17 @@ try:
     a.close()
     print("Obtained fresh credentials")
 
+    #let firebase know the connection was successful
+    with open('/home/pi/access_config.json', "r+") as a:
+        access_config = json.load(a)
+        id_token = access_config['id_token']
+        local_id = access_config['local_id']
+    a.close()
+
+    data = json.dumps({"connected": "1"})
+    url = "https://oasis-1757f.firebaseio.com/"+str(local_id)+".json?auth="+str(id_token)
+    result = requests.patch(url,data)
+
     #write device state as connected if successful
     with open('/home/pi/device_state.json', 'r+') as d:
         device_state = json.load(d)
@@ -107,9 +118,9 @@ with open('/home/pi/device_state.json') as d: #it is important to refresh the st
 d.close()
 
 #If connected, then launch the db event listener to monitor for changes
-if device_state["connected"] == "1":
+#if device_state["connected"] == "1":
     #db_monitor_process = Popen(['python3', '/home/pi/grow-ctrl/detect_db_events.py'])
-    print("Listening for parameter changes on firebase")
+    #print("Listening for parameter changes on firebase")
 
 if device_state["connected"] == "1" and device_state["running"] == "0" and device_state["awaiting_update"] == "1": #replicated in the main loop
     #launch update.py and wait to complete
@@ -133,6 +144,7 @@ if device_state["AccessPoint"] == "1":
     d.close()
 
     #launch server subprocess to accept credentials over Oasis wifi network
+    ser_out.write(bytes(str(device_state["LEDstatus"]+"\n"), 'utf-8')) #write status
     server_process = Popen('sudo python3 /home/pi/grow-ctrl/oasis_server.py', shell=True)
     while True:
         ser_out.write(bytes(str(device_state["LEDstatus"]+"\n"), 'utf-8')) #write status
@@ -169,7 +181,7 @@ else:
     else:
 
         #launch sensing-feedback subprocess in daemon mode
-        #grow_ctrl_process = Popen(['python3', '/home/pi/grow-ctrl/grow_ctrl.py', 'daemon'])
+        grow_ctrl_process = Popen(['python3', '/home/pi/grow-ctrl/grow_ctrl.py', 'daemon'])
 
         if device_state["connected"] == "1":
             with open('/home/pi/device_state.json', 'r+') as d:
@@ -224,6 +236,13 @@ else:
                 access_config = json.load(a)
             a.close()
 
+            #let firebase know the connection was successful
+            with open('/home/pi/access_config.json', "r+") as a:
+                access_config = json.load(a)
+                id_token = access_config['id_token']
+                local_id = access_config['local_id']
+            a.close()
+
             if device_state["connected"] == "1" and device_state["running"] == "0" and device_state["awaiting_update"] == "1": #replicated in the main loop
                 #launch update.py and wait to complete
                 update_process = Popen('sudo python3 /home/pi/grow-ctrl/update.py', shell=True)
@@ -253,7 +272,7 @@ else:
             #if the device is supposed to be running
             if device_state["running"] == "1":
 
-                poll_grow_ctrl = grow_ctrl_process.poll() #heat
+                poll_grow_ctrl = grow_ctrl_process.poll() #check if process is running
                 if poll_grow_ctrl is not None:
                     #launch grow_ctrl main
                     grow_ctrl_process = Popen(['python3', '/home/pi/grow-ctrl/grow_ctrl.py', 'main'])
@@ -278,15 +297,16 @@ else:
                     d.close()
 
             else:
-
                 #try to kill grow_ctrl process
-                try:
-                    grow_ctrl_process.kill() #if it is running, kill it and launch the daemon
-                    grow_ctrl_process.wait()
-                    #grow_ctrl_process = Popen(['python3', '/home/pi/grow-ctrl/grow_ctrl.py', 'daemon'])
-                    print("grow_ctrl_process deactivated")
-                except:
-                   pass
+                poll_grow_ctrl = grow_ctrl_process.poll() #heat
+                if poll_grow_ctrl is None:
+                    try:
+                        grow_ctrl_process.kill() #if it is running, kill it and launch the daemon
+                        grow_ctrl_process.wait()
+                        #grow_ctrl_process = Popen(['python3', '/home/pi/grow-ctrl/grow_ctrl.py', 'daemon'])
+                        print("grow_ctrl_process deactivated")
+                    except:
+                        pass
 
                 #launch sensing-feedback subprocess in daemon mode
                 #grow_ctrl_process = Popen(['python3', '/home/pi/grow-ctrl/grow_ctrl.py', 'daemon'])
@@ -315,6 +335,10 @@ else:
                 print("you hit the start button")
 
                 if device_state["running"] == "1":
+
+                    data = json.dumps({"running": "0"})
+                    url = "https://oasis-1757f.firebaseio.com/"+str(local_id)+".json?auth="+str(id_token)
+                    result = requests.patch(url,data)
 
                     #set running state to off = 0
                     with open('/home/pi/device_state.json', 'r+') as d:
@@ -355,6 +379,10 @@ else:
                             d.truncate() # remove remaining part
                         d.close()
                 else:
+
+                    data = json.dumps({"running": "1"})
+                    url = "https://oasis-1757f.firebaseio.com/"+str(local_id)+".json?auth="+str(id_token)
+                    result = requests.patch(url,data)
 
                     #set running state to on = 1
                     with open('/home/pi/device_state.json', 'r+') as d:
@@ -403,9 +431,16 @@ else:
                 print("you hit the connect button")
 
                 #disable WiFi, enable AP, update state, reboot
-                os.system("sudo cp /etc/dhcpcd_AP.conf /etc/dhcpcd.conf")
-                os.system("sudo cp /etc/dnsmasq_AP.conf /etc/dnsmasq.conf")
-                os.system("sudo systemctl enable hostapd")
+                config_ap_dhcpcd = Popen("sudo cp /etc/dhcpcd_AP.conf /etc/dhcpcd.conf", shell = True)
+                config_ap_dhcpcd.wait()
+                config_ap_dns = Popen("sudo cp /etc/dnsmasq_AP.conf /etc/dnsmasq.conf", shell = True)
+                config_ap_dns.wait()
+                enable_hostapd = Popen("sudo systemctl enable hostapd", shell = True)
+                enable_hostapd.wait()
+
+                data = json.dumps({"AccessPoint": "1"})
+                url = "https://oasis-1757f.firebaseio.com/"+str(local_id)+".json?auth="+str(id_token)
+                result = requests.patch(url,data)
 
                 #set AccessPoint state to "1" before rebooting
                 with open('/home/pi/device_state.json', 'r+') as d:
@@ -416,7 +451,7 @@ else:
                     d.truncate() # remove remaining part
                 d.close()
                 #exit
-                os.system("sudo systemctl reboot")
+                systemctl_reboot = Popen("sudo systemctl reboot", shell = True)
 
             wbutton_state = GPIO.input(WaterButton) #Water Button
 
@@ -445,7 +480,7 @@ else:
                 if int(device_state["LEDtimeon"]) < int(device_state['LEDtimeoff']):
                     if HoD >= int(device_state["LEDtimeon"]) and HoD < int(device_state["LEDtimeoff"]):
                         ser_out.write(bytes(str(device_state["LEDstatus"]+"\n"), 'utf-8')) #write status
-                    if HoD < int(device_state["LEDtimeon"]) or HoD >= int(device["LEDtimeoff"]):
+                    if HoD < int(device_state["LEDtimeon"]) or HoD >= int(device_state["LEDtimeoff"]):
                         ser_out.write(bytes(str("off"+"\n"), 'utf-8')) #write off
                 if int(device_state["LEDtimeon"]) >int(device_state["LEDtimeoff"]):
                     if HoD >=  int(device_state["LEDtimeon"]) or HoD < int(device_state["LEDtimeoff"]):

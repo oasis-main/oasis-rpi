@@ -21,8 +21,7 @@ sys.path.append('/usr/lib/python3/dist-packages')
 import time
 import base64
 from PIL import Image
-import subprocess32
-from subprocess32 import Popen
+from subprocess import Popen
 import requests
 import json
 

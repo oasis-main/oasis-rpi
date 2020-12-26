@@ -17,10 +17,23 @@
 #https://medium.com/@parasmani300/pyrebase-firebase-in-flask-d249a065e0df
 #https://stackoverflow.com/questions/54838847/pyrebase-stream-retrived-data-access
 
+import os.path
+import sys
+import time
+
+#set proper path for modules
+sys.path.append('/home/pi/grow-ctrl')
+sys.path.append('/usr/lib/python37.zip')
+sys.path.append('/usr/lib/python3.7')
+sys.path.append('/usr/lib/python3.7/lib-dynload')
+sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
+sys.path.append('/usr/local/lib/python3.7/dist-packages')
+sys.path.append('/usr/lib/python3/dist-packages')
+
+
 import pyrebase
 from multiprocessing import Process, Queue
 import json
-import os
 
 #get refresh token
 with open('/home/pi/access_config.json', "r+") as a:
@@ -60,6 +73,7 @@ def stream_handler(m):
     #might be from start up or might be user changed it
     if m['event']=='put':
         act_on_event(m['stream_id'],m['data'])
+        print(m)
 
     #something else
     else:
@@ -101,6 +115,9 @@ def act_on_event(field, new_data):
 
     #open data config file
     #edit appropriate spot
+
+    print(path)
+
     with open(path, 'r+') as r:
         data = json.load(r)
         data[str(field)] = str(new_data)
@@ -111,6 +128,7 @@ def act_on_event(field, new_data):
 
 
 if __name__ == '__main__':
+    time.sleep(20)
     user, db = initialize_user(RefreshToken)
     #print(get_user_data(user, db))
     #detect_field_event(user, db, 'set_temp')

@@ -272,15 +272,13 @@ try:
 
                     #load dict into dataframe
                     df = pandas.DataFrame(dict)
-
                     #.csv write
                     df.to_csv('/home/pi/Documents/sensor_data.csv', sep='\t', header=None, mode='a')
 
                     #sensor data out, needs editing
+                    data = json.dumps(dict)
                     url = "https://oasis-1757f.firebaseio.com/"+str(local_id)+".json?auth="+str(id_token)
-                    data = json.dumps({dict})
                     result = requests.patch(url,data)
-                    print(result)
 
                     #pass old targets to derivative bank and update
                     last_targetT = targetT

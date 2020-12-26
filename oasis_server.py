@@ -4,6 +4,7 @@
 import os
 import os.path
 import sys
+from subprocess import Popen
 
 #set proper path for modules
 sys.path.append('/home/pi/grow-ctrl')
@@ -102,9 +103,12 @@ while True:
                 sock.send('connected'.encode())
                 sock.close()
                 CONNECTION_LIST.remove(sock)
-                os.system("sudo cp /etc/dhcpcd_WiFi.conf /etc/dhcpcd.conf")
-                os.system("sudo cp /etc/dnsmasq_WiFi.conf /etc/dnsmasq.conf")
-                os.system("sudo systemctl disable hostapd")
+                config_wifi_dchpcd = Popen("sudo cp /etc/dhcpcd_WiFi.conf /etc/dhcpcd.conf", shell = True)
+                config_wifi_dchpcd.wait()
+                config_wifi_dns = Popen("sudo cp /etc/dnsmasq_WiFi.conf /etc/dnsmasq.conf", shell = True)
+                config_wifi_dns.wait()
+                disable_hostapd = Popen("sudo systemctl disable hostapd", shell = True)
+                disable_hostapd.wait()
                 #set AccessPoint state to "0" before rebooting
                 with open('/home/pi/device_state.json', 'r+') as d:
                     device_state = json.load(d)
@@ -114,7 +118,8 @@ while True:
                     d.truncate() # remove remaining part
                 d.close()
                 #exit
-                os.system("sudo systemctl reboot")
+                systemctl_reboot = Popen("sudo systemctl reboot", shell = True)
+                systemctl_reboot.wait()
 
             #disconnect
             except:
