@@ -56,10 +56,12 @@ def modWiFiConfig(SSID, password):
     print("WiFi configs added")
 
 #update access_config.json
-def modAccessConfig(wak, refresh_token):
+def modAccessConfig(wak, e, p):
     access_config = {}
     access_config["wak"] = str(wak)
-    access_config["refresh_token"] = str(refresh_token)
+    access_config["e"] = str(e)
+    access_config["p"] = str(p)
+    access_config["refresh_token"] = " "
     access_config["id_token"] = " "
     access_config["local_id"] = " "
 
@@ -71,7 +73,7 @@ def modAccessConfig(wak, refresh_token):
     print("Access configs added")
 
 modWiFiConfig(" "," ")
-modAccessConfig(" "," ")
+modAccessConfig(" "," "," ")
 
 ##https://stackoverflow.com/questions/166506/finding-local-ip-addresses-using-pythons-stdlib
 print("Oasis server started on Port: " + str(PORT)+' on IP: '+socket.gethostbyname(socket.gethostname()))
@@ -94,11 +96,12 @@ while True:
                 data = pickle.loads(data)
                 print(data)
                 print(type(data))
+                #sys.exit()
                 #print('received data from [%s:%s]: ' % addr + data)
                 ##THIS IS WHERE YOU NEED TO VERIFY THAT THE INFORMATION IS RIGHT
                 modWiFiConfig(str(data['wifi_name']), str(data['wifi_pass']))
                 print("Wifi Added")
-                modAccessConfig(str(data['wak']), str(data['refresh_token']))
+                modAccessConfig(str(data['wak']), str(data['e']), str(data['p']))
                 print('Access Added')
                 sock.send('connected'.encode())
                 sock.close()

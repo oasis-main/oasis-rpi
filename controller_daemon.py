@@ -59,6 +59,33 @@ try:
 
     #call connection
     print("FireBase verification...")
+
+    #GET NEW REFESH TOKEN
+    def getNewRefreshToken(web_api_key,email,password):
+        sign_in_url = "https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key=" + web_api_key
+        sign_in_payload = json.dumps({"email": email, "password": password, "returnSecureToken": "true"})
+        r = requests.post(sign_in_url, sign_in_payload)
+        data = json.loads(r.content)
+        return data['refreshToken']
+
+    wak = access_config['wak']
+    email = access_config['e']
+    password = access_config['p']
+
+    #write credentials to access config if successful
+    with open('/home/pi/access_config.json', 'r+') as a:
+        access_config = json.load(a)
+        access_config['refresh_token'] = getNewRefreshToken(wak, email, password)
+        a.seek(0) # <--- should reset file position to the begi$
+        json.dump(access_config, a)
+        a.truncate() # remove remaining part
+    a.close()
+    print("Obtained refresh token")
+
+    with open('/home/pi/access_config.json') as a:
+        access_config = json.load(a) #get access state
+    a.close()
+
     #must define wak, refresh_token
     refresh_token = access_config['refresh_token']
     wak = access_config['wak']
@@ -66,10 +93,8 @@ try:
     refresh_payload = '{"grant_type": "refresh_token", "refresh_token": "%s"}' % refresh_token
     refresh_req = requests.post(refresh_url, data=refresh_payload)
     #print(refresh_req)
-    
-    ###THIS IS WHERE WE USE "GET NEW REFESH TOKEN" FUNCTION
 
-   #write credentials to access config if successful
+    #write credentials to access config if successful
     with open('/home/pi/access_config.json', 'r+') as a:
         access_config = json.load(a)
         access_config['id_token'] = refresh_req.json()['id_token']
@@ -78,7 +103,7 @@ try:
         json.dump(access_config, a)
         a.truncate() # remove remaining part
     a.close()
-    print("Obtained fresh credentials")
+    print("Obtained local credentials")
 
     #let firebase know the connection was successful
     with open('/home/pi/access_config.json', "r+") as a:
@@ -118,11 +143,6 @@ except Exception as e:
 with open('/home/pi/device_state.json') as d: #it is important to refresh the state for any operation after a change
     device_state = json.load(d) #get device state
 d.close()
-
-#If connected, then launch the db event listener to monitor for changes
-#if device_state["connected"] == "1":
-    #db_monitor_process = Popen(['python3', '/home/pi/grow-ctrl/detect_db_events.py'])
-    #print("Listening for parameter changes on firebase")
 
 if device_state["connected"] == "1" and device_state["running"] == "0" and device_state["awaiting_update"] == "1": #replicated in the main loop
     #launch update.py and wait to complete
@@ -253,6 +273,8 @@ else:
                     print("Failure " + str(update_process.returncode)+ " " +str(output)+str(error))
 
             if device_state["connected"] == "1":
+                #insert try/except statement to handle expired refresh token
+
                 if time.time() - token_timer > 600:
                     refresh_token = access_config['refresh_token']
                     wak = access_config['wak']
