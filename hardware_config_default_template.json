@@ -4,8 +4,7 @@
                    "humidityElement": 15,
                    "fanElement": 18,
                    "lightingElement": 23,
-                   "wateringElement": 24,
-                   "decorativeElement": 26
+                   "wateringElement": 24
                    },
 "buttonGPIOmap": {
                  "startStop": 17,

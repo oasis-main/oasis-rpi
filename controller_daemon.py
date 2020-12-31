@@ -276,6 +276,7 @@ else:
                 #insert try/except statement to handle expired refresh token
 
                 if time.time() - token_timer > 600:
+                    token_timer = time.time()
                     refresh_token = access_config['refresh_token']
                     wak = access_config['wak']
                     refresh_url = "https://securetoken.googleapis.com/v1/token?key=" + wak
