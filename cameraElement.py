@@ -34,32 +34,54 @@ with open('/home/pi/access_config.json', "r+") as a:
   access_config = json.load(a)
   id_token = access_config['id_token']
   local_id = access_config['local_id']
+  refresh_token = access_config['refresh_token']
 a.close()
 
+def initialize_user(refresh_token):
+#app configuration information
+    config = {"apiKey": "AIzaSyD-szNCnHbvC176y5K6haapY1J7or8XtKc",
+              "authDomain": "oasis-1757f.firebaseapp.com",
+              "databaseURL": "https://oasis-1757f.firebaseio.com/",
+              "storageBucket": "oasis-1757f.appspot.com"
+             }
+
+    firebase = pyrebase.initialize_app(config)
+    auth = firebase.auth()
+    db = firebase.database()
+    user = auth.refresh(refresh_token)
+    storage = firebase.storage()
+
+    return user, db, storage
+
+def send_image(user, storage, path):
+	storage.child(user['userId']+'/'+path).put(path, user['idToken'])
 
 #define a function to actuate element
-def actuate(interval = 3600): #amoubnt of time between shots
+def actuate(interval): #amount of time between shots
+
+    #timestamp image
+    timestamp = time.time()
 
     #add USB path
 
     #set timestamp file name
-    image_path = '/home/pi/Pictures/culture_image'+str(time.time())+'.jpg'
+    image_path = '/home/pi/Pictures/culture_image'+str(timestamp)+'.jpg'
 
     still = Popen('sudo raspistill -o ' + str(image_path), shell=True) #snap: call the camera
     still.wait()
 
-    if image_path != '':
-        with open(image_path, 'rb') as imageFile:
-            image_data = base64.b64encode(imageFile.read()) #encode in base64 for sending
-    else:
-        print('fail')
-        image_data = 'custom_image'
+    #if image_path != '':
+    #    with open(image_path, 'rb') as imageFile:
+    #        image_data = base64.b64encode(imageFile.read()) #encode in base64 for sending
+    #else:
+    #    print('fail')
+    #    image_data = 'custom_image'
 
-    data = json.dumps({"image": str(image_data)})
+    #data = json.dumps({"image": str(image_data)})
 
     if device_state["connected"] == "1":
-        url = "https://oasis-1757f.firebaseio.com/"+str(local_id)+".json?auth="+str(id_token)
-        result = requests.patch(url,data)
+        user, db, storage = initialize_user(refresh_token)
+        send_image(user, storage, image_path)
 
     time.sleep(float(interval))
 
