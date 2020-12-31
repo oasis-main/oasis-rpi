@@ -24,6 +24,7 @@ from PIL import Image
 from subprocess import Popen
 import requests
 import json
+import pyrebase
 
 #get device_state
 with open('/home/pi/device_state.json') as d:
@@ -54,7 +55,7 @@ def initialize_user(refresh_token):
     return user, db, storage
 
 def send_image(user, storage, path):
-	storage.child(user['userId']+'/'+path).put(path, user['idToken'])
+	storage.child(user['userId']+path).put(path, user['idToken'])
 
 #define a function to actuate element
 def actuate(interval): #amount of time between shots
@@ -64,24 +65,31 @@ def actuate(interval): #amount of time between shots
 
     #add USB path
 
+
     #set timestamp file name
     image_path = '/home/pi/Pictures/culture_image'+str(timestamp)+'.jpg'
 
     still = Popen('sudo raspistill -o ' + str(image_path), shell=True) #snap: call the camera
     still.wait()
 
-    #if image_path != '':
-    #    with open(image_path, 'rb') as imageFile:
-    #        image_data = base64.b64encode(imageFile.read()) #encode in base64 for sending
-    #else:
-    #    print('fail')
-    #    image_data = 'custom_image'
-
-    #data = json.dumps({"image": str(image_data)})
+    save_most_recent = Popen('cp ' + image_path + ' /home/pi/image.jpg', shell=True)
+    save_most_recent.wait()
 
     if device_state["connected"] == "1":
+
+        #get user info
         user, db, storage = initialize_user(refresh_token)
-        send_image(user, storage, image_path)
+        print("got credentials")
+
+        #send new image to firebase
+        send_image(user, storage, '/home/pi/image.jpg')
+        print("sent image")
+
+        #tell firebase that there is a new image
+        url = "https://oasis-1757f.firebaseio.com/"+str(local_id)+".json?auth="+str(id_token)
+        params = json.dumps({"new_image":str(int(1))})
+        result = requests.patch(url,params)
+        print("firebase has an image in waiting")
 
     time.sleep(float(interval))
 
