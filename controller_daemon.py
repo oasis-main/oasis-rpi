@@ -31,7 +31,7 @@ import datetime
 
 #Initialize Oasis:
 print("Initializing...")
-time.sleep(20)
+time.sleep(15)
 
 #Load Model
 with open('/home/pi/device_state.json') as d:
@@ -139,7 +139,7 @@ except Exception as e:
     d.close()
     print("Could not connect to Oasis Network")
 
-#Case for when the device boots in Access Point Mode
+#refresh device state
 with open('/home/pi/device_state.json') as d: #it is important to refresh the state for any operation after a change
     device_state = json.load(d) #get device state
 d.close()
@@ -244,7 +244,7 @@ else:
     GPIO.output(WaterElement, GPIO.LOW) #relay open = GPIO.HIGH, closed = GPIO.LOW
 
     #start the clock for timimg data exchanges with Arduino LED
-    start = time.time()
+    led_timer = time.time()
     token_timer = time.time()
 
     try:
@@ -279,20 +279,26 @@ else:
                     token_timer = time.time()
                     refresh_token = access_config['refresh_token']
                     wak = access_config['wak']
-                    refresh_url = "https://securetoken.googleapis.com/v1/token?key=" + wak
-                    refresh_payload = '{"grant_type": "refresh_token", "refresh_token": "%s"}' % refresh_token
-                    refresh_req = requests.post(refresh_url, data=refresh_payload)
 
-                    #write credentials to access config if successful
-                    with open('/home/pi/access_config.json', 'r+') as a:
-                        access_config = json.load(a)
-                        access_config['id_token'] = refresh_req.json()['id_token']
-                        access_config['local_id'] = refresh_req.json()['user_id']
-                        a.seek(0) # <--- should reset file position
-                        json.dump(access_config, a)
-                        a.truncate() # remove remaining part
-                    a.close()
-                    print("Obtained fresh credentials")
+                    try:
+                        refresh_url = "https://securetoken.googleapis.com/v1/token?key=" + wak
+                        refresh_payload = '{"grant_type": "refresh_token", "refresh_token": "%s"}' % refresh_token
+                        refresh_req = requests.post(refresh_url, data=refresh_payload)
+
+                        #write credentials to access config if successful
+                        with open('/home/pi/access_config.json', 'r+') as a:
+                            access_config = json.load(a)
+                            access_config['id_token'] = refresh_req.json()['id_token']
+                            access_config['local_id'] = refresh_req.json()['user_id']
+                            a.seek(0) # <--- should reset file position
+                            json.dump(access_config, a)
+                            a.truncate() # remove remaining part
+                        a.close()
+                        print("Obtained fresh credentials")
+
+                    except Exception as e:
+                        print(e)
+                        print("Failed to obtain fresh credentials")
 
             #if the device is supposed to be running
             if device_state["running"] == "1":
@@ -480,7 +486,7 @@ else:
 
             wbutton_state = GPIO.input(WaterButton) #Water Button
 
-            if wbutton_state == 0:
+            if wbutton_state == 0: #make it so that this does not stop the controller
 
                #turn on the pump
                GPIO.output(WaterElement, GPIO.HIGH)
@@ -494,14 +500,12 @@ else:
                 device_state = json.load(d)
             d.close()
 
-            #write the LED config to serial port
-
             #write "off" or write status depending on ToD + settings
             now = datetime.datetime.now()
             HoD = now.hour
 
             #exchange data with arduino for LED after set time elapses
-            if time.time() - start > 5:
+            if time.time() - led_timer > 5:
                 if int(device_state["LEDtimeon"]) < int(device_state['LEDtimeoff']):
                     if HoD >= int(device_state["LEDtimeon"]) and HoD < int(device_state["LEDtimeoff"]):
                         ser_out.write(bytes(str(device_state["LEDstatus"]+"\n"), 'utf-8')) #write status
@@ -516,7 +520,36 @@ else:
                     ser_out.write(bytes(str(device_state["LEDstatus"]+"\n"), 'utf-8')) #write status
 
                 #restart the clock
-                start = time.time()
+                led_timer = time.time()
+
+            #The following try/except statements copy the listener's buffer into the main model, avoiding overwrite errors
+            try:
+                with open('/home/pi/device_state_buffer.json') as d_buff:
+                    device_state = json.load(d_buff) #get device state
+                d_buff.close()
+                copy_device_state_buffer = Popen("sudo cp /home/pi/device_state_buffer.json /home/pi/device_state.json", shell = True)
+                copy_device_state_buffer.wait()
+            except Exception as e:
+                print("concurrent writing collision: device_state")
+                print(e)
+                pass
+            except(KeyboardInterrupt):
+                GPIO.cleanup()
+                sys.exit()
+
+            try:
+                with open('/home/pi/grow_params_buffer.json') as g_buff:
+                    grow_params = json.load(g_buff) #get device state
+                g_buff.close()
+                copy_grow_params_buffer = Popen("sudo cp /home/pi/grow_params_buffer.json /home/pi/grow_params.json", shell = True)
+                copy_grow_params_buffer.wait()
+            except Exception as e:
+                print("concurrent writing collision: grow_params")
+                print(e)
+                pass
+            except(KeyboardInterrupt):
+                GPIO.cleanup()
+                sys.exit()
 
     except(KeyboardInterrupt):
         GPIO.cleanup()

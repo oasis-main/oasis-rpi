@@ -45,7 +45,7 @@ import datetime
 if str(sys.argv[1]) == "daemon":
     print("grow_ctrl daemon started")
     #log daemon start
-    with open('/home/pi//logs/growCtrl_log.json', 'r+') as l:
+    with open('/home/pi/logs/growCtrl_log.json', 'r+') as l:
         log = json.load(l)
         log['last_start_mode'] = "daemon" # <--- add `id` value.
         l.seek(0) # <--- should reset file position to the beginning.
@@ -56,7 +56,7 @@ if str(sys.argv[1]) == "daemon":
 if str(sys.argv[1]) == "main":
     print("grow_ctrl main started")
     #log main start
-    with open('/home/pi/logs/growCtrl_log.json', 'r+') as l:
+    with open('/home/pi/logs/growCtrl_log.json', 'r+') as l: #write
         log = json.load(l)
         log['last_start_mode'] = "main" # <--- add `id` value.
         l.seek(0) # <--- should reset file position to the beginning.
@@ -74,7 +74,7 @@ else:
 
 #initialize firebase
 #import grow_params
-with open('/home/pi/access_config.json', "r+") as a:
+with open('/home/pi/access_config.json', "r+") as a: #read
   access_config = json.load(a)
   id_token = access_config['id_token']
   local_id = access_config['local_id']
@@ -200,7 +200,6 @@ def listen():
 #start the clock for timimg data exchanges with server, you'll have to extend this for update management
 start = time.time()
 
-
 #---------------------------------------------------------------------------------------
 #MAIN LOOP
 #listen, update, show, send, receive, actuate, wait, -- else die
@@ -268,7 +267,7 @@ try:
                     a.close()
 
                     #for use in python operations
-                    dict =  {"temp": [int(temp)], "hum": [int(hum)], "waterLow": [int(waterLow)]}
+                    dict =  {"temp": [str(temp)], "hum": [str(hum)], "waterLow": [str(waterLow)]}
 
                     #load dict into dataframe
                     df = pandas.DataFrame(dict)
@@ -371,4 +370,3 @@ except Exception as e:
     water_process.kill()
     water_process.wait()
     sys.exit()
-

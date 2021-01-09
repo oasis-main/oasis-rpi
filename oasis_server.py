@@ -112,6 +112,8 @@ while True:
                 config_wifi_dns.wait()
                 disable_hostapd = Popen("sudo systemctl disable hostapd", shell = True)
                 disable_hostapd.wait()
+
+                #double check to make sure this works while the listener is running!
                 #set AccessPoint state to "0" before rebooting
                 with open('/home/pi/device_state.json', 'r+') as d:
                     device_state = json.load(d)
@@ -120,6 +122,7 @@ while True:
                     json.dump(device_state, d)
                     d.truncate() # remove remaining part
                 d.close()
+
                 #exit
                 systemctl_reboot = Popen("sudo systemctl reboot", shell = True)
                 systemctl_reboot.wait()

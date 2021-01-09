@@ -104,9 +104,9 @@ def act_on_event(field, new_data):
     grow_params_fields = ["targetT","targetH","targetL","LtimeOn","LtimeOff","lightInterval","cameraInterval","waterMode","waterDuration","waterInterval"]
 
     if str(field) in device_state_fields:
-        path = '/home/pi/device_state.json'
+        path = '/home/pi/device_state_buffer.json'
     if str(field) in grow_params_fields:
-        path = '/home/pi/grow_params.json'
+        path = '/home/pi/grow_params_buffer.json'
 
     if os.path.exists(path) == False:
         f = open(path, "w")
@@ -118,7 +118,7 @@ def act_on_event(field, new_data):
 
     print(path)
 
-    with open(path, 'r+') as r:
+    with open(path, 'r+') as r: #writer
         data = json.load(r)
         data[str(field)] = str(new_data)
         r.seek(0) # <--- should reset file position to the beginning
@@ -128,8 +128,15 @@ def act_on_event(field, new_data):
 
 
 if __name__ == '__main__':
+    print("Initializing...")
     time.sleep(20)
-    user, db = initialize_user(RefreshToken)
+    try:
+        user, db = initialize_user(RefreshToken)
+        print("Begin database monitoring")
+    except Exception as e:
+        print(e)
+        print("Connection failed, terminating listener...")
+        sys.exit()
     #print(get_user_data(user, db))
     #detect_field_event(user, db, 'set_temp')
     fields = ["connected",
