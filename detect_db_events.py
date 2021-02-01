@@ -134,7 +134,7 @@ if __name__ == '__main__':
         user, db = initialize_user(RefreshToken)
         print("Begin database monitoring")
     except Exception as e:
-        print(e)
+        #print(e)
         print("Connection failed, terminating listener...")
         sys.exit()
     #print(get_user_data(user, db))
