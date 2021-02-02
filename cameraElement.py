@@ -67,7 +67,7 @@ def actuate(interval): #amount of time between shots
 
 
     #set timestamp file name
-    image_path = '/home/pi/Pictures/culture_image'+str(timestamp)+'.jpg'
+    image_path = '/home/pi/image_feed/culture_image'+str(timestamp)+'.jpg'
 
     still = Popen('sudo raspistill -o ' + str(image_path), shell=True) #snap: call the camera
     still.wait()

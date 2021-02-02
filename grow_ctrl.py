@@ -80,8 +80,10 @@ with open('/home/pi/access_config.json', "r+") as a: #read
   local_id = access_config['local_id']
 a.close()
 
-#start serial RPi<-Arduino
-ser_in = serial.Serial('/dev/ttyUSB0',9600)
+#start serial RPi<-Arduino, used for sensors and other microcontroller peripherals
+#Arduino Uno /dev/ttyACM0
+#Arduino Nano /dev/ttyUSB0
+ser_in = serial.Serial('/dev/ttyACM0',9600)
 line = 0
 sensorInfo = " "
 

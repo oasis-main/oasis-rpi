@@ -49,7 +49,9 @@ a.close()
 print("Loaded state.")
 
 #Launch Serial Port
-ser_out = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
+#Arduino Nano:'/dev/ttyUSB0'
+#Arduino Uno: '/dev/ttyACM0'
+ser_out = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
 ser_out.flush()
 print("Started serial communication.")
 
@@ -113,7 +115,7 @@ try:
     a.close()
 
     data = json.dumps({"connected": "1"})
-    url = "https://oasis-1757f.firebaseio.com/"+str(local_id)+".json?auth="+str(id_token)
+    url = "https://oasis-1757f.firebaseio.com/"+str(local_id)+"/"+str(access_config["device_name"])+".json?auth="+str(id_token)
     result = requests.patch(url,data)
 
     #write device state as connected if successful
@@ -368,7 +370,7 @@ else:
                 if device_state["running"] == "1":
 
                     data = json.dumps({"running": "0"})
-                    url = "https://oasis-1757f.firebaseio.com/"+str(local_id)+".json?auth="+str(id_token)
+                    url = "https://oasis-1757f.firebaseio.com/"+str(local_id)+"/"+str(access_config["device_name"])+".json?auth="+str(id_token)
                     result = requests.patch(url,data)
 
                     #set running state to off = 0
@@ -412,7 +414,7 @@ else:
                 else:
 
                     data = json.dumps({"running": "1"})
-                    url = "https://oasis-1757f.firebaseio.com/"+str(local_id)+".json?auth="+str(id_token)
+                    url = "https://oasis-1757f.firebaseio.com/"+str(local_id)+"/"+str(access_config["device_name"])+".json?auth="+str(id_token)
                     result = requests.patch(url,data)
 
                     #set running state to on = 1
@@ -470,7 +472,7 @@ else:
                 enable_hostapd.wait()
 
                 data = json.dumps({"AccessPoint": "1"})
-                url = "https://oasis-1757f.firebaseio.com/"+str(local_id)+".json?auth="+str(id_token)
+                url = "https://oasis-1757f.firebaseio.com/"+str(local_id)+"/"+str(access_config["device_name"])+".json?auth="+str(id_token)
                 result = requests.patch(url,data)
 
                 #set AccessPoint state to "1" before rebooting
