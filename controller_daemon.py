@@ -233,7 +233,7 @@ else:
     ConnectButton = hardware_config["buttonGPIOmap"]["connectInternet"]
     WaterButton = hardware_config["buttonGPIOmap"]["runWater"]
 
-    #set watering EPIO
+    #set watering GPIO
     WaterElement = hardware_config["actuatorGPIOmap"]["wateringElement"] #watering aparatus
 
     #Setup buttons
