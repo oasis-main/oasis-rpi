@@ -15,7 +15,6 @@ sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
 sys.path.append('/usr/local/lib/python3.7/dist-packages')
 sys.path.append('/usr/lib/python3/dist-packages')
 
-
 import socket, select
 from _thread import *
 import json
@@ -97,18 +96,18 @@ while True:
                 data = pickle.loads(data)
                 print(data)
                 print(type(data))
-                #sys.exit()
                 #print('received data from [%s:%s]: ' % addr + data)
-                ##THIS IS WHERE YOU NEED TO VERIFY THAT THE INFORMATION IS RIGHT
-                modWiFiConfig(str(data['wifi_name']), str(data['wifi_pass']))
-                print("Wifi Added")
-                modAccessConfig(str(data['box_name']), str(data['wak']), str(data['e']), str(data['p']))
-                print('Access Added')
                 sock.send('connected'.encode())
                 sock.close()
                 CONNECTION_LIST.remove(sock)
-                config_wifi_dchpcd = Popen("sudo cp /etc/dhcpcd_WiFi.conf /etc/dhcpcd.conf", shell = True)
-                config_wifi_dchpcd.wait()
+
+                modWiFiConfig(str(data['wifi_name']), str(data['wifi_pass']))
+                print("Wifi Added")
+                modAccessConfig(str(data['device_name']), str(data['wak']), str(data['e']), str(data['p']))
+                print("Access Added")
+
+                config_wifi_dhcpcd = Popen("sudo cp /etc/dhcpcd_WiFi.conf /etc/dhcpcd.conf", shell = True)
+                config_wifi_dhcpcd.wait()
                 config_wifi_dns = Popen("sudo cp /etc/dnsmasq_WiFi.conf /etc/dnsmasq.conf", shell = True)
                 config_wifi_dns.wait()
                 disable_hostapd = Popen("sudo systemctl disable hostapd", shell = True)
