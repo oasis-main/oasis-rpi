@@ -142,8 +142,11 @@ def connect_firebase(): #depends on: load_state(), write_state(), patch_firebase
     try:
         print("FireBase verification...")
 
+        #fetch refresh token
+        refresh_token = get_refresh_token(wak, email, password)
+
         #fetch refresh token and save to access_config
-        write_state("/home/pi/access_config.json","refresh_token",get_refresh_token(wak, email, password))
+        write_state("/home/pi/access_config.json","refresh_token", refresh_token)
 
         #bring in the refresh token for use further down
         load_state()
@@ -465,7 +468,7 @@ if __name__ == '__main__':
 
     #Initialize Oasis:
     print("Initializing...")
-    time.sleep(15)
+    time.sleep(10)
     load_state()
     start_serial()
     check_AP()
