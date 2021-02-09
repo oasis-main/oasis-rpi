@@ -255,6 +255,14 @@ try:
                 device_state = json.load(d)
             d.close()
 
+            #for use in python operations
+            dict =  {"time": [str(time.time())], "temp": [str(temp)], "hum": [str(hum)], "waterLow": [str(waterLow)]}
+
+            #load dict into dataframe
+            df = pandas.DataFrame(dict)
+            #.csv write
+            df.to_csv('/home/pi/Documents/sensor_data.csv', sep='\t', header=None, mode='a')
+
             #if connected, grab the most recent credentials, exchange data with server
             if device_state["connected"] == "1":
                 try:
@@ -268,15 +276,8 @@ try:
                         local_id = access_config['local_id']
                     a.close()
 
-                    #for use in python operations
-                    dict =  {"temp": [str(temp)], "hum": [str(hum)], "waterLow": [str(waterLow)]}
-
-                    #load dict into dataframe
-                    df = pandas.DataFrame(dict)
-                    #.csv write
-                    df.to_csv('/home/pi/Documents/sensor_data.csv', sep='\t', header=None, mode='a')
-
                     #sensor data out, needs editing
+                    dict.pop("time")
                     data = json.dumps(dict)
                     url = "https://oasis-1757f.firebaseio.com/"+str(local_id)+".json?auth="+str(id_token)
                     result = requests.patch(url,data)
