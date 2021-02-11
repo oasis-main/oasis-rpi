@@ -5,28 +5,40 @@
 grow-ctrl, developed by OASIS, is an open toolkit for controlled environment culturing, remote monitoring, and data collection. It is maintained with the goal of making the capabilities of automated gardening, precision agriculture, and cell culturing available to everyone. All functions can be accomplished with a RaspberryPi + Arduino and the requisite peripheral hardware. The software interfaces a sensor array, camera, and appliance set and is controllable via shell or mobile app (currently in Beta).      
 # Hardware Setup
 
-DIYers can purchase a complete PCB (currently in Beta) to get a jump on wiring or instead follow the prototype pinout spreasheet available here: https://docs.google.com/spreadsheets/d/e/2PACX-1vQgn0rGJVujcdRgQUK21jd7PybuvJZdb9DuSV6mf8QKvGKiNE8npMvLlrqJvNgFDA/pubhtml
+DIYers can purchase a complete PCB (currently in Beta) to get a jump on wiring or instead follow the prototype wiring diagram available here: https://docs.google.com/spreadsheets/d/e/2PACX-1vQgn0rGJVujcdRgQUK21jd7PybuvJZdb9DuSV6mf8QKvGKiNE8npMvLlrqJvNgFDA/pubhtml
 
-# Software Setup
-Raspberry Pi Software Setup
-  Flash Raspian to an SD card, insert it into the board, and plug in the power
-  (NOTE: the SD card is what is used as the memory of your pi and will hold program code and boot instructions. Using a higher quality one and shutting down the pi properly will   increase the stability of Oasis) 
+# Software Setup (Raspberry Pi)
 
-  Download Balena Etcher: https://www.balena.io/etcher/
-  Download the latest Raspberry Pi Operating System: https://howtoraspberrypi.com/downloads/
-  Connect a micro-SD card to your personal computer
-  Format the micro-SD in the MS-DOS (FAT) style. This will be done differently depending on the operating system of your personal computer. 
-  With MacOS, it is done using dis utility
-  Open up balena etcher, follow onscreen instructions to flash the RasPi OS to the SD, will eject automatically when finished
-  Place the SD card into the front slot of the Raspberry Pi
-  Connect a keyboard and monitor to the board via USB
-  Follow the on-screen setup guide
-  Update the OS
+First, flash Raspian to an SD card, insert it into the board, and plug in the power
+(NOTE: the SD card is what is used as the memory of your pi and will hold program code and boot instructions. Using a higher quality one and shutting down the pi properly  will increase the stability of Oasis) 
+  
+  1. Download Balena Etcher: https://www.balena.io/etcher/
+  
+  2. Download the latest Raspberry Pi Operating System: https://howtoraspberrypi.com/downloads/
+  
+  3. Connect a micro-SD card to your personal computer
+  
+  3. Format the micro-SD in the MS-DOS (FAT) style. This will be done differently depending on the operating system of your personal computer. 
+  With MacOS, it is done using disk utility
+  
+  4. Open up balena etcher, follow onscreen instructions to flash the RasPi OS to the SD, will eject automatically when finished
+  
+  5. Place the SD card into the front slot of the Raspberry Pi
+  
+  6. Connect a keyboard and monitor to the board via USB
+  
+  7. Power up, and follow the on-screen setup guide
+     - select languages & timezone
+     - connect WiFi
+     - update software
 
-  Remove unnecessary software
-  Raspbian comes with a package called ‘GVfs’ (GNOME virtual file system). It does not do much and causes a lot of kernel panics (crashes)
-    sudo apt-get purge --auto-remove gvfs-backends gvfs-fuse
-  Clone the grow-ctrl repository
+Now we will install the grow-ctrl software onto the Pi. This is where we will start working from the terminal, so open up a new window
+
+1. Remove unnecessary software
+    Raspbian comes with a package called ‘GVfs’ (GNOME virtual file system). It does not do much and causes a lot of kernel panics (crashes)
+      sudo apt-get purge --auto-remove gvfs-backends gvfs-fuse
+
+Clone the grow-ctrl repository
     cd ~
     git clone https://github.com/OasisRegenerative/grow-ctrl.git
     cd grow-ctrl
@@ -110,8 +122,7 @@ Raspberry Pi Software Setup
       b = IEEE 802.11b (2.4 GHz)
       g = IEEE 802.11g (2.4 GHz)
       ad = IEEE 802.11ad (60 GHz)
-
-    sudo systemctl reboot
+      sudo systemctl reboot
 
   Access point should be discoverable on development machine
   Join ssid using passkey through wifi interface
