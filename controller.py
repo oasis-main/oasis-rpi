@@ -75,7 +75,10 @@ def write_state(path,field,value): #Depends on: load_state(), patch_firebase, 'j
     load_state() #get connection status
 
     if device_state["connected"] == "1": #write state to cloud
-        patch_firebase(field,value)
+        try:
+            patch_firebase(field,value)
+        except:
+            pass
 
     with open(path, "r+") as x: #write state to local files
         data = json.load(x)
@@ -166,7 +169,7 @@ def connect_firebase(): #depends on: load_state(), write_state(), patch_firebase
     except Exception as e:
         print(e) #display error
         #write state as not connected
-        write_state("/home/pi/device_state.json","connected","1")
+        write_state("/home/pi/device_state.json","connected","0")
         print("Could not connect to Oasis Network")
 
 #checks for available updates, executes if connected & idle, waits for completion
