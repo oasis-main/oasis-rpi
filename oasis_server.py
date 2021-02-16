@@ -26,7 +26,12 @@ import pickle5 as pickle
 CONNECTION_LIST = [] #keep list of all sockets
 RECV_BUFFER = 4096 #fairly arbitrary buffer size, specifies maximum data to be recieved at once
 PORT = 8000 #this is the port which accepts socket connections
-server_socket = None #object which contains the socket server
+
+#launch socket connection
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server_socket.bind(("0.0.0.0", PORT))
+server_socket.listen(10)
+CONNECTION_LIST.append(server_socket)
 
 #writes state to .json, ignores firebase because there is no connection
 def write_state(path,field,value): #Depends on: 'json'; Modifies: path
@@ -59,14 +64,6 @@ def enable_WiFi(): #Depends on: write_state(), 'subprocess'; Modifies: device_st
     disable_hostapd = Popen("sudo systemctl disable hostapd", shell = True)
     disable_hostapd.wait()
     systemctl_reboot = Popen("sudo systemctl reboot", shell = True)
-
-#starts the socket server
-def start_socket_server(): #depends on: 'socket'; modifies: server_socket, CONNECTION_LIST
-    global CONNECTION_LIST, server_socket
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind(("0.0.0.0", PORT))
-    server_socket.listen(10)
-    CONNECTION_LIST.append(server_socket)
 
 #update wpa_supplicant.conf
 def modWiFiConfig(SSID, password):
@@ -117,9 +114,6 @@ if __name__ == '__main__':
     modWiFiConfig(" "," ")
     modAccessConfig(" "," "," "," ")
 
-    #launch TCP server
-    start_socket_server()
-
     ##https://stackoverflow.com/questions/166506/finding-local-ip-addresses-using-pythons-stdlib
     print("Oasis server started on Port: " + str(PORT)+' on IP: '+socket.gethostbyname(socket.gethostname()))
 
@@ -150,6 +144,8 @@ if __name__ == '__main__':
                     print("Wifi Added")
                     modAccessConfig(str(data['device_name']), str(data['wak']), str(data['e']), str(data['p']))
                     print("Access Added")
+
+                    write_state("/home/pi/device_state.json","new_device","1")
 
                     enable_WiFi()
 
