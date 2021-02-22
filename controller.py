@@ -135,11 +135,11 @@ def get_local_credentials(refresh_token): #Depends on: load_state(), write_state
 #check if the device is waiting to be added to firebase, if it is then add it, otherwise skip
 def check_new_device(): #depends on: ;modifies:
     load_state()
-    if device_state["connected"] == 0 and device_state["new_device"] == 1:
-        my_data = "{\"" + device_state["device_name"] + '\":{"connected":"1","running":"0","LEDstatus":"off","AccessPoint":"0","LEDtimeon":"0","LEDtimeoff":"0","awaiting_update":"0","targetT":"70","targetH":"90","targetL":"on","LtimeOn":"8","LtimeOff":"20","lightInterval":"60","cameraInterval":"3600","waterMode":"off","waterDuration":"15","waterInterval":"3600","temp":"N/A","hum":"N/A","waterLow":"0","new_image":"0","new_device":"0"}}'
+    if device_state["connected"] == "0" and device_state["new_device"] == "1":
+        my_data = "{\"" + access_config["device_name"] + '\":{"connected":"1","running":"0","LEDstatus":"off","AccessPoint":"0","LEDtimeon":"0","LEDtimeoff":"0","awaiting_update":"0","targetT":"70","targetH":"90","targetL":"on","LtimeOn":"8","LtimeOff":"20","lightInterval":"60","cameraInterval":"3600","waterMode":"off","waterDuration":"15","waterInterval":"3600","temp":"N/A","hum":"N/A","waterLow":"0","new_image":"0","new_device":"0"}}'
 
         #add box data to firebase
-        url = "https://oasis-1757f.firebaseio.com/"+self.local_id+".json?auth="+self.id_token
+        url = "https://oasis-1757f.firebaseio.com/"+access_config["local_id"]+".json?auth="+access_config["id_token"]
         post_request = requests.patch(url,my_data)
 
         write_state("/home/pi/device_state.json","new_device","0")
