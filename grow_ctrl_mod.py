@@ -40,7 +40,7 @@ import datetime
 #declare state variables
 device_state = None #describes the current state of the system
 access_config = None #contains credentials for connecting to firebase
-modules_config = None #tells grow_ctrl which elements are active and which are not
+feature_toggles = None #tells grow_ctrl which elements are active and which are not
 grow_params = None #offers run parameters to grow-ctrl
 
 #declare process management variables
@@ -54,11 +54,13 @@ camera_process = None
 water_process = None
 
 #declare sensor data variables
-temp = None
-hum = None
-last_temp = None
-last_hum = None
-waterLow = None
+temp = 0
+hum = 0
+last_temp = 0
+last_hum = 0
+last_targetT = 0
+last_targetH = 0
+waterLow = 0
 
 #save key values to .json
 def write_state(path,field,value): #Depends on: load_state(), 'json'; Modifies: path
@@ -110,33 +112,10 @@ def start_serial(): #Depends on:'serial'; Modifies: ser_out
         ser_in = None
         print("Serial connection not found")
 
-def initialize_actuators():
-    global heat_process, hum_process, fan_process, light_process, camera_process, water_process
-
-    load_state()
-
-    #heater: params = on/off frequency
-    heat_process = Popen(['python3', '/home/pi/grow-ctrl/heatingElement.py', str(0)])
-
-    #humidifier: params = on/off frequency
-    hum_process = Popen(['python3', '/home/pi/grow-ctrl/humidityElement.py', str(0)])
-
-    #fan: params = on/off frequency
-    fan_process = Popen(['python3', '/home/pi/grow-ctrl/fanElement.py', str(0)])
-
-    #light & camera: params = light mode, time on, time off, interval
-    light_process = Popen(['python3', '/home/pi/grow-ctrl/lightingElement.py'])
-
-    #camera: params = interval
-    camera_process = Popen(['python3', '/home/pi/grow-ctrl/cameraElement.py', grow_params["cameraInterval"]])
-
-    #watering: params = mode duration interval
-    water_process = Popen(['python3', '/home/pi/grow-ctrl/wateringElement.py'])
-
-#define event listener to collect data and kick off the transfer
-def listen():
+#gets data from serial
+def listen(): #Depends on 'serial', start_serial(); Modifies: ser_in, sensorInfo, temp, hum, last_temp, last_hum, waterLow
     #load in global vars
-    global line,ser_in,sensorInfo,temp,hum,last_temp,last_hum,waterLow
+    global ser_in,sensorInfo,temp,hum,last_temp,last_hum,waterLow
 
     #listen for data from aurdino
     sensorInfo = ser_in.readline().decode('UTF-8').strip().split(' ')
@@ -153,6 +132,55 @@ def listen():
         temp =float(sensorInfo[1])
 
         waterLow = int(sensorInfo[2])
+
+#PD controller to modulate heater feedback
+def heat_pd(temp, targetT, last_temp, last_targetT, P_heat, D_heat): #no dependencies
+    err_temp = temp-targetT
+
+    temp_dot = temp-last_temp
+
+    targetT_dot = targetT-last_targetT
+
+    err_dot_temp = temp_dot-targetT_dot
+
+    heat_level  = P_heat*err_temp + D_heat*err_dot_temp
+    heat_level  = max(min(int(heat_level),100),0)
+
+    return heat_level
+
+#PD controller to modulate humidifier feedback
+def hum_pd(hum, targetH, last_hum, last_targetH, P_hum, D_hum): #no dependencies
+    err_hum = hum-targetH
+
+    hum_dot = hum-last_hum
+
+    targetH_dot = targetH-last_targetH
+
+    err_dot_hum = hum_dot-targetH_dot
+
+    hum_level  = P_hum*err_hum + D_hum*err_dot_hum
+    hum_level  = max(min(int(hum_level),100),0)
+
+    return hum_level
+
+#PD controller to modulate fan feedback
+def fan_pd(temp, hum, targetT, targetH, last_temp, last_hum, last_targetT, last_targetH, Pt_fan, Ph_fan, Dt_fan, Dh_fan): #no dependencies
+    err_temp = temp-targetT
+    err_hum = hum-targetH
+
+    temp_dot = temp-last_temp
+    hum_dot = hum-last_hum
+
+    targetT_dot = targetT-last_targetT
+    targetH_dot = targetH-last_targetH
+
+    err_dot_temp = temp_dot-targetT_dot
+    err_dot_hum = hum_dot-targetH_dot
+
+    fan_level  = Pt_fan*err_temp + Ph_fan*err_hum + Dt_fan*err_dot_temp + Dh_fan*err_dot_hum
+    fan_level  = max(min(int(fan_level),100),0)
+
+    return fan_level
 
 if __name__ == '__main__':
     if str(sys.argv[1]) == "daemon":

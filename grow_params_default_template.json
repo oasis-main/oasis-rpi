@@ -9,5 +9,13 @@
 "waterMode": "off",
 "waterDuration": "15",
 "waterInterval": "3600"
+"P_temp": "75",
+"D_temp": "1",
+"P_hum": "50",
+"D_hum": "5",
+"Pt_fan": "60",
+"Dt_fan": "1",
+"Ph_fan": "1100",
+"Dh_fan": "20"
 }
 
