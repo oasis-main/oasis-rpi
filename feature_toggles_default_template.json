@@ -1,0 +1,10 @@
+{"temp_hum_sensor": "1",
+"water_low_sensor": "1",
+"heater": "1",
+"humidifier": "1",
+"fan": "1",
+"light": "1",
+"camera": "1",
+"water": "1",
+"save_images": "1",
+"save_data": "1"}

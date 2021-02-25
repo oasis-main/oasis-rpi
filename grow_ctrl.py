@@ -3,13 +3,12 @@
 #Shell, PID, Communication, Time
 #---------------------------------------------------------------------------------------
 #Setup Path
-#import shell modules
 import os
 import os.path
 import sys
 
 #set proper path for modules
-sys.path.append('/home/pi/grow-ctrl')
+sys.path.append('/home/pi/O-grow')
 sys.path.append('/usr/lib/python37.zip')
 sys.path.append('/usr/lib/python3.7')
 sys.path.append('/usr/lib/python3.7/lib-dynload')
@@ -17,7 +16,7 @@ sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
 sys.path.append('/usr/local/lib/python3.7/dist-packages')
 sys.path.append('/usr/lib/python3/dist-packages')
 
-#Shell pkgs
+#Process management
 import serial
 import subprocess
 from subprocess import Popen, PIPE, STDOUT
@@ -38,150 +37,99 @@ import pandas
 import time
 import datetime
 
-#-----------------------------------------------------------------------------
-#Exit early if opening subprocess daemon
-#-----------------------------------------------------------------------------
+#declare state variables
+device_state = None #describes the current state of the system
+access_config = None #contains credentials for connecting to firebase
+feature_toggles = None #tells grow_ctrl which elements are active and which are not
+grow_params = None #offers run parameters to grow-ctrl
 
-if str(sys.argv[1]) == "daemon":
-    print("grow_ctrl daemon started")
-    #log daemon start
-    with open('/home/pi/logs/growCtrl_log.json', 'r+') as l:
-        log = json.load(l)
-        log['last_start_mode'] = "daemon" # <--- add `id` value.
-        l.seek(0) # <--- should reset file position to the beginning.
-        json.dump(log, l)
-        l.truncate() # remove remaining part
-    l.close()
-    sys.exit()
-if str(sys.argv[1]) == "main":
-    print("grow_ctrl main started")
-    #log main start
-    with open('/home/pi/logs/growCtrl_log.json', 'r+') as l: #write
-        log = json.load(l)
-        log['last_start_mode'] = "main" # <--- add `id` value.
-        l.seek(0) # <--- should reset file position to the beginning.
-        json.dump(log, l)
-        l.truncate() # remove remaining part
-    l.close
-else:
-    print("please offer valid run parameters")
-    sys.exit()
+#declare process management variables
+ser_in = None
+sensor_info = None
+heat_process = None
+hum_process = None
+fan_process = None
+light_process = None
+camera_process = None
+water_process = None
 
-#---------------------------------------------------------------------------------------
-#INITIALIZATION
-#setting up variables, sensors, controlers, database
-#---------------------------------------------------------------------------------------
-
-#initialize firebase
-#import grow_params
-with open('/home/pi/access_config.json', "r+") as a: #read
-  access_config = json.load(a)
-  id_token = access_config['id_token']
-  local_id = access_config['local_id']
-a.close()
-
-#start serial RPi<-Arduino, used for sensors and other microcontroller peripherals
-#Arduino Uno /dev/ttyACM0
-#Arduino Nano /dev/ttyUSB0
-ser_in = serial.Serial('/dev/ttyACM0',9600)
-line = 0
-sensorInfo = " "
-
-#place holder for sensor data
+#declare sensor data variables
 temp = 0
 hum = 0
-waterLow = 0
-
-#import grow_params
-with open('/home/pi/grow_params.json', "r+") as g:
-  grow_params = json.load(g)
-g.close()
-
-
-#load grow parameters
-targetT = int(grow_params["targetT"])  #temperature set to?
-targetH = int(grow_params["targetH"]) #humidity set to?
-targetL = grow_params["targetL"] #lights on yes or no?
-LtimeOn = int(grow_params["LtimeOn"]) #when turn on 0-23 hr time?
-LtimeOff = int(grow_params["LtimeOff"]) #when turn off 0-23 hr time?
-lightInterval = int(grow_params["lightInterval"]) #how long until update?
-cameraInterval = int(grow_params["cameraInterval"]) #how long until next pic?
-waterMode = grow_params["waterMode"] #watering on yes or no?
-waterDuration = int(grow_params["waterDuration"]) #how long water?
-waterInterval = int(grow_params["waterInterval"]) #how often water?
-
-#initialize actuator subprocesses
-#heater: params = on/off frequency
-heat_process = Popen(['python3', '/home/pi/grow-ctrl/heatingElement.py', str(0)])
-#humidifier: params = on/off frequency
-hum_process = Popen(['python3', '/home/pi/grow-ctrl/humidityElement.py', str(0)])
-#fan: params = on/off frequency
-fan_process = Popen(['python3', '/home/pi/grow-ctrl/fanElement.py', '100'])
-#light & camera: params = light mode, time on, time off, interval
-light_process = Popen(['python3', '/home/pi/grow-ctrl/lightingElement.py', 'on', '0', '0', '10'])
-#camera: params = interval
-camera_process = Popen(['python3', '/home/pi/grow-ctrl/cameraElement.py', '10'])
-#watering: params = mode duration interval
-water_process = Popen(['python3', '/home/pi/grow-ctrl/wateringElement.py', 'off', '0', '10'])
-
-#create controllers:
-
-#heater: PID Library on temperature
-P_temp = 75
-I_temp = 0
-D_temp = 1
-
-pid_temp = PID.PID(P_temp, I_temp, D_temp)
-pid_temp.SetPoint = targetT
-pid_temp.setSampleTime(1)
-
-#humidifier: PID library on humidity
-P_hum = 50
-I_hum = 0
-D_hum = 5
-
-pid_hum = PID.PID(P_hum, I_hum, D_hum)
-pid_hum.SetPoint = targetH
-pid_hum.setSampleTime(1)
-
-#fan: custom proportional and derivative gain on both temperature and humidity
 last_temp = 0
 last_hum = 0
 last_targetT = 0
 last_targetH = 0
+waterLow = 0
 
-Kpt = 60
-Kph = 1100
-Kdt = 1
-Kdh = 20
+#loads device state, hardware, and access configurations
+def load_state(): #Depends on: 'json'; Modifies: device_state,hardware_config ,access_config
+    global device_state, feature_toggles, access_config, grow_params
 
-def fan_pd(temp, hum, targetT, targetH, last_temp, last_hum, last_targetT, last_targetH, Kpt, Kph, Kdt, Kdh):
-    err_temp = temp-targetT
-    err_hum = hum-targetH
+    with open("/home/pi/device_state.json") as d:
+        device_state = json.load(d) #get device state
+    d.close()
 
-    temp_dot = temp-last_temp
-    hum_dot = hum-last_hum
+    with open("/home/pi/access_config.json") as a:
+        access_config = json.load(a) #get access state
+    a.close()
 
-    targetT_dot = targetT-last_targetT
-    targetH_dot = targetH-last_targetH
+    with open("/home/pi/grow_params.json") as g:
+        grow_params = json.load(g)
+    g.close()
 
-    err_dot_temp = temp_dot-targetT_dot
-    err_dot_hum = hum_dot-targetH_dot
+    with open ("/home/pi/feature_toggles.json") as f:
+        feature_toggles = json.load(f)
+    f.close()
 
-    fan_level  = Kpt*err_temp+Kph*err_hum+Kdt*err_dot_temp+err_hum+Kdh*err_dot_hum
-    fan_level  = max(min(int(fan_level),100),0)
+#save key values to .json
+def write_state(path,field,value): #Depends on: load_state(), 'json'; Modifies: path
+    load_state() #get connection status
 
-    return fan_level
+    with open(path, "r+") as x: #write state to local files
+        data = json.load(x)
+        data[field] = value
+        x.seek(0)
+        json.dump(data, x)
+        x.truncate()
+    x.close()
 
+#modifies a firebase variable
+def patch_firebase(dict): #Depends on: load_state(),'requests','json'; Modifies: database{data}, state variables
+    load_state()
+    data = json.dumps(dict)
+    url = "https://oasis-1757f.firebaseio.com/"+str(access_config["local_id"])+"/"+str(access_config["device_name"])+".json?auth="+str(access_config["id_token"])
+    result = requests.patch(url,data)
 
-#---------------------------------------------------------------------------------------
-# Data Management
-#---------------------------------------------------------------------------------------
+#write some data to a .csv, takes a dictionary and a path
+def write_csv(path, dict): #Depends on: 'pandas',
+    #load dict into dataframe
+    df = pandas.DataFrame(dict)
+    #.csv write
+    df.to_csv(str(path), sep='\t', header=None, mode='a')
 
-#define event listener to collect data and kick off the transfer
-def listen():
+#attempts connection to microcontroller
+def start_serial(): #Depends on:'serial'; Modifies: ser_out
+    global ser_in
+
+    try:
+        try:
+            ser_in = serial.Serial("/dev/ttyUSB0", 9600, timeout=1)
+            print("Started serial communication with Arduino Nano.")
+        except:
+            ser_in = serial.Serial("/dev/ttyACM0", 9600, timeout=1)
+            print("Started serial communication with Arduino Uno.")
+    except Exception as e:
+        #ser_in = None
+        print("Serial connection not found")
+
+#gets data from serial
+def listen(): #Depends on 'serial', start_serial(); Modifies: ser_in, sensorInfo, temp, hum, last_temp, last_hum, waterLow
     #load in global vars
-    global line,ser_in,sensorInfo,temp,hum,last_temp,last_hum,waterLow
+    global ser_in,sensorInfo,temp,hum,last_temp,last_hum,waterLow
+
+    if ser_in == None:
+        return
 
     #listen for data from aurdino
     sensorInfo = ser_in.readline().decode('UTF-8').strip().split(' ')
@@ -199,177 +147,274 @@ def listen():
 
         waterLow = int(sensorInfo[2])
 
-#start the clock for timimg data exchanges with server, you'll have to extend this for update management
-start = time.time()
+#PD controller to modulate heater feedback
+def heat_pd(temp, targetT, last_temp, last_targetT, P_heat, D_heat): #no dependencies
+    err_temp = targetT-temp
 
-#---------------------------------------------------------------------------------------
-#MAIN LOOP
-#listen, update, show, send, receive, actuate, wait, -- else die
-#
-#TODO:
-#	Generalize IP
-#	Consolidate Shutdown processes and energy managment
-#	Energy Meter (for both us and users)
-#---------------------------------------------------------------------------------------
+    temp_dot = temp-last_temp
 
-try:
-    while True:
-        #initialize program
-        try:
-            listen()
-        except Exception as e:
-            print(e)
-            print("Serial Port Failure")
+    targetT_dot = targetT-last_targetT
 
-        #feed the data into our PIDs
-        pid_temp.update(temp)
-        pid_hum.update(hum)
+    err_dot_temp = targetT_dot-temp_dot
 
-        #Controller response
-        tempPID_out = pid_temp.output
-        tempPID_out = max( min( int(tempPID_out), 100 ),0)
-        print("Target Temperature: %.1f F | Current: %.1f F | Temp_PID: %s %%"%(targetT, temp, tempPID_out))
+    heat_level  = P_heat*err_temp + D_heat*err_dot_temp
+    heat_level  = max(min(int(heat_level),100),0)
 
-        humPID_out = pid_hum.output
-        humPID_out = max( min( int(humPID_out), 100 ),0)
-        print("Target Humidity: %.1f %% | Current: %.1f %% | Hum_PID: %s %%"%(targetH, hum, humPID_out))
+    return heat_level
 
-        fanPD_out = fan_pd(temp, hum, targetT, targetH, last_temp, last_hum, last_targetT, last_targetH, Kpt, Kph, Kdt, Kdh)
-        print("Fan PD: %s %%"%(fanPD_out))
+#PD controller to modulate humidifier feedback
+def hum_pd(hum, targetH, last_hum, last_targetH, P_hum, D_hum): #no dependencies
+    err_hum = targetH-hum
 
-        if targetL == "on":
-            print("Light Mode: %s | Turns on at: %i hours  | Turns off at: %i hours"%(targetL, LtimeOn, LtimeOff))
-        else:
-            print("Light Mode: %s "%(targetL))
+    hum_dot = hum-last_hum
 
-        if waterLow == 1:
-            print("Water Level Low!")
+    targetH_dot = targetH-last_targetH
 
-        print("Image every %i seconds"%(cameraInterval))
+    err_dot_hum = targetH_dot-hum_dot
+
+    hum_level  = P_hum*err_hum + D_hum*err_dot_hum
+    hum_level  = max(min(int(hum_level),100),0)
+
+    return hum_level
+
+#PD controller to modulate fan feedback
+def fan_pd(temp, hum, targetT, targetH, last_temp, last_hum, last_targetT, last_targetH, Pt_fan, Ph_fan, Dt_fan, Dh_fan): #no dependencies
+    err_temp = temp-targetT
+    err_hum = hum-targetH
+
+    temp_dot = temp-last_temp
+    hum_dot = hum-last_hum
+
+    targetT_dot = targetT-last_targetT
+    targetH_dot = targetH-last_targetH
+
+    err_dot_temp = temp_dot-targetT_dot
+    err_dot_hum = hum_dot-targetH_dot
+
+    fan_level  = Pt_fan*err_temp + Ph_fan*err_hum + Dt_fan*err_dot_temp + Dh_fan*err_dot_hum
+    fan_level  = max(min(int(fan_level),100),0)
+
+    return fan_level
+
+#poll heat subprocess if applicable and relaunch/update actuators
+def run_heat(intensity): #Depends on: 'subprocess'; Modifies: heat_process
+    global heat_process
+
+    try:
+        poll_heat = heat_process.poll() #heat
+        if poll_heat is not None:
+            heat_process = Popen(['python3', '/home/pi/O-grow/heatingElement.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
+    except:
+        heat_process = Popen(['python3', '/home/pi/O-grow//heatingElement.py', str(intensity)]) #If no process, then starts
+
+#poll humidity subprocess if applicable and relaunch/update actuators
+def run_hum(intensity): #Depends on: 'subprocess'; Modifies: hum_process
+    global hum_process
+
+    try:
+        poll_hum = hum_process.poll() #hum
+        if poll_hum is not None:
+            hum_process = Popen(['python3', '/home/pi/O-grow//humidityElement.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
+    except:
+        hum_process = Popen(['python3', '/home/pi/O-grow//humidityElement.py', str(intensity)]) #If no process, then starts
+
+#poll fan subprocess if applicable and relaunch/update actuators
+def run_fan(intensity): #Depends on: 'subprocess'; Modifies: hum_process
+    global fan_process
+
+    try:
+        poll_fan = fan_process.poll() #fan
+        if poll_fan is not None:
+            fan_process = Popen(['python3', '/home/pi/O-grow/fanElement.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
+    except:
+        fan_process = Popen(['python3', '/home/pi/O-grow//fanElement.py', str(intensity)]) #If no process, then starts
+
+#poll light subprocess if applicable and relaunch/update actuators
+def run_light(is_light_on, time_on, time_off, refresh_frequency):
+    global light_process #Depends on: 'subprocess'; Modifies: light_process
+
+    try:
+        poll_light = light_process.poll() #light
+        if poll_light is not None:
+            light_process = Popen(['python3', '/home/pi/O-grow/lightingElement.py', str(is_light_on), str(time_on), str(time_off), str(refresh_frequency)]) #If running, then skips. If idle then restarts, If no process, then fails
+    except:
+        light_process = Popen(['python3', '/home/pi/O-grow//lightingElement.py', str(is_light_on), str(time_on), str(time_off), str(refresh_frequency)]) #If no process, then starts
+
+#poll camera subprocess if applicable and relaunch/update actuators
+def run_camera(picture_frequency): #Depends on: 'subprocess'; Modifies: camera_process
+    global camera_process
+
+    try:
+        poll_camera = camera_process.poll() #camera
+        if poll_camera is not None:
+            camera_process = Popen(['python3', '/home/pi/O-grow/cameraElement.py', str(picture_frequency)]) #If running, then skips. If idle then restarts, If no process, then fails
+    except:
+        camera_process = Popen(['python3', '/home/pi/O-grow//cameraElement.py', str(picture_frequency)]) #If no process, then starts
+
+#poll water subprocess if applicable and relaunch/update actuators
+def run_water(is_water_on, watering_duration, watering_frequency): #Depends on: 'subprocess'; Modifies: water_process
+    global water_process
+
+    try:
+        poll_water = water_process.poll() #water
+        if poll_water is not None:
+            water_process = Popen(['python3', '/home/pi/O-grow/wateringElement.py', str(is_water_on), str(watering_duration), str(watering_frequency)]) #If running, then skips. If idle then restarts, If no process, then fails
+    except:
+        water_process = Popen(['python3', '/home/pi/O-grow//wateringElement.py', str(is_water_on), str(watering_duration), str(watering_frequency)]) #If no process, then starts
+
+#terminates the program and all running subprocesses
+def terminate_program(): #Depends on: load_state(), 'sys', 'subprocess' #Modifies: heat_process, hum_process, fan_process, light_process, camera_process, water_process
+    global heat_process, hum_process, fan_process, light_process, camera_process, water_process
+
+    print("Terminating Program...")
+
+    load_state() #get feature toggles
+
+    if (feature_toggles["heater"] == "1") and (heat_process != None): #go through toggles and kill active processes
+        heat_process.kill()
+        heat_process.wait()
+
+    if (feature_toggles["humidifier"] == "1") and (hum_process != None):
+        hum_process.kill()
+        hum_process.wait()
+
+    if (feature_toggles["fan"] == "1") and (fan_process != None):
+        fan_process.kill()
+        fan_process.wait()
+
+    if (feature_toggles["light"] == "1") and (light_process != None):
+        light_process.kill()
+        light_process.wait()
+
+    if (feature_toggles["camera"] == "1") and (camera_process != None):
+        camera_process.kill()
+        camera_process.wait()
+
+    if (feature_toggles["water"] == "1") and (water_process != None):
+        water_process.kill()
+        water_process.wait()
+
+    sys.exit()
+
+if __name__ == '__main__':
+
+    #Load state variables to start the main program
+    load_state()
+
+    #Exit early if opening subprocess daemon
+    if str(sys.argv[1]) == "daemon":
+        print("grow_ctrl daemon started")
+        #log daemon start
+        write_state('/home/pi/logs/growCtrl_log.json','last_start_mode',"daemon")
+        #kill the program
+        sys.exit()
+    if str(sys.argv[1]) == "main":
+        print("grow_ctrl main started")
+        #log main start
+        write_state('/home/pi/logs/growCtrl_log.json','last_start_mode',"main")
+        #continue with program execution
+        pass
+    else:
+        print("please offer valid run parameters")
+        sys.exit()
+
+    #attempt to make serial connection
+    start_serial()
+
+    #start the clock for timimg .csv writes and data exchanges with server
+    data_timer = time.time()
+
+    #launch main program loop
+    try:
         print("------------------------------------------------------------")
 
-        #exchange data with server after set time elapses
-        if time.time() - start > 5:
-            #get device_state
-            with open('/home/pi/device_state.json') as d:
-                device_state = json.load(d)
-            d.close()
+        while True:
 
-            #for use in python operations
-            dict =  {"time": [str(time.time())], "temp": [str(temp)], "hum": [str(hum)], "waterLow": [str(waterLow)]}
+            last_targetT = int(grow_params["targetT"]) #save last temperature and humidity targets to calculate delta for PD controllers
+            last_targetH = int(grow_params["targetH"])
 
-            #load dict into dataframe
-            df = pandas.DataFrame(dict)
-            #.csv write
-            df.to_csv('/home/pi/Documents/sensor_data.csv', sep='\t', header=None, mode='a')
+            load_state() #regresh the state variables to get new parameters
 
-            #if connected, grab the most recent credentials, exchange data with server
-            if device_state["connected"] == "1":
-                try:
-                    #start clock
-                    start = time.time()
+            try: #attempt to read data from sensor, raise exception if there is a problem
+                listen()
+            except Exception as e:
+                print(e)
+                print("Serial Port Failure")
 
-                    #get new id_token & local_id
-                    with open('/home/pi/access_config.json', "r+") as a:
-                        access_config = json.load(a)
-                        id_token = access_config['id_token']
-                        local_id = access_config['local_id']
-                    a.close()
+            if feature_toggles["heater"] == "1":
+                print("Target Temperature: %.1f F | Current: %.1f F | Temp_PID: %s %%"%(int(grow_params["targetT"]),temp, heat_pd(temp,
+                                                                                                                                  int(grow_params["targetT"]),
+                                                                                                                                  last_temp,
+                                                                                                                                  last_targetT,
+                                                                                                                                  int(grow_params["P_temp"]),
+                                                                                                                                  int(grow_params["D_temp"]))))
+            if feature_toggles["humidifier"] == "1":
+                print("Target Humidity: %.1f %% | Current: %.1f %% | Hum_PID: %s %%"%(int(grow_params["targetH"]), hum, hum_pd(hum,
+                                                                                                                               int(grow_params["targetH"]),
+                                                                                                                               last_hum,
+                                                                                                                               last_targetH,
+                                                                                                                               int(grow_params["P_hum"]),
+                                                                                                                               int(grow_params["D_hum"]))))
 
-                    #sensor data out, needs editing
-                    dict.pop("time")
-                    data = json.dumps(dict)
-                    url = "https://oasis-1757f.firebaseio.com/"+str(local_id)+".json?auth="+str(id_token)
-                    result = requests.patch(url,data)
+            if feature_toggles["fan"] == "1":
+                print("Fan PD: %s %%"%(fan_pd(temp,
+                                              hum,
+                                              int(grow_params["targetT"]),
+                                              int(grow_params["targetH"]),
+                                              last_temp,
+                                              last_hum,
+                                              last_targetT,
+                                              last_targetH,
+                                              int(grow_params["Pt_fan"]),
+                                              int(grow_params["Ph_fan"]),
+                                              int(grow_params["Dt_fan"]),
+                                              int(grow_params["Dh_fan"]))))
 
-                    #pass old targets to derivative bank and update
-                    last_targetT = targetT
-                    last_targetH = targetH
+            if feature_toggles["light"] == "1":
+                print("Light Mode: %s | Turns on at: %i hours  | Turns off at: %i hours"%(grow_params["targetL"], int(grow_params["LtimeOn"]), int(grow_params["LtimeOff"])))
 
-                    #refresh grow_params
-                    with open('/home/pi/grow_params.json') as g:
-                        grow_params = json.load(g)
-                    g.close()
+            if feature_toggles["camera"] == "1":
+                print("Image every %i seconds"%(int(grow_params["cameraInterval"])))
 
-                    #load grow parameters
-                    targetT = int(grow_params["targetT"])  #temperature set to?
-                    targetH = int(grow_params["targetH"]) #humidity set to?
-                    targetL = str(grow_params["targetL"]) #lights on yes or no?
-                    LtimeOn = int(grow_params["LtimeOn"]) #when turn on 0-23 hr time?
-                    LtimeOff = int(grow_params["LtimeOff"]) #when turn off 0-23 hr time?
-                    lightInterval = int(grow_params["lightInterval"]) #how long until update?
-                    cameraInterval = int(grow_params["cameraInterval"]) #how long until next pic?
-                    waterMode = str(grow_params["waterMode"]) #watering on yes or no?
-                    waterDuration = int(grow_params["waterDuration"]) #how long water?
-                    waterInterval = int(grow_params["waterInterval"]) #how often water?
+            if feature_toggles["water"] == "1":
+                print("Watering Mode: %s | Watering for: %i seconds  | Watering every: %i seconds"%(grow_params["waterMode"], int(grow_params["waterDuration"]), int(grow_params["waterInterval"])))
 
-                    #change PID module setpoints to target
-                    pid_temp.SetPoint = targetT
-                    pid_hum.SetPoint = targetH
+            if feature_toggles["water_low_sensor"] == "1":
+                if waterLow == 1:
+                    print("Water Level Low!")
 
-                except (KeyboardInterrupt):
-                    print(" ")
-                    print("Terminating Program...")
-                    heat_process.kill()
-                    heat_process.wait()
-                    hum_process.kill()
-                    hum_process.wait()
-                    fan_process.kill()
-                    fan_process.wait()
-                    light_process.kill()
-                    light_process.wait()
-                    camera_process.kill()
-                    camera_process.wait()
-                    water_process.kill()
-                    water_process.wait()
-                    sys.exit()
-                except Exception as e:
-                    print(e)
-                    pass
+            print("------------------------------------------------------------")
 
+            #write data and send to server after set time elapses
+            if time.time() - data_timer > 5:
 
-            #poll subprocesses if applicable and relaunch/update actuators
-            poll_heat = heat_process.poll() #heat
-            if poll_heat is not None:
-                heat_process = Popen(['python3', '/home/pi/grow-ctrl/heatingElement.py', str(tempPID_out)])
+                #save data to .csv
+                write_csv('/home/pi/Documents/sensor_data.csv',{"time": [str(time.time())], "temp": [temp], "hum": [hum], "waterLow": [waterLow]})
 
-            poll_hum = hum_process.poll() #hum
-            if poll_hum is not None:
-                hum_process = Popen(['python3', '/home/pi/grow-ctrl/humidityElement.py', str(humPID_out)])
+                if device_state["connected"]== "1":
+                    #patch data to firebase
+                    patch_firebase({"temp": [str(temp)], "hum": [str(hum)], "waterLow": [str(waterLow)]})
 
-            poll_fan = fan_process.poll() #fan
-            if poll_fan is not None:
-                fan_process = Popen(['python3', '/home/pi/grow-ctrl/fanElement.py', str(fanPD_out)])
+                #start clock
+                data_timer = time.time()
 
-            poll_light = light_process.poll() #light
-            if poll_light is not None:
-                light_process = Popen(['python3', '/home/pi/grow-ctrl/lightingElement.py', str(targetL), str(LtimeOn), str(LtimeOff), str(lightInterval)])
+            if feature_toggles["heater"] == "1":
+                run_heat(str(heat_pd(temp,int(grow_params["targetT"]),last_temp,last_targetT,int(grow_params["P_temp"]),int(grow_params["D_temp"]))))
+            if feature_toggles["humidifier"] == "1":
+                run_hum(str(hum_pd(hum,int(grow_params["targetH"]),last_hum,last_targetH,int(grow_params["P_hum"]),int(grow_params["D_hum"]))))
+            if feature_toggles["fan"] == "1":
+                run_fan(fan_pd(temp,hum,int(grow_params["targetT"]),int(grow_params["targetH"]),last_temp,last_hum,last_targetT,last_targetH,int(grow_params["Pt_fan"]),int(grow_params["Ph_fan"]),int(grow_params["Dt_fan"]),int(grow_params["Dh_fan"])))
+            if feature_toggles["light"] == "1":
+                run_light(grow_params["targetL"], int(grow_params["LtimeOn"]), int(grow_params["LtimeOff"]), int(grow_params["lightInterval"]))
+            if feature_toggles["camera"] == "1":
+                run_camera(int(grow_params["cameraInterval"]))
+            if feature_toggles["water"] == "1":
+                run_water(grow_params["waterMode"],int(grow_params["waterDuration"]),int(grow_params["waterInterval"]))
 
-            poll_camera = camera_process.poll() #camera
-            if poll_camera is not None:
-                camera_process = Popen(['python3', '/home/pi/grow-ctrl/cameraElement.py', str(cameraInterval)])
+            time.sleep(1)
 
-            poll_water = water_process.poll() #light
-            if poll_water is not None:
-                water_process = Popen(['python3', '/home/pi/grow-ctrl/wateringElement.py', str(waterMode), str(waterDuration), str(waterInterval)])
-
-            #line marks one interation of main loop
-            time.sleep(0.5)
-
-except Exception as e:
-    print(e)
-    print(" ")
-    print("Terminating Program...")
-    heat_process.kill()
-    heat_process.wait()
-    hum_process.kill()
-    hum_process.wait()
-    fan_process.kill()
-    fan_process.wait()
-    light_process.kill()
-    light_process.wait()
-    camera_process.kill()
-    camera_process.wait()
-    water_process.kill()
-    water_process.wait()
-    sys.exit()
+    except (KeyboardInterrupt):
+        terminate_program()
+    except Exception as e:
+        print(e)
+        terminate_program()

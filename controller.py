@@ -4,7 +4,7 @@ import os.path
 import sys
 
 #set proper path for modules
-sys.path.append('/home/pi/grow-ctrl')
+sys.path.append('/home/pi/O-grow')
 sys.path.append('/usr/lib/python37.zip')
 sys.path.append('/usr/lib/python3.7')
 sys.path.append('/usr/lib/python3.7/lib-dynload')
@@ -193,7 +193,7 @@ def check_updates(): #depends on: load_state(),'subproceess', update.py; modifie
     load_state()
     if device_state["connected"] == "1" and device_state["running"] == "0" and device_state["awaiting_update"] == "1": #replicated in the main loop
         #launch update.py and wait to complete
-        update_process = Popen("sudo python3 /home/pi/grow-ctrl/update.py", shell=True)
+        update_process = Popen("sudo python3 /home/pi/O-grow/update.py", shell=True)
         output, error = update_process.communicate()
         if update_process.returncode != 0:
             print("Failure " + str(update_process.returncode)+ " " +str(output)+str(error))
@@ -270,7 +270,7 @@ def check_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); M
     load_state()
     if device_state["AccessPoint"] == "1":
         #launch server subprocess to accept credentials over Oasis wifi network, does not wait
-        server_process = Popen("sudo python3 /home/pi/grow-ctrl/oasis_server.py", shell=True)
+        server_process = Popen("sudo python3 /home/pi/O-grow/oasis_server.py", shell=True)
         print("Access Point Mode enabled")
 
         setup_button_AP()
@@ -300,7 +300,7 @@ def setup_growctrl_process(): #Depends on: load_state(), write_state(), 'subproc
     if device_state["running"] == "1":
 
         #launch grow_ctrl main
-        grow_ctrl_process = Popen(["python3", "/home/pi/grow-ctrl/grow_ctrl.py", "main"])
+        grow_ctrl_process = Popen(["python3", "/home/pi/O-grow/grow_ctrl.py", "main"])
 
         if device_state["connected"] == "1": #if connected
             #LEDmode = "connectedRunning"
@@ -313,7 +313,7 @@ def setup_growctrl_process(): #Depends on: load_state(), write_state(), 'subproc
     else:
 
         #launch sensing-feedback subprocess in daemon mode
-        grow_ctrl_process = Popen(["python3", "/home/pi/grow-ctrl/grow_ctrl.py", "daemon"])
+        grow_ctrl_process = Popen(["python3", "/home/pi/O-grow/grow_ctrl.py", "daemon"])
 
         if device_state["connected"] == "1": #if connected
             #LEDmode = "connectedIdle"
@@ -334,7 +334,7 @@ def check_growctrl_running(): #Depends on: load_state(), write_state(), 'subproc
         poll_grow_ctrl = grow_ctrl_process.poll() #check if grow_ctrl process is running
         if poll_grow_ctrl is not None: #if it is not running
             #launch it
-            grow_ctrl_process = Popen(["python3", "/home/pi/grow-ctrl/grow_ctrl.py", "main"])
+            grow_ctrl_process = Popen(["python3", "/home/pi/O-grow/grow_ctrl.py", "main"])
             print("launched grow-ctrl")
 
             if device_state["connected"] == "1": #if connected
@@ -400,7 +400,7 @@ def switch_growctrl_running(): #Depends on: load_state(), write_state(), patch_f
 
         #start grow_ctrl
         try:
-            grow_ctrl_process = Popen(["python3", "/home/pi/grow-ctrl/grow_ctrl.py", "main"])
+            grow_ctrl_process = Popen(["python3", "/home/pi/O-grow/grow_ctrl.py", "main"])
             print("grow_ctrl process activated")
         except:
             print("failed to start grow_ctrl")

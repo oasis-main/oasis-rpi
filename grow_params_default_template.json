@@ -8,7 +8,7 @@
 "cameraInterval": "3600",
 "waterMode": "off",
 "waterDuration": "15",
-"waterInterval": "3600"
+"waterInterval": "3600",
 "P_temp": "75",
 "D_temp": "1",
 "P_hum": "50",

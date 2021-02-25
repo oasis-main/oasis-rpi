@@ -7,7 +7,7 @@ import sys
 from subprocess import Popen
 
 #set proper path for modules
-sys.path.append('/home/pi/grow-ctrl')
+sys.path.append('/home/pi/O-grow')
 sys.path.append('/usr/lib/python37.zip')
 sys.path.append('/usr/lib/python3.7')
 sys.path.append('/usr/lib/python3.7/lib-dynload')
@@ -19,16 +19,6 @@ import socket, select
 from _thread import *
 import json
 import pickle5 as pickle
-
-#keep list of all sockets
-CONNECTION_LIST = []
-RECV_BUFFER = 4096 #fairly arbitrary buffer size, specifies maximum data to be recieved at once
-PORT = 8000
-
-server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_socket.bind(("0.0.0.0", PORT))
-server_socket.listen(10)
-CONNECTION_LIST.append(server_socket)
 
 #update wpa_supplicant.conf
 def modWiFiConfig(SSID, password):
@@ -72,73 +62,84 @@ def modAccessConfig(name, wak, e, p):
     a.close()
     print("Access configs added")
 
-#modWiFiConfig(" "," ")
-#modAccessConfig(" "," "," "," ")
+def write_state(path,field,value): #Depends on: load_state(), 'json'; Modifies: path
+    load_state() #get connection status
 
-##https://stackoverflow.com/questions/166506/finding-local-ip-addresses-using-pythons-stdlib
-print("Oasis server started on Port: " + str(PORT)+' on IP: '+socket.gethostbyname(socket.gethostname()))
+    with open(path, "r+") as x: #write state to local files
+        data = json.load(x)
+        data[field] = value
+        x.seek(0)
+        json.dump(data, x)
+        x.truncate()
+    x.close()
 
-while True:
-    read_sockets, write_sockets, error_sockets = select.select(CONNECTION_LIST, [], [])
+def enable_WiFi(): #Depends on: 'subprocess'; Modifies: None
+    config_wifi_dchpcd = Popen("sudo cp /etc/dhcpcd_WiFi.conf /etc/dhcpcd.conf", shell = True)
+    config_wifi_dchpcd.wait()
+    config_wifi_dns = Popen("sudo cp /etc/dnsmasq_WiFi.conf /etc/dnsmasq.conf", shell = True)
+    config_wifi_dns.wait()
+    disable_hostapd = Popen("sudo systemctl disable hostapd", shell = True)
+    disable_hostapd.wait()
+    systemctl_reboot = Popen("sudo systemctl reboot", shell = True)
+    systemctl_reboot.wait()
 
-    for sock in read_sockets:
+if __name__ == '__main__':
 
-        #new connection
-        if sock == server_socket:
-            sockfd, addr = server_socket.accept()
-            CONNECTION_LIST.append(sockfd)
-            print("Client (%s, %s) connected" % addr)
+    #keep list of all sockets
+    CONNECTION_LIST = []
+    RECV_BUFFER = 4096 #fairly arbitrary buffer size, specifies maximum data to be recieved at once
+    PORT = 8000
 
-        #incoming message from client
-        else:
-            try:
-                data = sock.recv(RECV_BUFFER)
-                data = pickle.loads(data)
-                print(data)
-                print(type(data))
-                #sys.exit()
-                #print('received data from [%s:%s]: ' % addr + data)
-                ##THIS IS WHERE YOU NEED TO VERIFY THAT THE INFORMATION IS RIGHT
-                modWiFiConfig(str(data['wifi_name']), str(data['wifi_pass']))
-                print("Wifi Added")
-                modAccessConfig(str(data['device_name']), str(data['wak']), str(data['e']), str(data['p']))
-                print('Access Added')
-                sock.send('connected'.encode())
-                sock.close()
-                CONNECTION_LIST.remove(sock)
-                config_wifi_dchpcd = Popen("sudo cp /etc/dhcpcd_WiFi.conf /etc/dhcpcd.conf", shell = True)
-                config_wifi_dchpcd.wait()
-                config_wifi_dns = Popen("sudo cp /etc/dnsmasq_WiFi.conf /etc/dnsmasq.conf", shell = True)
-                config_wifi_dns.wait()
-                disable_hostapd = Popen("sudo systemctl disable hostapd", shell = True)
-                disable_hostapd.wait()
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.bind(("0.0.0.0", PORT))
+    server_socket.listen(10)
+    CONNECTION_LIST.append(server_socket)
 
-                #double check to make sure this works while the listener is running!
-                #set AccessPoint state to "0" before rebooting
-                with open('/home/pi/device_state.json', 'r+') as d:
-                    device_state = json.load(d)
-                    device_state['AccessPoint'] = "0" # <--- add `id` value.
-                    d.seek(0) # <--- should reset file position to the beginning.
-                    json.dump(device_state, d)
-                    d.truncate() # remove remaining part
-                d.close()
+    ##https://stackoverflow.com/questions/166506/finding-local-ip-addresses-using-pythons-stdlib
+    print("Oasis server started on Port: " + str(PORT)+' on IP: '+socket.gethostbyname(socket.gethostname()))
 
-                #set AccessPoint state to "0" before rebooting
-                with open('/home/pi/device_state.json', 'r+') as d:
-                    device_state = json.load(d)
-                    device_state['new_device'] = "1" # <--- add `id` value.
-                    d.seek(0) # <--- should reset file position to the beginning.
-                    json.dump(device_state, d)
-                    d.truncate() # remove remaining part
-                d.close()
+    while True:
+        read_sockets, write_sockets, error_sockets = select.select(CONNECTION_LIST, [], [])
 
-                #exit
-                systemctl_reboot = Popen("sudo systemctl reboot", shell = True)
-                systemctl_reboot.wait()
+        for sock in read_sockets:
 
-            #disconnect
-            except:
-                sock.close()
-                CONNECTION_LIST.remove(sock)
+            #new connection
+            if sock == server_socket:
+                sockfd, addr = server_socket.accept()
+                CONNECTION_LIST.append(sockfd)
+                print("Client (%s, %s) connected" % addr)
 
-server_socket.close()
+            #incoming message from client
+            else:
+                try:
+                    data = sock.recv(RECV_BUFFER)
+                    data = pickle.loads(data)
+                    print(data)
+                    print(type(data))
+                    #sys.exit()
+                    #print('received data from [%s:%s]: ' % addr + data)
+                    ##THIS IS WHERE YOU NEED TO VERIFY THAT THE INFORMATION IS RIGHT
+                    modWiFiConfig(str(data['wifi_name']), str(data['wifi_pass']))
+                    print("Wifi Added")
+                    modAccessConfig(str(data['device_name']), str(data['wak']), str(data['e']), str(data['p']))
+                    print("Access Added")
+                    sock.send('connected'.encode())
+                    sock.close()
+                    CONNECTION_LIST.remove(sock)
+
+                    #double check to make sure this works while the listener is running!
+                    #set AccessPoint state to "0" before rebooting
+                    write_state("/home/pi/device_state.json", "AccessPoint", "0") as d:
+
+                    #set AccessPoint state to "0" before rebooting
+                    write_state("/home/pi/device_state.json", "new_device", "1") as d:
+
+                    #stand up wifi and reboot
+                    enable_WiFi()
+
+                #disconnect
+                except:
+                    sock.close()
+                    CONNECTION_LIST.remove(sock)
+
+    server_socket.close()
