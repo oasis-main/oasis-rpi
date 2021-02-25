@@ -388,8 +388,9 @@ if __name__ == '__main__':
             #write data and send to server after set time elapses
             if time.time() - data_timer > 5:
 
-                #save data to .csv
-                write_csv('/home/pi/Documents/sensor_data.csv',{"time": [str(time.time())], "temp": [temp], "hum": [hum], "waterLow": [waterLow]})
+                if feature_toggles["save_data"] == "1":
+                    #save data to .csv
+                    write_csv('/home/pi/Documents/sensor_data.csv',{"time": [str(time.time())], "temp": [temp], "hum": [hum], "waterLow": [waterLow]})
 
                 if device_state["connected"]== "1":
                     #patch data to firebase
