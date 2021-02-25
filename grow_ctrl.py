@@ -114,10 +114,10 @@ def start_serial(): #Depends on:'serial'; Modifies: ser_out
 
     try:
         try:
-            ser_in = serial.Serial("/dev/ttyUSB0", 9600, timeout=1)
+            ser_in = serial.Serial("/dev/ttyUSB0", 9600)
             print("Started serial communication with Arduino Nano.")
         except:
-            ser_in = serial.Serial("/dev/ttyACM0", 9600, timeout=1)
+            ser_in = serial.Serial("/dev/ttyACM0", 9600)
             print("Started serial communication with Arduino Uno.")
     except Exception as e:
         #ser_in = None

@@ -129,10 +129,10 @@ if __name__ == '__main__':
 
                     #double check to make sure this works while the listener is running!
                     #set AccessPoint state to "0" before rebooting
-                    write_state("/home/pi/device_state.json", "AccessPoint", "0") as d:
+                    write_state("/home/pi/device_state.json", "AccessPoint", "0")
 
                     #set AccessPoint state to "0" before rebooting
-                    write_state("/home/pi/device_state.json", "new_device", "1") as d:
+                    write_state("/home/pi/device_state.json", "new_device", "1")
 
                     #stand up wifi and reboot
                     enable_WiFi()

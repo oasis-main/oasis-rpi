@@ -284,12 +284,16 @@ def check_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); M
                 ser_out.write(bytes(str(device_state["LEDstatus"]+"\n"), "utf-8"))
                 cbutton_state = get_button_state(ConnectButton)
                 if cbutton_state == 0:
-                    enableWiFi()
+                    server_process.kill()
+                    server_process.wait()
+                    enable_WiFi()
         else:
             while True:
                 cbutton_state = get_button_state(ConnectButton)
                 if cbutton_state == 0:
-                    enableWiFi()
+                    server_process.kill()
+                    server_process.wait()
+                    enable_WiFi()
 
 #check if grow_ctrl is supposed to be running, launch it if so. Do nothing if not
 def setup_growctrl_process(): #Depends on: load_state(), write_state(), 'subprocess'; Modifies: grow_ctrl_process, state_variables, device_state.json
@@ -356,10 +360,10 @@ def check_growctrl_running(): #Depends on: load_state(), write_state(), 'subproc
                 pass
 
             if device_state["connected"] == "1": #if connected
-                #send LEDmode = "connectedRunning"
+                #send LEDmode = "connectedIdle"
                 write_state("/home/pi/device_state.json","LEDstatus","connectedIdle")
             else: #if not connected
-                #send LEDmode = "islandRunning"
+                #send LEDmode = "islandIdle"
                 write_state("/home/pi/device_state.json","LEDstatus","islandIdle")
 
 #checks if growctrl is running, kills it if so, starts it otherwise
@@ -374,22 +378,9 @@ def switch_growctrl_running(): #Depends on: load_state(), write_state(), patch_f
         #set running state to off = 0
         write_state("/home/pi/device_state.json","running","0")
 
-        #try to kill grow_ctrl process
-        try:
-            grow_ctrl_process.kill() #if it is running, kill it and launch the daemon
-            grow_ctrl_process.wait()
-            print("grow_ctrl_process deactivated")
-        except:
-            print("grow_ctrl_process not running")
-
-        #Switch LED to idle mode
-        if device_state["connected"] == "1":
-            write_state("/home/pi/device_state.json","LEDstatus","connectedIdle")
-        else:
-            write_state("/home/pi/device_state.json","LEDstatus","islandIdle")
-
     #if not set to running
     else:
+        #start grow_ctrl
 
         #patch firebase if connected
         if device_state["connected"] == "1": #patch firebase if connected
@@ -398,18 +389,7 @@ def switch_growctrl_running(): #Depends on: load_state(), write_state(), patch_f
         #set running state to on = 1
         write_state("/home/pi/device_state.json","running","1")
 
-        #start grow_ctrl
-        try:
-            grow_ctrl_process = Popen(["python3", "/home/pi/O-grow/grow_ctrl.py", "main"])
-            print("grow_ctrl process activated")
-        except:
-            print("failed to start grow_ctrl")
 
-        #Switch LED to running mode
-        if device_state["connected"] == "1":
-            write_state("/home/pi/device_state.json","LEDstatus","connectedRunning")
-        else:
-            write_state("/home/pi/device_state.json","LEDstatus","islandRunning")
 
 #sets up the watering aparatus
 def setup_water(): #Depends on: load_state(), 'RPi.GPIO'; Modifies: WaterElement
@@ -518,15 +498,18 @@ if __name__ == '__main__':
             if sbutton_state == 0:
                 print("User pressed the start/stop button")
                 switch_growctrl_running() #turn growctrl on/off
+                time.sleep(1)
 
             cbutton_state = get_button_state(ConnectButton) #Connect Button
             if cbutton_state == 0:
                 print("User pressed the connect button")
                 enable_AP() #launch access point and reboot
+                time.sleep(1)
 
             wbutton_state = get_button_state(WaterButton) #Water Button
             if wbutton_state == 0:
                 run_water(60) #run the water for 60 seconds
+                time.sleep(1)
 
             if time.time() - led_timer > 5: #send data to LED ever 5s
                 update_LED()
