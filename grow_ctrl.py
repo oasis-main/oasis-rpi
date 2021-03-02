@@ -8,7 +8,7 @@ import os.path
 import sys
 
 #set proper path for modules
-sys.path.append('/home/pi/O-grow')
+sys.path.append('/home/pi/grow-ctrl')
 sys.path.append('/usr/lib/python37.zip')
 sys.path.append('/usr/lib/python3.7')
 sys.path.append('/usr/lib/python3.7/lib-dynload')
@@ -21,9 +21,6 @@ import serial
 import subprocess
 from subprocess import Popen, PIPE, STDOUT
 import signal
-
-#PID pkgs
-import PID
 
 #communicating with firebase
 import requests
@@ -203,9 +200,9 @@ def run_heat(intensity): #Depends on: 'subprocess'; Modifies: heat_process
     try:
         poll_heat = heat_process.poll() #heat
         if poll_heat is not None:
-            heat_process = Popen(['python3', '/home/pi/O-grow/heatingElement.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
+            heat_process = Popen(['python3', '/home/pi/grow-ctrl/heatingElement.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
-        heat_process = Popen(['python3', '/home/pi/O-grow//heatingElement.py', str(intensity)]) #If no process, then starts
+        heat_process = Popen(['python3', '/home/pi/grow-ctrl//heatingElement.py', str(intensity)]) #If no process, then starts
 
 #poll humidity subprocess if applicable and relaunch/update actuators
 def run_hum(intensity): #Depends on: 'subprocess'; Modifies: hum_process
@@ -214,9 +211,9 @@ def run_hum(intensity): #Depends on: 'subprocess'; Modifies: hum_process
     try:
         poll_hum = hum_process.poll() #hum
         if poll_hum is not None:
-            hum_process = Popen(['python3', '/home/pi/O-grow//humidityElement.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
+            hum_process = Popen(['python3', '/home/pi/grow-ctrl//humidityElement.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
-        hum_process = Popen(['python3', '/home/pi/O-grow//humidityElement.py', str(intensity)]) #If no process, then starts
+        hum_process = Popen(['python3', '/home/pi/grow-ctrl//humidityElement.py', str(intensity)]) #If no process, then starts
 
 #poll fan subprocess if applicable and relaunch/update actuators
 def run_fan(intensity): #Depends on: 'subprocess'; Modifies: hum_process
@@ -225,9 +222,9 @@ def run_fan(intensity): #Depends on: 'subprocess'; Modifies: hum_process
     try:
         poll_fan = fan_process.poll() #fan
         if poll_fan is not None:
-            fan_process = Popen(['python3', '/home/pi/O-grow/fanElement.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
+            fan_process = Popen(['python3', '/home/pi/grow-ctrl/fanElement.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
-        fan_process = Popen(['python3', '/home/pi/O-grow//fanElement.py', str(intensity)]) #If no process, then starts
+        fan_process = Popen(['python3', '/home/pi/grow-ctrl//fanElement.py', str(intensity)]) #If no process, then starts
 
 #poll light subprocess if applicable and relaunch/update actuators
 def run_light(is_light_on, time_on, time_off, refresh_frequency):
@@ -236,9 +233,9 @@ def run_light(is_light_on, time_on, time_off, refresh_frequency):
     try:
         poll_light = light_process.poll() #light
         if poll_light is not None:
-            light_process = Popen(['python3', '/home/pi/O-grow/lightingElement.py', str(is_light_on), str(time_on), str(time_off), str(refresh_frequency)]) #If running, then skips. If idle then restarts, If no process, then fails
+            light_process = Popen(['python3', '/home/pi/grow-ctrl/lightingElement.py', str(is_light_on), str(time_on), str(time_off), str(refresh_frequency)]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
-        light_process = Popen(['python3', '/home/pi/O-grow//lightingElement.py', str(is_light_on), str(time_on), str(time_off), str(refresh_frequency)]) #If no process, then starts
+        light_process = Popen(['python3', '/home/pi/grow-ctrl//lightingElement.py', str(is_light_on), str(time_on), str(time_off), str(refresh_frequency)]) #If no process, then starts
 
 #poll camera subprocess if applicable and relaunch/update actuators
 def run_camera(picture_frequency): #Depends on: 'subprocess'; Modifies: camera_process
@@ -247,9 +244,9 @@ def run_camera(picture_frequency): #Depends on: 'subprocess'; Modifies: camera_p
     try:
         poll_camera = camera_process.poll() #camera
         if poll_camera is not None:
-            camera_process = Popen(['python3', '/home/pi/O-grow/cameraElement.py', str(picture_frequency)]) #If running, then skips. If idle then restarts, If no process, then fails
+            camera_process = Popen(['python3', '/home/pi/grow-ctrl/cameraElement.py', str(picture_frequency)]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
-        camera_process = Popen(['python3', '/home/pi/O-grow//cameraElement.py', str(picture_frequency)]) #If no process, then starts
+        camera_process = Popen(['python3', '/home/pi/grow-ctrl//cameraElement.py', str(picture_frequency)]) #If no process, then starts
 
 #poll water subprocess if applicable and relaunch/update actuators
 def run_water(is_water_on, watering_duration, watering_frequency): #Depends on: 'subprocess'; Modifies: water_process
@@ -258,9 +255,9 @@ def run_water(is_water_on, watering_duration, watering_frequency): #Depends on: 
     try:
         poll_water = water_process.poll() #water
         if poll_water is not None:
-            water_process = Popen(['python3', '/home/pi/O-grow/wateringElement.py', str(is_water_on), str(watering_duration), str(watering_frequency)]) #If running, then skips. If idle then restarts, If no process, then fails
+            water_process = Popen(['python3', '/home/pi/grow-ctrl/wateringElement.py', str(is_water_on), str(watering_duration), str(watering_frequency)]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
-        water_process = Popen(['python3', '/home/pi/O-grow//wateringElement.py', str(is_water_on), str(watering_duration), str(watering_frequency)]) #If no process, then starts
+        water_process = Popen(['python3', '/home/pi/grow-ctrl//wateringElement.py', str(is_water_on), str(watering_duration), str(watering_frequency)]) #If no process, then starts
 
 #terminates the program and all running subprocesses
 def terminate_program(): #Depends on: load_state(), 'sys', 'subprocess' #Modifies: heat_process, hum_process, fan_process, light_process, camera_process, water_process

@@ -1,8 +1,5 @@
 #---------------------------------------------------------------------------------------
 #Manages Camera Timing & Image transmission
-#TODO:
-# - generalize IP, pass in as argumen from main file and take as input function to
-# - functionalize image capture and posting capability
 
 import os
 import os.path
@@ -26,17 +23,33 @@ import requests
 import json
 import pyrebase
 
-#get device_state
-with open('/home/pi/device_state.json') as d:
-    device_state = json.load(d)
-d.close()
+#declare state variables
+device_state = None #describes the current state of the system
+feature_toggles = None #holds feature toggles
+access_config = None #contains credentials for connecting to firebase
 
-with open('/home/pi/access_config.json', "r+") as a:
-  access_config = json.load(a)
-  id_token = access_config['id_token']
-  local_id = access_config['local_id']
-  refresh_token = access_config['refresh_token']
-a.close()
+#loads device state, hardware, and access configurations
+def load_state(): #Depends on: 'json'; Modifies: device_state,hardware_config ,access_config
+    global device_state, feature_toggles, access_config
+
+    with open("/home/pi/device_state.json") as d:
+        device_state = json.load(d) #get device state
+    d.close()
+
+    with open("/home/pi/feature_toggles.json") as f:
+        feature_toggles = json.load(f) #get hardware state
+    f.close()
+
+    with open("/home/pi/access_config.json") as a:
+        access_config = json.load(a) #get access state
+    a.close()
+
+#modifies a firebase variable
+def patch_firebase(field,value): #Depends on: load_state(),'requests','json'; Modifies: database['field'], state variables
+    load_state()
+    data = json.dumps({field: value})
+    url = "https://oasis-1757f.firebaseio.com/"+str(access_config["local_id"])+"/"+str(access_config["device_name"])+".json?auth="+str(access_config["id_token"])
+    result = requests.patch(url,data)
 
 def initialize_user(refresh_token):
 #app configuration information
@@ -57,28 +70,30 @@ def initialize_user(refresh_token):
 def send_image(user, storage, path):
 	storage.child(user['userId']+path).put(path, user['idToken'])
 
-#define a function to actuate element
-def actuate(interval): #amount of time between shots
-
-    #timestamp image
-    timestamp = time.time()
-
-    #add USB path
-
-
-    #set timestamp file name
-    image_path = '/home/pi/image_feed/culture_image'+str(timestamp)+'.jpg'
-
+def take_picture(image_path):
+    #take picture and save to standard location
     still = Popen('sudo raspistill -o ' + str(image_path), shell=True) #snap: call the camera
     still.wait()
 
-    save_most_recent = Popen('cp ' + image_path + ' /home/pi/image.jpg', shell=True)
+def save_to_feed(image_path):
+    #timestamp image
+    timestamp = time.time()
+    #move timestamped image into feed
+    save_most_recent = Popen('cp ' + image_path + ' /home/pi/image_feed/culture_image'+str(timestamp)+'.jpg', shell=True)
     save_most_recent.wait()
+
+#define a function to actuate element
+def actuate(interval): #amount of time between shots
+    load_state()
+    take_picture('/home/pi/image.jpg')
+
+    if feature_toggles["save_images"] == "1":
+        save_to_feed('/home/pi/image.jpg')
 
     if device_state["connected"] == "1":
 
         #get user info
-        user, db, storage = initialize_user(refresh_token)
+        user, db, storage = initialize_user(access_config["refresh_token"])
         print("got credentials")
 
         #send new image to firebase
@@ -86,9 +101,7 @@ def actuate(interval): #amount of time between shots
         print("sent image")
 
         #tell firebase that there is a new image
-        url = "https://oasis-1757f.firebaseio.com/"+str(local_id)+".json?auth="+str(id_token)
-        params = json.dumps({"new_image":str(int(1))})
-        result = requests.patch(url,params)
+        patch_firebase("new_image","1")
         print("firebase has an image in waiting")
 
     time.sleep(float(interval))
