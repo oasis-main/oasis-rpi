@@ -4,7 +4,7 @@
 
 grow-ctrl, developed by OASIS, is an open toolkit for controlled environment cultivation, remote monitoring, and data collection. It is maintained with the goal of making the capabilities of automated gardening, precision agriculture, and cell culturing available to everyone. All functions can be accomplished with a RaspberryPi + Arduino and the requisite peripheral hardware. The software interfaces a sensor array, camera, and appliance set and is controllable via shell or mobile app interface (currently in Beta).     
 
-#Instructions
+# Instructions for Use
 
 **Using with Interface:**
 
