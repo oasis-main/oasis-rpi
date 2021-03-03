@@ -27,7 +27,7 @@ Whether you are using OASIS hardware (coming soon) or followed the DIY wiring gu
 
     3. Water Button: this runs the watering pump for 60 seconds, if there is one connected. It is most useful for draining setups with bulky reservoirs and tanks via hose.      
 
-** Using the Command Line: **
+**Using the Command Line:**
 
 grow-ctrl can be run directly from the command line. This is the ideal option for those who would like to use custom interfaces and integrate their own scripts + programming (we are accepting collaborators, contributions, & pull requests! Hit us up mike@oasisregenerative.com). In order to do this, please obtain the required hardware running grow-ctrl as a pre-flashed image (contact us) or built from source (see below).
 
