@@ -63,7 +63,6 @@ def modAccessConfig(name, wak, e, p):
     print("Access configs added")
 
 def write_state(path,field,value): #Depends on: load_state(), 'json'; Modifies: path
-    load_state() #get connection status
 
     with open(path, "r+") as x: #write state to local files
         data = json.load(x)

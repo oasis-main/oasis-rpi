@@ -36,6 +36,7 @@ hardware_config = None #holds hardware I/O setting & pin #s
 access_config = None #contains credentials for connecting to firebase
 
 #declare process management variables
+listener = None
 ser_out = None #object for writing to the microcontroller via serial
 grow_ctrl_process = None #variable to launch & manage the grow controller
 WaterElement = None #holds GPIO object for running the watering aparatus
@@ -145,6 +146,11 @@ def check_new_device(): #depends on: ;modifies:
         write_state("/home/pi/device_state.json","new_device","0")
         print("New device added to firebase")
 
+#launches a script to detect changes in the database
+def launch_listener(): #depends on 'subprocess', modifies: state variables
+    global listener
+    listener = Popen(["sudo", "python3", "/home/pi/grow-ctrl/detect_db_events.py"])
+
 #connects system to firebase
 def connect_firebase(): #depends on: load_state(), write_state(), patch_firebase(), 'requests'; Modifies: access_config.json, device_state.json
     #load state so we can use access credentials
@@ -182,6 +188,9 @@ def connect_firebase(): #depends on: load_state(), write_state(), patch_firebase
         write_state('/home/pi/device_state.json',"connected","1")
         print("Device is connected to the Oasis Network")
 
+        #launches listener to detect changes in database and read into buffer
+        launch_listener()
+
     except Exception as e:
         print(e) #display error
         #write state as not connected
@@ -193,7 +202,7 @@ def check_updates(): #depends on: load_state(),'subproceess', update.py; modifie
     load_state()
     if device_state["connected"] == "1" and device_state["running"] == "0" and device_state["awaiting_update"] == "1": #replicated in the main loop
         #launch update.py and wait to complete
-        update_process = Popen("sudo python3 /home/pi/grow-ctrl/update.py", shell=True)
+        update_process = Popen(["sudo", "python3", "/home/pi/grow-ctrl/update.py"])
         output, error = update_process.communicate()
         if update_process.returncode != 0:
             print("Failure " + str(update_process.returncode)+ " " +str(output)+str(error))
@@ -270,7 +279,7 @@ def check_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); M
     load_state()
     if device_state["AccessPoint"] == "1":
         #launch server subprocess to accept credentials over Oasis wifi network, does not wait
-        server_process = Popen("sudo python3 /home/pi/grow-ctrl/oasis_server.py", shell=True)
+        server_process = Popen(["sudo", "python3", "/home/pi/grow-ctrl/oasis_server.py"])
         print("Access Point Mode enabled")
 
         setup_button_AP()

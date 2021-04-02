@@ -35,11 +35,36 @@ import pyrebase
 from multiprocessing import Process, Queue
 import json
 
-#get refresh token
-with open('/home/pi/access_config.json', "r+") as a:
-  access_config = json.load(a)
-  RefreshToken = access_config['refresh_token']
-a.close()
+#declare state variables
+device_state = None #describes the current state of the system
+grow_params = None #holds growing parameters
+access_config = None #contains credentials for connecting to firebase
+
+#loads device state, hardware, and access configurations
+def load_state(): #Depends on: 'json'; Modifies: device_state,hardware_config ,access_config
+    global device_state, grow_params, access_config
+
+    with open("/home/pi/device_state.json") as d:
+        device_state = json.load(d) #get device state
+    d.close()
+
+    with open("/home/pi/grow_params.json") as g:
+        grow_params = json.load(g) #get hardware state
+    g.close()
+
+    with open("/home/pi/access_config.json") as a:
+        access_config = json.load(a) #get access state
+    a.close()
+
+#save key values to .json
+def write_state(path,field,value): #Depends on:, 'json'; Modifies: path
+    with open(path, "r+") as x: #write state to local files
+        data = json.load(x)
+        data[field] = value
+        x.seek(0)
+        json.dump(data, x)
+        x.truncate()
+    x.close()
 
 def initialize_user(RefreshToken):
 
@@ -83,7 +108,7 @@ def stream_handler(m):
         print('something wierd...')
 
 def detect_field_event(user, db, field):
-    my_stream = db.child(user['userId']+'/'+field).stream(stream_handler, user['idToken'], stream_id=field)
+    my_stream = db.child(user['userId']+'/'+access_config["device_name"]+"/"+field).stream(stream_handler, user['idToken'], stream_id=field)
 
 #https://stackoverflow.com/questions/2046603/is-it-possible-to-run-function-in-a-subprocess-without-threading-or-writing-a-se
 #https://stackoverflow.com/questions/200469/what-is-the-difference-between-a-process-and-a-thread#:~:text=A%20process%20is%20an%20execution,sometimes%20called%20a%20lightweight%20process.
@@ -100,8 +125,8 @@ def act_on_event(field, new_data):
 
     #checks if file exists and makes a blank one if not
     #the path has to be set for box
-    device_state_fields = ["connected","running","LEDstatus","AccessPoint","LEDtimeon","LEDtimeoff","awaiting_update"]
-    grow_params_fields = ["targetT","targetH","targetL","LtimeOn","LtimeOff","lightInterval","cameraInterval","waterMode","waterDuration","waterInterval"]
+    device_state_fields = list(device_state.keys())
+    grow_params_fields = list(device_state.keys())
 
     if str(field) in device_state_fields:
         path = '/home/pi/device_state_buffer.json'
@@ -115,47 +140,24 @@ def act_on_event(field, new_data):
 
     #open data config file
     #edit appropriate spot
-
-    print(path)
-
-    with open(path, 'r+') as r: #writer
-        data = json.load(r)
-        data[str(field)] = str(new_data)
-        r.seek(0) # <--- should reset file position to the beginning
-        json.dump(data, r)
-        r.truncate()
-    r.close()
-
+    #print(path)
+    write_state(path,field,new_data)
 
 if __name__ == '__main__':
-    print("Initializing...")
-    time.sleep(20)
+    print("Starting listener...")
+    load_state()
     try:
-        user, db = initialize_user(RefreshToken)
-        print("Begin database monitoring")
+        user, db = initialize_user(access_config['refresh_token'])
+        print("Database monitoring: active")
     except Exception as e:
-        #print(e)
-        print("Connection failed, terminating listener...")
+        print("Listener could not connect")
+        print("Database monitoring: inactive")
         sys.exit()
-    #print(get_user_data(user, db))
+    #print(get_user_data(user, db)) #Avi what do these lines do
     #detect_field_event(user, db, 'set_temp')
-    fields = ["connected",
-              "running",
-              "LEDstatus",
-              "AccessPoint",
-              "LEDtimeon",
-              "LEDtimeoff",
-              "awaiting_update",
-              "targetT",
-              "targetH",
-              "targetL",
-              "LtimeOn",
-              "LtimeOff",
-              "lightInterval",
-              "cameraInterval",
-              "waterMode",
-              "waterDuration",
-              "waterInterval"]
+    device_state_fields = list(device_state.keys())
+    grow_params_fields = list(device_state.keys())
+    fields = device_state_fields + grow_params_fields
 
     detect_multiple_field_events(user, db, fields)
 
