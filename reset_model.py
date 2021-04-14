@@ -33,4 +33,4 @@ def reset_logs()
 
   
 if __name__ == "__main__":
-  reset_device_state()
+    reset_device_state()
