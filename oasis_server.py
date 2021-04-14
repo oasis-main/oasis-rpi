@@ -82,6 +82,10 @@ def enable_WiFi(): #Depends on: 'subprocess'; Modifies: None
     systemctl_reboot = Popen("sudo systemctl reboot", shell = True)
     systemctl_reboot.wait()
 
+#launches a script to detect changes in the database
+def reset_state(): #depends on 'subprocess', modifies: state variables
+    reset_process = Popen(["sudo", "python3", "/home/pi/grow-ctrl/reset_model.py"])    
+    
 if __name__ == '__main__':
 
     #keep list of all sockets
@@ -126,9 +130,8 @@ if __name__ == '__main__':
                     sock.close()
                     CONNECTION_LIST.remove(sock)
 
-                    #double check to make sure this works while the listener is running!
-                    #set AccessPoint state to "0" before rebooting
-                    write_state("/home/pi/device_state.json", "AccessPoint", "0")
+                    #reset_box
+                    reset_state()
 
                     #set AccessPoint state to "0" before rebooting
                     write_state("/home/pi/device_state.json", "new_device", "1")
