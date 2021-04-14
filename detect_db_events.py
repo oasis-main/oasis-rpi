@@ -126,7 +126,7 @@ def act_on_event(field, new_data):
     #checks if file exists and makes a blank one if not
     #the path has to be set for box
     device_state_fields = list(device_state.keys())
-    grow_params_fields = list(device_state.keys())
+    grow_params_fields = list(grow_params.keys())
 
     if str(field) in device_state_fields:
         path = '/home/pi/device_state_buffer.json'
@@ -156,7 +156,7 @@ if __name__ == '__main__':
     #print(get_user_data(user, db)) #Avi what do these lines do
     #detect_field_event(user, db, 'set_temp')
     device_state_fields = list(device_state.keys())
-    grow_params_fields = list(device_state.keys())
+    grow_params_fields = list(grow_params.keys())
     fields = device_state_fields + grow_params_fields
 
     detect_multiple_field_events(user, db, fields)
