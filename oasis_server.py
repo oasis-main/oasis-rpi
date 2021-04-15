@@ -84,8 +84,9 @@ def enable_WiFi(): #Depends on: 'subprocess'; Modifies: None
 
 #launches a script to detect changes in the database
 def reset_state(): #depends on 'subprocess', modifies: state variables
-    reset_process = Popen(["sudo", "python3", "/home/pi/grow-ctrl/reset_model.py"])    
-    
+    reset_process = Popen(["sudo", "python3", "/home/pi/grow-ctrl/reset_model.py"])
+    reset_process.wait()
+
 if __name__ == '__main__':
 
     #keep list of all sockets

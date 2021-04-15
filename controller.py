@@ -32,6 +32,7 @@ import datetime
 
 #declare state variables
 device_state = None #describes the current state of the system
+grow_params = None #describes the grow configuration of the system
 hardware_config = None #holds hardware I/O setting & pin #s
 access_config = None #contains credentials for connecting to firebase
 
@@ -48,11 +49,15 @@ WaterButton = None #holds GPIO object for triggering the watering aparatus
 
 #loads device state, hardware, and access configurations
 def load_state(): #Depends on: 'json'; Modifies: device_state,hardware_config ,access_config
-    global device_state, hardware_config, access_config
+    global device_state, grow_params, hardware_config, access_config
 
     with open("/home/pi/device_state.json") as d:
         device_state = json.load(d) #get device state
     d.close()
+
+    with open("/home/pi/grow_params.json") as g:
+        grow_params = json.load(g) #get device state
+    g.close()
 
     with open("/home/pi/hardware_config.json") as h:
         hardware_config = json.load(h) #get hardware state
@@ -136,12 +141,22 @@ def get_local_credentials(refresh_token): #Depends on: load_state(), write_state
 #check if the device is waiting to be added to firebase, if it is then add it, otherwise skip
 def check_new_device(): #depends on: ;modifies:
     load_state()
+
     if device_state["new_device"] == "1":
-        my_data = "{\"" + access_config["device_name"] + '\":{"connected":"1","running":"0","LEDstatus":"off","AccessPoint":"0","LEDtimeon":"0","LEDtimeoff":"0","awaiting_update":"0","targetT":"70","targetH":"90","targetL":"on","LtimeOn":"8","LtimeOff":"20","lightInterval":"60","cameraInterval":"3600","waterMode":"off","waterDuration":"15","waterInterval":"3600","temp":"N/A","hum":"N/A","waterLow":"0","new_image":"0","new_device":"0"}}'
+
+        #assemble data to initialize firebase
+        setup_dict = {}
+        setup_dict.update(device_state)
+        setup_dict.update(grow_params)
+        setup_dict_named = {access_config["device_name"] : setup_dict}
+        my_data = json.dumps(setup_dict_named)
+        #print(my_data)
+        #print(type(my_data))
 
         #add box data to firebase
         url = "https://oasis-1757f.firebaseio.com/"+access_config["local_id"]+".json?auth="+access_config["id_token"]
         post_request = requests.patch(url,my_data)
+        #print(post_request.ok)
 
         write_state("/home/pi/device_state.json","new_device","0")
         print("New device added to firebase")
