@@ -2,20 +2,41 @@
 
 grow-ctrl, developed by OASIS, is an open toolkit for controlled environment cultivation, remote monitoring, and data collection. It is maintained with the goal of making the capabilities of automated gardening, precision agriculture, and cell culturing available to everyone. All functions can be accomplished with a RaspberryPi + Arduino and the requisite peripheral hardware. The software interfaces a sensor array, camera, and appliance set and is controllable via shell or mobile app interface (currently in Beta).     
 
+# Get started with a pre-built image
+
+Download our grow-ctrl image to get started right away! Available here: https://drive.google.com/drive/folders/1bbqZBXVvcPGmtm_TweJJgc5ww8IDLcl-?usp=sharing
+
+Setup:
+  1. Download Balena Etcher: https://www.balena.io/etcher/
+  
+  2. Connect a micro-SD card to your personal computer
+  
+  3. Format the micro-SD in the MS-DOS (FAT) style. This will be done differently depending on the operating system of your personal computer. 
+  With MacOS, it is done using disk utility
+  
+  4. Open up balena etcher, follow onscreen instructions to flash the grow-ctrl image to the SD, will eject automatically when finished
+  
+  5. Place the SD card into the front slot of the Raspberry Pi
+  
+  6. Connect a keyboard and monitor to the board via USB. Proceeed to instructions in the text below.
+
+Note: You'll still have to configure wifi and flash the Adruino code to use the full set of features.
+
 # Instructions for Use
 
 **Using with Interface:**
 
-To use the platform with the button interface and Oasis App, make sure you have a Raspberry Pi, Arduino, and related hardware running pre-flashed debian image (please contact us) or grow-ctrl software built from source (see below). Power on the Raspberry pi, open a terminal and run:
+To use the platform with the button interface and Oasis App, make sure you have a Raspberry Pi, Arduino, and related hardware running a pre-flashed debian image (see above) or grow-ctrl software built from source (see below).
 
-    sudo crontab -e
+Power on the Raspberry pi, open a terminal and run:
+
+    sudo nano /etc/rc.local
 
 Go to the bottom of the file and uncomment (remove the hashtag at the beginning of) the following lines:
 
-    #@reboot sh /home/pi/grow-ctrl/launcher.sh >/home/pi/logs/cronlog_launcher 2>&1
-    #@reboot sh /home/pi/grow-ctrl/listener.sh >/home/pi/logs/cronlog_listener 2>&1
+    #sudo python3 /home/pi/grow-ctrl/controller.py
 
-The first line launches our interface script which accepts button inputs, controlls the precision growing process, and manages the optional connection process with the Oasis cloud and mobile app. The second line sets up a program which listens for mobile app commands, cloud service messages, and software-updates. This all happens on reboot, so we'll run the following command to get it up and running:
+This line launches our interface script on startup which accepts button inputs, controls the growing environment, collects harvest data, and manages the optional connection process with the Oasis cloud and mobile app. This all happens on reboot, so we'll run the following command to get it up and running:
 
     sudo reboot
 
@@ -45,11 +66,11 @@ To make use of the button interface for controlling the grow cycles, use this in
 
 To start either the button controller interface at startup, run:
 
-    sudo crontab -e
+    sudo nano /etc/rc.local
     
-and uncomment the following line
+and uncomment the following line:
 
-    #@reboot sh /home/pi/grow-ctrl/launcher.sh >/home/pi/logs/cronlog_launcher 2>&1
+    ##sudo python3 /home/pi/grow-ctrl/controller.py
 
 You can edit the launcher.sh script to lauch either controller.py (button interface), or grow_ctrl.py main (raw grow process manager). 
 
@@ -124,16 +145,11 @@ Alternatively, you can add your credentials to the /etc/wpa_supplicant/wpa_suppl
 
 6. Plug in arduino to pi via usb
 
-7. Open terminal, run:
-
-       ls /dev/tty*
-
-      - You should see the port which the arduino is plugged into. To determine which port it actuallyis, unplug the arduino and run the command again to see which ones appear and disappear
-      - Copy the serial port ID in quotes to the python scripts (in this case, controller.py, oasis_server.py, grow_ctrl.py) -> serial.Serial(‘your port’,9600)
-
 # DIY Hardware Setup
 
-DIYers can purchase a complete PCB (currently in Beta) to get a jump on wiring or instead follow the prototype wiring diagram available here: https://docs.google.com/spreadsheets/d/e/2PACX-1vQgn0rGJVujcdRgQUK21jd7PybuvJZdb9DuSV6mf8QKvGKiNE8npMvLlrqJvNgFDA/pubhtml
+DIYers can purchase a complete PCB (currently in Beta) to get a jump on wiring or instead follow the prototype wiring diagram available here: https://drive.google.com/drive/folders/1jkARU0VrMkFMp18-Fvo4N2hcPtA7zahQ?usp=sharing
+
+Note: We are not dedicated electrical engineers, as some of you may be able to tell from the wiring guide. If you know how to make good circuit diagrams, we could use your help, so shoot us an email!
 
 # Build Raspberry Pi from Source
 
