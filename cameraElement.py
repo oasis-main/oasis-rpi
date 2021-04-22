@@ -68,7 +68,13 @@ def initialize_user(refresh_token):
     return user, db, storage
 
 def send_image(user, storage, path):
-	storage.child(user['userId']+path).put(path, user['idToken'])
+    #send new image to firebase
+    storage.child(user['userId'] + "/" + access_config["device_name"] + "/image.jpg").put(path, user['idToken'])
+    print("sent image")
+
+    #tell firebase that there is a new image
+    patch_firebase("new_image","1")
+    print("firebase has an image in waiting")
 
 def take_picture(image_path):
     #take picture and save to standard location
@@ -98,16 +104,12 @@ def actuate(interval): #amount of time between shots
 
         #send new image to firebase
         send_image(user, storage, '/home/pi/image.jpg')
-        print("sent image")
-
-        #tell firebase that there is a new image
-        patch_firebase("new_image","1")
-        print("firebase has an image in waiting")
 
     time.sleep(float(interval))
 
-try:
-    actuate(str(sys.argv[1]))
-except KeyboardInterrupt:
-    print("Interrupted")
+if __name__ == '__main__':
+    try:
+        actuate(str(sys.argv[1]))
+    except KeyboardInterrupt:
+        print("Interrupted")
 

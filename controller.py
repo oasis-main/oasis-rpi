@@ -483,7 +483,7 @@ if __name__ == '__main__':
 
     #Initialize Oasis:
     print("Initializing...")
-    time.sleep(10)
+    time.sleep(20)
     load_state()
     start_serial()
     check_AP()
