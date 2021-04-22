@@ -464,7 +464,8 @@ def sync_cloud_state(): #Depends on: 'json','subprocess'
     except Exception as e:
         print("concurrent writing collision: device_state")
         print(e)
-        pass
+        reset_device_state_buffer = Popen("sudo cp /home/pi/grow-ctrl/device_state_default_template.json /home/pi/device_state_buffer.json", shell = True)
+        reset_device_state_buffer.wait()
 
     try:
         with open("/home/pi/grow_params_buffer.json") as g_buff:
@@ -475,7 +476,8 @@ def sync_cloud_state(): #Depends on: 'json','subprocess'
     except Exception as e:
         print("concurrent writing collision: grow_params")
         print(e)
-        pass
+        reset_grow_params_buffer = Popen("sudo cp /home/pi/grow-ctrl/grow_params_default_template.json /home/pi/grow_params_buffer.json", shell = True)
+        reset_grow_params_buffer.wait()
 
 if __name__ == '__main__':
 
