@@ -103,7 +103,7 @@ def test_water():
     except:
         print("Water actuator not triggering, there is a problem with the software")
 
-def test_database_connection():
+def test_cloud_connection():
     load_state()
     print("Testing firebase connection")
     try:
@@ -123,7 +123,7 @@ def run_all_tests():
     test_fan()
     test_light()
     test_water()
-    test_database_connection()
+    test_cloud_connection()
 
 if __name__ == "__main__":
    load_state()

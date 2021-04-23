@@ -1,0 +1,9 @@
+Serial connection not working
+Camera launched, check to ensure correct behavior
+Heat actuator launched, check to ensure correct behavior
+Humidity actuator launched, check to ensure correct behavior
+Fan actuator launched, check to ensure correct behavior
+Lighting actuator launched, check to ensure correct behavior
+Water actuator launched, check to ensure correct behavior
+Testing firebase connection
+Firebase connection not working
