@@ -138,34 +138,6 @@ def get_local_credentials(refresh_token): #Depends on: load_state(), write_state
 
     print("Obtained local credentials")
 
-#check if the device is waiting to be added to firebase, if it is then add it, otherwise skip
-def check_new_device(): #depends on: ;modifies:
-    load_state()
-
-    if device_state["new_device"] == "1":
-
-        #assemble data to initialize firebase
-        setup_dict = {}
-        setup_dict.update(device_state)
-        setup_dict.update(grow_params)
-        setup_dict_named = {access_config["device_name"] : setup_dict}
-        my_data = json.dumps(setup_dict_named)
-        #print(my_data)
-        #print(type(my_data))
-
-        #add box data to firebase
-        url = "https://oasis-1757f.firebaseio.com/"+access_config["local_id"]+".json?auth="+access_config["id_token"]
-        post_request = requests.patch(url,my_data)
-        #print(post_request.ok)
-
-        write_state("/home/pi/device_state.json","new_device","0")
-        print("New device added to firebase")
-
-#launches a script to detect changes in the database
-def launch_listener(): #depends on 'subprocess', modifies: state variables
-    global listener
-    listener = Popen(["sudo", "python3", "/home/pi/grow-ctrl/detect_db_events.py"])
-
 #connects system to firebase
 def connect_firebase(): #depends on: load_state(), write_state(), patch_firebase(), 'requests'; Modifies: access_config.json, device_state.json
     #load state so we can use access credentials
@@ -193,9 +165,6 @@ def connect_firebase(): #depends on: load_state(), write_state(), patch_firebase
         #fetch a new id_token & local_id
         get_local_credentials(refresh_token)
 
-        #check if new device
-        check_new_device()
-
         #let firebase know the connection was successful
         patch_firebase("connected","1")
 
@@ -203,24 +172,71 @@ def connect_firebase(): #depends on: load_state(), write_state(), patch_firebase
         write_state('/home/pi/device_state.json',"connected","1")
         print("Device is connected to the Oasis Network")
 
-        #launches listener to detect changes in database and read into buffer
-        launch_listener()
-
     except Exception as e:
         print(e) #display error
         #write state as not connected
         write_state("/home/pi/device_state.json","connected","0")
         print("Could not connect to Oasis Network")
 
+#check if the device is waiting to be added to firebase, if it is then add it, otherwise skip
+def check_new_device(): #depends on: ;modifies:
+    load_state()
+
+    if device_state["new_device"] == "1":
+
+        #assemble data to initialize firebase
+        setup_dict = {}
+        setup_dict.update(device_state)
+        setup_dict.update(grow_params)
+        setup_dict_named = {access_config["device_name"] : setup_dict}
+        my_data = json.dumps(setup_dict_named)
+        #print(my_data)
+        #print(type(my_data))
+
+        #add box data to firebase
+        url = "https://oasis-1757f.firebaseio.com/"+access_config["local_id"]+".json?auth="+access_config["id_token"]
+        post_request = requests.patch(url,my_data)
+        #print(post_request.ok)
+
+        write_state("/home/pi/device_state.json","new_device","0")
+        print("New device added to firebase")
+
 #checks for available updates, executes if connected & idle, waits for completion
 def check_updates(): #depends on: load_state(),'subproceess', update.py; modifies: system code, state variables
     load_state()
-    if device_state["connected"] == "1" and device_state["running"] == "0" and device_state["awaiting_update"] == "1": #replicated in the main loop
+    if device_state["running"] == "0" and device_state["awaiting_update"] == "1": #replicated in the main loop
         #launch update.py and wait to complete
         update_process = Popen(["sudo", "python3", "/home/pi/grow-ctrl/update.py"])
         output, error = update_process.communicate()
         if update_process.returncode != 0:
             print("Failure " + str(update_process.returncode)+ " " +str(output)+str(error))
+
+#sets up the cloud data buffer with local, buffer used to blocks concurrent reading/ writing while editing state variables
+def setup_buffers():
+    try:
+        with open("/home/pi/device_state.json") as d: #verify that the cloud is not currently writing
+            device_state = json.load(d)
+        d.close()
+        copy_device_state_to_buffer = Popen(["sudo", "cp", "/home/pi/device_state.json", "/home/pi/device_state_buffer.json"])
+        copy_device_state_to_buffer.wait()
+    except Exception as e:
+        print("concurrent writing collision: device_state not loading")
+        print(e)
+
+    try:
+        with open("/home/pi/grow_params.json") as g:
+            grow_params = json.load(g) #verify that the cloud is not currently writing
+        g.close()
+        copy_grow_params_to_buffer = Popen(["sudo", "cp", "/home/pi/grow_params.json", "/home/pi/grow_params_buffer.json"])
+        copy_grow_params_to_buffer.wait()
+    except Exception as e:
+        print("concurrent writing collision: grow_params_not loading")
+        print(e)
+
+#launches a script to detect changes in the database
+def launch_listener(): #depends on 'subprocess', modifies: state variables
+    global listener
+    listener = Popen(["sudo", "python3", "/home/pi/grow-ctrl/detect_db_events.py"])
 
 #setup buttons for the main program interface
 def setup_button_interface(): #depends on: load_state(), 'RPi.GPIO'; modifies: StartButton, ConnectButton, WaterButton, state variables
@@ -488,7 +504,14 @@ if __name__ == '__main__':
     start_serial()
     check_AP()
     connect_firebase()
-    check_updates()
+
+    load_state()
+    if device_state["connected"] == "1":
+        check_new_device()
+        check_updates()
+        setup_buffers()
+        launch_listener()
+
     setup_growctrl_process()
     setup_button_interface()
     setup_water()
@@ -501,12 +524,12 @@ if __name__ == '__main__':
         while True:
             load_state() #refresh the state variables
 
-            check_updates() #check if the machine needs to be update
-
             if device_state["connected"] == "1":
-                if time.time() - token_timer > 600: #refresh the local credentials every 10 min (600s)
+               check_updates() #check if the machine needs to be update
+               if time.time() - token_timer > 600: #refresh the local credentials every 10 min (600s)
                     token_timer = time.time()
                     get_local_credentials(access_config["refresh_token"])
+               sync_cloud_state() #get data from cloud
 
             check_growctrl_running() #check if growctrl is supposed to be running
 
@@ -527,12 +550,9 @@ if __name__ == '__main__':
                 run_water(60) #run the water for 60 seconds
                 time.sleep(1)
 
-            if time.time() - led_timer > 5: #send data to LED ever 5s
+            if time.time() - led_timer > 5: #send data to LED every 5s
                 update_LED()
                 led_timer = time.time()
-
-            if device_state["connected"] == "1": #get data from cloud
-                sync_cloud_state()
 
     except(KeyboardInterrupt):
         GPIO.cleanup()

@@ -391,7 +391,7 @@ if __name__ == '__main__':
 
                 if device_state["connected"]== "1":
                     #patch data to firebase
-                    patch_firebase({"temp": [str(temp)], "hum": [str(hum)], "waterLow": [str(waterLow)]})
+                    patch_firebase({"temp": str(temp), "hum": str(hum), "waterLow": str(waterLow)})
 
                 #start clock
                 data_timer = time.time()
