@@ -19,6 +19,12 @@ sys.path.append('/usr/lib/python3/dist-packages')
 changedir = Popen("cd ~/grow-ctrl", shell = True)
 changedir.wait()
 
+rmpycache = Popen("sudo rm -rf __pycache__", shell = True)
+rmpycache.wait()
+
+gitstash = Popen("git stash", shell = True)
+gitstash.wait()
+
 gitpull = Popen("git pull", shell = True)
 gitpull.wait()
 
