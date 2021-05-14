@@ -32,6 +32,11 @@ def reset_logs():
     reset_process = Popen(["sudo", "cp", "/home/pi/grow-ctrl/growCtrl_log_default_template.json", "/home/pi/logs/growCtrl_log.json"])
     reset_process.wait()
 
+def reset_nonhw_configs():
+    reset_device_state()
+    reset_grow_params()
+    reset_access_config()
+
 #function that runs all the other functions
 def reset_all():
     reset_device_state()
