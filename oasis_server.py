@@ -5,9 +5,10 @@ import os
 import os.path
 import sys
 from subprocess import Popen
+import reset_model
 
 #set proper path for modules
-sys.path.append('/home/pi/grow-ctrl')
+sys.path.append('/home/pi/oasis-grow')
 sys.path.append('/usr/lib/python37.zip')
 sys.path.append('/usr/lib/python3.7')
 sys.path.append('/usr/lib/python3.7/lib-dynload')
@@ -82,11 +83,6 @@ def enable_WiFi(): #Depends on: 'subprocess'; Modifies: None
     systemctl_reboot = Popen("sudo systemctl reboot", shell = True)
     systemctl_reboot.wait()
 
-#launches a script to detect changes in the database
-def reset_state(): #depends on 'subprocess', modifies: state variables
-    reset_process = Popen(["sudo", "python3", "/home/pi/grow-ctrl/reset_model.py"])
-    reset_process.wait()
-
 if __name__ == '__main__':
 
     #keep list of all sockets
@@ -132,7 +128,7 @@ if __name__ == '__main__':
                     CONNECTION_LIST.remove(sock)
 
                     #reset_box
-                    reset_state()
+                    reset_model.reset_device_state()
 
                     #set AccessPoint state to "0" before rebooting
                     write_state("/home/pi/device_state.json", "new_device", "1")
