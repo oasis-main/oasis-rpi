@@ -175,6 +175,8 @@ First, flash Raspian to an SD card, insert it into the board, and plug in the po
      - select languages & timezone
      - connect WiFi
      - update software
+  
+- Note: your micro-SD card may not have enough space to install the most recent version of Raspberry Pi OS.  You can still install Raspberry Pi OS Lite, which has similar functionality but does not provide a graphical user interface. If you choose to install the lite version of the operating system, follow [this guide](https://www.raspberrypi.org/documentation/configuration/wireless/wireless-cli.md) to set up Wi-Fi connectivity.
 
 Now we will install the grow-ctrl software and configure the pi to run it. This is where we will start working from the terminal, so open up a new window.
 
@@ -187,19 +189,24 @@ Now we will install the grow-ctrl software and configure the pi to run it. This 
    
        sudo apt-get purge --auto-remove gvfs-backends gvfs-fuse
 
-3. Clone the grow-ctrl repository
+3. If you are using Raspberry Pi OS Lite, install git and pip3 with
+
+        sudo apt-get install git
+        sudo apt-get install python3-pip
+
+4. Clone the grow-ctrl repository
 
        cd ~
        git clone https://github.com/OasisRegenerative/grow-ctrl.git
        cd grow-ctrl
 
-4. Install dependencies & change settings
+5. Install dependencies & change settings
        
        pip3 install subprocess32 firebase pyrebase python_jwt gcloud sseclient requests-toolbelt pickle5
 
-5. Run `sudo raspi-config` and select `Interface` then `Enable Camera`
+6. Run `sudo raspi-config` and select `Interface` then `Enable Camera`
 
-6. Setup launcher and listener script (This is only required if you intend to launch the program at startup, in conjunction with the mobile interface)
+7. Setup launcher and listener script (This is only required if you intend to launch the program at startup, in conjunction with the mobile interface)
 
        cd grow-ctrl
        chmod 775 launcher.sh
@@ -224,12 +231,12 @@ Now we will install the grow-ctrl software and configure the pi to run it. This 
            cat cronlog_listener
            cat growCtrl_log.json
 
-7. If you plan on connecting to a mobile or desktop interface to remotely monitor your grow, run the `setup_network.sh` script found in the `scripts` directory of the `oasis-grow` respository. This will allow user and network credentials to be passed from your device to the grow-ctrl node. If you do not have permission, you may need to run
+8. If you plan on connecting to a mobile or desktop interface to remotely monitor your grow, run the `setup_network.sh` script found in the `scripts` directory of the `oasis-grow` respository. This will allow user and network credentials to be passed from your device to the grow-ctrl node. If you do not have permission, you may need to run
 
         chmod u+x oasis-grow/setup_network.sh
 
     After this, you will be able to 
 
-8. Finally, we copy our configuration files into the root directory where they can be accessed by our programs by running the `setup_config.sh` script, found in the same location as above. Similarly, you may need to run
+9.  Finally, we copy our configuration files into the root directory where they can be accessed by our programs by running the `setup_config.sh` script, found in the same location as above. Similarly, you may need to run
  
         chmod u+x oasis-grow/setup_config.sh
