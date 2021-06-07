@@ -17,6 +17,7 @@ sys.path.append('/usr/lib/python3/dist-packages')
 #import libraries
 import time
 import base64
+import PIL
 from PIL import Image
 from subprocess import Popen
 import requests
@@ -85,7 +86,7 @@ def save_to_feed(image_path):
     #timestamp image
     timestamp = time.time()
     #move timestamped image into feed
-    save_most_recent = Popen('cp ' + image_path + ' /home/pi/image_feed/culture_image'+str(timestamp)+'.jpg', shell=True)
+    save_most_recent = Popen('cp ' + image_path + ' /home/pi/data_output/image_feed/culture_image'+str(timestamp)+'.jpg', shell=True)
     save_most_recent.wait()
 
 #define a function to actuate element
