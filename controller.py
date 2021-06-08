@@ -30,6 +30,9 @@ import time
 from time import sleep
 import datetime
 
+#import other oasis packages
+import reset_model
+
 #declare state variables
 device_state = None #describes the current state of the system
 grow_params = None #describes the grow configuration of the system
@@ -197,9 +200,11 @@ def check_new_device(): #depends on: ;modifies:
         url = "https://oasis-1757f.firebaseio.com/"+access_config["local_id"]+".json?auth="+access_config["id_token"]
         post_request = requests.patch(url,my_data)
         #print(post_request.ok)
-
-        write_state("/home/pi/device_state.json","new_device","0")
-        print("New device added to firebase")
+        if post_request.ok:
+            write_state("/home/pi/device_state.json","new_device","0")
+            print("New device added to firebase")
+        else:
+            print("Failed to add new device")
 
 #checks for available updates, executes if connected & idle, waits for completion
 def check_updates(): #depends on: load_state(),'subproceess', update.py; modifies: system code, state variables
@@ -237,6 +242,16 @@ def setup_buffers():
 def launch_listener(): #depends on 'subprocess', modifies: state variables
     global listener
     listener = Popen(["sudo", "python3", "/home/pi/oasis-grow/detect_db_events.py"])
+
+#deletes a box if the cloud is indicating that it should do so
+def check_deleted():
+    load_state()
+    if device_state["deleted"] == "1":
+        device_state["connected"] = "0" #maker sure it doesn't write anything to the cloud
+        listener.kill()
+        reset_model.reset_nonhw_configs()
+        reset_model.reset_data_out()
+        reset_model.reset_logs()
 
 #setup buttons for the main program interface
 def setup_button_interface(): #depends on: load_state(), 'RPi.GPIO'; modifies: StartButton, ConnectButton, WaterButton, state variables

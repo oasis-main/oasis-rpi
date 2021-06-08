@@ -3,34 +3,34 @@ from subprocess import Popen
 
 #all functions depend on subprocess module
 def reset_device_state():
-    reset_process = Popen(["sudo", "cp", "/home/pi/oasis-grow/device_state_default_template.json", "/home/pi/device_state.json"])
-    reset_process.wait()
-    reset_process = Popen(["sudo","cp","/home/pi/oasis-grow/device_state_default_template.json", "/home/pi/device_state_buffer.json"])
-    reset_process.wait()
+    reset_d = Popen(["sudo", "cp", "/home/pi/oasis-grow/device_state_default_template.json", "/home/pi/device_state.json"])
+    reset_d.wait()
+    reset_d_buff = Popen(["sudo","cp","/home/pi/oasis-grow/device_state_default_template.json", "/home/pi/device_state_buffer.json"])
+    reset_d_buff.wait()
 
 def reset_grow_params():
-    reset_process = Popen(["sudo", "cp", "/home/pi/oasis-grow/grow_params_default_template.json", "/home/pi/grow_params.json"])
-    reset_process.wait()
-    reset_process = Popen(["sudo","cp","/home/pi/oasis-grow/grow_params_default_template.json", "/home/pi/grow_params_buffer.json"])
-    reset_process.wait()
+    reset_g = Popen(["sudo", "cp", "/home/pi/oasis-grow/grow_params_default_template.json", "/home/pi/grow_params.json"])
+    reset_g.wait()
+    reset_g_buff = Popen(["sudo","cp","/home/pi/oasis-grow/grow_params_default_template.json", "/home/pi/grow_params_buffer.json"])
+    reset_g_buff.wait()
 
 def reset_access_config():
-    reset_process = Popen(["sudo", "cp", "/home/pi/oasis-grow/access_config_default_template.json", "/home/pi/access_config.json"])
-    reset_process.wait()
-    reset_process = Popen(["sudo","cp","/home/pi/oasis-grow/access_config_default_template.json", "/home/pi/access_config_buffer.json"])
-    reset_process.wait()
+    reset_a = Popen(["sudo", "cp", "/home/pi/oasis-grow/access_config_default_template.json", "/home/pi/access_config.json"])
+    reset_a.wait()
+    reset_a_buff = Popen(["sudo","cp","/home/pi/oasis-grow/access_config_default_template.json", "/home/pi/access_config_buffer.json"])
+    reset_a_buff.wait()
 
 def reset_hardware_config():
-    reset_process = Popen(["sudo", "cp", "/home/pi/oasis-grow/hardware_config_default_template.json", "/home/pi/hardware_config.json"])
-    reset_process.wait()
+    reset_h = Popen(["sudo", "cp", "/home/pi/oasis-grow/hardware_config_default_template.json", "/home/pi/hardware_config.json"])
+    reset_h.wait()
 
 def reset_feature_toggles():
-    reset_process = Popen(["sudo", "cp", "/home/pi/oasis-grow/feature_toggles_default_template.json", "/home/pi/feature_toggles.json"])
-    reset_process.wait()
+    reset_f = Popen(["sudo", "cp", "/home/pi/oasis-grow/feature_toggles_default_template.json", "/home/pi/feature_toggles.json"])
+    reset_f.wait()
 
 def reset_logs():
-    reset_process = Popen(["sudo", "cp", "/home/pi/oasis-grow/growCtrl_log_default_template.json", "/home/pi/logs/growCtrl_log.json"])
-    reset_process.wait()
+    reset_l = Popen(["sudo", "cp", "/home/pi/oasis-grow/growCtrl_log_default_template.json", "/home/pi/logs/growCtrl_log.json"])
+    reset_l.wait()
 
 def reset_nonhw_configs():
     reset_device_state()

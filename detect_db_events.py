@@ -105,7 +105,8 @@ def stream_handler(m):
         pass
         #if this happens... theres a problem...
         #should be handled for
-        print('something wierd...')
+        print('something wierd...', m['event'])
+        input()
 
 def detect_field_event(user, db, field):
     my_stream = db.child(user['userId']+'/'+access_config["device_name"]+"/"+field).stream(stream_handler, user['idToken'], stream_id=field)
