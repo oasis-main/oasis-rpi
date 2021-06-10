@@ -1,6 +1,6 @@
 echo "Installing dependencies..."
-sudo apt install hostapd
-sudo apt install dnsmasq
+sudo apt install -y hostapd
+sudo apt install -y dnsmasq
 
 echo "Configuring services..."
 sudo systemctl unmask hostapd
@@ -13,11 +13,11 @@ sudo cp /etc/dnsmasq.conf /etc/dnsmasq_backup.conf
 sudo cp /etc/network/interfaces /etc/network/interfaces_backup
 
 echo "Writing configurations..."
-printf "
+sudo printf "
 interface wlan0
 static ip_address=192.168.4.1/24
 nohook wpa_supplicant" >> /etc/dhcpcd.conf
-printf "
+sudo printf "
 Listening interface
 interface=wlan0
 #Pool of IP addresses served via DHCP
@@ -26,7 +26,7 @@ dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h
 domain=wlan
 #Alias for this router
 address=/gw.wlan/192.168.4.1" >> /etc/dnsmasq.conf
-printf "
+sudo printf "
 country_code=US
 interface=wlan0
 ssid=Oasis
