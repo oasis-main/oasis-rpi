@@ -4,7 +4,7 @@ import os.path
 import sys
 
 #set proper path for modules
-sys.path.append('/home/pi/grow-ctrl')
+sys.path.append('/home/pi/oasis-grow')
 sys.path.append('/usr/lib/python37.zip')
 sys.path.append('/usr/lib/python3.7')
 sys.path.append('/usr/lib/python3.7/lib-dynload')
@@ -29,6 +29,9 @@ import json
 import time
 from time import sleep
 import datetime
+
+#import other oasis packages
+import reset_model
 
 #declare state variables
 device_state = None #describes the current state of the system
@@ -197,16 +200,18 @@ def check_new_device(): #depends on: ;modifies:
         url = "https://oasis-1757f.firebaseio.com/"+access_config["local_id"]+".json?auth="+access_config["id_token"]
         post_request = requests.patch(url,my_data)
         #print(post_request.ok)
-
-        write_state("/home/pi/device_state.json","new_device","0")
-        print("New device added to firebase")
+        if post_request.ok:
+            write_state("/home/pi/device_state.json","new_device","0")
+            print("New device added to firebase")
+        else:
+            print("Failed to add new device")
 
 #checks for available updates, executes if connected & idle, waits for completion
 def check_updates(): #depends on: load_state(),'subproceess', update.py; modifies: system code, state variables
     load_state()
     if device_state["running"] == "0" and device_state["awaiting_update"] == "1": #replicated in the main loop
         #launch update.py and wait to complete
-        update_process = Popen(["sudo", "python3", "/home/pi/grow-ctrl/update.py"])
+        update_process = Popen(["sudo", "python3", "/home/pi/oasis-grow/update.py"])
         output, error = update_process.communicate()
         if update_process.returncode != 0:
             print("Failure " + str(update_process.returncode)+ " " +str(output)+str(error))
@@ -236,7 +241,21 @@ def setup_buffers():
 #launches a script to detect changes in the database
 def launch_listener(): #depends on 'subprocess', modifies: state variables
     global listener
-    listener = Popen(["sudo", "python3", "/home/pi/grow-ctrl/detect_db_events.py"])
+    listener = Popen(["sudo", "python3", "/home/pi/oasis-grow/detect_db_events.py"])
+
+#deletes a box if the cloud is indicating that it should do so
+def check_deleted():
+    global listener
+    load_state()
+    if device_state["deleted"] == "1" and listener is not None:
+        print("Removing device from Oasis Network...")
+        device_state["connected"] = "0" #make sure it doesn't write anything to the cloud
+        print("Database monitoring deactivated")
+        reset_model.reset_nonhw_configs()
+        reset_model.reset_data_out()
+        reset_model.reset_logs()
+        listener = None
+        print("Device has been reset to default configuration")
 
 #setup buttons for the main program interface
 def setup_button_interface(): #depends on: load_state(), 'RPi.GPIO'; modifies: StartButton, ConnectButton, WaterButton, state variables
@@ -310,7 +329,7 @@ def check_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); M
     load_state()
     if device_state["AccessPoint"] == "1":
         #launch server subprocess to accept credentials over Oasis wifi network, does not wait
-        server_process = Popen(["sudo", "python3", "/home/pi/grow-ctrl/oasis_server.py"])
+        server_process = Popen(["sudo", "python3", "/home/pi/oasis-grow/oasis_server.py"])
         print("Access Point Mode enabled")
 
         setup_button_AP()
@@ -324,14 +343,14 @@ def check_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); M
                 ser_out.write(bytes(str(device_state["LEDstatus"]+"\n"), "utf-8"))
                 cbutton_state = get_button_state(ConnectButton)
                 if cbutton_state == 0:
-                    server_process.kill()
+                    server_process.terminate()
                     server_process.wait()
                     enable_WiFi()
         else:
             while True:
                 cbutton_state = get_button_state(ConnectButton)
                 if cbutton_state == 0:
-                    server_process.kill()
+                    server_process.terminate()
                     server_process.wait()
                     enable_WiFi()
 
@@ -344,7 +363,7 @@ def setup_growctrl_process(): #Depends on: load_state(), write_state(), 'subproc
     if device_state["running"] == "1":
 
         #launch grow_ctrl main
-        grow_ctrl_process = Popen(["sudo", "python3", "/home/pi/grow-ctrl/grow_ctrl.py", "main"])
+        grow_ctrl_process = Popen(["sudo", "python3", "/home/pi/oasis-grow/grow_ctrl.py", "main"])
 
         if device_state["connected"] == "1": #if connected
             #LEDmode = "connectedRunning"
@@ -357,7 +376,7 @@ def setup_growctrl_process(): #Depends on: load_state(), write_state(), 'subproc
     else:
 
         #launch sensing-feedback subprocess in daemon mode
-        grow_ctrl_process = Popen(["sudo", "python3", "/home/pi/grow-ctrl/grow_ctrl.py", "daemon"])
+        grow_ctrl_process = Popen(["sudo", "python3", "/home/pi/oasis-grow/grow_ctrl.py", "daemon"])
 
         if device_state["connected"] == "1": #if connected
             #LEDmode = "connectedIdle"
@@ -378,7 +397,7 @@ def check_growctrl_running(): #Depends on: load_state(), write_state(), 'subproc
         poll_grow_ctrl = grow_ctrl_process.poll() #check if grow_ctrl process is running
         if poll_grow_ctrl is not None: #if it is not running
             #launch it
-            grow_ctrl_process = Popen(["sudo", "python3", "/home/pi/grow-ctrl/grow_ctrl.py", "main"])
+            grow_ctrl_process = Popen(["sudo", "python3", "/home/pi/oasis-grow/grow_ctrl.py", "main"])
             print("launched grow-ctrl")
 
             if device_state["connected"] == "1": #if connected
@@ -393,7 +412,7 @@ def check_growctrl_running(): #Depends on: load_state(), write_state(), 'subproc
         poll_grow_ctrl = grow_ctrl_process.poll() #check if grow_ctrl process is running
         if poll_grow_ctrl is None: #if it is running
             try: #try to kill it
-                grow_ctrl_process.kill()
+                grow_ctrl_process.terminate()
                 grow_ctrl_process.wait()
                 print("grow_ctrl_process deactivated")
             except:
@@ -480,7 +499,7 @@ def sync_cloud_state(): #Depends on: 'json','subprocess'
     except Exception as e:
         print("concurrent writing collision: device_state")
         print(e)
-        reset_device_state_buffer = Popen("sudo cp /home/pi/grow-ctrl/device_state_default_template.json /home/pi/device_state_buffer.json", shell = True)
+        reset_device_state_buffer = Popen("sudo cp /home/pi/oasis-grow/device_state_default_template.json /home/pi/device_state_buffer.json", shell = True)
         reset_device_state_buffer.wait()
 
     try:
@@ -492,14 +511,14 @@ def sync_cloud_state(): #Depends on: 'json','subprocess'
     except Exception as e:
         print("concurrent writing collision: grow_params")
         print(e)
-        reset_grow_params_buffer = Popen("sudo cp /home/pi/grow-ctrl/grow_params_default_template.json /home/pi/grow_params_buffer.json", shell = True)
+        reset_grow_params_buffer = Popen("sudo cp /home/pi/oasis-grow/grow_params_default_template.json /home/pi/grow_params_buffer.json", shell = True)
         reset_grow_params_buffer.wait()
 
 if __name__ == '__main__':
 
     #Initialize Oasis:
     print("Initializing...")
-    time.sleep(20)
+    time.sleep(10)
     load_state()
     start_serial()
     check_AP()
@@ -532,6 +551,7 @@ if __name__ == '__main__':
                sync_cloud_state() #get data from cloud
 
             check_growctrl_running() #check if growctrl is supposed to be running
+            check_deleted()
 
             sbutton_state = get_button_state(StartButton) #Start Button
             if sbutton_state == 0:

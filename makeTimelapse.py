@@ -1,3 +1,8 @@
+#Needs updating
+#Make callable as python module
+#Make sure cv2 is available
+#Incorporate data export script
+
 #imports
 import cv2
 import os
@@ -5,7 +10,7 @@ import os.path
 import sys
 
 #set proper path for modules
-sys.path.append('/home/pi/grow-ctrl')
+sys.path.append('/home/pi/oasis-grow')
 sys.path.append('/usr/lib/python37.zip')
 sys.path.append('/usr/lib/python3.7')
 sys.path.append('/usr/lib/python3.7/lib-dynload')
