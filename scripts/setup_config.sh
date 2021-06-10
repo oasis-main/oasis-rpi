@@ -1,4 +1,4 @@
-echo "Moving configuratino files..."
+echo "Moving configuration files..."
 cd oasis-grow
 cp oasis-grow/hardware_config_default_template.json /home/pi/hardware_config.json
 cp oasis-grow/access_config_default_template.json /home/pi/access_config.json
