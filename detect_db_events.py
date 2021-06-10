@@ -17,6 +17,7 @@
 #https://medium.com/@parasmani300/pyrebase-firebase-in-flask-d249a065e0df
 #https://stackoverflow.com/questions/54838847/pyrebase-stream-retrived-data-access
 
+import os
 import os.path
 import sys
 import time
@@ -30,7 +31,7 @@ sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
 sys.path.append('/usr/local/lib/python3.7/dist-packages')
 sys.path.append('/usr/lib/python3/dist-packages')
 
-
+import signal
 import pyrebase
 from multiprocessing import Process, Queue
 import json
@@ -68,7 +69,7 @@ def write_state(path,field,value): #Depends on:, 'json'; Modifies: path
 
 def initialize_user(RefreshToken):
 
-#app configuration information
+    #app configuration information
     config = {
     "apiKey": "AIzaSyD-szNCnHbvC176y5K6haapY1J7or8XtKc",
     "authDomain": "oasis-1757f.firebaseapp.com",
@@ -120,6 +121,23 @@ def detect_multiple_field_events(user, db, fields):
         p = Process(target=detect_field_event, args=(user, db, field))
         p.start()
 
+#This function launches a thread that checks whether the device has been deleted and kills this script if so
+def stop_condition(field,value): #Depends on: os, Process,load_state(); Modifies: stops this whole script
+
+    def check_exit(f,v): #This should be launched in its own thread, otherwise will hang the script
+        while True:
+            try:
+                load_state()
+            except:
+                pass
+
+            if device_state[f] == v:
+                print("Exiting database listener...")
+                os._exit(0)
+
+    p = Process(target = check_exit, args = (field,value))
+    p.start()
+
 #make change to config file
 def act_on_event(field, new_data):
     #get data and field info
@@ -155,12 +173,13 @@ if __name__ == '__main__':
         print("Database monitoring: inactive")
         sys.exit()
     #print(get_user_data(user, db)) #Avi what do these lines do
-    #detect_field_event(user, db, 'set_temp')
+    #actual section that launches the listener
     device_state_fields = list(device_state.keys())
     grow_params_fields = list(grow_params.keys())
     fields = device_state_fields + grow_params_fields
-
     detect_multiple_field_events(user, db, fields)
+
+    stop_condition("deleted","1")
 
 
 

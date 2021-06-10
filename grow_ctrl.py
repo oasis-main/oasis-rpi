@@ -268,27 +268,27 @@ def terminate_program(): #Depends on: load_state(), 'sys', 'subprocess' #Modifie
     load_state() #get feature toggles
 
     if (feature_toggles["heater"] == "1") and (heat_process != None): #go through toggles and kill active processes
-        heat_process.kill()
+        heat_process.terminate()
         heat_process.wait()
 
     if (feature_toggles["humidifier"] == "1") and (hum_process != None):
-        hum_process.kill()
+        hum_process.terminate()
         hum_process.wait()
 
     if (feature_toggles["fan"] == "1") and (fan_process != None):
-        fan_process.kill()
+        fan_process.terminate()
         fan_process.wait()
 
     if (feature_toggles["light"] == "1") and (light_process != None):
-        light_process.kill()
+        light_process.terminate()
         light_process.wait()
 
     if (feature_toggles["camera"] == "1") and (camera_process != None):
-        camera_process.kill()
+        camera_process.terminate()
         camera_process.wait()
 
     if (feature_toggles["water"] == "1") and (water_process != None):
-        water_process.kill()
+        water_process.terminate()
         water_process.wait()
 
     sys.exit()
@@ -409,7 +409,7 @@ if __name__ == '__main__':
             if feature_toggles["water"] == "1":
                 run_water(grow_params["waterMode"],int(grow_params["waterDuration"]),int(grow_params["waterInterval"]))
 
-            time.sleep(1)
+            time.sleep(5)
 
     except (KeyboardInterrupt):
         terminate_program()

@@ -245,13 +245,17 @@ def launch_listener(): #depends on 'subprocess', modifies: state variables
 
 #deletes a box if the cloud is indicating that it should do so
 def check_deleted():
+    global listener
     load_state()
-    if device_state["deleted"] == "1":
-        device_state["connected"] = "0" #maker sure it doesn't write anything to the cloud
-        listener.kill()
+    if device_state["deleted"] == "1" and listener is not None:
+        print("Removing device from Oasis Network...")
+        device_state["connected"] = "0" #make sure it doesn't write anything to the cloud
+        print("Database monitoring deactivated")
         reset_model.reset_nonhw_configs()
         reset_model.reset_data_out()
         reset_model.reset_logs()
+        listener = None
+        print("Device has been reset to default configuration")
 
 #setup buttons for the main program interface
 def setup_button_interface(): #depends on: load_state(), 'RPi.GPIO'; modifies: StartButton, ConnectButton, WaterButton, state variables
@@ -339,14 +343,14 @@ def check_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); M
                 ser_out.write(bytes(str(device_state["LEDstatus"]+"\n"), "utf-8"))
                 cbutton_state = get_button_state(ConnectButton)
                 if cbutton_state == 0:
-                    server_process.kill()
+                    server_process.terminate()
                     server_process.wait()
                     enable_WiFi()
         else:
             while True:
                 cbutton_state = get_button_state(ConnectButton)
                 if cbutton_state == 0:
-                    server_process.kill()
+                    server_process.terminate()
                     server_process.wait()
                     enable_WiFi()
 
@@ -408,7 +412,7 @@ def check_growctrl_running(): #Depends on: load_state(), write_state(), 'subproc
         poll_grow_ctrl = grow_ctrl_process.poll() #check if grow_ctrl process is running
         if poll_grow_ctrl is None: #if it is running
             try: #try to kill it
-                grow_ctrl_process.kill()
+                grow_ctrl_process.terminate()
                 grow_ctrl_process.wait()
                 print("grow_ctrl_process deactivated")
             except:
@@ -547,6 +551,7 @@ if __name__ == '__main__':
                sync_cloud_state() #get data from cloud
 
             check_growctrl_running() #check if growctrl is supposed to be running
+            check_deleted()
 
             sbutton_state = get_button_state(StartButton) #Start Button
             if sbutton_state == 0:
