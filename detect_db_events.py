@@ -41,6 +41,9 @@ device_state = None #describes the current state of the system
 grow_params = None #holds growing parameters
 access_config = None #contains credentials for connecting to firebase
 
+#declare listener list
+listener_list = []
+
 #loads device state, hardware, and access configurations
 def load_state(): #Depends on: 'json'; Modifies: device_state,hardware_config ,access_config
     global device_state, grow_params, access_config
@@ -117,12 +120,16 @@ def detect_field_event(user, db, field):
 #run multiprocesser to handle database listener
 #could use threads in future? would it be better?
 def detect_multiple_field_events(user, db, fields):
+    global listner_list
+
     for field in fields:
         p = Process(target=detect_field_event, args=(user, db, field))
         p.start()
+        listener_list.append(p)
 
 #This function launches a thread that checks whether the device has been deleted and kills this script if so
-def stop_condition(field,value): #Depends on: os, Process,load_state(); Modifies: stops this whole script
+def stop_condition(field,value): #Depends on: os, Process,load_state(); Modifies: listener_list, stops this whole script
+    global listener_list
 
     def check_exit(f,v): #This should be launched in its own thread, otherwise will hang the script
         while True:
@@ -133,10 +140,13 @@ def stop_condition(field,value): #Depends on: os, Process,load_state(); Modifies
 
             if device_state[f] == v:
                 print("Exiting database listener...")
+                for listener in listener_list:
+                    listener.terminate()
                 os._exit(0)
+                stop_condition.terminate()
 
-    p = Process(target = check_exit, args = (field,value))
-    p.start()
+    stop_condition = Process(target = check_exit, args = (field,value))
+    stop_condition.start()
 
 #make change to config file
 def act_on_event(field, new_data):
