@@ -65,19 +65,15 @@ def load_state(): #Depends on: 'json'; Modifies: device_state,hardware_config ,a
 
     with open("/home/pi/device_state.json") as d:
         device_state = json.load(d) #get device state
-    d.close()
 
     with open("/home/pi/access_config.json") as a:
         access_config = json.load(a) #get access state
-    a.close()
 
     with open("/home/pi/grow_params.json") as g:
         grow_params = json.load(g)
-    g.close()
 
     with open ("/home/pi/feature_toggles.json") as f:
         feature_toggles = json.load(f)
-    f.close()
 
 #save key values to .json
 def write_state(path,field,value): #Depends on: load_state(), 'json'; Modifies: path
@@ -89,7 +85,6 @@ def write_state(path,field,value): #Depends on: load_state(), 'json'; Modifies: 
         x.seek(0)
         json.dump(data, x)
         x.truncate()
-    x.close()
 
 #modifies a firebase variable
 def patch_firebase(dict): #Depends on: load_state(),'requests','json'; Modifies: database{data}, state variables
@@ -120,7 +115,7 @@ def start_serial(): #Depends on:'serial'; Modifies: ser_out
         #ser_in = None
         print("Serial connection not found")
 
-#gets data from serial
+#gets data from serial THIS WILL HAVE TO BE DEPRECATED SOON IN FAVOR OF AN ON-BOARD SENSOR SUITE
 def listen(): #Depends on 'serial', start_serial(); Modifies: ser_in, sensorInfo, temp, hum, last_temp, last_hum, waterLow
     #load in global vars
     global ser_in,sensorInfo,temp,hum,last_temp,last_hum,waterLow
@@ -130,7 +125,6 @@ def listen(): #Depends on 'serial', start_serial(); Modifies: ser_in, sensorInfo
 
     #listen for data from aurdino
     sensorInfo = ser_in.readline().decode('UTF-8').strip().split(' ')
-    #print(sensorInfo)
 
     if len(sensorInfo)<3:
         pass
@@ -298,6 +292,9 @@ if __name__ == '__main__':
     #Load state variables to start the main program
     load_state()
 
+    #flip "running" to 1 to make usable from command line
+    write_state("/home/pi/device_state.json", "running", "1")
+
     #Exit early if opening subprocess daemon
     if str(sys.argv[1]) == "daemon":
         print("grow_ctrl daemon started")
@@ -332,11 +329,13 @@ if __name__ == '__main__':
 
             load_state() #regresh the state variables to get new parameters
 
-            try: #attempt to read data from sensor, raise exception if there is a problem
-                listen()
-            except Exception as e:
-                print(e)
-                print("Serial Port Failure")
+
+            if (feature_toggles["temp_hum_sensor"] == "1") or (feature_toggles["water_low_sensor"] == "1"):
+                try: #attempt to read data from sensor, raise exception if there is a problem
+                    listen() #this will be changed to run many sensor functions as opposed to one serial listener
+                except Exception as e:
+                    print(e)
+                    print("Serial Port Failure")
 
             if feature_toggles["heater"] == "1":
                 print("Target Temperature: %.1f F | Current: %.1f F | Temp_PID: %s %%"%(int(grow_params["targetT"]),temp, heat_pd(temp,
@@ -408,6 +407,9 @@ if __name__ == '__main__':
                 run_camera(int(grow_params["cameraInterval"]))
             if feature_toggles["water"] == "1":
                 run_water(grow_params["waterMode"],int(grow_params["waterDuration"]),int(grow_params["waterInterval"]))
+
+            if device_state["running"] == "0":
+                terminate_program()
 
             time.sleep(5)
 

@@ -42,7 +42,7 @@ def modWiFiConfig(SSID, password):
         w.seek(0)
         w.write(config)
         w.truncate()
-    w.close()
+
     print("WiFi configs added")
 
 #update access_config.json
@@ -60,7 +60,7 @@ def modAccessConfig(name, wak, e, p):
         a.seek(0)
         json.dump(access_config, a)
         a.truncate()
-    a.close()
+
     print("Access configs added")
 
 def write_state(path,field,value): #Depends on: load_state(), 'json'; Modifies: path
@@ -71,7 +71,6 @@ def write_state(path,field,value): #Depends on: load_state(), 'json'; Modifies: 
         x.seek(0)
         json.dump(data, x)
         x.truncate()
-    x.close()
 
 def enable_WiFi(): #Depends on: 'subprocess'; Modifies: None
     config_wifi_dchpcd = Popen("sudo cp /etc/dhcpcd_WiFi.conf /etc/dhcpcd.conf", shell = True)
