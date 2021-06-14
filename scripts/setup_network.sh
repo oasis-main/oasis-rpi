@@ -19,7 +19,7 @@ static ip_address=192.168.4.1/24
 nohook wpa_supplicant
 " | sudo tee -a /etc/dhcpcd.conf
 printf "
-Listening interface
+#Listening interface
 interface=wlan0
 #Pool of IP addresses served via DHCP
 dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h
