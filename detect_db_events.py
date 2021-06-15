@@ -35,6 +35,7 @@ import signal
 import pyrebase
 from multiprocessing import Process, Queue
 import json
+import reset_model
 
 #declare state variables
 device_state = None #describes the current state of the system
@@ -48,17 +49,23 @@ listener_list = []
 def load_state(): #Depends on: 'json'; Modifies: device_state,hardware_config ,access_config
     global device_state, grow_params, access_config
 
-    with open("/home/pi/device_state.json") as d:
-        device_state = json.load(d) #get device state
-    d.close()
+    try:
+        with open("/home/pi/device_state.json") as d:
+            device_state = json.load(d) #get device state
+    except ValueError:
+        reset_model.reset_device_state()
 
-    with open("/home/pi/grow_params.json") as g:
-        grow_params = json.load(g) #get hardware state
-    g.close()
+    try:
+        with open("/home/pi/grow_params.json") as g:
+            grow_params = json.load(g) #get hardware state
+    except ValueError:
+        reset_model.reset_grow_params()
 
-    with open("/home/pi/access_config.json") as a:
-        access_config = json.load(a) #get access state
-    a.close()
+    try:
+        with open("/home/pi/access_config.json") as a:
+            access_config = json.load(a) #get access state
+    except ValueError:
+        reset_model.reset_access_config()
 
 #save key values to .json
 def write_state(path,field,value): #Depends on:, 'json'; Modifies: path
@@ -68,7 +75,6 @@ def write_state(path,field,value): #Depends on:, 'json'; Modifies: path
         x.seek(0)
         json.dump(data, x)
         x.truncate()
-    x.close()
 
 def initialize_user(RefreshToken):
 

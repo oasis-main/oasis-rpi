@@ -54,21 +54,29 @@ WaterButton = None #holds GPIO object for triggering the watering aparatus
 def load_state(): #Depends on: 'json'; Modifies: device_state,hardware_config ,access_config
     global device_state, grow_params, hardware_config, access_config
 
-    with open("/home/pi/device_state.json") as d:
-        device_state = json.load(d) #get device state
+    try:
+        with open("/home/pi/device_state.json") as d:
+            device_state = json.load(d) #get device state
+    except ValueError:
+        reset_model.reset_device_state()
 
+    try:
+        with open("/home/pi/grow_params.json") as g:
+            grow_params = json.load(g) #get device state
+    except ValueError:
+        reset_model.reset_grow_params()
 
-    with open("/home/pi/grow_params.json") as g:
-        grow_params = json.load(g) #get device state
+    try:
+        with open("/home/pi/hardware_config.json") as h:
+            hardware_config = json.load(h) #get hardware state
+    except ValueError:
+        reset_model.reset_hardware_config()
 
-
-    with open("/home/pi/hardware_config.json") as h:
-        hardware_config = json.load(h) #get hardware state
-
-
-    with open("/home/pi/access_config.json") as a:
-        access_config = json.load(a) #get access state
-
+    try:
+        with open("/home/pi/access_config.json") as a:
+            access_config = json.load(a) #get access state
+    except ValueError:
+        reset_model.reset_access_config()
 
     #print("Loaded state")
 

@@ -34,6 +34,9 @@ import pandas
 import time
 import datetime
 
+#import oasis packages
+import reset_model
+
 #declare state variables
 device_state = None #describes the current state of the system
 access_config = None #contains credentials for connecting to firebase
@@ -63,17 +66,29 @@ waterLow = 0
 def load_state(): #Depends on: 'json'; Modifies: device_state,hardware_config ,access_config
     global device_state, feature_toggles, access_config, grow_params
 
-    with open("/home/pi/device_state.json") as d:
-        device_state = json.load(d) #get device state
+    try:
+        with open("/home/pi/device_state.json") as d:
+            device_state = json.load(d) #get device state
+    except ValueError:
+        reset_model.reset_device_state()
 
-    with open("/home/pi/access_config.json") as a:
-        access_config = json.load(a) #get access state
+    try:
+        with open("/home/pi/access_config.json") as a:
+            access_config = json.load(a) #get access state
+    except ValueError:
+        reset_model.reset_access_config()
 
-    with open("/home/pi/grow_params.json") as g:
-        grow_params = json.load(g)
+    try:
+        with open("/home/pi/grow_params.json") as g:
+            grow_params = json.load(g)
+    except ValueError:
+        reset_model.reset_grow_params()
 
-    with open ("/home/pi/feature_toggles.json") as f:
-        feature_toggles = json.load(f)
+    try:
+        with open ("/home/pi/feature_toggles.json") as f:
+            feature_toggles = json.load(f)
+    except ValueError:
+        reset_model.reset_feature_toggles()
 
 #save key values to .json
 def write_state(path,field,value): #Depends on: load_state(), 'json'; Modifies: path
