@@ -1,10 +1,11 @@
 pandas==1.2.1
 firebase
 pyrebase
-python_jwt
-gcloud
+python_jwt==2.0.1
+gcloud==0.17.0
 sseclient
-requests-toolbelt
+requests==2.11.1
+requests-toolbelt==0.7.0
 pickle5
 pyserial
 Pillow
