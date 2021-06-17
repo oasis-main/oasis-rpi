@@ -5,6 +5,7 @@ sudo apt-get install -y libtiff5
 sudo apt-get install -y libatlas-base-dev
 
 echo "Creating virtual environment..."
+pip3 install virtualenv
 python3 venv -m /home/pi/oasis-grow
 source /home/pi/oasis-grow/bin/activate
 
