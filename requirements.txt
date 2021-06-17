@@ -6,6 +6,5 @@ gcloud
 sseclient
 requests-toolbelt
 pickle5
-pandas
 pyserial
 Pillow
