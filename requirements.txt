@@ -1,1 +1,11 @@
 pandas==1.2.1
+firebase
+pyrebase
+python_jwt
+gcloud
+sseclient
+requests-toolbelt
+pickle5
+pandas
+pyserial
+Pillow
