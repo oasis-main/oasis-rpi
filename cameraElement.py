@@ -35,15 +35,12 @@ def load_state(): #Depends on: 'json'; Modifies: device_state,hardware_config ,a
 
     with open("/home/pi/device_state.json") as d:
         device_state = json.load(d) #get device state
-    d.close()
 
     with open("/home/pi/feature_toggles.json") as f:
         feature_toggles = json.load(f) #get hardware state
-    f.close()
 
     with open("/home/pi/access_config.json") as a:
         access_config = json.load(a) #get access state
-    a.close()
 
 #modifies a firebase variable
 def patch_firebase(field,value): #Depends on: load_state(),'requests','json'; Modifies: database['field'], state variables

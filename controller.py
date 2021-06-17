@@ -54,21 +54,29 @@ WaterButton = None #holds GPIO object for triggering the watering aparatus
 def load_state(): #Depends on: 'json'; Modifies: device_state,hardware_config ,access_config
     global device_state, grow_params, hardware_config, access_config
 
-    with open("/home/pi/device_state.json") as d:
-        device_state = json.load(d) #get device state
-    d.close()
+    try:
+        with open("/home/pi/device_state.json") as d:
+            device_state = json.load(d) #get device state
+    except ValueError:
+        reset_model.reset_device_state()
 
-    with open("/home/pi/grow_params.json") as g:
-        grow_params = json.load(g) #get device state
-    g.close()
+    try:
+        with open("/home/pi/grow_params.json") as g:
+            grow_params = json.load(g) #get device state
+    except ValueError:
+        reset_model.reset_grow_params()
 
-    with open("/home/pi/hardware_config.json") as h:
-        hardware_config = json.load(h) #get hardware state
-    h.close()
+    try:
+        with open("/home/pi/hardware_config.json") as h:
+            hardware_config = json.load(h) #get hardware state
+    except ValueError:
+        reset_model.reset_hardware_config()
 
-    with open("/home/pi/access_config.json") as a:
-        access_config = json.load(a) #get access state
-    a.close()
+    try:
+        with open("/home/pi/access_config.json") as a:
+            access_config = json.load(a) #get access state
+    except ValueError:
+        reset_model.reset_access_config()
 
     #print("Loaded state")
 
@@ -95,7 +103,7 @@ def write_state(path,field,value): #Depends on: load_state(), patch_firebase, 'j
         x.seek(0)
         json.dump(data, x)
         x.truncate()
-    x.close()
+
 
 #attempts connection to microcontroller
 def start_serial(): #Depends on:'serial'; Modifies: ser_out
@@ -221,7 +229,6 @@ def setup_buffers():
     try:
         with open("/home/pi/device_state.json") as d: #verify that the cloud is not currently writing
             device_state = json.load(d)
-        d.close()
         copy_device_state_to_buffer = Popen(["sudo", "cp", "/home/pi/device_state.json", "/home/pi/device_state_buffer.json"])
         copy_device_state_to_buffer.wait()
     except Exception as e:
@@ -231,7 +238,6 @@ def setup_buffers():
     try:
         with open("/home/pi/grow_params.json") as g:
             grow_params = json.load(g) #verify that the cloud is not currently writing
-        g.close()
         copy_grow_params_to_buffer = Popen(["sudo", "cp", "/home/pi/grow_params.json", "/home/pi/grow_params_buffer.json"])
         copy_grow_params_to_buffer.wait()
     except Exception as e:
@@ -493,7 +499,6 @@ def sync_cloud_state(): #Depends on: 'json','subprocess'
     try:
         with open("/home/pi/device_state_buffer.json") as d_buff: #verify that the cloud is not currently writing
             device_state_buffer = json.load(d_buff)
-        d_buff.close()
         copy_device_state_buffer = Popen("sudo cp /home/pi/device_state_buffer.json /home/pi/device_state.json", shell = True)
         copy_device_state_buffer.wait()
     except Exception as e:
@@ -505,7 +510,6 @@ def sync_cloud_state(): #Depends on: 'json','subprocess'
     try:
         with open("/home/pi/grow_params_buffer.json") as g_buff:
             grow_params_buffer = json.load(g_buff) #verify that the cloud is not currently writing
-        g_buff.close()
         copy_grow_params_buffer = Popen("sudo cp /home/pi/grow_params_buffer.json /home/pi/grow_params.json", shell = True)
         copy_grow_params_buffer.wait()
     except Exception as e:

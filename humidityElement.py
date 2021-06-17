@@ -25,7 +25,6 @@ import json
 #get hardware config
 with open('/home/pi/hardware_config.json') as h:
   hardware_config = json.load(h)
-h.close()
 
 #setup GPIO
 GPIO.setmode(GPIO.BCM) #GPIO Numbers instead of board numbers
