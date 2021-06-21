@@ -6,7 +6,7 @@ sudo apt-get install -y libtiff5
 sudo apt-get install -y libatlas-base-dev
 
 echo "Creating virtual environment..."
-python3 venv -m /home/pi/oasis-grow
+python3 -m venv /home/pi/oasis-grow
 source /home/pi/oasis-grow/bin/activate
 
 echo "Configuring PATH variable..."
