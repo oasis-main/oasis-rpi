@@ -83,3 +83,18 @@ cp /home/pi/oasis-grow/grow_params_default_template.json /home/pi/grow_params.js
 cp /home/pi/oasis-grow/grow_params_default_template.json /home/pi/grow_params_buffer.json
 cp /home/pi/oasis-grow/feature_toggles_default_template.json /home/pi/feature_toggles.json
 cp /home/pi/oasis-grow/growCtrl_log_default_template.json /home/pi/logs/growCtrl_log.json
+
+while getopts ":a:" opt; do
+    case $opt in
+        b)
+            echo "Setting up grow_ctrl bootloader..."
+            printf "
+            sudo source /home/pi/oasis-grow/bin/activate
+            sudo python3 /home/pi/oasis-grow/controller.py &
+            " | sudo tee -a /etc/rc.local
+            ;;
+        \?)
+            echo "Invalid option: -$OPTARG"
+            ;;
+    esac
+done
