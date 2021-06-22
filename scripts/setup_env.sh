@@ -1,4 +1,4 @@
-"echo "Adding packages..."
+echo "Adding packages..."
 sudo apt install -y python3-pip
 sudo apt-get install -y python3-venv
 sudo apt-get install -y libopenjp2-7
