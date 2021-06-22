@@ -4,7 +4,7 @@ pyrebase
 python_jwt==2.0.1
 gcloud==0.17.0
 sseclient
-requests==2.25.1
+requests==2.11.1
 requests-toolbelt==0.7.0
 pickle5
 pyserial
