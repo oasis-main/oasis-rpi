@@ -10,7 +10,7 @@ python3 -m venv /home/pi/oasis-grow
 source /home/pi/oasis-grow/bin/activate
 
 echo "Configuring PATH variable..."
-echo "export PATH=\"home/pi/.local/bin:$PATH" | sudo tee -a /home/pi/.bashrc
+echo "export PATH=\"home/pi/.local/bin:$PATH\"" | sudo tee -a /home/pi/.bashrc
 source /home/pi/.bashrc
 
 echo "Installing modules..."
