@@ -5,7 +5,7 @@ source /home/pi/oasis-grow/scripts/setup_config.sh
 sudo chmod +x /home/pi/oasis-grow/scripts/setup_network.sh
 source /home/pi/oasis-grow/scripts/setup_network.sh
 
-while getopts ":a:" opt; do
+while getopts ":a" opt; do
     case $opt in
         b)
             echo "Setting up grow_ctrl bootloader..."
