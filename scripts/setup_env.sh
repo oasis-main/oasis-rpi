@@ -7,6 +7,7 @@ sudo apt-get install -y libatlas-base-dev
 
 echo "Creating virtual environment..."
 python3 -m venv /home/pi/oasis-grow
+sudo chmod +x /home/pi/oasis-grow/bin/activate
 source /home/pi/oasis-grow/bin/activate
 
 echo "Configuring PATH variable..."
