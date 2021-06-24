@@ -1,4 +1,4 @@
-pandas==1.2.1
+pandas
 firebase
 pyrebase
 python_jwt==2.0.1

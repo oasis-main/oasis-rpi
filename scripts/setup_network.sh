@@ -1,3 +1,5 @@
+#!/bin/bash
+
 echo "Installing dependencies..."
 sudo apt install -y hostapd
 sudo apt install -y dnsmasq
