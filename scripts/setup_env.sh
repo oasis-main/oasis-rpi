@@ -16,3 +16,5 @@ source /home/pi/.bashrc
 
 echo "Installing modules..."
 pip3 install -r /home/pi/oasis-grow/requirements.txt
+
+

@@ -49,3 +49,9 @@ sudo cp /etc/dhcpcd.conf /etc/dhcpcd_AP.conf
 sudo cp /etc/dhcpcd_backup.conf /etc/dhcpcd_WiFi.conf
 sudo cp /etc/dnsmasq.conf /etc/dnsmasq_AP.conf
 sudo cp /etc/dnsmasq_backup.conf /etc/dnsmasq_WiFi.conf
+
+echo "Returning to WiFi mode..."
+sudo cp /etc/dhcpcd_WiFi.conf /etc/dhcpcd.conf
+sudo cp /etc/dnsmasq_WiFi.conf /etc/dnsmasq.conf
+sudo systemctl disable hostapd
+sudo systemctl reboot
