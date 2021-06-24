@@ -1,0 +1,6 @@
+# venv directories
+/bin
+/lib
+/__pycache__
+/include
+/share
