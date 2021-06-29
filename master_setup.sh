@@ -19,3 +19,9 @@ while getopts ":b" opt; do
             ;;
     esac
 done
+
+echo "Returning to WiFi mode..."
+sudo cp /etc/dhcpcd_WiFi.conf /etc/dhcpcd.conf
+sudo cp /etc/dnsmasq_WiFi.conf /etc/dnsmasq.conf
+sudo systemctl disable hostapd
+sudo systemctl reboot
