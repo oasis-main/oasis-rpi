@@ -1,7 +1,2 @@
-# venv directories
-/bin
-/lib
+# pycache
 /__pycache__
-/include
-/share
-/pyvenv.cfg
