@@ -335,7 +335,7 @@ def check_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); M
     load_state()
     if device_state["AccessPoint"] == "1":
         #launch server subprocess to accept credentials over Oasis wifi network, does not wait
-        server_process = Popen(["sudo", "python3", "/home/pi/oasis-grow/oasis_server.py"])
+        server_process = Popen(["sudo", "python3.9", "/home/pi/oasis-grow/oasis_server.py"])
         print("Access Point Mode enabled")
 
         setup_button_AP()
