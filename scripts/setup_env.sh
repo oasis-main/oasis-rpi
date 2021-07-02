@@ -8,6 +8,7 @@ sudo apt install -y wget software-properties-common build-essential libnss3-dev 
 sudo apt-get install -y libopenjp2-7
 sudo apt-get install -y libtiff5
 sudo apt-get install -y libatlas-base-dev
+sudo apt-get install -y libjpeg-dev zlib1g-dev
 
 echo "Building Python Environment (3.9.2)..."
 wget https://www.python.org/ftp/python/3.9.2/Python-3.9.2.tgz
@@ -30,6 +31,7 @@ echo "export PATH=/home/pi/.local/bin:$PATH/" | sudo tee -a /home/pi/.bashrc
 source /home/pi/.bashrc
 
 echo "Installing modules..."
-pip3.9 install -r /home/pi/oasis-grow/requirements.txt
+cd ..
+python3.9 -m pip install -r /home/pi/oasis-grow/requirements.txt
 
 
