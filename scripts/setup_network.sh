@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh -e
 
 echo "Installing dependencies..."
 sudo apt install -y hostapd

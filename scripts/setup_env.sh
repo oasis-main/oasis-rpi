@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh -e
 
 echo "This setup is built for the Raspi OS release 2021-05-07-raspios-buster-armhf-lite."
 
