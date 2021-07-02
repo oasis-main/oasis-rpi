@@ -30,6 +30,6 @@ echo "export PATH=/home/pi/.local/bin:$PATH/" | sudo tee -a /home/pi/.bashrc
 source /home/pi/.bashrc
 
 echo "Installing modules..."
-pip3 install -r /home/pi/oasis-grow/requirements.txt
+pip3.9 install -r /home/pi/oasis-grow/requirements.txt
 
 
