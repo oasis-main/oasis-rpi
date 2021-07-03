@@ -1,6 +1,9 @@
 import json
 from subprocess import Popen
 
+#set proper path for modules
+sys.path.append("home/pi/.local/lib/python3.9/site-packages")
+
 #all functions depend on subprocess module
 def reset_device_state():
     reset_d = Popen(["sudo", "cp", "/home/pi/oasis-grow/device_state_default_template.json", "/home/pi/device_state.json"])
