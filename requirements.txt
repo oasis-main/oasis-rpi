@@ -1,4 +1,6 @@
+setuptools
 cython
+numpy
 pandas
 firebase
 pyrebase
