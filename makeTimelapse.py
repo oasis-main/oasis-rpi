@@ -10,6 +10,7 @@ import os.path
 import sys
 
 #set proper path for modules
+sys.path.append("home/pi/.local/lib/python3.9/site-packages")
 
 #dir where images are stored
 image_folder = '/home/pi/Pictures'
