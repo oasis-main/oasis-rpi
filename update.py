@@ -7,6 +7,7 @@ import requests
 from subprocess import Popen
 
 #set proper path for modules
+sys.path.append("home/pi/.local/lib/python3.9/site-packages")
 
 #pull repository
 changedir = Popen("cd ~/grow-ctrl", shell = True)
