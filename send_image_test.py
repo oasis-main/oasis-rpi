@@ -1,3 +1,4 @@
+import sys
 import cameraElement as cam
 
 #set proper path for modules
