@@ -4,6 +4,7 @@ import os.path
 import sys
 
 #set proper path for modules
+sys.path.append("home/pi/.local/lib/python3.9/site-packages")
 
 #import package modules
 import RPi.GPIO as GPIO
