@@ -1,5 +1,9 @@
+import sys
 import json
 from subprocess import Popen
+
+#set proper path for modules
+sys.path.append("home/pi/.local/lib/python3.9/site-packages")
 
 #all functions depend on subprocess module
 def reset_device_state():

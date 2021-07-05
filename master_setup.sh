@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh -e
 
 sudo chmod +x /home/pi/oasis-grow/scripts/setup_env.sh
 source /home/pi/oasis-grow/scripts/setup_env.sh

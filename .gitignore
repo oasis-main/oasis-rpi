@@ -1,7 +1,4 @@
-# venv directories
-/bin
-/lib
+# pycache
 /__pycache__
-/include
-/share
-/pyvenv.cfg
+/Python-3.9.2
+/Python-3.9.2.tgz

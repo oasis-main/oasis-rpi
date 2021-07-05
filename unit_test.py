@@ -1,6 +1,10 @@
+import sys
 import subprocess
 from subprocess import Popen
 import json
+
+#set proper path for modules
+sys.path.append("home/pi/.local/lib/python3.9/site-packages")
 
 #declare process management variables
 ser_in = None

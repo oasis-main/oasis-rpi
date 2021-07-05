@@ -1,4 +1,6 @@
+setuptools
 cython
+numpy
 pandas
 firebase
 pyrebase
@@ -10,3 +12,4 @@ requests-toolbelt==0.7.0
 pickle5
 pyserial
 Pillow
+RPi

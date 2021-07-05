@@ -4,13 +4,7 @@ import os.path
 import sys
 
 #set proper path for modules
-sys.path.append('/home/pi/oasis-grow')
-sys.path.append('/usr/lib/python37.zip')
-sys.path.append('/usr/lib/python3.7')
-sys.path.append('/usr/lib/python3.7/lib-dynload')
-sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
-sys.path.append('/usr/local/lib/python3.7/dist-packages')
-sys.path.append('/usr/lib/python3/dist-packages')
+sys.path.append("home/pi/.local/lib/python3.9/site-packages")
 
 #import package modules
 import RPi.GPIO as GPIO
@@ -335,7 +329,7 @@ def check_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); M
     load_state()
     if device_state["AccessPoint"] == "1":
         #launch server subprocess to accept credentials over Oasis wifi network, does not wait
-        server_process = Popen(["sudo", "python3", "/home/pi/oasis-grow/oasis_server.py"])
+        server_process = Popen(["sudo", "python3.9", "/home/pi/oasis-grow/oasis_server.py"])
         print("Access Point Mode enabled")
 
         setup_button_AP()

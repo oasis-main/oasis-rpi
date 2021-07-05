@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh -e
 
 echo "Creating data directories..."
 mkdir /home/pi/logs
