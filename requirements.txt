@@ -1,7 +1,5 @@
 setuptools
 cython
-numpy
-pandas
 firebase
 pyrebase
 python_jwt==2.0.1
@@ -12,4 +10,3 @@ requests-toolbelt==0.7.0
 pickle5
 pyserial
 Pillow
-RPi
