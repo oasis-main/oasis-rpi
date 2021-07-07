@@ -47,3 +47,5 @@ git clone https://github.com/numpy/numpy.git
 cd numpy
 python3.9 -m pip install .
 cd ..
+
+python3.9 -m pip install pandas
