@@ -38,7 +38,6 @@ python3.9 -m pip install -r /home/pi/oasis-grow/requirements.txt
 echo "Building RPi.GPIO from source"
 sudo apt-get install python-dev python3-dev -y
 sudo apt-get install mercurial -y
-sudo apt-get install python-pip python3-pip -y
 sudo apt-get remove python-rpi.gpio python3-rpi.gpio -y
 python3.9 -m pip install hg+http://hg.code.sf.net/p/raspberry-gpio-python/code#egg=RPi.GPIO
 
