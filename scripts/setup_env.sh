@@ -9,20 +9,20 @@ sudo apt-get install -y libtiff5
 sudo apt-get install -y libatlas-base-dev
 sudo apt-get install -y libjpeg-dev zlib1g-dev
 
-echo "Building Python Environment (3.9.2)..."
-wget https://www.python.org/ftp/python/3.9.6/Python-3.9.6.tgz
-tar xvf Python-3.9.6.tgz
-cd Python-3.9.6/
+echo "Building Python Environment (3.8.9)..."
+wget https://www.python.org/ftp/python/3.8.9/Python-3.8.9.tgz
+tar xvf Python-3.8.9.tgz
+cd Python-3.8.9/
 ./configure --enable-optimizations
 sudo make altinstall
-python3.9 -V
+python3.8 -V
 
 echo "Pointing all python3 to python3.9..."
-alias python3=python3.9
-alias pip3=pip3.9
-echo "alias python3=python3.9" | sudo tee -a /home/pi/.bashrc
+alias python3=python3.8
+alias pip3=pip3.8
+echo "alias python3=python3.8" | sudo tee -a /home/pi/.bashrc
 source /home/pi/.bashrc
-echo "alias pip3=pip3.9" | sudo tee -a /home/pi/.bashrc
+echo "alias pip3=pip3.8" | sudo tee -a /home/pi/.bashrc
 source /home/pi/.bashrc
 
 echo "Configuring PATH variable..."
@@ -31,11 +31,11 @@ source /home/pi/.bashrc
 
 echo "Installing Python modules..."
 cd ..
-python3.9 -m pip install --upgrade pip
-python3.9 -m pip install -r /home/pi/oasis-grow/requirements.txt
+python3.8 -m pip install --upgrade pip
+python3.8 -m pip install -r /home/pi/oasis-grow/requirements.txt
 
 echo "Building RPi.GPIO from source..."
 sudo apt-get install python-dev python3-dev -y
 sudo apt-get install mercurial -y
 sudo apt-get remove python-rpi.gpio python3-rpi.gpio -y
-python3.9 -m pip install hg+http://hg.code.sf.net/p/raspberry-gpio-python/code#egg=RPi.GPIO
+python3.8 -m pip install hg+http://hg.code.sf.net/p/raspberry-gpio-python/code#egg=RPi.GPIO
