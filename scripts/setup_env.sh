@@ -10,9 +10,9 @@ sudo apt-get install -y libatlas-base-dev
 sudo apt-get install -y libjpeg-dev zlib1g-dev
 
 echo "Building Python Environment (3.9.2)..."
-wget https://www.python.org/ftp/python/3.9.2/Python-3.9.2.tgz
-tar xvf Python-3.9.2.tgz
-cd Python-3.9.2/
+wget https://www.python.org/ftp/python/3.9.6/Python-3.9.6.tgz
+tar xvf Python-3.9.6.tgz
+cd Python-3.9.6/
 ./configure --enable-optimizations
 sudo make altinstall
 python3.9 -V
@@ -39,14 +39,3 @@ sudo apt-get install python-dev python3-dev -y
 sudo apt-get install mercurial -y
 sudo apt-get remove python-rpi.gpio python3-rpi.gpio -y
 python3.9 -m pip install hg+http://hg.code.sf.net/p/raspberry-gpio-python/code#egg=RPi.GPIO
-
-echo "Installing Numpy for Raspi"
-sudo apt-get install gfortran -y
-sudo apt-get install python3-numpy -y 
-
-echo "Building Pandas from source..."
-wget http://pandas.pydata.org/pandas-build/pandas-0.8.0b1.tar.gz
-tar xzf pandas-0.8.0b1.tar.gz
-cd pandas-0.8.0b1
-python3.9 setup.py build
-python3.9 setup.py install
