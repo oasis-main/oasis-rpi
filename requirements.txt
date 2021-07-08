@@ -1,5 +1,7 @@
 setuptools
 cython
+numpy
+pandas
 firebase
 pyrebase
 python_jwt==2.0.1
