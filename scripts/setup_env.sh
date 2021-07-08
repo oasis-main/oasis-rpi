@@ -3,7 +3,6 @@
 echo "This environment is built for the Raspi OS release 2021-05-07-raspios-buster-armhf-lite."
 
 echo "Adding OS packages..."
-sudo apt-get update
 sudo apt install -y wget software-properties-common build-essential libnss3-dev zlib1g-dev libgdbm-dev libncurses5-dev libssl-dev libffi-dev libreadline-dev libsqlite3-dev libbz2-dev
 sudo apt-get install -y libopenjp2-7
 sudo apt-get install -y libtiff5
@@ -35,17 +34,19 @@ cd ..
 python3.9 -m pip install --upgrade pip
 python3.9 -m pip install -r /home/pi/oasis-grow/requirements.txt
 
-echo "Building RPi.GPIO from source"
+echo "Building RPi.GPIO from source..."
 sudo apt-get install python-dev python3-dev -y
 sudo apt-get install mercurial -y
 sudo apt-get remove python-rpi.gpio python3-rpi.gpio -y
 python3.9 -m pip install hg+http://hg.code.sf.net/p/raspberry-gpio-python/code#egg=RPi.GPIO
 
-echo "Building Numpy from Source"
+echo "Installing Numpy for Raspi"
 sudo apt-get install gfortran -y
-git clone https://github.com/numpy/numpy.git
-cd numpy
-python3.9 -m pip install .
-cd ..
+sudo apt-get install python3-numpy -y 
 
-python3.9 -m pip install pandas
+echo "Building Pandas from source..."
+wget http://pandas.pydata.org/pandas-build/pandas-0.8.0b1.tar.gz
+tar xzf pandas-0.8.0b1.tar.gz
+cd pandas-0.8.0b1
+python3.9 setup.py build
+python3.9 setup.py install
