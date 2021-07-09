@@ -31,7 +31,7 @@ source /home/pi/.bashrc
 
 echo "Installing Python modules..."
 cd ..
-python3.8 -m pip install --upgrade pip
+/usr/local/bin/python3.8 -m pip install --upgrade pip
 python3.8 -m pip install -r /home/pi/oasis-grow/requirements.txt
 
 echo "Installing RPi.GPIO for OS..."
