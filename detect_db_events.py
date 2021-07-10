@@ -23,7 +23,13 @@ import sys
 import time
 
 #set proper path for modules
-sys.path.append("home/pi/.local/lib/python3.9/site-packages")
+sys.path.append('/home/pi/grow-ctrl')
+sys.path.append('/usr/lib/python37.zip')
+sys.path.append('/usr/lib/python3.7')
+sys.path.append('/usr/lib/python3.7/lib-dynload')
+sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
+sys.path.append('/usr/local/lib/python3.7/dist-packages')
+sys.path.append('/usr/lib/python3/dist-packages')
 
 import signal
 import pyrebase
