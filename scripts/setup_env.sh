@@ -15,7 +15,7 @@ source /home/pi/.bashrc
 
 echo "Installing Python modules..."
 cd ..
-/usr/local/bin/python3 -m pip install --upgrade pip
+sudo apt install python3-pip -y
 python3 -m pip install -r /home/pi/oasis-grow/requirements.txt
 
 echo "Installing RPi.GPIO for OS..."
