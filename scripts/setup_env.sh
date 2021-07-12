@@ -17,3 +17,6 @@ echo "Installing Python modules..."
 cd ..
 /usr/local/bin/python3 -m pip install --upgrade pip
 python3 -m pip install -r /home/pi/oasis-grow/requirements.txt
+
+echo "Installing RPi.GPIO for OS..."
+sudo apt-get -y install python3-rpi.gpio
