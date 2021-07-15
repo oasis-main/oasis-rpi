@@ -12,4 +12,5 @@ requests-toolbelt==0.7.0
 pickle5
 pyserial
 Pillow
+streamlit
 RPi.GPIO
