@@ -13,10 +13,24 @@ echo "Configuring PATH variable..."
 echo "export PATH=/home/pi/.local/bin:$PATH/" | sudo tee -a /home/pi/.bashrc
 source /home/pi/.bashrc
 
-echo "Installing Python modules..."
+echo "Installing Python..."
 cd ..
-sudo apt install python3-pip -y
-python3 -m pip install -r /home/pi/oasis-grow/requirements.txt
+wget https://www.python.org/ftp/python/3.9.6/Python-3.9.6.tgz
+tar xvf Python-3.9.6.tgz
+cd Python-3.9.6/
+./configure  --enable-optimizations
+sudo make altinstall
+python3.9 -V
+
+echo "Building pip environment..."
+cd ..
+sudo apt-get install python3.9-distutils
+curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+python3.9 get-pip.py
+
+echo "Installing python3.9 modules via pip..."
+
+python3.9 -m pip install -r /home/pi/oasis-grow/requirements.txt
 
 echo "Installing RPi.GPIO for OS..."
 sudo apt-get -y install python3-rpi.gpio
