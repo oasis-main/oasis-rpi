@@ -32,4 +32,4 @@ sudo apt-get install python3.9-distutils
 curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
 python3.9 get-pip.py
 echo "Installing python3.9 modules via pip..."
-python3.9 -m pip install streamlit
+sudo python3.9 -m pip install streamlit
