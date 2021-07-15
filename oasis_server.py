@@ -24,6 +24,9 @@ from _thread import *
 import json
 import pickle5 as pickle
 
+#create a secure lan interface for accepting credentials
+import streamlit as st
+
 #update wpa_supplicant.conf
 def modWiFiConfig(SSID, password):
     config_lines = [
