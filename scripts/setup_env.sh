@@ -3,7 +3,7 @@
 echo "This environment is built for the Raspi OS release 2021-05-07-raspios-buster-armhf-lite."
 
 echo "Adding OS packages..."
-sudo apt install -y wget software-properties-common build-essential libnss3-dev zlib1g-dev libgdbm-dev libncurses5-dev libssl-dev libffi-dev libreadline-dev libsqlite3-dev libbz2-dev
+sudo apt install -y wget software-properties-common build-essential libnss3-dev zlib1g-dev libgdbm-dev libncurses5-dev libssl-dev libffi-dev libreadline-dev libsqlite3-dev libbz2-dev liblzma-dev
 sudo apt-get install -y libopenjp2-7
 sudo apt-get install -y libtiff5
 sudo apt-get install -y libatlas-base-dev
