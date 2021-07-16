@@ -1,8 +1,3 @@
-#Implement oasis.setup streamlit here
-
-
-# TCP Chat server which listens for incoming connections from chat clients
-# uses port 8000
 #import shell modules
 import os
 import os.path
@@ -52,10 +47,10 @@ def modWiFiConfig(SSID, password):
     print("WiFi configs added")
 
 #update access_config.json
-def modAccessConfig(name, wak, e, p):
+def modAccessConfig(name, e, p):
     access_config = {}
     access_config["device_name"] = str(name)
-    access_config["wak"] = str(wak)
+    access_config["wak"] = "AIzaSyD-szNCnHbvC176y5K6haapY1J7or8XtKc"
     access_config["e"] = str(e)
     access_config["p"] = str(p)
     access_config["refresh_token"] = " "
@@ -88,62 +83,37 @@ def enable_WiFi(): #Depends on: 'subprocess'; Modifies: None
     systemctl_reboot = Popen("sudo systemctl reboot", shell = True)
     systemctl_reboot.wait()
 
+def save_creds_exit(email, password, wifi_name, wifi_pass, device_name):
+    #place credentials in proper locations
+    modWiFiConfig(wifi_name, wifi_pass)
+    print("Wifi creds added")
+    modAccessConfig(device_name, email, password)
+    print("Access creds added")
+
+    #reset_box
+    reset_model.reset_device_state()
+
+    #set AccessPoint state to "0" before rebooting
+    write_state("/home/pi/device_state.json", "new_device", "1")
+
+    #stand up wifi and reboot
+    enable_WiFi()
+
+
 if __name__ == '__main__':
 
-    #keep list of all sockets
-    CONNECTION_LIST = []
-    RECV_BUFFER = 4096 #fairly arbitrary buffer size, specifies maximum data to be recieved at once
-    PORT = 8000
+    default = " "
 
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind(("0.0.0.0", PORT))
-    server_socket.listen(10)
-    CONNECTION_LIST.append(server_socket)
+    st.title('Oasis Device Setup')
 
-    ##https://stackoverflow.com/questions/166506/finding-local-ip-addresses-using-pythons-stdlib
-    print("Oasis server started on Port: " + str(PORT)+' on IP: '+socket.gethostbyname(socket.gethostname()))
+    email = st.text_input('Oasis Email', default)
 
-    while True:
-        read_sockets, write_sockets, error_sockets = select.select(CONNECTION_LIST, [], [])
+    password = st.text_input('Oasis Password', default, type="password")
 
-        for sock in read_sockets:
+    wifi_name = st.text_input('Wifi Name', default)
 
-            #new connection
-            if sock == server_socket:
-                sockfd, addr = server_socket.accept()
-                CONNECTION_LIST.append(sockfd)
-                print("Client (%s, %s) connected" % addr)
+    wifi_pass = st.text_input('Wifi Password', default, type="password")
 
-            #incoming message from client
-            else:
-                try:
-                    data = sock.recv(RECV_BUFFER)
-                    data = pickle.loads(data)
-                    print(data)
-                    print(type(data))
-                    #sys.exit()
-                    #print('received data from [%s:%s]: ' % addr + data)
-                    ##THIS IS WHERE YOU NEED TO VERIFY THAT THE INFORMATION IS RIGHT
-                    modWiFiConfig(str(data['wifi_name']), str(data['wifi_pass']))
-                    print("Wifi Added")
-                    modAccessConfig(str(data['device_name']), str(data['wak']), str(data['e']), str(data['p']))
-                    print("Access Added")
-                    sock.send('connected'.encode())
-                    sock.close()
-                    CONNECTION_LIST.remove(sock)
+    device_name = st.text_input('Name this device:', default)
 
-                    #reset_box
-                    reset_model.reset_device_state()
-
-                    #set AccessPoint state to "0" before rebooting
-                    write_state("/home/pi/device_state.json", "new_device", "1")
-
-                    #stand up wifi and reboot
-                    enable_WiFi()
-
-                #disconnect
-                except:
-                    sock.close()
-                    CONNECTION_LIST.remove(sock)
-
-    server_socket.close()
+    st.button('Launch', on_click=save_creds_exit, args=[email, password, wifi_name, wifi_pass, device_name])
