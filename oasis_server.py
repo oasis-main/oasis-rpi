@@ -102,7 +102,7 @@ def save_creds_exit(email, password, wifi_name, wifi_pass, device_name):
 
 if __name__ == '__main__':
 
-    default = " "
+    default = ""
 
     st.title('Oasis Device Setup')
 
