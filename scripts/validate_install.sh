@@ -1,3 +1,7 @@
+#/bin/sh -e
+
+echo "Validating python packages..."
+
 
 echo "Checking network connectivity..."
 wget -q --spider http://google.com
