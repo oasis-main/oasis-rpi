@@ -2,7 +2,7 @@
 
 ## Introduction
 
-oasis-grow, developed by OASIS, is an open toolkit for controlled environment cultivation, remote monitoring, and data collection. It is maintained with the goal of making the capabilities of automated gardening, precision agriculture, and cell culturing available to everyone. 
+oasis-grow, developed by Oasis, is an open-source toolkit for controlled environment cultivation, remote monitoring, and data collection. It is maintained with the goal of making the capabilities of automated gardening, precision agriculture, and cell culturing available to everyone. Users are encouraged to contribute data, projects, and technical expertise. See [Contributing](#contributing) for details.
 
 This repository contains:
 1. Python scripts for monitoring the grow environment and interfacing with peripherals sensors and devices,
@@ -15,16 +15,69 @@ All functions can be accomplished with a RaspberryPi + Arduino and the requisite
 ## Table of Contents
 
   - [Introduction](#introduction)
-  - [Hardware Setup](#hardware-setup)
+  - [Raspberry Pi Setup](#raspberry-pi-setup)
+    - [Using pre-built image](#using-pre-built-image)
     - [Arduino Setup](#arduino-setup)
     - [DIY Wiring](#diy-wiring)
     - [Button Interface](#button-interface)
   - [Software Install](#software-install)
-    - [Using pre-built image](#using-pre-built-image)
     - [Using setup scripts](#using-setup-scripts)
   - [Configuration](#configuration)
   - [Sample Projects](#sample-projects)
   - [Contributing](#contributing)
+
+## Raspberry Pi Setup
+Users have two options for install: using a pre-built image to flash oasis-grow and its requisite packages directly to an SD card, or using the [setup scripts](scripts) to build the repository and its requirements onto a fresh install of Raspbian Lite.
+
+### Using pre-built image
+
+Install the image onto your Raspberry Pi:
+1. Download the oasis-grow image here: [NOT YET AVAILABLE].
+2. Download [Balena Etcher](https://www.balena.io/etcher/).
+3. Connect a microSD card to your personal computer.
+4. Format the microSD card in the MS-DOS (FAT) style using your operating system's disk formatting utility.
+5. Open Balena Etcher and follow the on-screen instructions to flash the image to your microSD.
+6. Place the SD card into the front slot of the Raspberry Pi.
+7. Connect a keyboard, monitor, and sufficient power supply to the Pi.
+
+### Using setup scripts
+
+Install Raspbian Lite onto your Raspberry Pi:
+1. Download the latest Raspbian Lite image from the [official download site](https://www.raspberrypi.org/software/operating-systems/).
+2. Download [Balena Etcher](https://www.balena.io/etcher/).
+3. Connect a microSD card to your personal computer.
+4. Format the microSD card in the MS-DOS (FAT) style using your operating system's disk formatting utility.
+5. Open Balena Etcher and follow the on-screen instructions to flash the image to your microSD.
+6. Place the SD card into the front slot of the Raspberry Pi.
+7. Connect a keyboard, monitor, and sufficient power supply to the Pi.
+   
+Wait for the Pi to boot, then enter the following when prompted for a username and password:
+```
+raspberrypi login: pi
+Password: raspberry
+```
+When the prompt appears, enter `sudo raspi-config`. Using the arrow keys to navigate, set `Localisation Options > WLAN Country` according to your locale. Next, select `Interface Options > Camera` and turn the camera on. Finally, select `System Options > Wireless LAN` and enter the name and password for your home WiFi network.
+
+Once you are connected to the internet, update package lists with
+```
+sudo apt-get update
+```
+Next, install git:
+```
+sudo apt-get install -y git
+```
+Use git to clone the oasis-grow repository into `/home/pi`:
+```
+cd ~
+sudo git clone https://github.com/oasis-gardens/oasis-grow
+```
+Change permissions and run the `master_setup.sh` script found in the repository's root directory. If you wish to run `controller.py` automatically at startup, at the `-b` flag.
+```
+cd oasis-grow
+chmod +x master_setup.sh
+./master_setup.sh -b
+```
+When the system reboots automatically, the [button interface]() and peripheral devices should be fully functional.
 
 ## Hardware Setup
 
@@ -53,21 +106,6 @@ If you have followed the DIY wiring guide, the three buttons on the control inte
 **Connect Button**: launches an ad-hoc network and TCP server that is used to connect your system to the internet using the Oasis Mobile App (coming soon!). When ready to link your device, press this button, wait 15 seconds and then join the "Oasis" wifi network in your phone settings. Once this is done, return to the app, press "add device", and follow the on-screen prompt.
 
 **Water Button**: this runs the watering pump for 60 seconds, if there is one connected. It is most useful for draining setups with bulky reservoirs and tanks via hose.
-
-## Software Install
-
-Users have two options for install: using a pre-built image to flash oasis-grow and its requisite packages directly to an SD card, or using the [setup scripts](scripts) to install the repository and its requirements onto a fresh install of Raspbian Lite.
-
-### Using pre-built image
-
-Install the image onto your Raspberry Pi:
-1. Download the oasis-grow image here: [NOT YET AVAILABLE].
-2. Download [Balena Etcher](https://www.balena.io/etcher/).
-3. Connect a microSD card to your personal computer.
-4. Format the microSD card in the MS-DOS (FAT) style using your operating system's disk formatting utility.
-5. Open Balena Etcher and follow the on-screen instructions to flash the image to your microSD.
-6. Place the SD card into the front slot of the Raspberry Pi.
-7. Connect a keyboard, monitor, and sufficient power supply to the Pi.
 
 **Using the Button Interface**
 
@@ -111,45 +149,6 @@ and uncomment the following line by removing the leading hashtag:
 #sudo python3 /home/pi/grow-ctrl/controller.py
 ```
 Two configuration files, `grow_params.json` and `feature_toggles.json`, can be edited directly from the command line using a text editor like `nano`. More details can be found under [Configuration](#configuration)
-
-### Using setup scripts
-
-Install Raspbian Lite onto your Raspberry Pi:
-1. Download the latest Raspbian Lite image from the [official download site](https://www.raspberrypi.org/software/operating-systems/).
-2. Download [Balena Etcher](https://www.balena.io/etcher/).
-3. Connect a microSD card to your personal computer.
-4. Format the microSD card in the MS-DOS (FAT) style using your operating system's disk formatting utility.
-5. Open Balena Etcher and follow the on-screen instructions to flash the image to your microSD.
-6. Place the SD card into the front slot of the Raspberry Pi.
-7. Connect a keyboard, monitor, and sufficient power supply to the Pi.
-   
-Wait for the Pi to boot, then enter the following when prompted for a username and password:
-```
-raspberrypi login: pi
-Password: raspberry
-```
-When the prompt appears, enter `sudo raspi-config`. Using the arrow keys to navigate, set `Localisation Options > WLAN Country` according to your locale. Next, select `Interface Options > Camera` and turn the camera on. Finally, select `System Options > Wireless LAN` and enter the name and password for your home WiFi network.
-
-Once you are connected to the internet, update package lists with
-```
-sudo apt-get update
-```
-Next, install git:
-```
-sudo apt-get install -y git
-```
-Use git to clone the oasis-grow repository into `/home/pi`:
-```
-cd ~
-sudo git clone https://github.com/oasis-gardens/oasis-grow
-```
-Change permissions and run the `master_setup.sh` script found in the repository's root directory. If you wish to run `controller.py` automatically at startup, at the `-b` flag.
-```
-cd oasis-grow
-chmod +x master_setup.sh
-./master_setup.sh -b
-```
-When the system reboots automatically, the button interface and peripheral devices should be fully functional.
 
 ## Configuration
 
