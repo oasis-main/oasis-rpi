@@ -199,7 +199,15 @@ oasis-grow contains two important configuration files, both located in the repos
 | `Dh_fan` | int | dampening feedback response for fan with respect to humidity (advanced)
 
 ## Sample Projects
-oasis-grow provides a highly modular interface with countless possible applications. A forthcoming wiki will provide detailed instructions for common projects as well as a gallery of existing OASIS applications for inspiration.
+oasis-grow provides a highly modular interface with countless possible applications. A forthcoming wiki will provide detailed instructions for common projects as well as a gallery of existing OASIS applications:
+- time lapse cameras
+- incubators
+- mushroom growing chambers
+- hydroponic gardens
+- outdoor environmental monitoring
+- petri desh habitats
+- automated irrigation
+- much more!
 
 ## Contributing
 oasis-grow welcomes pull requests and offers three tiers of open source contribution. 
