@@ -76,7 +76,7 @@ Change permissions and run the `master_setup.sh` script found in the repository'
 ```
 cd oasis-grow
 chmod +x master_setup.sh
-./master_setup.sh -b
+source ./master_setup.sh -b
 ```
 When the system reboots automatically, the [button interface]() and peripheral devices should be fully functional.
 
@@ -116,11 +116,11 @@ To use the platform with the [button interface](#button-interface) and OASIS app
 ```
 sudo nano /etc/rc.local
 ```
-Uncomment the following line by removing the leading hashtag:
+Check the following line is present & uncommented ie. if there is a leading hashtag, remove it. If you ran the setup script with the "-b" flag or are using a pre-flashed image, this should already be done for you:
 ```
-#sudo python3 /home/pi/grow-ctrl/controller.py
+python3 /home/pi/grow-ctrl/controller.py
 ```
-If you do not see this line, add the command (the part of the line after the hashtag) to `/etc/rc.local` before the `exit 0` command.
+If you do not see this line, add the command to `/etc/rc.local` before the `exit 0` command.
 
 
 This line launches our interface script on startup which accepts button inputs, controls the growing environment, collects harvest data, and manages the optional connection process with the Oasis cloud and mobile app. This all happens on reboot, so we'll run the following command to get it up and running:
@@ -150,11 +150,11 @@ If you want to run `controller.py` automatically at startup, open `rc.local` wit
 ```
 sudo nano /etc/rc.local
 ```
-and uncomment the following line by removing the leading hashtag:
+and make sure the following line is present and uncommented:
 ```
-#sudo python3 /home/pi/grow-ctrl/controller.py
+python3 /home/pi/grow-ctrl/controller.py
 ```
-If you do not see this line, add the command (the part of the line after the hashtag) to `/etc/rc.local` before the `exit 0` command.
+Remove the leading hashtag if there is one. If you do not see this line, add the command to `/etc/rc.local` before the `exit 0` command.
 
 Two configuration files, `grow_params.json` and `feature_toggles.json`, can be edited directly from the command line using a text editor like `nano`. More details can be found under [Configuration](#configuration).
 
