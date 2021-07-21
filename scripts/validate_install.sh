@@ -6,7 +6,7 @@ if ! [ -d "/usr/local/lib/python3.9/site-packages/streamlit" ]; then
 fi
 
 for packageName in setuptools Cython numpy pandas firebase pyrebase python_jwt gcloud sseclient requests requests_toolbelt pickle5 serial PIL; do
-    if ! [ -d "usr/local/lib/python3.9/site-packages/$packageName" ]; then
+    if ! [ -d "/home/pi/.local/lib/python3.7/site-packages/$packageName" ]; then
         echo "'$packageName' not found"
     fi
 done
