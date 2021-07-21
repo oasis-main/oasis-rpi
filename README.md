@@ -10,18 +10,19 @@ This repository contains:
 3. An Arduino source file for use with sensors and LEDs,
 4. Shell scripts for installing and configuring necessary packages.
 
-All functions can be accomplished with a RaspberryPi + Arduino and the requisite peripheral hardware. The software interfaces with a sensor array, camera, and appliance set and is controllable via shell or mobile app interface (currently in Beta).
+All functions can be accomplished with a RaspberryPi, with an optional Arduino for collecting sensor data, working LEDs, and other precision-timing applications. The software interfaces with a sensor array, camera, and appliance set and is controllable via shell or mobile app interface (currently in Beta).
 
 ## Table of Contents
 
   - [Introduction](#introduction)
   - [Raspberry Pi Setup](#raspberry-pi-setup)
     - [Using pre-built image](#using-pre-built-image)
+    - [Using setup scripts](#using-setup-scripts)
+  - [Hardware Setup](#hardware-setup)
     - [Arduino Setup](#arduino-setup)
     - [DIY Wiring](#diy-wiring)
+  - [Usage](#Usage)
     - [Button Interface](#button-interface)
-  - [Software Install](#software-install)
-    - [Using setup scripts](#using-setup-scripts)
   - [Configuration](#configuration)
   - [Sample Projects](#sample-projects)
   - [Contributing](#contributing)
@@ -97,6 +98,8 @@ DIYers can purchase a complete PCB (currently in Beta) to get a jump on wiring o
 
 Note: We are not dedicated electrical engineers, as some of you may be able to tell from the wiring guide. If you know how to make good circuit diagrams, we could use your help, so shoot us an email!
 
+## Usage
+
 ### Button Interface
 
 If you have followed the DIY wiring guide, the three buttons on the control interface will function as follows provided `controller.py` is running (see below).
@@ -107,9 +110,9 @@ If you have followed the DIY wiring guide, the three buttons on the control inte
 
 **Water Button**: this runs the watering pump for 60 seconds, if there is one connected. It is most useful for draining setups with bulky reservoirs and tanks via hose.
 
-**Using the Button Interface**
+### Using the Button Interface
 
-To use the platform with the [button interface](#button-interface) and OASIS app, follow the instructions immediately below. If you wish to run oasis-grow from the command line, skip to the **Using the Command Line** header. Begin by opening a terminal and opening `/etc/rc.local`:
+To use the platform with the [button interface](#button-interface) and OASIS app, follow the instructions immediately below. If you wish to run oasis-grow from the command line, skip to the **Using the Command Line** header. Begin by opening a terminal on the Raspberry Pi and opening `/etc/rc.local`:
 ```
 sudo nano /etc/rc.local
 ```
@@ -117,6 +120,9 @@ Uncomment the following line by removing the leading hashtag:
 ```
 #sudo python3 /home/pi/grow-ctrl/controller.py
 ```
+If you do not see this line, add the command (the part of the line after the hashtag) to `/etc/rc.local` before the `exit 0` command.
+
+
 This line launches our interface script on startup which accepts button inputs, controls the growing environment, collects harvest data, and manages the optional connection process with the Oasis cloud and mobile app. This all happens on reboot, so we'll run the following command to get it up and running:
 ```
 sudo systemctl reboot
@@ -126,19 +132,19 @@ Once `controller.py` is running, and if wiring has been [set up correctly](#diy-
 
 **Using the Command Line**
 
-oasis-grow can be run directly from the command line. This is the ideal option for those who would like to use custom interfaces and integrate their own scripts + programming (we are accepting collaborators, contributions, & pull requests! Hit us up mike@oasisregenerative.com). In order to do this, please obtain the required hardware running grow-ctrl as a pre-flashed image (contact us) or built from source (see below).
+oasis-grow can be run directly from the command line. This is the ideal option for those who would like to use custom interfaces and integrate their own scripts + programming (we are accepting collaborators, contributions, & pull requests! Hit us up mike@oasisregenerative.com, or see [Contributing](#contributing)). In order to do this, please obtain the required hardware running grow-ctrl as a pre-flashed image (contact us) or built from source (see below).
 
 Start by opening a terminal and run the following command to enter the project directory:
 ```
 cd ~/grow-ctrl
 ```
-Running the following command to start a grow cycle with default settings. This begins the process of sensing temperature, humidity, & water level, regulating hea, humidity, airflow, light, & water, and capturing images at regular intervals.
+Running the following command to start a grow cycle with default settings. This begins the process of sensing temperature, humidity, & water level, regulating heat, humidity, airflow, light, & water, and capturing images at regular intervals.
 ```
-sudo python3 grow_ctrl.py main
+python3 grow_ctrl.py main
 ```
 To make use of the [button interface](#button-interface) for controlling the grow cycles, use this instead:
 ```
-sudo python3 controller.py
+python3 controller.py
 ```
 If you want to run `controller.py` automatically at startup, open `rc.local` with
 ```
@@ -148,11 +154,27 @@ and uncomment the following line by removing the leading hashtag:
 ```
 #sudo python3 /home/pi/grow-ctrl/controller.py
 ```
-Two configuration files, `grow_params.json` and `feature_toggles.json`, can be edited directly from the command line using a text editor like `nano`. More details can be found under [Configuration](#configuration)
+If you do not see this line, add the command (the part of the line after the hashtag) to `/etc/rc.local` before the `exit 0` command.
+
+Two configuration files, `grow_params.json` and `feature_toggles.json`, can be edited directly from the command line using a text editor like `nano`. More details can be found under [Configuration](#configuration).
 
 ## Configuration
 
 oasis-grow contains two important configuration files, both located in the repository's root directory. 
+
+`feature_toggles.json` toggles certain features on and off:
+| Field | Value | Function |
+| ----- | ----- | -------- |
+| `temp_hum_sensor` | `0` or `1` | determines whether the program is reading temperature and humidity data | 
+| `water_low_sensor` | `0` or `1` | determines whether the program is reading water level data |
+| `heater` | `0` or `1` | determines whether the heater is on or off |
+| `humidifier` | `0` or `1` | determines whether the watering apparatus is on or off |
+| `fan` | `0` or `1` | determines whether the fan is on or off |
+| `light` | `0` or `1` | determines whether the lights cycle is on or off |
+| `camera` | `0` or `1` | determines whether the camera is on or off |
+| `water` | `0` or `1` | determines whether the watering apparatus is on or off |
+| `save_images` | `0` or `1` | determines whether the camera is saving images to a continuous feed that can be used to generate timelapses |
+| `save_data` | `0` or `1` | determines whether the grow control process is logging sensor data to a `.csv` file
 
 `grow_params.json` modifies grow parameters:
 | Field | Value | Function |
@@ -176,24 +198,11 @@ oasis-grow contains two important configuration files, both located in the repos
 | `Ph_fan` | int | proportional feedback response for fan with respect to humidity (advanced)
 | `Dh_fan` | int | dampening feedback response for fan with respect to humidity (advanced)
 
-`feature_toggles.json` toggles certain features on and off:
-| Field | Value | Function |
-| ----- | ----- | -------- |
-| `temp_hum_sensor` | `0` or `1` | determines whether the program is reading temperature and humidity data | 
-| `water_low_sensor` | `0` or `1` | determines whether the program is reading water level data |
-| `heater` | `0` or `1` | determines whether the heater is on or off |
-| `humidifier` | `0` or `1` | determines whether the watering apparatus is on or off |
-| `fan` | `0` or `1` | determines whether the fan is on or off |
-| `light` | `0` or `1` | determines whether the lights cycle is on or off |
-| `camera` | `0` or `1` | determines whether the camera is on or off |
-| `water` | `0` or `1` | determines whether the watering apparatus is on or off |
-| `save_images` | `0` or `1` | determines whether the camera is saving images to a continuous feed that can be used to generate timelapses |
-| `save_data` | `0` or `1` | determines whether the grow control process is logging sensor data to a `.csv` file
-
 ## Sample Projects
 oasis-grow provides a highly modular interface with countless possible applications. A forthcoming wiki will provide detailed instructions for common projects as well as a gallery of existing OASIS applications for inspiration.
 
 ## Contributing
-oasis-grow welcomes open-source contributors and is currently accepting pull requests. Contact mike@oasisregenerative.com with questions or proposals.
-
-A wiki with additional information on building from source and the makeup of the core python scripts is in the works.
+oasis-grow welcomes pull requests and offers three tiers of open source contribution. 
+- Oasis Citizen: Build and share a photo of your physical Oasis shetup
+- Oasis Gardener: Install Oasis software and collect 14 days of sensor data
+- Oasis Technician: Submit a pull request to the oasis-grow repository
