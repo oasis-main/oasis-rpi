@@ -203,6 +203,6 @@ oasis-grow provides a highly modular interface with countless possible applicati
 
 ## Contributing
 oasis-grow welcomes pull requests and offers three tiers of open source contribution. 
-- Oasis Citizen: Build and share a photo of your physical Oasis shetup
+- Oasis Citizen: Build and share a photo of your physical Oasis setup
 - Oasis Gardener: Install Oasis software and collect 14 days of sensor data
 - Oasis Technician: Submit a pull request to the oasis-grow repository
