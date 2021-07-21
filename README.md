@@ -10,7 +10,7 @@ This repository contains:
 3. An Arduino source file for use with sensors and LEDs,
 4. Shell scripts for installing and configuring necessary packages.
 
-All functions can be accomplished with a RaspberryPi, with an optional Arduino for collecting sensor data, working LEDs, and other precision-timing applications. The software interfaces with a sensor array, camera, and appliance set and is controllable via shell or mobile app interface (currently in Beta).
+All functions can be deployed with a RaspberryPi (for networking, scheduling, task management, & control) + an Arduino (for precision sensors, LED management, and other real-time applications). The resulting system is controllable via shell or web interface (currently in Beta).
 
 ## Table of Contents
 
@@ -210,7 +210,7 @@ oasis-grow provides a highly modular interface with countless possible applicati
 - much more!
 
 ## Contributing
-oasis-grow welcomes pull requests and offers three tiers of open source contribution. 
-- Oasis Citizen: Build and share a photo of your physical Oasis setup
-- Oasis Gardener: Install Oasis software and collect 14 days of sensor data
-- Oasis Technician: Submit a pull request to the oasis-grow repository
+oasis-grow welcomes open-source contributors and is currently accepting pull requests. Contact mike@oasisregenerative.com with questions or proposals.
+
+A wiki with additional information on building from source and the makeup of the core python scripts is in the works.
+
