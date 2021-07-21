@@ -10,7 +10,7 @@ This repository contains:
 3. An Arduino source file for use with sensors and LEDs,
 4. Shell scripts for installing and configuring necessary packages.
 
-All functions can be accomplished with a RaspberryPi + Arduino and the requisite peripheral hardware. The software interfaces with a sensor array, camera, and appliance set and is controllable via shell or mobile app interface (currently in Beta).
+All functions can be accomplished with a RaspberryPi + Arduino and the requisite peripheral hardware. The software interfaces with a sensor array, camera, and appliance set and is controllable via shell or browser interface (currently in Beta).
 
 ## Table of Contents
 
@@ -192,7 +192,15 @@ oasis-grow contains two important configuration files, both located in the repos
 | `save_data` | `0` or `1` | determines whether the grow control process is logging sensor data to a `.csv` file
 
 ## Sample Projects
-oasis-grow provides a highly modular interface with countless possible applications. A forthcoming wiki will provide detailed instructions for common projects as well as a gallery of existing OASIS applications for inspiration.
+oasis-grow provides a highly modular interface with countless possible applications. A forthcoming wiki will provide detailed instructions for common projects as well as a gallery of existing OASIS applications:
+- time lapse cameras
+- incubators
+- mushroom growing chambers
+- hydroponic gardens
+- outdoor environmental monitoring
+- petri desh habitats
+- automated irrigation
+- much more!
 
 ## Contributing
 oasis-grow welcomes open-source contributors and is currently accepting pull requests. Contact mike@oasisregenerative.com with questions or proposals.
