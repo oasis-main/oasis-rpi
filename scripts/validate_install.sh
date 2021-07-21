@@ -5,9 +5,15 @@ if ! [ -d "/usr/local/lib/python3.9/site-packages/streamlit" ]; then
     echo "'streamlit' not found, python3.9 install failed"
 fi
 
-for packageName in setuptools Cython numpy pandas firebase pyrebase python_jwt gcloud sseclient requests requests_toolbelt pickle5 serial PIL; do
+if ! [ -d "/usr/lib/python3/dist-packages/requests" ]; then
+    echo "'requests' not found"
+elif ! [ -d "/usr/lib/python3/dist-packages/setuptools" ]; then
+    echo "'setuptools' not found"
+fi
+
+for packageName in Cython numpy pandas firebase pyrebase python_jwt gcloud sseclient requests_toolbelt pickle5 serial PIL; do
     if ! [ -d "/home/pi/.local/lib/python3.7/site-packages/$packageName" ]; then
-        echo "'$packageName' not found"
+        echo "package '$packageName' not found"
     fi
 done
 
