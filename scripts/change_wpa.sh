@@ -1,4 +1,4 @@
-#/bin/bash -e
+#/bin/sh -e
 
 read -sp "Enter old password: " oldpwd
 printf "\n"
