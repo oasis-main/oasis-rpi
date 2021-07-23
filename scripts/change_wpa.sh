@@ -8,7 +8,7 @@ if [ "wpa_passphrase=$oldpwd" = "$pwdline" ]; then
     read -sp "Confirm new password: " newpwdconf
 
     if [ "$newpwd" = "$newpwdconf" ]; then
-        sudo sed -i "s/$oldpwd/$newpwd" /etc/hostapd/hostapd.conf
+        sudo sed -i "s/$oldpwd/$newpwd/" /etc/hostapd/hostapd.conf
     fi
 else
     echo "Incorrect password."
