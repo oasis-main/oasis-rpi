@@ -19,7 +19,7 @@ printf "
 interface wlan0
 static ip_address=192.168.4.1/24
 nohook wpa_supplicant
-" | sudo tee -a /etc/dhcpcd.conf
+" | sudo tee /etc/dhcpcd.conf
 printf "
 #Listening interface
 interface=wlan0
@@ -29,7 +29,7 @@ dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h
 domain=wlan
 #Alias for this router
 address=/gw.wlan/192.168.4.1
-" | sudo tee -a /etc/dnsmasq.conf
+" | sudo tee /etc/dnsmasq.conf
 printf "
 country_code=US
 interface=wlan0
@@ -44,7 +44,7 @@ wpa_passphrase=community
 wpa_key_mgmt=WPA-PSK
 wpa_pairwise=TKIP
 rsn_pairwise=CCMP
-" | sudo tee -a /etc/hostapd/hostapd.conf
+" | sudo tee /etc/hostapd/hostapd.conf
 
 echo "Staging config files for network mode switching..."
 sudo cp /etc/dhcpcd.conf /etc/dhcpcd_AP.conf
