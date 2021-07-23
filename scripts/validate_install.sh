@@ -1,5 +1,11 @@
 #/bin/sh -e
 
+echo "Checking python 3.9 install..."
+python3.9 --version
+if ! [ $? -eq 0  ]; then
+    echo "python3.9 installation failed"
+fi
+
 echo "Validating python packages..."
 if ! [ -d "/usr/local/lib/python3.9/site-packages/streamlit" ]; then
     echo "'streamlit' not found"
