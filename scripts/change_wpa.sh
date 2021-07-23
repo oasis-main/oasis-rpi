@@ -14,9 +14,7 @@ if [ "wpa_passphrase=$oldpwd" = "$pwdline" ]; then
         sudo sed -i "s/$oldpwd/$newpwd/" /etc/hostapd/hostapd.conf
     else
         echo "Passwords do not match."
-        printf "\n"
     fi
 else
     echo "Incorrect password."
-    printf "\n"
 fi
