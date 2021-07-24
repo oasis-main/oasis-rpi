@@ -8,6 +8,7 @@ sudo apt-get install -y libopenjp2-7
 sudo apt-get install -y libtiff5
 sudo apt-get install -y libatlas-base-dev
 sudo apt-get install -y libjpeg-dev zlib1g-dev
+sudo apt-get install -y cmake
 
 echo "Configuring PATH variable..."
 echo "export PATH=/home/pi/.local/bin:$PATH/" | sudo tee -a /home/pi/.bashrc
