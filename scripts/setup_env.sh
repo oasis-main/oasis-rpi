@@ -37,4 +37,5 @@ wget https://apache.bintray.com/arrow/ubuntu/apache-arrow-archive-keyring-latest
 sudo apt install ./apache-arrow-archive-keyring-latest-focal.deb
 sudo apt install libarrow-dev libarrow-python-dev
 ARROW_HOME=/usr PYARROW_CMAKE_OPTIONS="-DARROW_ARMV8_ARCH=armv8-a"
+sudo python3.9 -m pip install numpy=1.19.3
 sudo python3.9 -m pip install streamlit
