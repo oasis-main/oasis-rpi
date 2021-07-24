@@ -33,4 +33,8 @@ sudo apt-get install python3.9-distutils
 curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
 python3.9 get-pip.py
 echo "Installing python3.9 modules via pip..."
+wget https://apache.bintray.com/arrow/ubuntu/apache-arrow-archive-keyring-latest-focal.deb
+sudo apt install ./apache-arrow-archive-keyring-latest-focal.deb
+sudo apt install libarrow-dev libarrow-python-dev
+ARROW_HOME=/usr PYARROW_CMAKE_OPTIONS="-DARROW_ARMV8_ARCH=armv8-a"
 sudo python3.9 -m pip install streamlit
