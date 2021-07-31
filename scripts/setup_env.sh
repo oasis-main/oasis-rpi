@@ -21,20 +21,20 @@ python3 -m pip install -r /home/pi/oasis-grow/requirements.txt
 echo "Installing python 3.7 RPi.GPIO for OS..."
 sudo apt-get -y install python3-rpi.gpio
 
-echo "Installing Python 3.9..."
-cd ..
-wget https://www.python.org/ftp/python/3.9.6/Python-3.9.6.tgz
-tar xvf Python-3.9.6.tgz
-cd Python-3.9.6/
-./configure  --enable-optimizations
-sudo make altinstall
-python3.9 -V
+#echo "Installing Python 3.9..."
+#cd ..
+#wget https://www.python.org/ftp/python/3.9.6/Python-3.9.6.tgz
+#tar xvf Python-3.9.6.tgz
+#cd Python-3.9.6/
+#./configure  --enable-optimizations
+#sudo make altinstall
+#python3.9 -V
 
-echo "Building pip3.9 environment..."
-cd ..
-sudo apt-get install python3.9-distutils
-curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-python3.9 get-pip.py
+#echo "Building pip3.9 environment..."
+#cd ..
+#sudo apt-get install python3.9-distutils
+#curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+#python3.9 get-pip.py
 
 echo "Build llvm-10 from source (Apache Arrow dependency)..."
 echo "export LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"" | sudo tee -a /home/pi/.bashrc
@@ -74,13 +74,12 @@ cmake \
 make -j4
 sudo make install
 cd ../../python
-python3.9 setup.py build_ext --build-type=release --with-parquet
-sudo python3.9 setup.py install
+python3 setup.py build_ext --build-type=release --with-parquet
+sudo python3 setup.py install
 
 echo "Add LD_Preload to .bashrc..."
 echo "LD_PRELOAD=/usr/lib/arm-linux-gnueabihf/libatomic.so.1.2.0" | sudo tee -a /home/pi/.bashrc
 source /home/pi/.bashrc
 
-echo "Installing python3.9 modules via pip..."
-sudo python3.9 -m pip install numpy==1.19.3
-sudo python3.9 -m pip install streamlit
+echo "Installing streamlit..."
+sudo python3 -m pip install streamlit
