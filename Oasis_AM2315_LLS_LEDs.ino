@@ -12,13 +12,13 @@
 Adafruit_AM2315 am2315; 
 
 //sensor pin for water level
-int waterLevelPin = 2;
+int water_level_pin = 2;
 
 //set up LED controller
 #define LEDPIN 7
 #define NUMOFLEDS 60
 CRGB leds[NUMOFLEDS];
-String LEDmode = "off";
+String led_mode = "off";
 
 void setup() {
   FastLED.addLeds<WS2812B, LEDPIN, GRB>(leds, NUMOFLEDS);
@@ -32,10 +32,10 @@ void setup() {
      while (1);
   }
 
-  pinMode(waterLevelPin, INPUT_PULLUP);
+  pinMode(water_level_pin, INPUT_PULLUP);
 
   //off (none, looping)
-  if (LEDmode == "off"){
+  if (led_mode == "off"){
     for (int i = 0; i <= 59; i++) {
       leds[i] = CRGB (0, 0, 0);
       FastLED.show();
@@ -53,7 +53,7 @@ int waterSig0 = 0;
 void loop() {
   //Serial Data Out
   float temperature, humidity;
-  int waterLow;
+  int water_low;
 
   if (! am2315.readTemperatureAndHumidity(&temperature, &humidity)) {
     temperature = -1;
@@ -61,7 +61,7 @@ void loop() {
     return;
   }
 
-  if (digitalRead(waterLevelPin) == HIGH)
+  if (digitalRead(water_level_pin) == HIGH)
   {
     waterSig0 = waterSig1;
     waterSig1 = waterSig2;
@@ -80,28 +80,28 @@ void loop() {
 
   if (waterSig4 == 1 || waterSig3 == 1 || waterSig2 == 1 || waterSig1 == 1 || waterSig0 == 1)
   {
-    waterLow = 1;
+    water_low = 1;
   }
   else
   {
-    waterLow = 0;
+    water_low = 0;
   }
   
   Serial.print(humidity);
   Serial.print(" "); 
   Serial.print(temperature*(1.800)+32); //need to manually adjust the sensor smh
   Serial.print(" ");
-  Serial.print(waterLow);
+  Serial.print(water_low);
   Serial.println(); 
 
   //Mode Management
   if (Serial.available() > 0) {
-    String LEDdata = Serial.readStringUntil('\n');
-    LEDmode = LEDdata;
+    String led_data = Serial.readStringUntil('\n');
+    led_mode = led_data;
   }
   
   //Connected, Running (green, looping)
-  if (LEDmode =="connectedRunning"){
+  if (led_mode =="connected_running"){
     for (int i = 0; i <= 59; i++) {
       leds[i] = CRGB (0, 10, 0);
       FastLED.show();
@@ -115,7 +115,7 @@ void loop() {
   }
 
   //Connected, Idle (green, static)
-  if (LEDmode =="connectedIdle"){
+  if (led_mode =="connected_idle"){
     for (int i = 0; i <= 59; i++) {
       leds[i] = CRGB (0, 5, 0);
       FastLED.show();
@@ -124,7 +124,7 @@ void loop() {
   }
 
   //Island, Running (white, looping)
-  if (LEDmode =="islandRunning"){
+  if (led_mode =="offline_running"){
     for (int i = 0; i <= 59; i++) {
       leds[i] = CRGB (10, 10, 10);
       FastLED.show();
@@ -138,7 +138,7 @@ void loop() {
   }
 
   //Island, Idle (white, static)
-  if (LEDmode =="islandIdle"){
+  if (led_mode =="offline_idle"){
     for (int i = 0; i <= 59; i++) {
       leds[i] = CRGB (5, 5, 5);
       FastLED.show();
@@ -146,17 +146,17 @@ void loop() {
     }  
   }
 
-  //Island, Idle (white, static)
-  if (LEDmode =="islandIdle"){
+  //Master sends error message (red, static)
+  if (led_mode =="error"){
     for (int i = 0; i <= 59; i++) {
-      leds[i] = CRGB (5, 5, 5);
+      leds[i] = CRGB (5, 0, 0);
       FastLED.show();
       delay(40);
     }  
   }
 
   //AP-mode, Server accepting connections (blue, looping)
-  if (LEDmode =="connectWifi"){
+  if (led_mode =="accepting_wifi_connection"){
     for (int i = 0; i <= 59; i++) {
       leds[i] = CRGB (0, 0, 10);
       FastLED.show();
@@ -170,7 +170,7 @@ void loop() {
   }
 
   //off (none, looping)
-  if (LEDmode == "off"){
+  if (led_mode == "off"){
     for (int i = 0; i <= 59; i++) {
       leds[i] = CRGB (0, 0, 0);
       FastLED.show();
@@ -178,7 +178,7 @@ void loop() {
     }
   }
 
-  //Serial.println(LEDmode);  
+  Serial.println(led_mode);  
   
   delay(1);
 }
