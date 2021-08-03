@@ -6,7 +6,7 @@
 "lighting_interval": "60",
 "camera_interval": "60",
 "watering_duration": "15",
-"watering_interval": "1",
+"watering_interval": "24",
 "P_temp": "75",
 "D_temp": "1",
 "P_hum": "50",
