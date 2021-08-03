@@ -4,7 +4,7 @@
 "time_start_light": "8",
 "time_start_dark": "20",
 "lighting_interval": "60",
-"camera_interval": "1",
+"camera_interval": "60",
 "watering_duration": "15",
 "watering_interval": "1",
 "P_temp": "75",
