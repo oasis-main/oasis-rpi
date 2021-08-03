@@ -32,41 +32,37 @@ with open('/home/pi/hardware_config.json') as h:
 
 #setup GPIO
 GPIO.setmode(GPIO.BCM) #GPIO Numbers instead of board numbers
-Light_GPIO = hardware_config["actuatorGPIOmap"]["lightingElement"] #heater pin pulls from config file
+Light_GPIO = hardware_config["actuator_gpio_map"]["light_relay"] #heater pin pulls from config file
 GPIO.setup(Light_GPIO, GPIO.OUT) #GPIO setup relay open = GPIO.HIGH, closed = GPIO.LOW
 GPIO.output(Light_GPIO, GPIO.LOW) #relay open = GPIO.HIGH, closed = GPIO.LOW
 
 #define a function to actuate element
-def actuate(lightingMode, timeOn = 0, timeOff = 0, interval = 900): #time on must be less than time off
+def actuate(timeOn = 0, timeOff = 0, interval = 900): #time on must be less than time off
 
     now = datetime.datetime.now()
     HoD = now.hour
 
-    if lightingMode == "off":
-        GPIO.output(Light_GPIO, GPIO.LOW) #light off (relay open)
+
+    if timeOn < timeOff:
+        if HoD >= timeOn and HoD < timeOff:
+            GPIO.output(Light_GPIO, GPIO.HIGH) #light on (relay closed)
+            time.sleep(interval)
+        if HoD < timeOn or HoD >= timeOff:
+            GPIO.output(Light_GPIO, GPIO.LOW)
+            time.sleep(interval)
+    if timeOn > timeOff:
+        if HoD >=  timeOn or HoD < timeOff:
+            GPIO.output(Light_GPIO, GPIO.HIGH) #light on (relay closed)
+            time.sleep(interval)
+        if HoD < timeOn and  HoD >= timeOff:
+            GPIO.output(Light_GPIO, GPIO.LOW) #light on (relay closed)
+            time.sleep(interval)
+    if timeOn == timeOff:
+        GPIO.output(Light_GPIO, GPIO.HIGH)
         time.sleep(interval)
 
-    if lightingMode == "on":
-        if timeOn < timeOff:
-            if HoD >= timeOn and HoD < timeOff:
-                GPIO.output(Light_GPIO, GPIO.HIGH) #light on (relay closed)
-                time.sleep(interval)
-            if HoD < timeOn or HoD >= timeOff:
-                GPIO.output(Light_GPIO, GPIO.LOW)
-                time.sleep(interval)
-        if timeOn > timeOff:
-            if HoD >=  timeOn or HoD < timeOff:
-                GPIO.output(Light_GPIO, GPIO.HIGH) #light on (relay closed)
-                time.sleep(interval)
-            if HoD < timeOn and  HoD >= timeOff:
-                GPIO.output(Light_GPIO, GPIO.LOW) #light on (relay closed)
-                time.sleep(interval)
-        if timeOn == timeOff:
-            GPIO.output(Light_GPIO, GPIO.HIGH)
-            time.sleep(interval)
-
 try:
-    actuate(str(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]))
+    actuate(str(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]))
     GPIO.cleanup()
 except KeyboardInterrupt:
     print("Interrupted")

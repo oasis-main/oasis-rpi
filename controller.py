@@ -43,12 +43,12 @@ access_config = None #contains credentials for connecting to firebase
 listener = None
 ser_out = None #object for writing to the microcontroller via serial
 grow_ctrl_process = None #variable to launch & manage the grow controller
-WaterElement = None #holds GPIO object for running the watering aparatus
+water_relay = None #holds GPIO object for running the watering aparatus
 
 #declare UI variables
-StartButton = None #holds GPIO object for starting and stopping grow_ctrl process
-ConnectButton = None #holds GPIO object for connecting device to internet
-WaterButton = None #holds GPIO object for triggering the watering aparatus
+start_stop_button = None #holds GPIO object for starting and stopping grow_ctrl process
+connect_internet_button = None #holds GPIO object for connecting device to internet
+run_water_button = None #holds GPIO object for triggering the watering aparatus
 
 #loads device state, hardware, and access configurations
 def load_state(): #Depends on: 'json'; Modifies: device_state,hardware_config ,access_config
@@ -264,8 +264,8 @@ def check_deleted():
         print("Device has been reset to default configuration")
 
 #setup buttons for the main program interface
-def setup_button_interface(): #depends on: load_state(), 'RPi.GPIO'; modifies: StartButton, ConnectButton, WaterButton, state variables
-    global StartButton, ConnectButton, WaterButton
+def setup_button_interface(): #depends on: load_state(), 'RPi.GPIO'; modifies: start_stop_button, connect_internet_button, run_water_button, state variables
+    global start_stop_button, connect_internet_button, run_water_button
     #specify gpio pin number mode
     GPIO.setmode(GPIO.BCM)
 
@@ -273,28 +273,28 @@ def setup_button_interface(): #depends on: load_state(), 'RPi.GPIO'; modifies: S
     load_state()
 
     #set button pins
-    StartButton = hardware_config["buttonGPIOmap"]["startStop"]
-    ConnectButton = hardware_config["buttonGPIOmap"]["connectInternet"]
-    WaterButton = hardware_config["buttonGPIOmap"]["runWater"]
+    start_stop_button = hardware_config["button_gpio_map"]["start_stop_button"]
+    connect_internet_button = hardware_config["button_gpio_map"]["connect_internet_button"]
+    run_water_button = hardware_config["button_gpio_map"]["run_water_button"]
 
     #Setup buttons
-    GPIO.setup(StartButton, GPIO.IN,pull_up_down=GPIO.PUD_UP)
-    GPIO.setup(ConnectButton,GPIO.IN,pull_up_down=GPIO.PUD_UP)
-    GPIO.setup(WaterButton,GPIO.IN,pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(start_stop_button, GPIO.IN,pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(connect_internet_button,GPIO.IN,pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(run_water_button,GPIO.IN,pull_up_down=GPIO.PUD_UP)
 
 #setup restart button for Access Point Button
-def setup_button_AP(): #Depends on: load_state(), 'RPi.GPIO'; Modifies: ConnectButton, state variables
-    global ConnectButton
+def setup_button_AP(): #Depends on: load_state(), 'RPi.GPIO'; Modifies: connect_internet_button, state variables
+    global connect_internet_button
     GPIO.setmode(GPIO.BCM)
 
     #get hardware configuration
     load_state()
 
     #set button pins
-    ConnectButton = hardware_config["buttonGPIOmap"]["connectInternet"]
+    connect_internet_button = hardware_config["button_gpio_map"]["connect_internet_button"]
 
     #Setup buttons
-    GPIO.setup(ConnectButton,GPIO.IN,pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(connect_internet_button,GPIO.IN,pull_up_down=GPIO.PUD_UP)
 
 #gets the state of a button (returns 1 if not pressed, 0 if pressed)
 def get_button_state(button): #Depends on: RPi.GPIO; Modifies: None
@@ -304,7 +304,7 @@ def get_button_state(button): #Depends on: RPi.GPIO; Modifies: None
 #reconfigures network interface, tells system to boot with Access Point, restarts
 def enable_AP(): #Depends on: write_state(), 'subprocess'; Modifies: device_state.json, configuration files
     #tell system that the access point should be launched on next controller startup
-    write_state("/home/pi/device_state.json","AccessPoint","1")
+    write_state("/home/pi/device_state.json","access_point","1")
 
     #disable WiFi, enable AP, reboot
     config_ap_dhcpcd = Popen("sudo cp /etc/dhcpcd_AP.conf /etc/dhcpcd.conf", shell = True)
@@ -318,7 +318,7 @@ def enable_AP(): #Depends on: write_state(), 'subprocess'; Modifies: device_stat
 #reconfigures network interface, tells system to boot with WiF, restarts
 def enable_WiFi(): #Depends on: write_state(), 'subprocess'; Modifies: device_state.json, configuration files
     #tell system that the access point should not be launched on next controller startup
-    write_state("/home/pi/device_state.json","AccessPoint","0")
+    write_state("/home/pi/device_state.json","access_point","0")
 
     #disable WiFi, enable AP, reboot
     config_wifi_dchpcd = Popen("sudo cp /etc/dhcpcd_WiFi.conf /etc/dhcpcd.conf", shell = True)
@@ -333,7 +333,7 @@ def enable_WiFi(): #Depends on: write_state(), 'subprocess'; Modifies: device_st
 def check_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); Modifies: state_variables, 'ser_out', device_state.json
     global ser_out
     load_state()
-    if device_state["AccessPoint"] == "1":
+    if device_state["access_point"] == "1":
         #launch server subprocess to accept credentials over Oasis wifi network, does not wait
         server_process = Popen(["sudo", "streamlit", "run", "/home/pi/oasis-grow/oasis_server.py", "--server.headless=true", "--server.port=80", "--server.address=192.168.4.1", "--server.enableCORS=false", "--server.enableWebsocketCompression=false"])
         print("Access Point Mode enabled")
@@ -341,20 +341,20 @@ def check_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); M
         setup_button_AP()
 
         if ser_out is not None:
-            #set LEDstatus = "connectWifi"
-            write_state("/home/pi/device_state.json","LEDstatus","connectWifi")
+            #set led_status = "connectWifi"
+            write_state("/home/pi/device_state.json","led_status","accepting_wifi_connection")
             load_state()
             #write LED state to seriaL
             while True: #place the "exit button" here to leave connection mode
-                ser_out.write(bytes(str(device_state["LEDstatus"]+"\n"), "utf-8"))
-                cbutton_state = get_button_state(ConnectButton)
+                ser_out.write(bytes(str(device_state["led_status"]+"\n"), "utf-8"))
+                cbutton_state = get_button_state(connect_internet_button)
                 if cbutton_state == 0:
                     server_process.terminate()
                     server_process.wait()
                     enable_WiFi()
         else:
             while True:
-                cbutton_state = get_button_state(ConnectButton)
+                cbutton_state = get_button_state(connect_internet_button)
                 if cbutton_state == 0:
                     server_process.terminate()
                     server_process.wait()
@@ -372,12 +372,12 @@ def setup_growctrl_process(): #Depends on: load_state(), write_state(), 'subproc
         grow_ctrl_process = Popen(["sudo", "python3", "/home/pi/oasis-grow/grow_ctrl.py", "main"])
 
         if device_state["connected"] == "1": #if connected
-            #LEDmode = "connectedRunning"
-            write_state("/home/pi/device_state.json","LEDstatus","connectedRunning")
+            #LEDmode = "connected_running"
+            write_state("/home/pi/device_state.json","led_status","connected_running")
         else: #if not connected
-            write_state("/home/pi/device_state.json","LEDstatus","islandRunning")
+            write_state("/home/pi/device_state.json","led_status","offline_running")
 
-        print("launched grow-ctrl")
+        print("launched grow controller")
 
     else:
 
@@ -385,12 +385,12 @@ def setup_growctrl_process(): #Depends on: load_state(), write_state(), 'subproc
         grow_ctrl_process = Popen(["sudo", "python3", "/home/pi/oasis-grow/grow_ctrl.py", "daemon"])
 
         if device_state["connected"] == "1": #if connected
-            #LEDmode = "connectedIdle"
-            write_state("/home/pi/device_state.json","LEDstatus","connectedIdle")
+            #LEDmode = "connected_idle"
+            write_state("/home/pi/device_state.json","led_status","connected_idle")
         else: #if not connected
-            write_state('/home/pi/device_state.json',"LEDstatus","islandIdle")
+            write_state('/home/pi/device_state.json',"led_status","offline_idle")
 
-        print("grow_ctrl not launched")
+        print("grow controller not launched")
 
 #checks if growctrl should be running, starts it if so, kills it otherwise
 def check_growctrl_running(): #Depends on: load_state(), write_state(), 'subprocess'; Modifies: grow_ctrl_process, state variables, device_state.json
@@ -407,11 +407,11 @@ def check_growctrl_running(): #Depends on: load_state(), write_state(), 'subproc
             print("launched grow-ctrl")
 
             if device_state["connected"] == "1": #if connected
-                #send LEDmode = "connectedRunning"
-                write_state("/home/pi/device_state.json","LEDstatus","connectedRunning")
+                #send LEDmode = "connected_running"
+                write_state("/home/pi/device_state.json","led_status","connected_running")
             else: #if not connected
-                #send LEDmode = "islandRunning"
-                write_state("/home/pi/device_state.json","LEDstatus","islandRunning")
+                #send LEDmode = "offline_running"
+                write_state("/home/pi/device_state.json","led_status","offline_running")
 
     else:
 
@@ -425,11 +425,11 @@ def check_growctrl_running(): #Depends on: load_state(), write_state(), 'subproc
                 pass
 
             if device_state["connected"] == "1": #if connected
-                #send LEDmode = "connectedIdle"
-                write_state("/home/pi/device_state.json","LEDstatus","connectedIdle")
+                #send LEDmode = "connected_idle"
+                write_state("/home/pi/device_state.json","led_status","connected_idle")
             else: #if not connected
-                #send LEDmode = "islandIdle"
-                write_state("/home/pi/device_state.json","LEDstatus","islandIdle")
+                #send LEDmode = "offline_idle"
+                write_state("/home/pi/device_state.json","led_status","offline_idle")
 
 #checks if growctrl is running, kills it if so, starts it otherwise
 def switch_growctrl_running(): #Depends on: load_state(), write_state(), patch_firebase(), 'subprocess'; Modifies: device_state.json, state_variables
@@ -446,26 +446,26 @@ def switch_growctrl_running(): #Depends on: load_state(), write_state(), patch_f
         write_state("/home/pi/device_state.json","running","1")
 
 #sets up the watering aparatus
-def setup_water(): #Depends on: load_state(), 'RPi.GPIO'; Modifies: WaterElement
-    global WaterElement
+def setup_water(): #Depends on: load_state(), 'RPi.GPIO'; Modifies: water_relay
+    global water_relay
     #get hardware configuration
     load_state()
 
     #set watering GPIO
-    WaterElement = hardware_config["actuatorGPIOmap"]["wateringElement"] #watering aparatus
+    water_relay = hardware_config["actuator_gpio_map"]["water_relay"] #watering aparatus
     GPIO.setwarnings(False)
-    GPIO.setup(WaterElement, GPIO.OUT) #GPIO setup
-    GPIO.output(WaterElement, GPIO.LOW) #relay open = GPIO.LOW, closed = GPIO.HIGH
+    GPIO.setup(water_relay, GPIO.OUT) #GPIO setup
+    GPIO.output(water_relay, GPIO.LOW) #relay open = GPIO.LOW, closed = GPIO.HIGH
 
 #runs the watering aparatus for a supplied interval
-def run_water(interval): #Depends on: 'RPi.GPIO'; Modifies: WaterElement
-    global WaterElement
+def run_water(interval): #Depends on: 'RPi.GPIO'; Modifies: water_relay
+    global water_relay
     #turn on the pump
-    GPIO.output(WaterElement, GPIO.HIGH)
+    GPIO.output(water_relay, GPIO.HIGH)
     #wait 60 seconds
     sleep(interval)
     #turn off the pump
-    GPIO.output(WaterElement, GPIO.LOW)
+    GPIO.output(water_relay, GPIO.LOW)
 
 #updates the state of the LED, serial must be set up,
 def update_LED(): #Depends on: load_state(), 'datetime'; Modifies: ser_out
@@ -477,18 +477,18 @@ def update_LED(): #Depends on: load_state(), 'datetime'; Modifies: ser_out
     HoD = now.hour
 
     if ser_out is not None:
-        if int(device_state["LEDtimeon"]) < int(device_state['LEDtimeoff']):
-            if HoD >= int(device_state["LEDtimeon"]) and HoD < int(device_state["LEDtimeoff"]):
-                ser_out.write(bytes(str(device_state["LEDstatus"]+"\n"), 'utf-8')) #write status
-            if HoD < int(device_state["LEDtimeon"]) or HoD >= int(device_state["LEDtimeoff"]):
+        if int(device_state["time_start_led"]) < int(device_state['time_stop_led']):
+            if HoD >= int(device_state["time_start_led"]) and HoD < int(device_state["time_stop_led"]):
+                ser_out.write(bytes(str(device_state["led_status"]+"\n"), 'utf-8')) #write status
+            if HoD < int(device_state["time_start_led"]) or HoD >= int(device_state["time_stop_led"]):
                 ser_out.write(bytes(str("off"+"\n"), 'utf-8')) #write off
-        if int(device_state["LEDtimeon"]) >int(device_state["LEDtimeoff"]):
-            if HoD >=  int(device_state["LEDtimeon"]) or HoD < int(device_state["LEDtimeoff"]):
-                ser_out.write(bytes(str(device_state["LEDstatus"]+"\n"), 'utf-8')) #write status
-            if HoD < int(device_state["LEDtimeon"]) and  HoD >= int(device_state["LEDtimeoff"]):
+        if int(device_state["time_start_led"]) >int(device_state["time_stop_led"]):
+            if HoD >=  int(device_state["time_start_led"]) or HoD < int(device_state["time_stop_led"]):
+                ser_out.write(bytes(str(device_state["led_status"]+"\n"), 'utf-8')) #write status
+            if HoD < int(device_state["time_start_led"]) and  HoD >= int(device_state["time_stop_led"]):
                 ser_out.write(bytes(str("off"+"\n"), 'utf-8')) #write off
-        if int(device_state["LEDtimeon"]) == int(device_state["LEDtimeoff"]):
-                ser_out.write(bytes(str(device_state["LEDstatus"]+"\n"), 'utf-8')) #write status
+        if int(device_state["time_start_led"]) == int(device_state["time_stop_led"]):
+                ser_out.write(bytes(str(device_state["led_status"]+"\n"), 'utf-8')) #write status
     else:
         #print("no serial connection, cannot update LED view")
         pass
@@ -557,19 +557,19 @@ if __name__ == '__main__':
             check_growctrl_running() #check if growctrl is supposed to be running
             check_deleted()
 
-            sbutton_state = get_button_state(StartButton) #Start Button
+            sbutton_state = get_button_state(start_stop_button) #Start Button
             if sbutton_state == 0:
                 print("User pressed the start/stop button")
                 switch_growctrl_running() #turn growctrl on/off
                 time.sleep(1)
 
-            cbutton_state = get_button_state(ConnectButton) #Connect Button
+            cbutton_state = get_button_state(connect_internet_button) #Connect Button
             if cbutton_state == 0:
                 print("User pressed the connect button")
                 enable_AP() #launch access point and reboot
                 time.sleep(1)
 
-            wbutton_state = get_button_state(WaterButton) #Water Button
+            wbutton_state = get_button_state(run_water_button) #Water Button
             if wbutton_state == 0:
                 run_water(60) #run the water for 60 seconds
                 time.sleep(1)

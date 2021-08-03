@@ -28,7 +28,7 @@ with open('/home/pi/hardware_config.json') as h:
 
 #setup GPIO
 GPIO.setmode(GPIO.BCM) #GPIO Numbers instead of board numbers
-Heat_GPIO = hardware_config["actuatorGPIOmap"]["heatingElement"] #heater pin pulls from config file
+Heat_GPIO = hardware_config["actuator_gpio_map"]["heat_relay"] #heater pin pulls from config file
 GPIO.setup(Heat_GPIO, GPIO.OUT) #GPIO setup
 GPIO.output(Heat_GPIO, GPIO.LOW)
 

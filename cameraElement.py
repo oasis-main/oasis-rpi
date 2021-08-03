@@ -87,7 +87,7 @@ def save_to_feed(image_path):
     save_most_recent.wait()
 
 #define a function to actuate element
-def actuate(interval): #amount of time between shots
+def actuate(interval): #amount of time between shots in minutes
     load_state()
     take_picture('/home/pi/image.jpg')
 
@@ -103,7 +103,7 @@ def actuate(interval): #amount of time between shots
         #send new image to firebase
         send_image(user, storage, '/home/pi/image.jpg')
 
-    time.sleep(float(interval))
+    time.sleep(float(interval)*60)
 
 if __name__ == '__main__':
     try:

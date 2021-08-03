@@ -27,7 +27,7 @@ with open('/home/pi/hardware_config.json') as h:
 
 #setup GPIO
 GPIO.setmode(GPIO.BCM) #GPIO Numbers instead of board numbers
-Hum_GPIO = hardware_config["actuatorGPIOmap"]["humidityElement"] #heater pin pulls from config file
+Hum_GPIO = hardware_config["actuator_gpio_map"]["humidifier_relay"] #heater pin pulls from config file
 GPIO.setup(Hum_GPIO, GPIO.OUT) #GPIO setup
 GPIO.output(Hum_GPIO, GPIO.LOW) #relay open = GPIO.HIGH, closed = GPIO.LOW
 

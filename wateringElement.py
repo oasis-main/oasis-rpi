@@ -26,24 +26,20 @@ with open('/home/pi/hardware_config.json') as h:
 
 #setup GPIO
 GPIO.setmode(GPIO.BCM) #GPIO Numbers instead of board numbers
-H2o_GPIO = hardware_config["actuatorGPIOmap"]["wateringElement"] #heater pin pulls from config file
+H2o_GPIO = hardware_config["actuator_gpio_map"]["watering_relay"] #heater pin pulls from config file
 GPIO.setup(H2o_GPIO, GPIO.OUT) #GPIO setup
 GPIO.output(H2o_GPIO, GPIO.LOW) #relay open = GPIO.HIGH, closed = GPIO.LOW
 
 #define a function to actuate element
-def actuate(mode = "on",duration = 30, interval = 3600): #amoubnt of time between waterings
+def actuate(duration = 30, interval = 24): #amoubnt of time between waterings
 
-    if mode == "on":
-        GPIO.output(H2o_GPIO, GPIO.HIGH)
-        time.sleep(float(duration))
-        GPIO.output(H2o_GPIO, GPIO.LOW)
-        time.sleep(float(interval))
-    else:
-        GPIO.output(H2o_GPIO, GPIO.LOW)
-        time.sleep(float(interval))
+    GPIO.output(H2o_GPIO, GPIO.HIGH)
+    time.sleep(float(duration))
+    GPIO.output(H2o_GPIO, GPIO.LOW)
+    time.sleep(float(interval)*3600)
 
 try:
-    actuate(str(sys.argv[1]),str(sys.argv[2]),str(sys.argv[3]))
+    actuate(str(sys.argv[1]),str(sys.argv[2])))
     GPIO.cleanup()
 except KeyboardInterrupt:
     print("Interrupted")
