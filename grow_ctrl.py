@@ -399,6 +399,76 @@ if __name__ == '__main__':
 
             print("------------------------------------------------------------")
 
+            #every hour, log past hour and shift 24 hours of sensor data
+            if time.time() - sensor_log_timer > 3600:
+
+                if feature_toggles["temp_hum_sensor"] == "1":
+                    
+                    #replace each log with the next most recent one
+                    device_state["temperature_log"]["temp_2hour_ago"] = device_state["temperature_log"]["temp_1hour_ago"]
+                    device_state["temperature_log"]["temp_3hour_ago"] = device_state["temperature_log"]["temp_2hour_ago"] 
+                    device_state["temperature_log"]["temp_4hour_ago"] = device_state["temperature_log"]["temp_3hour_ago"] 
+                    device_state["temperature_log"]["temp_5hour_ago"] = device_state["temperature_log"]["temp_4hour_ago"] 
+                    device_state["temperature_log"]["temp_6hour_ago"] = device_state["temperature_log"]["temp_5hour_ago"]
+                    device_state["temperature_log"]["temp_7hour_ago"] = device_state["temperature_log"]["temp_6hour_ago"]
+                    device_state["temperature_log"]["temp_8hour_ago"] = device_state["temperature_log"]["temp_7hour_ago"] 
+                    device_state["temperature_log"]["temp_9hour_ago"] = device_state["temperature_log"]["temp_8hour_ago"]
+                    device_state["temperature_log"]["temp_10hour_ago"] = device_state["temperature_log"]["temp_9hour_ago"]
+                    device_state["temperature_log"]["temp_11hour_ago"] = device_state["temperature_log"]["temp_10hour_ago"]
+                    device_state["temperature_log"]["temp_12hour_ago"] = device_state["temperature_log"]["temp_11hour_ago"]
+                    device_state["temperature_log"]["temp_13hour_ago"] = device_state["temperature_log"]["temp_12hour_ago"]
+                    device_state["temperature_log"]["temp_14hour_ago"] = device_state["temperature_log"]["temp_13hour_ago"] 
+                    device_state["temperature_log"]["temp_15hour_ago"] = device_state["temperature_log"]["temp_14hour_ago"]
+                    device_state["temperature_log"]["temp_16hour_ago"] = device_state["temperature_log"]["temp_15hour_ago"]
+                    device_state["temperature_log"]["temp_17hour_ago"] = device_state["temperature_log"]["temp_16hour_ago"]
+                    device_state["temperature_log"]["temp_18hour_ago"] = device_state["temperature_log"]["temp_17hour_ago"]
+                    device_state["temperature_log"]["temp_19hour_ago"] = device_state["temperature_log"]["temp_18hour_ago"]
+                    device_state["temperature_log"]["temp_20hour_ago"] = device_state["temperature_log"]["temp_19hour_ago"]
+                    device_state["temperature_log"]["temp_21hour_ago"] = device_state["temperature_log"]["temp_21hour_ago"]
+                    device_state["temperature_log"]["temp_22hour_ago"] = device_state["temperature_log"]["temp_22hour_ago"]
+                    device_state["temperature_log"]["temp_23hour_ago"] = device_state["temperature_log"]["temp_23hour_ago"]
+                    device_state["temperature_log"]["temp_24hour_ago"] = device_state["temperature_log"]["temp_24hour_ago"]
+                    
+                    device_state["humidity_log"]["hum_2hour_ago"] = device_state["humidity_log"]["hum_1hour_ago"]
+                    device_state["humidity_log"]["hum_3hour_ago"] = device_state["humidity_log"]["hum_2hour_ago"]
+                    device_state["humidity_log"]["hum_4hour_ago"] = device_state["humidity_log"]["hum_3hour_ago"]
+                    device_state["humidity_log"]["hum_5hour_ago"] = device_state["humidity_log"]["hum_4hour_ago"]
+                    device_state["humidity_log"]["hum_6hour_ago"] = device_state["humidity_log"]["hum_5hour_ago"]
+                    device_state["humidity_log"]["hum_7hour_ago"] = device_state["humidity_log"]["hum_6hour_ago"]
+                    device_state["humidity_log"]["hum_8hour_ago"] = device_state["humidity_log"]["hum_7hour_ago"]
+                    device_state["humidity_log"]["hum_9hour_ago"] = device_state["humidity_log"]["hum_8hour_ago"]
+                    device_state["humidity_log"]["hum_10hour_ago"] = device_state["humidity_log"]["hum_9hour_ago"]
+                    device_state["humidity_log"]["hum_11hour_ago"] = device_state["humidity_log"]["hum_10hour_ago"]
+                    device_state["humidity_log"]["hum_12hour_ago"] = device_state["humidity_log"]["hum_11hour_ago"]
+                    device_state["humidity_log"]["hum_13hour_ago"] = device_state["humidity_log"]["hum_12hour_ago"]
+                    device_state["humidity_log"]["hum_14hour_ago"] = device_state["humidity_log"]["hum_13hour_ago"]
+                    device_state["humidity_log"]["hum_15hour_ago"] = device_state["humidity_log"]["hum_14hour_ago"]
+                    device_state["humidity_log"]["hum_16hour_ago"] = device_state["humidity_log"]["hum_15hour_ago"]
+                    device_state["humidity_log"]["hum_17hour_ago"] = device_state["humidity_log"]["hum_16hour_ago"]
+                    device_state["humidity_log"]["hum_18hour_ago"] = device_state["humidity_log"]["hum_17hour_ago"]
+                    device_state["humidity_log"]["hum_19hour_ago"] = device_state["humidity_log"]["hum_18hour_ago"]
+                    device_state["humidity_log"]["hum_20hour_ago"] = device_state["humidity_log"]["hum_19hour_ago"]
+                    device_state["humidity_log"]["hum_21hour_ago"] = device_state["humidity_log"]["hum_20hour_ago"]
+                    device_state["humidity_log"]["hum_22hour_ago"] = device_state["humidity_log"]["hum_21hour_ago"]
+                    device_state["humidity_log"]["hum_23hour_ago"] = device_state["humidity_log"]["hum_22hour_ago"]
+                    device_state["humidity_log"]["hum_24hour_ago"] = device_state["humidity_log"]["hum_23hour_ago"]
+                    
+                    #save new data to 1 hour ago
+                    device_state["temperature_log"]["temp_1hour_ago"] = temperature
+                    device_state["humidity_log"]["hum_1hour_ago"] = humidity
+                
+                    #push data to firebase if connected
+                    if device_state["connected"]== "1":
+                        #patch data to firebase
+                        patch_firebase({"temperature_log": device_state["temperature_log"],
+                                        "humidity_log": device_state["humidity_log"]})    
+                    else: #push data to local json otherwise
+                        write_state("/home/pi/device_state.json", "temperature_log", device_state["temperature_log"])
+                        write_state("/home/pi/device_state.json", "humidity_log", device_state["humidity_log"])
+                    
+                #start clock
+                sensor_log_timer = time.time()
+            
             #write data and send to server after set time elapses
             if time.time() - data_timer > 5:
 
@@ -409,10 +479,15 @@ if __name__ == '__main__':
                 if device_state["connected"]== "1":
                     #patch data to firebase
                     patch_firebase({"temperature": str(temperature), "humidity": str(humidity), "water_low": str(water_low)})
-
+                else:
+                    write_state("/home/pi/device_state.json", "temperature", str(temperature))
+                    write_state("/home/pi/device_state.json", "humidity", str(humidity))
+                    write_state("/home/pi/device_state.json", "temperature", str(humidity))
+                    
                 #start clock
                 data_timer = time.time()
-
+           
+            #update actuators in use
             if feature_toggles["heater"] == "1":
                 run_heat(str(heat_pd(temperature,int(grow_params["target_temperature"]),last_temperature,last_target_temperature,int(grow_params["P_temp"]),int(grow_params["D_temp"]))))
             if feature_toggles["humidifier"] == "1":
@@ -426,6 +501,7 @@ if __name__ == '__main__':
             if feature_toggles["water"] == "1":
                 run_water(int(grow_params["watering_duration"]),int(grow_params["watering_interval"]))
 
+            #set exit condition
             if device_state["running"] == "0":
                 terminate_program()
 
