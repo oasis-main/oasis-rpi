@@ -13,4 +13,3 @@ pickle5
 pyserial
 Pillow
 RPi.GPIO
-streamlit==0.62.0
