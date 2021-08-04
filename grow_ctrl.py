@@ -420,7 +420,7 @@ if __name__ == '__main__':
             if feature_toggles["fan"] == "1":
                 run_fan(fan_pd(temperature,humidity,int(grow_params["target_temperature"]),int(grow_params["target_humidity"]),last_temperature,last_humidity,last_target_temperature,last_target_humidity,int(grow_params["Pt_fan"]),int(grow_params["Ph_fan"]),int(grow_params["Dt_fan"]),int(grow_params["Dh_fan"])))
             if feature_toggles["light"] == "1":
-                run_light(int(grow_params["time_start_light"]), int(grow_params["time_start_dark"]), int(grow_params["lightInterval"]))
+                run_light(int(grow_params["time_start_light"]), int(grow_params["time_start_dark"]), int(grow_params["lighting_interval"]))
             if feature_toggles["camera"] == "1":
                 run_camera(int(grow_params["camera_interval"]))
             if feature_toggles["water"] == "1":
