@@ -334,7 +334,7 @@ if __name__ == '__main__':
 
     #start the clock for timimg .csv writes and data exchanges with server
     data_timer = time.time()
-    sensor_log_timer
+    sensor_log_timer = time.time()
 
     #launch main program loop
     try:
