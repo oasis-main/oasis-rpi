@@ -78,7 +78,13 @@ cd oasis-grow
 chmod +x master_setup.sh
 source ./master_setup.sh -b
 ```
-When the system reboots automatically, the [button interface]() and peripheral devices should be fully functional.
+When the system reboots automatically, the button interface]() and peripheral devices should be fully functional.
+
+Set your local time EST 
+```
+timedatectl list-timezones
+timedatectl set-timezone <timezone>
+```
 
 ## Hardware Setup
 
