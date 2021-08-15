@@ -11,6 +11,10 @@ sudo apt-get install -y libjpeg-dev zlib1g-dev
 sudo apt-get install -y cmake
 sudo apt-get install -y ntp
 
+echo "Activating NTP & setting local time to America/New_York"
+sudo timedatectl set-ntp true
+sudo timedatectl set-timezone America/New_York
+
 echo "Configuring PATH variable..."
 echo "export PATH=/home/pi/.local/bin:$PATH/" | sudo tee -a /home/pi/.bashrc
 source /home/pi/.bashrc
