@@ -9,6 +9,7 @@ import sys
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
+sys.path.append('/home/pi/oasis-grow/utils')
 sys.path.append('/usr/lib/python37.zip')
 sys.path.append('/usr/lib/python3.7')
 sys.path.append('/usr/lib/python3.7/lib-dynload')
@@ -52,6 +53,7 @@ fan_process = None
 light_process = None
 camera_process = None
 water_process = None
+air_process = None
 
 #declare sensor data variables
 temperature = 0
@@ -67,25 +69,25 @@ def load_state(): #Depends on: 'json'; Modifies: device_state,hardware_config ,a
     global device_state, feature_toggles, access_config, grow_params
 
     try:
-        with open("/home/pi/device_state.json") as d:
+        with open("/home/pi/oasis-grow/state/device_state.json") as d:
             device_state = json.load(d) #get device state
     except ValueError:
         reset_model.reset_device_state()
 
     try:
-        with open("/home/pi/access_config.json") as a:
+        with open("/home/pi/oasis-grow/configs/access_config.json") as a:
             access_config = json.load(a) #get access state
     except ValueError:
         reset_model.reset_access_config()
 
     try:
-        with open("/home/pi/grow_params.json") as g:
+        with open("/home/pi/oasis-grow/state/grow_params.json") as g:
             grow_params = json.load(g)
     except ValueError:
         reset_model.reset_grow_params()
 
     try:
-        with open ("/home/pi/feature_toggles.json") as f:
+        with open ("/home/pi/oasis-grow/configs/feature_toggles.json") as f:
             feature_toggles = json.load(f)
     except ValueError:
         reset_model.reset_feature_toggles()
@@ -209,9 +211,9 @@ def run_heat(intensity): #Depends on: 'subprocess'; Modifies: heat_process
     try:
         poll_heat = heat_process.poll() #heat
         if poll_heat is not None:
-            heat_process = Popen(['python3', '/home/pi/oasis-grow/heatingElement.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
+            heat_process = Popen(['python3', '/home/pi/oasis-grow/actuators/heatingElement.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
-        heat_process = Popen(['python3', '/home/pi/oasis-grow//heatingElement.py', str(intensity)]) #If no process, then starts
+        heat_process = Popen(['python3', '/home/pi/oasis-grow/actuators/heatingElement.py', str(intensity)]) #If no process, then starts
 
 #poll humidity subprocess if applicable and relaunch/update actuators
 def run_hum(intensity): #Depends on: 'subprocess'; Modifies: hum_process
@@ -220,9 +222,9 @@ def run_hum(intensity): #Depends on: 'subprocess'; Modifies: hum_process
     try:
         poll_humidity = humidity_process.poll() #humidity
         if poll_humidity is not None:
-            humidity_process = Popen(['python3', '/home/pi/oasis-grow//humidityElement.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
+            humidity_process = Popen(['python3', '/home/pi/oasis-grow/actuators/humidityElement.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
-        humidity_process = Popen(['python3', '/home/pi/oasis-grow//humidityElement.py', str(intensity)]) #If no process, then starts
+        humidity_process = Popen(['python3', '/home/pi/oasis-grow/actuators/humidityElement.py', str(intensity)]) #If no process, then starts
 
 #poll fan subprocess if applicable and relaunch/update actuators
 def run_fan(intensity): #Depends on: 'subprocess'; Modifies: humidity_process
@@ -231,9 +233,9 @@ def run_fan(intensity): #Depends on: 'subprocess'; Modifies: humidity_process
     try:
         poll_fan = fan_process.poll() #fan
         if poll_fan is not None:
-            fan_process = Popen(['python3', '/home/pi/oasis-grow/fanElement.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
+            fan_process = Popen(['python3', '/home/pi/oasis-grow/actuators/fanElement.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
-        fan_process = Popen(['python3', '/home/pi/oasis-grow//fanElement.py', str(intensity)]) #If no process, then starts
+        fan_process = Popen(['python3', '/home/pi/oasis-grow/actuators/fanElement.py', str(intensity)]) #If no process, then starts
 
 #poll light subprocess if applicable and relaunch/update actuators
 def run_light(time_on, time_off, refresh_frequency):
@@ -242,9 +244,9 @@ def run_light(time_on, time_off, refresh_frequency):
     try:
         poll_light = light_process.poll() #light
         if poll_light is not None:
-            light_process = Popen(['python3', '/home/pi/oasis-grow/lightingElement.py', str(time_on), str(time_off), str(refresh_frequency)]) #If running, then skips. If idle then restarts, If no process, then fails
+            light_process = Popen(['python3', '/home/pi/oasis-grow/actuators/lightingElement.py', str(time_on), str(time_off), str(refresh_frequency)]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
-        light_process = Popen(['python3', '/home/pi/oasis-grow//lightingElement.py', str(time_on), str(time_off), str(refresh_frequency)]) #If no process, then starts
+        light_process = Popen(['python3', '/home/pi/oasis-grow/actuators/lightingElement.py', str(time_on), str(time_off), str(refresh_frequency)]) #If no process, then starts
 
 #poll camera subprocess if applicable and relaunch/update actuators
 def run_camera(picture_frequency): #Depends on: 'subprocess'; Modifies: camera_process
@@ -253,9 +255,9 @@ def run_camera(picture_frequency): #Depends on: 'subprocess'; Modifies: camera_p
     try:
         poll_camera = camera_process.poll() #camera
         if poll_camera is not None:
-            camera_process = Popen(['python3', '/home/pi/oasis-grow/cameraElement.py', str(picture_frequency)]) #If running, then skips. If idle then restarts, If no process, then fails
+            camera_process = Popen(['python3', '/home/pi/oasis-grow/imaging/cameraElement.py', str(picture_frequency)]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
-        camera_process = Popen(['python3', '/home/pi/oasis-grow//cameraElement.py', str(picture_frequency)]) #If no process, then starts
+        camera_process = Popen(['python3', '/home/pi/oasis-grow/imaging/cameraElement.py', str(picture_frequency)]) #If no process, then starts
 
 #poll water subprocess if applicable and relaunch/update actuators
 def run_water(watering_duration, watering_frequency): #Depends on: 'subprocess'; Modifies: water_process
@@ -267,6 +269,18 @@ def run_water(watering_duration, watering_frequency): #Depends on: 'subprocess';
             water_process = Popen(['python3', '/home/pi/oasis-grow/wateringElement.py', str(watering_duration), str(watering_frequency)]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
         water_process = Popen(['python3', '/home/pi/oasis-grow//wateringElement.py', str(watering_duration), str(watering_frequency)]) #If no process, then starts
+
+#poll air subprocess if applicable and relaunch/update actuators
+def run_air(time_on, time_off, refresh_frequency):
+    global air_process #Depends on: 'subprocess'; Modifies: light_process
+
+    try:
+        poll_air = air_process.poll() #light
+        if poll_air is not None:
+            air_process = Popen(['python3', '/home/pi/oasis-grow/actuators/airElement.py', str(time_on), str(time_off), str(refresh_frequency)]) #If running, then skips. If idle then restarts, If no proce$
+    except:
+        air_process = Popen(['python3', '/home/pi/oasis-grow/actuators/airElement.py', str(time_on), str(time_off), str(refresh_frequency)]) #If no process, then starts
+
 
 #terminates the program and all running subprocesses
 def terminate_program(): #Depends on: load_state(), 'sys', 'subprocess' #Modifies: heat_process, humidity_process, fan_process, light_process, camera_process, water_process
@@ -301,7 +315,7 @@ def terminate_program(): #Depends on: load_state(), 'sys', 'subprocess' #Modifie
         water_process.wait()
 
     #flip "running" to 1 to make usable from command line
-    write_state("/home/pi/device_state.json", "running", "0")
+    write_state("/home/pi/oasis-grow/state/device_state.json", "running", "0")
 
     sys.exit()
 
@@ -314,15 +328,15 @@ if __name__ == '__main__':
     if str(sys.argv[1]) == "daemon":
         print("grow_ctrl daemon started")
         #log daemon start
-        write_state('/home/pi/logs/growCtrl_log.json','last_start_mode',"daemon")
+        write_state('/home/pi/oasis-grow/data_out/logs/grow_ctrl_log.json','last_start_mode',"daemon")
         #kill the program
         sys.exit()
     if str(sys.argv[1]) == "main":
         print("grow_ctrl main started")
         #log main start
-        write_state('/home/pi/logs/growCtrl_log.json','last_start_mode',"main")
+        write_state('/home/pi/oasis-grow/data_out/logs/grow_ctrl_log.json','last_start_mode',"main")
         #flip "running" to 1 to make usable from command line
-        write_state("/home/pi/device_state.json", "running", "1")
+        write_state("/home/pi/oasis-grow/state/device_state.json", "running", "1")
         #continue with program execution
         pass
     else:
@@ -463,8 +477,8 @@ if __name__ == '__main__':
                         patch_firebase({"temperature_log": device_state["temperature_log"],
                                         "humidity_log": device_state["humidity_log"]})
                     else: #push data to local json otherwise
-                        write_state("/home/pi/device_state.json", "temperature_log", device_state["temperature_log"])
-                        write_state("/home/pi/device_state.json", "humidity_log", device_state["humidity_log"])
+                        write_state("/home/pi/oasis-grow/state/device_state.json", "temperature_log", device_state["temperature_log"])
+                        write_state("/home/pi/oasis-grow/state/device_state.json", "humidity_log", device_state["humidity_log"])
 
                 #start clock
                 sensor_log_timer = time.time()
@@ -480,9 +494,9 @@ if __name__ == '__main__':
                     #patch data to firebase
                     patch_firebase({"temperature": str(temperature), "humidity": str(humidity), "water_low": str(water_low)})
                 else:
-                    write_state("/home/pi/device_state.json", "temperature", str(temperature))
-                    write_state("/home/pi/device_state.json", "humidity", str(humidity))
-                    write_state("/home/pi/device_state.json", "temperature", str(humidity))
+                    write_state("/home/pi/oasis-grow/state/device_state.json", "temperature", str(temperature))
+                    write_state("/home/pi/oasis-grow/state/device_state.json", "humidity", str(humidity))
+                    write_state("/home/pi/oasis-grow/state/device_state.json", "temperature", str(humidity))
 
                 #start clock
                 data_timer = time.time()
@@ -500,6 +514,8 @@ if __name__ == '__main__':
                 run_camera(int(grow_params["camera_interval"]))
             if feature_toggles["water"] == "1":
                 run_water(int(grow_params["watering_duration"]),int(grow_params["watering_interval"]))
+            if feature_toggles["airstone"] == "1":
+            	scheduled_air(int(grow_params["time_start_air"], int(grow_params["time_stop_air"],  int(grow_params["air_interval"])
 
             #set exit condition
             if device_state["running"] == "0":
