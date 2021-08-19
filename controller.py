@@ -1,3 +1,9 @@
+#This is the program root, main.py. Run this file from the command line, in cron, or in rc.local(preferred).
+
+
+#Tips:
+# Use the -b when installing with 'source ./master_setup.sh" to setup the bootloader ie. 'source ./master_setup.sh -b'
+
 #import shell modules
 import os
 import os.path
