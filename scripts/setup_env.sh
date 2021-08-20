@@ -21,7 +21,7 @@ source /home/pi/.bashrc
 
 echo "Installing pip3 & Python 3.7 modules..."
 sudo apt install python3-pip -y
-python3 -m pip install -r /home/pi/oasis-grow/requirements.txt
+python3 -m pip install -r /home/pi/oasis-grow/defaults/requirements.txt
 
 echo "Installing python 3.7 RPi.GPIO for OS..."
 sudo apt-get -y install python3-rpi.gpio
