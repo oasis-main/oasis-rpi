@@ -7,6 +7,7 @@ import reset_model
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
+sys.path.append('/home/pi/oasis-grow/utils')
 sys.path.append('/usr/lib/python37.zip')
 sys.path.append('/usr/lib/python3.7')
 sys.path.append('/usr/lib/python3.7/lib-dynload')
@@ -57,7 +58,7 @@ def modAccessConfig(name, e, p):
     access_config["id_token"] = " "
     access_config["local_id"] = " "
 
-    with open("/home/pi/access_config.json", "r+") as a:
+    with open("/home/pi/oasis-grow/configs/access_config.json", "r+") as a:
         a.seek(0)
         json.dump(access_config, a)
         a.truncate()
@@ -94,7 +95,7 @@ def save_creds_exit(email, password, wifi_name, wifi_pass, device_name):
     reset_model.reset_device_state()
 
     #set AccessPoint state to "0" before rebooting
-    write_state("/home/pi/device_state.json", "new_device", "1")
+    write_state("/home/pi/oasis-grow/state/device_state.json", "new_device", "1")
 
     #stand up wifi and reboot
     enable_WiFi()

@@ -35,7 +35,6 @@ import signal
 import pyrebase
 from multiprocessing import Process, Queue
 import json
-import reset_model
 
 #declare state variables
 device_state = None #describes the current state of the system
@@ -50,22 +49,22 @@ def load_state(): #Depends on: 'json'; Modifies: device_state,hardware_config ,a
     global device_state, grow_params, access_config
 
     try:
-        with open("/home/pi/device_state.json") as d:
+        with open("/home/pi/oasis-grow/concurrency_buffers/device_state_main.json") as d:
             device_state = json.load(d) #get device state
     except ValueError:
-        reset_model.reset_device_state()
+        print("Failed to load device state")
 
     try:
-        with open("/home/pi/grow_params.json") as g:
+        with open("/home/pi/oasis-grow/concurrency_buffers/grow_params_main.json") as g:
             grow_params = json.load(g) #get hardware state
     except ValueError:
-        reset_model.reset_grow_params()
+        print("Failed to load grow params")
 
     try:
         with open("/home/pi/access_config.json") as a:
             access_config = json.load(a) #get access state
     except ValueError:
-        reset_model.reset_access_config()
+        print("Failed to load access configs")
 
 #save key values to .json
 def write_state(path,field,value): #Depends on:, 'json'; Modifies: path
@@ -164,9 +163,9 @@ def act_on_event(field, new_data):
     grow_params_fields = list(grow_params.keys())
 
     if str(field) in device_state_fields:
-        path = '/home/pi/device_state_buffer.json'
+        path = '/home/pi/oasis-grow/state/concurrency_buffers/device_state_listener.json'
     if str(field) in grow_params_fields:
-        path = '/home/pi/grow_params_buffer.json'
+        path = '/home/pi/oasis-grow/state/concurrency_buffers/grow_params_listener.json'
 
     if os.path.exists(path) == False:
         f = open(path, "w")

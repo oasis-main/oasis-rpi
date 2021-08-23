@@ -4,7 +4,8 @@
                    "humidifier_relay": 15,
                    "fan_relay": 18,
                    "light_relay": 23,
-                   "water_relay": 24
+                   "water_relay": 24,
+                   "air_relay": 25
                    },
 "button_gpio_map": {
                  "start_stop_button": 17,

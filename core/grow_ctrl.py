@@ -9,7 +9,6 @@ import sys
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
-sys.path.append('/home/pi/oasis-grow/utils')
 sys.path.append('/usr/lib/python37.zip')
 sys.path.append('/usr/lib/python3.7')
 sys.path.append('/usr/lib/python3.7/lib-dynload')
@@ -35,9 +34,6 @@ import pandas
 import time
 import datetime
 
-#import oasis packages
-import reset_model
-
 #declare state variables
 device_state = None #describes the current state of the system
 access_config = None #contains credentials for connecting to firebase
@@ -54,6 +50,8 @@ light_process = None
 camera_process = None
 water_process = None
 air_process = None
+read_path = None
+write_path = None
 
 #declare sensor data variables
 temperature = 0
@@ -65,43 +63,35 @@ last_target_humidity = 0
 water_low = 0
 
 #loads device state, hardware, and access configurations
+#checks first to see that main is not writing, if json valid, loads state
 def load_state(): #Depends on: 'json'; Modifies: device_state,hardware_config ,access_config
     global device_state, feature_toggles, access_config, grow_params
 
+    #verify that the child is not current writing
+
     try:
-        with open("/home/pi/oasis-grow/state/device_state.json") as d:
+        with open("/home/pi/oasis-grow/state/concurrency_buffers/device_state_main.json") as d:
             device_state = json.load(d) #get device state
     except ValueError:
-        reset_model.reset_device_state()
+        print("Tried to read while parent was writing, please wait a few millisecconds!")
 
     try:
-        with open("/home/pi/oasis-grow/configs/access_config.json") as a:
+        with open("/home/pi/oasis-grow/state/concurrency_buffers/grow_params_main.json") as g:
+            grow_params = json.load(g) #get grow params
+    except ValueError:
+        print("Tried to read while parent was writing, please wait a few millisecconds!")
+
+    try:
+        with open("/home/pi/oasis-grow/configs/access_config_main.json") as a:
             access_config = json.load(a) #get access state
     except ValueError:
-        reset_model.reset_access_config()
-
-    try:
-        with open("/home/pi/oasis-grow/state/grow_params.json") as g:
-            grow_params = json.load(g)
-    except ValueError:
-        reset_model.reset_grow_params()
+        print("There was a problem loading access credentials")
 
     try:
         with open ("/home/pi/oasis-grow/configs/feature_toggles.json") as f:
             feature_toggles = json.load(f)
     except ValueError:
-        reset_model.reset_feature_toggles()
-
-#save key values to .json
-def write_state(path,field,value): #Depends on: load_state(), 'json'; Modifies: path
-    load_state() #get connection status
-
-    with open(path, "r+") as x: #write state to local files
-        data = json.load(x)
-        data[field] = value
-        x.seek(0)
-        json.dump(data, x)
-        x.truncate()
+        print("There was a problem loading feature toggles")
 
 #modifies a firebase variable
 def patch_firebase(dict): #Depends on: load_state(),'requests','json'; Modifies: database{data}, state variables
@@ -109,6 +99,27 @@ def patch_firebase(dict): #Depends on: load_state(),'requests','json'; Modifies:
     data = json.dumps(dict)
     url = "https://oasis-1757f.firebaseio.com/"+str(access_config["local_id"])+"/"+str(access_config["device_name"])+".json?auth="+str(access_config["id_token"])
     result = requests.patch(url,data)
+
+#save key values to .json
+def write_state(path,field,value): #Depends on: load_state(), 'json'; Modifies: path
+    load_state() #get connection status
+
+    #these will be loaded in by the listener, so best to make sure we represent the change in firebase too
+    if device_state["connected"] == "1": #write state to cloud
+
+        dict = {field:value}
+
+        try:
+            patch_firebase(dict)
+        except:
+            pass
+
+    with open(path, "r+") as x: #write state to local files
+        data = json.load(x)
+        data[field] = value
+        x.seek(0)
+        json.dump(data, x)
+        x.truncate()
 
 #write some data to a .csv, takes a dictionary and a path
 def write_csv(path, dict): #Depends on: 'pandas',
@@ -268,7 +279,7 @@ def run_water(watering_duration, watering_frequency): #Depends on: 'subprocess';
         if poll_water is not None:
             water_process = Popen(['python3', '/home/pi/oasis-grow/wateringElement.py', str(watering_duration), str(watering_frequency)]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
-        water_process = Popen(['python3', '/home/pi/oasis-grow//wateringElement.py', str(watering_duration), str(watering_frequency)]) #If no process, then starts
+        water_process = Popen(['python3', '/home/pi/oasis-grow/wateringElement.py', str(watering_duration), str(watering_frequency)]) #If no process, then starts
 
 #poll air subprocess if applicable and relaunch/update actuators
 def run_air(time_on, time_off, refresh_frequency):
@@ -314,8 +325,12 @@ def terminate_program(): #Depends on: load_state(), 'sys', 'subprocess' #Modifie
         water_process.terminate()
         water_process.wait()
 
+    if (feature_toggles["air"] == "1") and (air_process != None):
+        air_process.terminate()
+        air_process.wait()
+
     #flip "running" to 1 to make usable from command line
-    write_state("/home/pi/oasis-grow/state/device_state.json", "running", "0")
+    write_state("/home/pi/oasis-grow/state/concurrency_buffers/device_state_grow_ctrl.json", "running", "0")
 
     sys.exit()
 
@@ -336,7 +351,7 @@ if __name__ == '__main__':
         #log main start
         write_state('/home/pi/oasis-grow/data_out/logs/grow_ctrl_log.json','last_start_mode',"main")
         #flip "running" to 1 to make usable from command line
-        write_state("/home/pi/oasis-grow/state/device_state.json", "running", "1")
+        write_state("/home/pi/oasis-grow/state/concurrency_buffers/device_state_grow_ctrl.json", "running", "1")
         #continue with program execution
         pass
     else:
@@ -419,6 +434,7 @@ if __name__ == '__main__':
                 if feature_toggles["temp_hum_sensor"] == "1":
 
                     #replace each log with the next most recent one
+                    device_state["temperature_log"]["1"] = device_state["temperature_log"]["0"]
                     device_state["temperature_log"]["2"] = device_state["temperature_log"]["1"]
                     device_state["temperature_log"]["3"] = device_state["temperature_log"]["2"]
                     device_state["temperature_log"]["4"] = device_state["temperature_log"]["3"]
@@ -441,8 +457,8 @@ if __name__ == '__main__':
                     device_state["temperature_log"]["21"] = device_state["temperature_log"]["20"]
                     device_state["temperature_log"]["22"] = device_state["temperature_log"]["21"]
                     device_state["temperature_log"]["23"] = device_state["temperature_log"]["22"]
-                    device_state["temperature_log"]["24"] = device_state["temperature_log"]["23"]
 
+                    device_state["humidity_log"]["1"] = device_state["humidity_log"]["0"]
                     device_state["humidity_log"]["2"] = device_state["humidity_log"]["1"]
                     device_state["humidity_log"]["3"] = device_state["humidity_log"]["2"]
                     device_state["humidity_log"]["4"] = device_state["humidity_log"]["3"]
@@ -465,20 +481,20 @@ if __name__ == '__main__':
                     device_state["humidity_log"]["21"] = device_state["humidity_log"]["20"]
                     device_state["humidity_log"]["22"] = device_state["humidity_log"]["21"]
                     device_state["humidity_log"]["23"] = device_state["humidity_log"]["22"]
-                    device_state["humidity_log"]["24"] = device_state["humidity_log"]["23"]
 
                     #save new data to 1 hour ago
-                    device_state["temperature_log"]["1"] = temperature
-                    device_state["humidity_log"]["1"] = humidity
+                    device_state["temperature_log"]["0"] = temperature
+                    device_state["humidity_log"]["0"] = humidity
 
                     #push data to firebase if connected
                     if device_state["connected"]== "1":
                         #patch data to firebase
                         patch_firebase({"temperature_log": device_state["temperature_log"],
                                         "humidity_log": device_state["humidity_log"]})
-                    else: #push data to local json otherwise
-                        write_state("/home/pi/oasis-grow/state/device_state.json", "temperature_log", device_state["temperature_log"])
-                        write_state("/home/pi/oasis-grow/state/device_state.json", "humidity_log", device_state["humidity_log"])
+
+                    #push data to local json too
+                    write_state("/home/pi/oasis-grow/state/concurrency_buffers/device_state.json", "temperature_log", device_state["temperature_log"])
+                    write_state("/home/pi/oasis-grow/state/concurrency_buffers/device_state.json", "humidity_log", device_state["humidity_log"])
 
                 #start clock
                 sensor_log_timer = time.time()
@@ -488,15 +504,15 @@ if __name__ == '__main__':
 
                 if feature_toggles["save_data"] == "1":
                     #save data to .csv
-                    write_csv('/home/pi/data_output/sensor_feed/sensor_data.csv',{"time": [str(time.time())], "temperature": [temperature], "humidity": [humidity], "water_low": [water_low]})
+                    write_csv('/home/pi/data_out/sensor_feed/sensor_data.csv',{"time": [str(time.time())], "temperature": [temperature], "humidity": [humidity], "water_low": [water_low]})
 
                 if device_state["connected"]== "1":
                     #patch data to firebase
                     patch_firebase({"temperature": str(temperature), "humidity": str(humidity), "water_low": str(water_low)})
                 else:
-                    write_state("/home/pi/oasis-grow/state/device_state.json", "temperature", str(temperature))
-                    write_state("/home/pi/oasis-grow/state/device_state.json", "humidity", str(humidity))
-                    write_state("/home/pi/oasis-grow/state/device_state.json", "temperature", str(humidity))
+                    write_state("/home/pi/oasis-grow/state/concurrency_buffers/device_state.json", "temperature", str(temperature))
+                    write_state("/home/pi/oasis-grow/state/concurrency_buffers/device_state.json", "humidity", str(humidity))
+                    write_state("/home/pi/oasis-grow/state/concurrency_buffers/device_state.json", "temperature", str(humidity))
 
                 #start clock
                 data_timer = time.time()
@@ -515,13 +531,13 @@ if __name__ == '__main__':
             if feature_toggles["water"] == "1":
                 run_water(int(grow_params["watering_duration"]),int(grow_params["watering_interval"]))
             if feature_toggles["airstone"] == "1":
-            	scheduled_air(int(grow_params["time_start_air"], int(grow_params["time_stop_air"],  int(grow_params["air_interval"])
+            	run_air(int(grow_params["time_start_air"], int(grow_params["time_stop_air"],  int(grow_params["air_interval"])
 
             #set exit condition
             if device_state["running"] == "0":
                 terminate_program()
 
-            time.sleep(5)
+            time.sleep(1)
 
     except (KeyboardInterrupt):
         terminate_program()

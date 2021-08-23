@@ -13,6 +13,7 @@
  "water_low": "0", 
  "deleted": "0",
  "temperature_log": {
+                    "0": None,
                     "1": None,
                     "2": None,
                     "3": None,
@@ -35,10 +36,10 @@
                     "20": None,
                     "21": None,
                     "22": None,
-                    "23": None,
-                    "24": None
+                    "23": None
                     },
    "humidity_log": {
+                    "0": None,
                     "1": None,
                     "2": None,
                     "3": None,
@@ -61,7 +62,6 @@
                     "20": None,
                     "21": None,
                     "22": None,
-                    "23": None,
-                    "24": None
+                    "23": None
                     }
 }
