@@ -85,14 +85,14 @@ def send_image(user, storage, path):
 
 def take_picture(image_path):
     #take picture and save to standard location
-    still = Popen('sudo raspistill -o ' + str(image_path), shell=True) #snap: call the camera
+    still = Popen(["sudo", "raspistill", "-o", str(image_path)]) #snap: call the camera
     still.wait()
 
 def save_to_feed(image_path):
     #timestamp image
     timestamp = time.time()
     #move timestamped image into feed
-    save_most_recent = Popen('cp ' + image_path + ' /home/pi/oasis-grow/data_out/image_feed/culture_image'+str(timestamp)+'.jpg', shell=True)
+    save_most_recent = Popen(["cp", str(image_path), "/home/pi/oasis-grow/data_out/image_feed/culture_image" + str(timestamp)+'.jpg'])
     save_most_recent.wait()
 
 #define a function to actuate element
