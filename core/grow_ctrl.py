@@ -82,7 +82,7 @@ def load_state(): #Depends on: 'json'; Modifies: device_state,hardware_config ,a
         print("Tried to read while parent was writing, please wait a few millisecconds!")
 
     try:
-        with open("/home/pi/oasis-grow/configs/access_config_main.json") as a:
+        with open("/home/pi/oasis-grow/configs/access_config.json") as a:
             access_config = json.load(a) #get access state
     except ValueError:
         print("There was a problem loading access credentials")
@@ -531,7 +531,7 @@ if __name__ == '__main__':
             if feature_toggles["water"] == "1":
                 run_water(int(grow_params["watering_duration"]),int(grow_params["watering_interval"]))
             if feature_toggles["airstone"] == "1":
-            	run_air(int(grow_params["time_start_air"], int(grow_params["time_stop_air"],  int(grow_params["air_interval"])
+            	run_air(int(grow_params["time_start_air"]), int(grow_params["time_stop_air"]),  int(grow_params["air_interval"]))
 
             #set exit condition
             if device_state["running"] == "0":

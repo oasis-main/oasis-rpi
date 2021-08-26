@@ -251,6 +251,7 @@ def setup_buffers():
         print("concurrent writing collision: grow_params_not loading, resetting configs")
         print(e)
         reset_model.reset_grow_params()
+
 #launches a script to detect changes in the database
 def launch_listener(): #depends on 'subprocess', modifies: state variables
     global listener
@@ -314,13 +315,13 @@ def enable_AP(): #Depends on: write_state(), 'subprocess'; Modifies: device_stat
     write_state("/home/pi/oasis-grow/state/device_state.json","access_point","1")
 
     #disable WiFi, enable AP, reboot
-    config_ap_dhcpcd = Popen("sudo cp /etc/dhcpcd_AP.conf /etc/dhcpcd.conf", shell = True)
+    config_ap_dhcpcd = Popen(["sudo", "cp", "/etc/dhcpcd_AP.conf", "/etc/dhcpcd.conf"])
     config_ap_dhcpcd.wait()
-    config_ap_dns = Popen("sudo cp /etc/dnsmasq_AP.conf /etc/dnsmasq.conf", shell = True)
+    config_ap_dns = Popen(["sudo", "cp", "/etc/dnsmasq_AP.conf", "/etc/dnsmasq.conf"])
     config_ap_dns.wait()
-    enable_hostapd = Popen("sudo systemctl enable hostapd", shell = True)
+    enable_hostapd = Popen(["sudo", "systemctl", "enable", "hostapd"])
     enable_hostapd.wait()
-    systemctl_reboot = Popen("sudo systemctl reboot", shell = True)
+    systemctl_reboot = Popen(["sudo", "systemctl", "reboot"])
 
 #reconfigures network interface, tells system to boot with WiF, restarts
 def enable_WiFi(): #Depends on: write_state(), 'subprocess'; Modifies: device_state.json, configuration files
@@ -328,13 +329,13 @@ def enable_WiFi(): #Depends on: write_state(), 'subprocess'; Modifies: device_st
     write_state("/home/pi/oasis-grow/state/device_state.json","access_point","0")
 
     #disable WiFi, enable AP, reboot
-    config_wifi_dchpcd = Popen("sudo cp /etc/dhcpcd_WiFi.conf /etc/dhcpcd.conf", shell = True)
+    config_wifi_dchpcd = Popen(["sudo", "cp", "/etc/dhcpcd_WiFi.conf", "/etc/dhcpcd.conf"])
     config_wifi_dchpcd.wait()
-    config_wifi_dns = Popen("sudo cp /etc/dnsmasq_WiFi.conf /etc/dnsmasq.conf", shell = True)
+    config_wifi_dns = Popen(["sudo", "cp", "/etc/dnsmasq_WiFi.conf", "/etc/dnsmasq.conf"])
     config_wifi_dns.wait()
-    disable_hostapd = Popen("sudo systemctl disable hostapd", shell = True)
+    disable_hostapd = Popen(["sudo", "systemctl", "disable hostapd"])
     disable_hostapd.wait()
-    systemctl_reboot = Popen("sudo systemctl reboot", shell = True)
+    systemctl_reboot = Popen(["sudo", "systemctl", "reboot"])
 
 #checks whether system is booting in Access Point Mode, launches connection script if so
 def check_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); Modifies: state_variables, 'ser_out', device_state.json
@@ -357,7 +358,7 @@ def check_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); M
                 cbutton_state = get_button_state(connect_internet_button)
                 if cbutton_state == 0:
                     write_state("/home/pi/oasis-grow/state/device_state.json","led_status","offline_idle")
-                    ser_out.write(bytes(str(device_state["led_status"]+"\n"), "utf-8")
+                    ser_out.write(bytes(str(device_state["led_status"]+"\n"), "utf-8"))
                     server_process.terminate()
                     server_process.wait()
                     enable_WiFi()
@@ -515,14 +516,14 @@ def sync_child_states(): #Depends on: 'json','subprocess'
                 device_state_buffer = json.load(d_buff)
 
             #if clear, copy buffers into the parent state
-            copy_device_state_buffer = Popen("sudo cp /home/pi/oasis-grow/state/concurrency_buffers/device_state_listener.json /home/pi/oasis-grow/state/device_state.json")
+            copy_device_state_buffer = Popen(["sudo", "cp" , "/home/pi/oasis-grow/state/concurrency_buffers/device_state_listener.json", "/home/pi/oasis-grow/state/device_state.json"])
             copy_device_state_buffer.wait()
 
             with open("/home/pi/oasis-grow/state/concurrency_buffers/grow_params_listener.json") as g_buff:
                 grow_params_buffer = json.load(g_buff)
 
             #if clear, copy buffers into the parent state
-            copy_grow_params_buffer = Popen("sudo cp /home/pi/oasis-grow/state/concurrency_buffers/grow_params_listener.json /home/pi/oasis-grow/state/grow_params.json")
+            copy_grow_params_buffer = Popen(["sudo", "cp", "/home/pi/oasis-grow/state/concurrency_buffers/grow_params_listener.json", "/home/pi/oasis-grow/state/grow_params.json"])
             copy_grow_params_buffer.wait()
 
         else:
@@ -531,7 +532,7 @@ def sync_child_states(): #Depends on: 'json','subprocess'
                 device_state_buffer = json.load(d_buff)
 
             #if clear, copy buffers into the parent state
-            copy_device_state_buffer = Popen("sudo cp /home/pi/oasis-grow/state/concurrency_buffers/device_state_grow_ctrl.json /home/pi/oasis-grow/state/device_state.json")
+            copy_device_state_buffer = Popen(["sudo", "cp", "/home/pi/oasis-grow/state/concurrency_buffers/device_state_grow_ctrl.json", "/home/pi/oasis-grow/state/device_state.json"])
             copy_device_state_buffer.wait()
 
             #verify that the child is not current writing
@@ -539,12 +540,12 @@ def sync_child_states(): #Depends on: 'json','subprocess'
                 grow_params_buffer = json.load(d_buff)
 
             #if clear, copy buffers into the parent state
-            copy_grow_params_buffer = Popen("sudo cp /home/pi/oasis-grow/state/concurrency_buffers/grow_params_grow_ctrl.json /home/pi/oasis-grow/state/grow_params.json")
+            copy_grow_params_buffer = Popen(["sudo", "cp", "/home/pi/oasis-grow/state/concurrency_buffers/grow_params_grow_ctrl.json", "/home/pi/oasis-grow/state/grow_params.json"])
             copy_grow_params_buffer.wait()
 
     except Exception as e:
         print("concurrent collision: tried to read while child writing, please wait a few milliseconds!")
-        #print(e)
+        print(e)
 
 
 if __name__ == '__main__':

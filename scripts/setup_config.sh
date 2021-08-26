@@ -3,13 +3,14 @@
 echo "Creating local directories..."
 
 mkdir /home/pi/oasis-grow/state
+mkdir /home/pi/oasis-grow/state/concurrency_buffers
 
 mkdir /home/pi/oasis-grow/configs
 
-mkdir /home/pi/oasis-grow/data-out
-mkdir /home/pi/oasis-grow/data-out/image_feed
-mkdir /home/pi/oasis-grow/data-out/sensor_feed
-mkdir /home/pi/oasis-grow/data-out/logs
+mkdir /home/pi/oasis-grow/data_out
+mkdir /home/pi/oasis-grow/data_out/image_feed
+mkdir /home/pi/oasis-grow/data_out/sensor_feed
+mkdir /home/pi/oasis-grow/data_out/logs
 
 echo "Moving configuration files..."
 
