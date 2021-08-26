@@ -5,6 +5,7 @@ import sys
 import json
 import requests
 from subprocess import Popen
+import reset_model
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
@@ -15,201 +16,125 @@ sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
 sys.path.append('/usr/local/lib/python3.7/dist-packages')
 sys.path.append('/usr/lib/python3/dist-packages')
 
-#pull repository
-changedir = Popen("cd ~/grow-ctrl", shell = True)
-changedir.wait()
+device_state = None
+grow_params = None
+hardware_config = None
+access_config = None
 
-rmpycache = Popen("sudo rm -rf __pycache__", shell = True)
-rmpycache.wait()
+#loads device state, grow_params, hardware, and access configurations
+def load_state_main(): #Depends on: 'json'; Modifies: device_state,hardware_config ,access_config
+    global device_state, grow_params, hardware_config, access_config
 
-gitstash = Popen("git stash", shell = True)
-gitstash.wait()
+    with open("/home/pi/oasis-grow/state/device_state.json") as d:
+        device_state = json.load(d) #get device state
 
-gitpull = Popen("git pull", shell = True)
-gitpull.wait()
+    with open("/home/pi/oasis-grow/state/grow_params.json") as g:
+        grow_params = json.load(g) #get device state
 
-print("Pulled most recent production repo")
+    with open("/home/pi/oasis-grow/configs/hardware_config.json") as h:
+        hardware_config = json.load(h) #get hardware state
 
-#save existing data into temps, copy new config formats
-savehardware = Popen("cp /home/pi/hardware_config.json /home/pi/hardware_config_temp.json", shell = True)
-savehardware.wait()
+    with open("/home/pi/oasis-grow/configs/access_config.json") as a:
+        access_config = json.load(a) #get access state
+    #print("Loaded state")
 
-saveaccess = Popen("cp /home/pi/access_config.json /home/pi/access_config_temp.json", shell = True)
-saveaccess.wait()
+#modifies a firebase variable
+def patch_firebase(field,value): #Depends on: load_state_main(),'requests','json'; Modifies: database['field'], state variables
+    data = json.dumps({field: value})
+    url = "https://oasis-1757f.firebaseio.com/"+str(access_config["local_id"])+"/"+str(access_config["device_name"])+".json?auth="+str(access_config["id_token"])
+    result = requests.patch(url,data)
 
-savestate = Popen("cp /home/pi/device_state.json /home/pi/device_state_temp.json", shell = True)
-savestate.wait()
+#save key values to .json
+def write_state(path,field,value): #Depends on: load_state_main(), patch_firebase, 'json'; Modifies: path
+    load_state_main() #get connection status
 
-saveparams = Popen("cp /home/pi/grow_params.json /home/pi/grow_params_temp.json", shell = True)
-saveparams.wait()
+    #these will be loaded in by the listener, so best to make sure we represent the change in firebase too
+    if device_state["connected"] == "1": #write state to cloud
+        try:
+            patch_firebase(field,value)
+        except:
+            pass
 
-savelog = Popen("cp /home/pi/logs/growCtrl_log.json /home/pi/logs/growCtrl_log_temp.json", shell = True)
-savelog.wait()
+    with open(path, "r+") as x: #write state to local files
+        data = json.load(x)
+        data[field] = value
+        x.seek(0)
+        json.dump(data, x)
+        x.truncate()
 
-newhardware = Popen("cp hardware_config_default_template.json /home/pi/hardware_config.json", shell = True)
-newhardware.wait()
+#get latest code from designated repository
+def git_pull():
+    changedir = Popen(["cd", "/home/pi/oasis-grow"])
+    changedir.wait()
 
-newaccess = Popen("cp access_config_default_template.json /home/pi/access_config.json", shell = True)
-newaccess.wait()
+    gitpull = Popen(["git", "pull"])
+    gitpull.wait()
 
-newstate = Popen("cp device_state_default.json /home/pi/device_state.json", shell = True)
-newstate.wait()
+    print("Pulled most recent production repo")
 
-newparams = Popen("cp grow_params_default_template.json /home/pi/grow_params.json", shell = True)
-newparams.wait()
+#save existing data into temps
+def save_old_configs():
+    savehardware = Popen(["cp", "/home/pi/oasis-grow/configs/hardware_config.json", "/home/pi/oasis-grow/configs/hardware_config_temp.json"])
+    savehardware.wait()
 
-newlogs = Popen("cp growCtrl_log_default.json /home/pi/logs/growCtrl_log.json", shell = True)
-newlogs.wait()
+    saveaccess = Popen(["cp", "/home/pi/oasis-grow/configs/access_config.json", "/home/pi/oasis-grow/configs/access_config_temp.json"])
+    saveaccess.wait()
 
-#preserve existing configs if fields remain the same
-#HARDWARE
-with open('/home/pi/hardware_config.json') as h: #get new format
-    hardware_config = json.load(h)
-h.close()
+    savestate = Popen(["cp", "/home/pi/oasis-grow/configs/device_state.json", "/home/pi/oasis-grow/configs/device_state_temp.json"])
+    savestate.wait()
 
-with open('/home/pi/hardware_config_temp.json') as h_temp: #get old data
-    hardware_config_temp = json.load(h_temp)
-h_temp.close()
+    saveparams = Popen(["cp", "/home/pi/oasis-grow/configs/grow_params.json", "/home/pi/oasis-grow/configs/grow_params_temp.json"])
+    saveparams.wait()
 
-#persist old data into new format
-old_data_keys = list(hardware_config_temp.keys())
-new_format_keys = list(hardware_config.keys())
-common_keys = set(old_data_keys) & set(new_format_keys) #common ones between them
-#loop through common keys, change values to temp
-for key in common_keys:
-    hardware_config[key] = hardware_config_temp[key]
+#transfer compatible configs which we save before getting the new code and default files
+def transfer_compatible_configs(config_path,temp_config_path):
 
-with open("/home/pi/hardware_config.json", "r+") as h: #write data to config
-        h.seek(0)
-        json.dump(hardware_config, h)
-        h.truncate()
-h.close()
+    with open(config_path) as x: #get new format
+        config = json.load(x)
 
-removehwtemp = Popen("sudo rm ~/hardware_config_temp.json", shell = True)
-removehwtemp.wait()
+    with open(temp_config_path) as x_temp: #get old data
+        config_temp = json.load(x_temp)
 
-#ACCESS
-with open('/home/pi/access_config.json') as a: #get new format
-    access_config = json.load(a)
-a.close()
+    #persist old data into new format
+    old_data_keys = list(config_temp.keys())
+    new_format_keys = list(config.keys())
+    common_keys = set(old_data_keys) & set(new_format_keys) #common ones between them
 
-with open('/home/pi/access_config_temp.json') as a_temp: #get old data
-    access_config_temp = json.load(a_temp)
-a_temp.close()
+    #loop through common keys, change values to temp
+    for key in common_keys:
+        config[key] = config_temp[key]
 
-#persist old data into new format
-old_data_keys = list(access_config_temp.keys())
-new_format_keys = list(access_config.keys())
-common_keys = set(old_data_keys) & set(new_format_keys) #common ones between them
-#loop through common keys, change values to temp
-for key in common_keys:
-    access_config[key] = access_config_temp[key]
+    with open(config_path, "r+") as x: #write data to config
+        x.seek(0)
+        json.dump(config, x)
+        x.truncate()
 
-with open("/home/pi/access_config.json", "r+") as a: #write data to config
-        a.seek(0)
-        json.dump(access_config, a)
-        a.truncate()
-a.close()
+    remove_temp = Popen(["sudo", "rm", temp_config_path])
+    remove_temp.wait()
 
-removeatemp = Popen("sudo rm ~/access_config_temp.json", shell = True)
-removeatemp.wait()
+if __name__ == '__main__':
 
-#DEVICE STATE
-with open('/home/pi/device_state.json') as d: #get new format
-    device_state = json.load(d)
-d.close()
+    #get latest code
+    git_pull()
 
-with open('/home/pi/device_state_temp.json') as d_temp: #get old data
-    device_state_temp = json.load(d_temp)
-d_temp.close()
+    #back up the configs & state that can survive update
+    save_old_configs()
+    reset_model.reset_all()
+    transfer_compatible_configs('/home/pi/oasis-grow/configs/hardware_config.json', '/home/pi/oasis-grow/configs/hardware_config_temp.json')
+    transfer_compatible_configs('/home/pi/oasis-grow/configs/access_config.json', '/home/pi/oasis-grow/configs/access_config_temp.json')
+    transfer_compatible_configs('/home/pi/oasis-grow/state/device_state.json', '/home/pi/oasis-grow/state/device_state_temp.json')
+    transfer_compatible_configs('/home/pi/oasis-grow/state/grow_params.json', '/home/pi/oasis-grow/state/grow_params_temp.json')
 
-#persist old data into new format
-old_data_keys = list(device_state_temp.keys())
-new_format_keys = list(device_state.keys())
-common_keys = set(old_data_keys) & set(new_format_keys) #common ones between them
-#loop through common keys, change values to temp
-for key in common_keys:
-    device_state[key] = device_state[key]
+    #run external update commands
+    update_commands = Popen(["sudo", "python3", "/home/pi/oasis-grow/utils/update_patch.py"])
+    output, error = update_commands.communicate()
 
-with open("/home/pi/device_state.json", "r+") as d: #write data to config
-        d.seek(0)
-        json.dump(device_state, d)
-        d.truncate()
-d.close()
+    #load state to get configs & state for conn
+    load_state_main()
 
-removestemp = Popen("sudo rm ~/device_state_temp.json", shell = True)
-removestemp.wait()
+    #change awaiting_update to "O" in firebase and locally
+    write_state("/home/pi/oasis-grow/state/device_state.json", "awaiting_update", "0")
 
-#GROW PARAMS
-with open('/home/pi/grow_params.json') as g: #get new format
-    grow_params = json.load(g)
-g.close()
-
-with open('/home/pi/grow_params_temp.json') as g_temp: #get old data
-    grow_params_temp = json.load(g_temp)
-g_temp.close()
-
-#persist old data into new format
-old_data_keys = list(grow_params_temp.keys())
-new_format_keys = list(grow_params.keys())
-common_keys = set(old_data_keys) & set(new_format_keys) #common ones between them
-#loop through common keys, change values to temp
-for key in common_keys:
-    grow_params[key] = grow_params[key]
-
-with open("/home/pi/grow_params.json", "r+") as g: #write data to config
-        g.seek(0)
-        json.dump(grow_params, g)
-        g.truncate()
-g.close()
-
-removeptemp = Popen("sudo rm ~/grow_params_temp.json", shell = True)
-removeptemp.wait()
-
-#GROW CTRL LOGS
-with open('/home/pi/logs/growCtrl_log.json') as l: #get new format
-    growCtrl_log = json.load(l)
-l.close()
-
-with open('/home/pi/logs/growCtrl_log_temp.json') as l_temp: #get old data
-    growCtrl_log_temp = json.load(l_temp)
-l_temp.close()
-
-#persist old data into new format
-old_data_keys = list(growCtrl_log_temp.keys())
-new_format_keys = list(growCtrl_log.keys())
-common_keys = set(old_data_keys) & set(new_format_keys) #common ones between them
-#loop through common keys, change values to temp
-for key in common_keys:
-    growCtrl_log[key] = growCtrl_log[key]
-
-with open("/home/pi/logs/growCtrl_log.json", "r+") as l: #write data to config
-        l.seek(0)
-        json.dump(growCtrl_log, l)
-        l.truncate()
-l.close()
-
-removeltemp = Popen("sudo rm ~/logs/growCtrl_log_temp.json", shell=True)
-removeltemp.wait()
-
-#run external update commands
-update_commands = Popen('sudo python3 /home/pi/grow-ctrl/update_commands.py', shell=True)
-output, error = update_commands.communicate()
-
-
-#load local_id & id_token
-with open('/home/pi/access_config.json', "r+") as a:
-  access_config = json.load(a)
-  id_token = access_config['id_token']
-  local_id = access_config['local_id']
-a.close()
-
-#change awaiting_update to "O", needs editing, also used in grow-ctrl
-#url = "https://oasis-1757f.firebaseio.com/"+str(local_id)+".json?auth="+str(id_token)
-#data = json.dumps({dict})
-#result = requests.patch(url,data)
-#print(result)
-
-#reboot
-reboot = Popen("sudo reboot", shell = True)
-reboot.wait()
+    #reboot
+    reboot = Popen(["sudo","reboot"])
+    reboot.wait()
