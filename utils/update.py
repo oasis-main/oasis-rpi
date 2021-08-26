@@ -137,7 +137,7 @@ if __name__ == '__main__':
     #change awaiting_update to "O" in firebase and locally
     write_state("/home/pi/oasis-grow/state/device_state.json", "awaiting_update", "0")
 
-    reboot
+    #reboot
     print("Rebooting...")
     reboot = Popen(["sudo","reboot"])
     reboot.wait()
