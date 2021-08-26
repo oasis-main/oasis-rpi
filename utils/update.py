@@ -66,10 +66,7 @@ def write_state(path,field,value): #Depends on: load_state_main(), patch_firebas
 
 #get latest code from designated repository
 def git_pull():
-    changedir = Popen("cd /home/pi/oasis-grow", shell = True)
-    changedir.wait()
-
-    gitpull = Popen(["git", "pull", "origin", "master"])
+    gitpull = Popen(["git", "pull"])
     gitpull.wait()
 
     print("Pulled most recent production repo")
@@ -116,8 +113,6 @@ def transfer_compatible_configs(config_path,temp_config_path):
     remove_temp = Popen(["sudo", "rm", temp_config_path])
     remove_temp.wait()
 
-    print("Transfered compatible state & configs, removing temporary files")
-
 if __name__ == '__main__':
 
     #get latest code
@@ -130,6 +125,7 @@ if __name__ == '__main__':
     transfer_compatible_configs('/home/pi/oasis-grow/configs/access_config.json', '/home/pi/oasis-grow/configs/access_config_temp.json')
     transfer_compatible_configs('/home/pi/oasis-grow/state/device_state.json', '/home/pi/oasis-grow/state/device_state_temp.json')
     transfer_compatible_configs('/home/pi/oasis-grow/state/grow_params.json', '/home/pi/oasis-grow/state/grow_params_temp.json')
+    print("Transfered compatible state & configs, removing temporary files")
 
     #run external update commands
     update_commands = Popen(["sudo", "python3", "/home/pi/oasis-grow/utils/update_commands.py"])
@@ -141,7 +137,7 @@ if __name__ == '__main__':
     #change awaiting_update to "O" in firebase and locally
     write_state("/home/pi/oasis-grow/state/device_state.json", "awaiting_update", "0")
 
-    #reboot
+    reboot
     print("Rebooting...")
     reboot = Popen(["sudo","reboot"])
     reboot.wait()
