@@ -43,6 +43,7 @@ def patch_firebase(field,value): #Depends on: load_state_main(),'requests','json
     data = json.dumps({field: value})
     url = "https://oasis-1757f.firebaseio.com/"+str(access_config["local_id"])+"/"+str(access_config["device_name"])+".json?auth="+str(access_config["id_token"])
     result = requests.patch(url,data)
+    print("Updated firebase")
 
 #save key values to .json
 def write_state(path,field,value): #Depends on: load_state_main(), patch_firebase, 'json'; Modifies: path
@@ -61,13 +62,14 @@ def write_state(path,field,value): #Depends on: load_state_main(), patch_firebas
         x.seek(0)
         json.dump(data, x)
         x.truncate()
+    print("Wrote local state")
 
 #get latest code from designated repository
 def git_pull():
-    changedir = Popen(["cd", "/home/pi/oasis-grow"])
+    changedir = Popen("cd /home/pi/oasis-grow", shell = True)
     changedir.wait()
 
-    gitpull = Popen(["git", "pull"])
+    gitpull = Popen(["git", "pull", "origin", "master"])
     gitpull.wait()
 
     print("Pulled most recent production repo")
@@ -80,11 +82,13 @@ def save_old_configs():
     saveaccess = Popen(["cp", "/home/pi/oasis-grow/configs/access_config.json", "/home/pi/oasis-grow/configs/access_config_temp.json"])
     saveaccess.wait()
 
-    savestate = Popen(["cp", "/home/pi/oasis-grow/configs/device_state.json", "/home/pi/oasis-grow/configs/device_state_temp.json"])
+    savestate = Popen(["cp", "/home/pi/oasis-grow/state/device_state.json", "/home/pi/oasis-grow/state/device_state_temp.json"])
     savestate.wait()
 
-    saveparams = Popen(["cp", "/home/pi/oasis-grow/configs/grow_params.json", "/home/pi/oasis-grow/configs/grow_params_temp.json"])
+    saveparams = Popen(["cp", "/home/pi/oasis-grow/state/grow_params.json", "/home/pi/oasis-grow/state/grow_params_temp.json"])
     saveparams.wait()
+
+    print("Saved existing configs to temporary files")
 
 #transfer compatible configs which we save before getting the new code and default files
 def transfer_compatible_configs(config_path,temp_config_path):
@@ -112,6 +116,8 @@ def transfer_compatible_configs(config_path,temp_config_path):
     remove_temp = Popen(["sudo", "rm", temp_config_path])
     remove_temp.wait()
 
+    print("Transfered compatible state & configs, removing temporary files")
+
 if __name__ == '__main__':
 
     #get latest code
@@ -126,7 +132,7 @@ if __name__ == '__main__':
     transfer_compatible_configs('/home/pi/oasis-grow/state/grow_params.json', '/home/pi/oasis-grow/state/grow_params_temp.json')
 
     #run external update commands
-    update_commands = Popen(["sudo", "python3", "/home/pi/oasis-grow/utils/update_patch.py"])
+    update_commands = Popen(["sudo", "python3", "/home/pi/oasis-grow/utils/update_commands.py"])
     output, error = update_commands.communicate()
 
     #load state to get configs & state for conn
@@ -136,5 +142,6 @@ if __name__ == '__main__':
     write_state("/home/pi/oasis-grow/state/device_state.json", "awaiting_update", "0")
 
     #reboot
+    print("Rebooting...")
     reboot = Popen(["sudo","reboot"])
     reboot.wait()

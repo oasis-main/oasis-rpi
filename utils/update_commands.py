@@ -13,7 +13,7 @@ sys.path.append('/usr/lib/python3/dist-packages')
 patch = Popen(["chmod" ,"+x", "/home/pi/oasis-grow/scripts/update_patch.sh"])
 patch.wait()
 
-patch = Popen(["source" , "/home/pi/oasis-grow/scripts/update_patch.sh"])
+patch = Popen("source /home/pi/oasis-grow/scripts/update_patch.sh", shell = True)
 output, error = patch.communicate()
 
 print("Successfully ran commands to patch-in latest update")
