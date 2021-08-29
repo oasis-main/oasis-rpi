@@ -101,11 +101,9 @@ def write_state(path,field,value): #Depends on: load_state_main(), patch_firebas
     #Whenever we write a value to a critical-section/ concurrent R&W resource, it will go into an out-buffer.
     #Child processes try to read this data buffer from the main process to avoid error when refreshing state.
     if path == "/home/pi/oasis-grow/state/device_state.json":
-        copy_device_state_to_main_buffer = Popen(["sudo", "cp", "/home/pi/oasis-grow/state/device_state.json", "/home/pi/oasis-grow/state/device_state_main.json"])
-        copy_device_state_to_main_buffer.wait()
+        write_state("/home/pi/oasis-grow/state/concurrency_buffers/device_state_main.json", field, value)
     if path == "/home/pi/oasis-grow/state/grow_params.json":
-        copy_grow_params_to_main_buffer = Popen(["sudo", "cp", "/home/pi/oasis-grow/state/grow_params.json", "/home/pi/oasis-grow/state/grow_params_main.json"])
-        copy_grow_params_to_main_buffer.wait()
+        write_state("/home/pi/oasis-grow/state/concurrency_buffers/grow_params_main.json", field, value)
 
 #attempts connection to microcontroller
 def start_serial(): #Depends on:'serial'; Modifies: ser_out
@@ -241,7 +239,7 @@ def setup_buffers():
         reset_model.reset_device_state()
 
     try:
-        with open("/home/pi/grow_params.json") as g:
+        with open("/home/pi/oasis-grow/state/grow_params.json") as g:
             grow_params = json.load(g) #verify that the listener is not currently writing
         copy_grow_params_to_buffer = Popen(["sudo", "cp", "/home/pi/oasis-grow/state/grow_params.json", "/home/pi/oasis-grow/state/concurrency_buffers/grow_params_grow_ctrl.json"])
         copy_grow_params_to_buffer.wait()
@@ -401,6 +399,15 @@ def setup_growctrl_process(): #Depends on: load_state_main(), write_state(), 'su
             write_state('/home/pi/oasis-grow/state/device_state.json',"led_status","offline_idle")
 
         print("grow controller not launched")
+
+#checks in the the core process has been called from the command line
+def check_cmd_run():
+    try:
+        if sys.argv[1] == "run":
+            write_state("/home/pi/oasis-grow/state/device_state.json","running","1")
+            print("Command line argument set to run")
+    except Exception as e:
+        print("Defaulting to idle mode")
 
 #checks if growctrl should be running, starts it if so, kills it otherwise
 def check_growctrl_running(): #Depends on: load_state_main(), write_state(), 'subprocess'; Modifies: grow_ctrl_process, state variables, device_state.json
@@ -564,6 +571,9 @@ if __name__ == '__main__':
         check_new_device()
         check_updates()
         launch_listener()
+
+    #Check if command line set to run
+    check_cmd_run()
 
     #launch core process
     setup_growctrl_process()
