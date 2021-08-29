@@ -407,7 +407,7 @@ def check_cmd_run():
             write_state("/home/pi/oasis-grow/state/device_state.json","running","1")
             print("Command line argument set to run")
     except Exception as e:
-        print("Defaulting to idle mode")
+        print("Defaulting to last registered mode...")
 
 #checks if growctrl should be running, starts it if so, kills it otherwise
 def check_growctrl_running(): #Depends on: load_state_main(), write_state(), 'subprocess'; Modifies: grow_ctrl_process, state variables, device_state.json
