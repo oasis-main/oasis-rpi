@@ -49,19 +49,19 @@ def load_state(): #Depends on: 'json'; Modifies: device_state,hardware_config ,a
     global device_state, grow_params, access_config
 
     try:
-        with open("/home/pi/oasis-grow/concurrency_buffers/device_state_main.json") as d:
+        with open("/home/pi/oasis-grow/state/concurrency_buffers/device_state_main.json") as d:
             device_state = json.load(d) #get device state
     except ValueError:
         print("Failed to load device state")
 
     try:
-        with open("/home/pi/oasis-grow/concurrency_buffers/grow_params_main.json") as g:
+        with open("/home/pi/oasis-grow/state/concurrency_buffers/grow_params_main.json") as g:
             grow_params = json.load(g) #get hardware state
     except ValueError:
         print("Failed to load grow params")
 
     try:
-        with open("/home/pi/access_config.json") as a:
+        with open("/home/pi/oasis-grow/configs/access_config.json") as a:
             access_config = json.load(a) #get access state
     except ValueError:
         print("Failed to load access configs")

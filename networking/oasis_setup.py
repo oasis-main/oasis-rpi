@@ -3,7 +3,6 @@ import os
 import os.path
 import sys
 from subprocess import Popen
-import reset_model
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
@@ -20,7 +19,10 @@ from _thread import *
 import json
 import pickle5 as pickle
 
-#create a secure lan interface for accepting credentials
+#import custom modules
+import reset_model
+
+#create a password-protected lan interface for accepting credentials
 import streamlit as st
 
 #update wpa_supplicant.conf

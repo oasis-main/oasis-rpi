@@ -261,13 +261,18 @@ def check_deleted():
     load_state_main()
     if device_state["deleted"] == "1" and listener is not None:
         print("Removing device from Oasis Network...")
-        device_state["connected"] = "0" #make sure it doesn't write anything to the cloud
-        print("Database monitoring deactivated")
-        reset_model.reset_nonhw_configs()
-        reset_model.reset_data_out()
-        reset_model.reset_logs()
+        write_state("/home/pi/oasis-grow/state/device_state.json","connected","0") #make sure it doesn't write anything to the cloud, kill the listener
         listener = None
+        print("Database monitoring deactivated")
+        reset_model.reset_device_state()
+        reset_model.reset_grow_params()
+        reset_model.reset_nonhw_configs()
+        #reset_model.reset_data_out()
+        reset_model.reset_logs()
         print("Device has been reset to default configuration")
+        systemctl_reboot = Popen(["sudo", "systemctl", "reboot"])
+
+
 
 #setup buttons for the main program interface
 def setup_button_interface(): #depends on: load_state_main(), 'RPi.GPIO'; modifies: start_stop_button, connect_internet_button, run_water_button, state variables
@@ -337,7 +342,7 @@ def enable_WiFi(): #Depends on: write_state(), 'subprocess'; Modifies: device_st
 
 #checks whether system is booting in Access Point Mode, launches connection script if so
 def check_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); Modifies: state_variables, 'ser_out', device_state.json
-    global ser_out
+    global ser_out, connect_internet_button
     load_state_main()
     if device_state["access_point"] == "1":
         #launch server subprocess to accept credentials over Oasis wifi network, does not wait
@@ -570,6 +575,7 @@ if __name__ == '__main__':
     if device_state["connected"] == "1":
         check_new_device()
         check_updates()
+        check_deleted()
         launch_listener()
 
     #Check if command line set to run
@@ -594,10 +600,10 @@ if __name__ == '__main__':
 
             if device_state["connected"] == "1":
                check_updates() #check if the machine needs to be update
+               check_deleted() #check if the user is trying to delete this device
                if time.time() - token_timer > 600: #refresh the local credentials every 10 min (600s)
                     token_timer = time.time()
                     get_local_credentials(access_config["refresh_token"])
-               check_deleted()
 
             sbutton_state = get_button_state(start_stop_button) #Start Button
             if sbutton_state == 0:
