@@ -275,7 +275,6 @@ def check_deleted():
         systemctl_reboot = Popen(["sudo", "systemctl", "reboot"])
 
 
-
 #setup buttons for the main program interface
 def setup_button_interface(): #depends on: load_state_main(), 'RPi.GPIO'; modifies: start_stop_button, connect_internet_button, run_water_button, state variables
     global start_stop_button, connect_internet_button, run_water_button
@@ -410,13 +409,16 @@ def setup_growctrl_process(): #Depends on: load_state_main(), write_state(), 'su
         print("grow controller not launched")
 
 #checks in the the core process has been called from the command line
-def check_cmd_run():
+def cmd_line_args():
     try:
         if sys.argv[1] == "run":
             write_state("/home/pi/oasis-grow/state/device_state.json","running","1")
             print("Command line argument set to run")
+        if sys.argv[1] == "idle":
+            write_state("/home/pi/oasis-grow/state/device_state.json","running","0")
+            print("Command line argument set to idle")
     except Exception as e:
-        print("Defaulting to last registered mode...")
+        print("Defaulting to last saved mode...")
 
 #checks if growctrl should be running, starts it if so, kills it otherwise
 def check_growctrl_running(): #Depends on: load_state_main(), write_state(), 'subprocess'; Modifies: grow_ctrl_process, state variables, device_state.json
@@ -583,7 +585,7 @@ if __name__ == '__main__':
         launch_listener()
 
     #Check if command line set to run
-    check_cmd_run()
+    cmd_line_args()
 
     #launch core process
     setup_growctrl_process()

@@ -329,7 +329,7 @@ def terminate_program(): #Depends on: load_state(), 'sys', 'subprocess' #Modifie
         air_process.terminate()
         air_process.wait()
 
-    #flip "running" to 1 to make usable from command line
+    #flip "running" to 0
     write_state("/home/pi/oasis-grow/state/concurrency_buffers/device_state_grow_ctrl.json", "running", "0")
 
     sys.exit()
@@ -512,7 +512,7 @@ if __name__ == '__main__':
                 else:
                     write_state("/home/pi/oasis-grow/state/concurrency_buffers/device_state_grow_ctrl.json", "temperature", str(temperature))
                     write_state("/home/pi/oasis-grow/state/concurrency_buffers/device_state_grow_ctrl.json", "humidity", str(humidity))
-                    write_state("/home/pi/oasis-grow/state/concurrency_buffers/device_state_grow_ctrl.json", "temperature", str(humidity))
+                    write_state("/home/pi/oasis-grow/state/concurrency_buffers/device_state_grow_ctrl.json", "water_low", str(water_low))
 
                 #start clock
                 data_timer = time.time()
@@ -538,6 +538,40 @@ if __name__ == '__main__':
             if device_state["running"] == "0":
                 terminate_program()
 
+            #bring untouched variables into buffer, avoid overwriting changes by main
+            if device_state["connected"] != "1":
+                write_state("/home/pi/oasis-grow/state/concurrency_buffers/device_state_grow_ctrl.json", "connected", device_state["connected"])
+                write_state("/home/pi/oasis-grow/state/concurrency_buffers/device_state_grow_ctrl.json", "running", device_state["running"])
+                write_state("/home/pi/oasis-grow/state/concurrency_buffers/device_state_grow_ctrl.json", "led_status", device_state["led_status"])
+                #write_state("/home/pi/oasis-grow/state/concurrency_buffers/device_state_grow_ctrl.json", "access_point", device_state["access_point"])
+                write_state("/home/pi/oasis-grow/state/concurrency_buffers/device_state_grow_ctrl.json", "time_start_led", device_state["time_start_led"])
+                write_state("/home/pi/oasis-grow/state/concurrency_buffers/device_state_grow_ctrl.json", "time_stop_led", device_state["time_stop_led"])
+                write_state("/home/pi/oasis-grow/state/concurrency_buffers/device_state_grow_ctrl.json", "awaiting_update", device_state["awaiting_update"])
+                write_state("/home/pi/oasis-grow/state/concurrency_buffers/device_state_grow_ctrl.json", "new_image", device_state["new_image"])
+                write_state("/home/pi/oasis-grow/state/concurrency_buffers/device_state_grow_ctrl.json", "new_device", device_state["new_device"])
+                write_state("/home/pi/oasis-grow/state/concurrency_buffers/device_state_grow_ctrl.json", "deleted", device_state["deleted"])
+
+                write_state("/home/pi/oasis-grow/state/concurrency_buffers/grow_params_grow_ctrl.json", "target_temperature", grow_params["target_temperature"])
+                write_state("/home/pi/oasis-grow/state/concurrency_buffers/grow_params_grow_ctrl.json", "target_humidity", grow_params["target_humidity"])
+                write_state("/home/pi/oasis-grow/state/concurrency_buffers/grow_params_grow_ctrl.json", "time_start_light", grow_params["time_start_light"])
+                write_state("/home/pi/oasis-grow/state/concurrency_buffers/grow_params_grow_ctrl.json", "time_start_dark", grow_params["time_start_dark"])
+                write_state("/home/pi/oasis-grow/state/concurrency_buffers/grow_params_grow_ctrl.json", "lighting_interval", grow_params["lighting_interval"])
+                write_state("/home/pi/oasis-grow/state/concurrency_buffers/grow_params_grow_ctrl.json", "camera_interval", grow_params["camera_interval"])
+                write_state("/home/pi/oasis-grow/state/concurrency_buffers/grow_params_grow_ctrl.json", "watering_duration", grow_params["watering_duration"])
+                write_state("/home/pi/oasis-grow/state/concurrency_buffers/grow_params_grow_ctrl.json", "watering_interval", grow_params["watering_interval"])
+                write_state("/home/pi/oasis-grow/state/concurrency_buffers/grow_params_grow_ctrl.json", "time_start_air", grow_params["time_start_air"])
+                write_state("/home/pi/oasis-grow/state/concurrency_buffers/grow_params_grow_ctrl.json", "time_stop_air", grow_params["time_stop_air"])
+                write_state("/home/pi/oasis-grow/state/concurrency_buffers/grow_params_grow_ctrl.json", "air_interval", grow_params["air_interval"])
+                write_state("/home/pi/oasis-grow/state/concurrency_buffers/grow_params_grow_ctrl.json", "P_temp", grow_params["P_temp"])
+                write_state("/home/pi/oasis-grow/state/concurrency_buffers/grow_params_grow_ctrl.json", "D_temp", grow_params["D_temp"])
+                write_state("/home/pi/oasis-grow/state/concurrency_buffers/grow_params_grow_ctrl.json", "P_hum", grow_params["P_hum"])
+                write_state("/home/pi/oasis-grow/state/concurrency_buffers/grow_params_grow_ctrl.json", "D_hum", grow_params["D_hum"])
+                write_state("/home/pi/oasis-grow/state/concurrency_buffers/grow_params_grow_ctrl.json", "Pt_fan", grow_params["Pt_fan"])
+                write_state("/home/pi/oasis-grow/state/concurrency_buffers/grow_params_grow_ctrl.json", "Dt_fan", grow_params["Dt_fan"])
+                write_state("/home/pi/oasis-grow/state/concurrency_buffers/grow_params_grow_ctrl.json", "Ph_fan", grow_params["Ph_fan"])
+                write_state("/home/pi/oasis-grow/state/concurrency_buffers/grow_params_grow_ctrl.json", "Dh_fan", grow_params["Dh_fan"])
+
+            #give the program some time to breathe
             time.sleep(1)
 
     except (KeyboardInterrupt):
