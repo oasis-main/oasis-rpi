@@ -233,6 +233,7 @@ def setup_buffers():
         copy_device_state_to_buffer.wait()
         copy_device_state_to_buffer = Popen(["sudo", "cp", "/home/pi/oasis-grow/state/device_state.json", "/home/pi/oasis-grow/state/concurrency_buffers/device_state_listener.json"])
         copy_device_state_to_buffer.wait()
+        print("Established grow-params buffer")
     except Exception as e:
         print("concurrent writing collision: device_state not loading, resetting configs")
         print(e)
@@ -245,6 +246,7 @@ def setup_buffers():
         copy_grow_params_to_buffer.wait()
         copy_grow_params_to_buffer = Popen(["sudo", "cp", "/home/pi/oasis-grow/state/grow_params.json", "/home/pi/oasis-grow/state/concurrency_buffers/grow_params_listener.json"])
         copy_grow_params_to_buffer.wait()
+        print("Established grow-params buffer")
     except Exception as e:
         print("concurrent writing collision: grow_params_not loading, resetting configs")
         print(e)
@@ -365,6 +367,7 @@ def check_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); M
                     server_process.terminate()
                     server_process.wait()
                     enable_WiFi()
+                    time.sleep(1)
         else:
             while True:
                 cbutton_state = get_button_state(connect_internet_button)
@@ -372,6 +375,7 @@ def check_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); M
                     server_process.terminate()
                     server_process.wait()
                     enable_WiFi()
+                    time.sleep(1)
 
 #check if grow_ctrl is supposed to be running, launch it if so. Do nothing if not
 def setup_growctrl_process(): #Depends on: load_state_main(), write_state(), 'subprocess'; Modifies: grow_ctrl_process, state_variables, device_state.json
@@ -504,7 +508,7 @@ def update_LED(): #Depends on: load_state_main(), 'datetime'; Modifies: ser_out
                 ser_out.write(bytes(str(device_state["led_status"]+"\n"), 'utf-8')) #write status
             if HoD < int(device_state["time_start_led"]) or HoD >= int(device_state["time_stop_led"]):
                 ser_out.write(bytes(str("off"+"\n"), 'utf-8')) #write off
-        if int(device_state["time_start_led"]) >int(device_state["time_stop_led"]):
+        if int(device_state["time_start_led"]) > int(device_state["time_stop_led"]):
             if HoD >=  int(device_state["time_start_led"]) or HoD < int(device_state["time_stop_led"]):
                 ser_out.write(bytes(str(device_state["led_status"]+"\n"), 'utf-8')) #write status
             if HoD < int(device_state["time_start_led"]) and  HoD >= int(device_state["time_stop_led"]):

@@ -57,12 +57,13 @@ def reset_data_out():
     clear_logs = Popen(["sudo", "rm", "-rf", "/home/pi/oasis-grow/data_out/logs"])
     clear_logs.wait()
 
-    new_image_feed =  Popen(["sudo", "mkdir", "/home/pi/oasis-grow/data_out/image_feed"])
+    new_image_feed = Popen(["sudo", "mkdir", "/home/pi/oasis-grow/data_out/image_feed"])
     new_image_feed.wait()
     new_sensor_feed = Popen(["sudo", "mkdir", "/home/pi/oasis-grow/data_out/sensor_feed"])
     new_sensor_feed.wait()
     new_logs = Popen(["sudo", "mkdir", "/home/pi/oasis-grow/data_out/logs"])
     new_logs.wait()
+    reset_logs()
 
 #function that runs all the other functions
 def reset_all():
