@@ -1,5 +1,9 @@
 # pycache
 /__pycache__
-/state
+/networking/__pycache__
+/imaging/__pycache__
+/core/__pycache__
+/actuators/__pycache__
+/utils/__pycache__
 /configs
 /data_out
