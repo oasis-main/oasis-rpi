@@ -27,14 +27,14 @@ import datetime
 import json
 
 #get hardware config
-with open('/home/pi/hardware_config.json') as h:
+with open('/home/pi/oasis-grow/configs/hardware_config.json') as h:
   hardware_config = json.load(h)
 
 #setup GPIO
 GPIO.setmode(GPIO.BCM) #GPIO Numbers instead of board numbers
-Light_GPIO = hardware_config["actuator_gpio_map"]["light_relay"] #heater pin pulls from config file
-GPIO.setup(Light_GPIO, GPIO.OUT) #GPIO setup relay open = GPIO.HIGH, closed = GPIO.LOW
-GPIO.output(Light_GPIO, GPIO.LOW) #relay open = GPIO.HIGH, closed = GPIO.LOW
+Air_GPIO = hardware_config["actuator_gpio_map"]["air_relay"] #heater pin pulls from config file
+GPIO.setup(Air_GPIO, GPIO.OUT) #GPIO setup relay open = GPIO.HIGH, closed = GPIO.LOW
+GPIO.output(Air_GPIO, GPIO.LOW) #relay open = GPIO.HIGH, closed = GPIO.LOW
 
 #define a function to actuate element
 def actuate(timeOn = 0, timeOff = 0, interval = 900): #time on must be less than time off
@@ -45,20 +45,20 @@ def actuate(timeOn = 0, timeOff = 0, interval = 900): #time on must be less than
 
     if timeOn < timeOff:
         if HoD >= timeOn and HoD < timeOff:
-            GPIO.output(Light_GPIO, GPIO.HIGH) #light on (relay closed)
+            GPIO.output(Air_GPIO, GPIO.HIGH) #light on (relay closed)
             time.sleep(interval)
         if HoD < timeOn or HoD >= timeOff:
-            GPIO.output(Light_GPIO, GPIO.LOW)
+            GPIO.output(Air_GPIO, GPIO.LOW)
             time.sleep(interval)
     if timeOn > timeOff:
         if HoD >=  timeOn or HoD < timeOff:
-            GPIO.output(Light_GPIO, GPIO.HIGH) #light on (relay closed)
+            GPIO.output(Air_GPIO, GPIO.HIGH) #light on (relay closed)
             time.sleep(interval)
         if HoD < timeOn and  HoD >= timeOff:
-            GPIO.output(Light_GPIO, GPIO.LOW) #light on (relay closed)
+            GPIO.output(Air_GPIO, GPIO.LOW) #light on (relay closed)
             time.sleep(interval)
     if timeOn == timeOff:
-        GPIO.output(Light_GPIO, GPIO.HIGH)
+        GPIO.output(Air_GPIO, GPIO.HIGH)
         time.sleep(interval)
 
 try:

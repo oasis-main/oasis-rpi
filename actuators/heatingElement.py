@@ -23,7 +23,7 @@ import time
 import json
 
 #get hardware config
-with open('/home/pi/hardware_config.json') as h:
+with open('/home/pi/oasis-grow/configs/hardware_config.json') as h:
   hardware_config = json.load(h)
 
 #setup GPIO

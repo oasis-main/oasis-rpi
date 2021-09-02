@@ -3,10 +3,10 @@ import os
 import os.path
 import sys
 from subprocess import Popen
-import reset_model
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
+sys.path.append('/home/pi/oasis-grow/utils')
 sys.path.append('/usr/lib/python37.zip')
 sys.path.append('/usr/lib/python3.7')
 sys.path.append('/usr/lib/python3.7/lib-dynload')
@@ -19,7 +19,10 @@ from _thread import *
 import json
 import pickle5 as pickle
 
-#create a secure lan interface for accepting credentials
+#import custom modules
+import reset_model
+
+#create a password-protected lan interface for accepting credentials
 import streamlit as st
 
 #update wpa_supplicant.conf
@@ -57,7 +60,7 @@ def modAccessConfig(name, e, p):
     access_config["id_token"] = " "
     access_config["local_id"] = " "
 
-    with open("/home/pi/access_config.json", "r+") as a:
+    with open("/home/pi/oasis-grow/configs/access_config.json", "r+") as a:
         a.seek(0)
         json.dump(access_config, a)
         a.truncate()
@@ -66,14 +69,22 @@ def modAccessConfig(name, e, p):
 
 def write_state(path,field,value): #Depends on: load_state(), 'json'; Modifies: path
 
-    with open(path, "r+") as x: #write state to local files
-        data = json.load(x)
-        data[field] = value
-        x.seek(0)
-        json.dump(data, x)
-        x.truncate()
+    try:
+        with open(path, "r+") as x: #write state to local files
+            data = json.load(x)
+            data[field] = value
+            x.seek(0)
+            json.dump(data, x)
+            x.truncate()
+
+    except Exception as e:
+        print("Setup script tried to write while another write was occuring. Retrying...")
+        write_state(path,field,value)
+
 
 def enable_WiFi(): #Depends on: 'subprocess'; Modifies: None
+    write_state("/home/pi/oasis-grow/configs/device_state.json","access_point","0")
+
     config_wifi_dchpcd = Popen("sudo cp /etc/dhcpcd_WiFi.conf /etc/dhcpcd.conf", shell = True)
     config_wifi_dchpcd.wait()
     config_wifi_dns = Popen("sudo cp /etc/dnsmasq_WiFi.conf /etc/dnsmasq.conf", shell = True)
@@ -93,8 +104,8 @@ def save_creds_exit(email, password, wifi_name, wifi_pass, device_name):
     #reset_box
     reset_model.reset_device_state()
 
-    #set AccessPoint state to "0" before rebooting
-    write_state("/home/pi/device_state.json", "new_device", "1")
+    #set new_device to "0" before rebooting
+    write_state("/home/pi/oasis-grow/configs/device_state.json", "new_device", "1")
 
     #stand up wifi and reboot
     enable_WiFi()

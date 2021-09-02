@@ -33,14 +33,19 @@ access_config = None #contains credentials for connecting to firebase
 def load_state(): #Depends on: 'json'; Modifies: device_state,hardware_config ,access_config
     global device_state, feature_toggles, access_config
 
-    with open("/home/pi/device_state.json") as d:
-        device_state = json.load(d) #get device state
+    try:
+        with open("/home/pi/oasis-grow/configs/device_state.json") as d:
+            device_state = json.load(d) #get device state
 
-    with open("/home/pi/feature_toggles.json") as f:
-        feature_toggles = json.load(f) #get hardware state
+        with open("/home/pi/oasis-grow/configs/feature_toggles.json") as f:
+            feature_toggles = json.load(f) #get hardware state
 
-    with open("/home/pi/access_config.json") as a:
-        access_config = json.load(a) #get access state
+        with open("/home/pi/oasis-grow/configs/access_config.json") as a:
+            access_config = json.load(a) #get access state
+
+    except Exception as e:
+        print("Camera tried to read while system was writing. Retrying...")
+        load_state()
 
 #modifies a firebase variable
 def patch_firebase(field,value): #Depends on: load_state(),'requests','json'; Modifies: database['field'], state variables
@@ -76,14 +81,14 @@ def send_image(user, storage, path):
 
 def take_picture(image_path):
     #take picture and save to standard location
-    still = Popen('sudo raspistill -o ' + str(image_path), shell=True) #snap: call the camera
+    still = Popen(["sudo", "raspistill", "-o", str(image_path)]) #snap: call the camera
     still.wait()
 
 def save_to_feed(image_path):
     #timestamp image
     timestamp = time.time()
     #move timestamped image into feed
-    save_most_recent = Popen('cp ' + image_path + ' /home/pi/data_output/image_feed/culture_image'+str(timestamp)+'.jpg', shell=True)
+    save_most_recent = Popen(["cp", str(image_path), "/home/pi/oasis-grow/data_out/image_feed/culture_image" + str(timestamp)+'.jpg'])
     save_most_recent.wait()
 
 #define a function to actuate element

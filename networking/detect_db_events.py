@@ -35,7 +35,6 @@ import signal
 import pyrebase
 from multiprocessing import Process, Queue
 import json
-import reset_model
 
 #declare state variables
 device_state = None #describes the current state of the system
@@ -50,31 +49,36 @@ def load_state(): #Depends on: 'json'; Modifies: device_state,hardware_config ,a
     global device_state, grow_params, access_config
 
     try:
-        with open("/home/pi/device_state.json") as d:
+
+        with open("/home/pi/oasis-grow/configs/device_state.json") as d:
             device_state = json.load(d) #get device state
-    except ValueError:
-        reset_model.reset_device_state()
 
-    try:
-        with open("/home/pi/grow_params.json") as g:
+        with open("/home/pi/oasis-grow/configs/grow_params.json") as g:
             grow_params = json.load(g) #get hardware state
-    except ValueError:
-        reset_model.reset_grow_params()
 
-    try:
-        with open("/home/pi/access_config.json") as a:
+        with open("/home/pi/oasis-grow/configs/access_config.json") as a:
             access_config = json.load(a) #get access state
+
     except ValueError:
-        reset_model.reset_access_config()
+
+        print("Listener tried to read while system was writing. Retrying...")
+        load_state()
 
 #save key values to .json
 def write_state(path,field,value): #Depends on:, 'json'; Modifies: path
-    with open(path, "r+") as x: #write state to local files
-        data = json.load(x)
-        data[field] = value
-        x.seek(0)
-        json.dump(data, x)
-        x.truncate()
+
+    try:
+        with open(path, "r+") as x: #write state to local files
+            data = json.load(x)
+            data[field] = value
+            x.seek(0)
+            json.dump(data, x)
+            x.truncate()
+
+    except Exception as e:
+
+        print("Listener tried to write while system was writing. Retrying...")
+        write_state(path,field,value)
 
 def initialize_user(RefreshToken):
 
@@ -164,9 +168,9 @@ def act_on_event(field, new_data):
     grow_params_fields = list(grow_params.keys())
 
     if str(field) in device_state_fields:
-        path = '/home/pi/device_state_buffer.json'
+        path = "/home/pi/oasis-grow/configs/device_state.json"
     if str(field) in grow_params_fields:
-        path = '/home/pi/grow_params_buffer.json'
+        path = "/home/pi/oasis-grow/configs/grow_params.json"
 
     if os.path.exists(path) == False:
         f = open(path, "w")
@@ -178,11 +182,11 @@ def act_on_event(field, new_data):
     #print(path)
     write_state(path,field,new_data)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print("Starting listener...")
     load_state()
     try:
-        user, db = initialize_user(access_config['refresh_token'])
+        user, db = initialize_user(access_config["refresh_token"])
         print("Database monitoring: active")
     except Exception as e:
         print("Listener could not connect")
