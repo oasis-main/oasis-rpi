@@ -25,10 +25,10 @@ access_config = None
 def load_state_main(): #Depends on: 'json'; Modifies: device_state,hardware_config ,access_config
     global device_state, grow_params, hardware_config, access_config
 
-    with open("/home/pi/oasis-grow/state/device_state.json") as d:
+    with open("/home/pi/oasis-grow/configs/device_state.json") as d:
         device_state = json.load(d) #get device state
 
-    with open("/home/pi/oasis-grow/state/grow_params.json") as g:
+    with open("/home/pi/oasis-grow/configs/grow_params.json") as g:
         grow_params = json.load(g) #get device state
 
     with open("/home/pi/oasis-grow/configs/hardware_config.json") as h:
@@ -79,10 +79,10 @@ def save_old_configs():
     saveaccess = Popen(["cp", "/home/pi/oasis-grow/configs/access_config.json", "/home/pi/oasis-grow/configs/access_config_temp.json"])
     saveaccess.wait()
 
-    savestate = Popen(["cp", "/home/pi/oasis-grow/state/device_state.json", "/home/pi/oasis-grow/state/device_state_temp.json"])
+    savestate = Popen(["cp", "/home/pi/oasis-grow/configs/device_state.json", "/home/pi/oasis-grow/configs/device_state_temp.json"])
     savestate.wait()
 
-    saveparams = Popen(["cp", "/home/pi/oasis-grow/state/grow_params.json", "/home/pi/oasis-grow/state/grow_params_temp.json"])
+    saveparams = Popen(["cp", "/home/pi/oasis-grow/configs/grow_params.json", "/home/pi/oasis-grow/configs/grow_params_temp.json"])
     saveparams.wait()
 
     print("Saved existing configs to temporary files")
@@ -123,8 +123,8 @@ if __name__ == '__main__':
     reset_model.reset_all()
     transfer_compatible_configs('/home/pi/oasis-grow/configs/hardware_config.json', '/home/pi/oasis-grow/configs/hardware_config_temp.json')
     transfer_compatible_configs('/home/pi/oasis-grow/configs/access_config.json', '/home/pi/oasis-grow/configs/access_config_temp.json')
-    transfer_compatible_configs('/home/pi/oasis-grow/state/device_state.json', '/home/pi/oasis-grow/state/device_state_temp.json')
-    transfer_compatible_configs('/home/pi/oasis-grow/state/grow_params.json', '/home/pi/oasis-grow/state/grow_params_temp.json')
+    transfer_compatible_configs('/home/pi/oasis-grow/configs/device_state.json', '/home/pi/oasis-grow/configs/device_state_temp.json')
+    transfer_compatible_configs('/home/pi/oasis-grow/configs/grow_params.json', '/home/pi/oasis-grow/configs/grow_params_temp.json')
     print("Transfered compatible state & configs, removing temporary files")
 
     #run external update commands
@@ -135,7 +135,7 @@ if __name__ == '__main__':
     load_state_main()
 
     #change awaiting_update to "O" in firebase and locally
-    write_state("/home/pi/oasis-grow/state/device_state.json", "awaiting_update", "0")
+    write_state("/home/pi/oasis-grow/configs/device_state.json", "awaiting_update", "0")
 
     #reboot
     print("Rebooting...")

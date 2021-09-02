@@ -35,11 +35,11 @@ waterLow = 0
 def load_state(): #Depends on: 'json'; Modifies: device_state,hardware_config ,access_config
     global device_state, feature_toggles, access_config, grow_params
 
-    with open("/home/pi/oasis-grow/state/device_state.json") as d:
+    with open("/home/pi/oasis-grow/configs/device_state.json") as d:
         device_state = json.load(d)
     d.close()
 
-    with open("/home/pi/oasis-grow/state/grow_params.json") as g:
+    with open("/home/pi/oasis-grow/configs/grow_params.json") as g:
         grow_params = json.load(g)
     g.close()
 

@@ -34,22 +34,18 @@ def load_state(): #Depends on: 'json'; Modifies: device_state,hardware_config ,a
     global device_state, feature_toggles, access_config
 
     try:
-        with open("/home/pi/oasis-grow/state/concurrency_buffers/device_state_main.json") as d:
+        with open("/home/pi/oasis-grow/configs/device_state.json") as d:
             device_state = json.load(d) #get device state
-    except Exception as e:
-        print("Tried to read while parent was writing")
 
-    try:
         with open("/home/pi/oasis-grow/configs/feature_toggles.json") as f:
             feature_toggles = json.load(f) #get hardware state
-    except Exception as e:
-        print("Failed to load access config")
 
-    try:
         with open("/home/pi/oasis-grow/configs/access_config.json") as a:
             access_config = json.load(a) #get access state
+
     except Exception as e:
-        print("Failed to load access config")
+        print("Camera tried to read while system was writing. Retrying...")
+        load_state()
 
 #modifies a firebase variable
 def patch_firebase(field,value): #Depends on: load_state(),'requests','json'; Modifies: database['field'], state variables
