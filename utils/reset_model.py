@@ -13,21 +13,13 @@ sys.path.append('/usr/lib/python3/dist-packages')
 
 #all functions depend on subprocess module
 def reset_device_state():
-    reset_d = Popen(["sudo", "cp", "/home/pi/oasis-grow/defaults/device_state_default_template.json", "/home/pi/oasis-grow/state/device_state.json"])
+    reset_d = Popen(["sudo", "cp", "/home/pi/oasis-grow/defaults/device_state_default_template.json", "/home/pi/oasis-grow/configs/device_state.json"])
     reset_d.wait()
-#    reset_d_buff = Popen(["sudo","cp","/home/pi/oasis-grow/defaults/device_state_default_template.json", "/home/pi/oasis-grow/state/concurrency_buffers/device_state_grow_ctrl.json"])
-#    reset_d_buff.wait()
-#    reset_d_buff = Popen(["sudo","cp","/home/pi/oasis-grow/defaults/device_state_default_template.json", "/home/pi/oasis-grow/state/concurrency_buffers/device_state_listener.json"])
-#    reset_d_buff.wait()
 
 def reset_grow_params():
-    reset_g = Popen(["sudo", "cp", "/home/pi/oasis-grow/defaults/grow_params_default_template.json", "/home/pi/oasis-grow/state/grow_params.json"])
+    reset_g = Popen(["sudo", "cp", "/home/pi/oasis-grow/defaults/grow_params_default_template.json", "/home/pi/oasis-grow/configs/grow_params.json"])
     reset_g.wait()
-#    reset_g_buff = Popen(["sudo","cp","/home/pi/oasis-grow/defaults/grow_params_default_template.json", "/home/pi/oasis-grow/state/concurrency_buffers/grow_params_grow_ctrl.json"])
-#    reset_g_buff.wait()
-#    reset_g_buff = Popen(["sudo","cp","/home/pi/oasis-grow/defaults/grow_params_default_template.json", "/home/pi/oasis-grow/state/concurrency_buffers/grow_params_listener.json"])
-#    reset_g_buff.wait()
-
+    
 def reset_access_config():
     reset_a = Popen(["sudo", "cp", "/home/pi/oasis-grow/defaults/access_config_default_template.json", "/home/pi/oasis-grow/configs/access_config.json"])
     reset_a.wait()
