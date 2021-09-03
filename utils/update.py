@@ -66,7 +66,7 @@ def write_state(path,field,value): #Depends on: load_state_main(), patch_firebas
 
 #get latest code from designated repository
 def git_pull():
-    gitpull = Popen(["git", "pull"])
+    gitpull = Popen(["git", "pull", "origin", "master"])
     gitpull.wait()
 
     print("Pulled most recent production repo")
