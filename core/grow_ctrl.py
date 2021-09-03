@@ -487,8 +487,8 @@ if __name__ == '__main__':
                                         "humidity_log": device_state["humidity_log"]})
 
                     #push data to local json too
-                    write_state("/home/pi/oasis-grow/configs/device_state.json", "temperature_log", dict(device_state["temperature_log"])))
-                    write_state("/home/pi/oasis-grow/configs/device_state.json", "humidity_log", dict(device_state["humidity_log"])))
+                    write_state("/home/pi/oasis-grow/configs/device_state.json", "temperature_log", dict(device_state["temperature_log"]))
+                    write_state("/home/pi/oasis-grow/configs/device_state.json", "humidity_log", dict(device_state["humidity_log"]))
 
                 #start clock
                 sensor_log_timer = time.time()
