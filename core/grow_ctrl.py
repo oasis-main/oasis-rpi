@@ -299,32 +299,32 @@ def clean_up_processes():
     load_state()
 
     if (feature_toggles["heater"] == "1") and (heat_process != None): #go through toggles and kill active processes
-    heat_process.terminate()
-    heat_process.wait()
+        heat_process.terminate()
+        heat_process.wait()
 
     if (feature_toggles["humidifier"] == "1") and (humidity_process != None):
-    humidity_process.terminate()
-    humidity_process.wait()
+        humidity_process.terminate()
+        humidity_process.wait()
 
     if (feature_toggles["fan"] == "1") and (fan_process != None):
-    fan_process.terminate()
-    fan_process.wait()
+        fan_process.terminate()
+        fan_process.wait()
 
     if (feature_toggles["light"] == "1") and (light_process != None):
-    light_process.terminate()
-    light_process.wait()
+        light_process.terminate()
+        light_process.wait()
 
     if (feature_toggles["camera"] == "1") and (camera_process != None):
-    camera_process.terminate()
-    camera_process.wait()
+        camera_process.terminate()
+        camera_process.wait()
 
     if (feature_toggles["water"] == "1") and (water_process != None):
-    water_process.terminate()
-    water_process.wait()
+        water_process.terminate()
+        water_process.wait()
 
     if (feature_toggles["air"] == "1") and (air_process != None):
-    air_process.terminate()
-    air_process.wait()
+        air_process.terminate()
+        air_process.wait()
 
 #terminates the program and all running subprocesses
 def terminate_program(): #Depends on: load_state(), 'sys', 'subprocess' #Modifies: heat_process, humidity_process, fan_process, light_process, camera_process, water_process
@@ -371,7 +371,7 @@ def main_setup():
     sensor_log_timer = time.time()    
 
 def main_loop():
-    global data_timer, sensor_log_timer, last_target_temperature, last_target_humidity
+    global data_timer, sensor_log_timer, last_target_temperature, last_target_humidity, device_state
     
     #launch main program loop
     try:
