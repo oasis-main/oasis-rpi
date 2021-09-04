@@ -331,7 +331,7 @@ def terminate_program(): #Depends on: load_state(), 'sys', 'subprocess' #Modifie
     global heat_process, humidity_process, fan_process, light_process, camera_process, water_process, air_process
 
     print("Terminating Program...")
-    clean up processes()
+    clean_up_processes()
     
     #flip "running" to 0
     write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "0")
@@ -513,11 +513,11 @@ def main_loop():
             if time.time() - data_timer > 5:
 
                 try:
-            
+
                     if feature_toggles["save_data"] == "1":
                         #save data to .csv
                         print("Writing to csv")
-                        write_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv',{"time": str(time.time()), "temperature": str(temperature), "humidity": str(humidity), "water_low": (water_low)})
+                        write_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv',{"time": [str(time.time())], "temperature": [str(temperature)], "humidity": [str(humidity)], "water_low": [str(water_low)]})
 
                     if device_state["connected"]== "1":
                         #patch data to firebase
