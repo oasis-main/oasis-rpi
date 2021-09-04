@@ -21,6 +21,7 @@ import serial
 import subprocess
 from subprocess import Popen, PIPE, STDOUT
 import signal
+import gc
 
 #communicating with firebase
 import requests
@@ -59,6 +60,10 @@ last_humidity = 0
 last_target_temperature = 0
 last_target_humidity = 0
 water_low = 0
+
+#timekeeping variables
+data_timer = None
+sensor_log_timer = None
 
 #loads device state, hardware, and access configurations
 #checks first to see that main is not writing, if json valid, loads state
@@ -287,49 +292,55 @@ def run_air(time_on, time_off, refresh_frequency):
         air_process = Popen(['python3', '/home/pi/oasis-grow/actuators/airElement.py', str(time_on), str(time_off), str(refresh_frequency)]) #If no process, then starts
 
 
+def clean_up_processes():
+    global heat_process, humidity_process, fan_process, light_process, camera_process, water_process, air_process        
+
+    #clean up all processes
+    load_state()
+
+    if (feature_toggles["heater"] == "1") and (heat_process != None): #go through toggles and kill active processes
+    heat_process.terminate()
+    heat_process.wait()
+
+    if (feature_toggles["humidifier"] == "1") and (humidity_process != None):
+    humidity_process.terminate()
+    humidity_process.wait()
+
+    if (feature_toggles["fan"] == "1") and (fan_process != None):
+    fan_process.terminate()
+    fan_process.wait()
+
+    if (feature_toggles["light"] == "1") and (light_process != None):
+    light_process.terminate()
+    light_process.wait()
+
+    if (feature_toggles["camera"] == "1") and (camera_process != None):
+    camera_process.terminate()
+    camera_process.wait()
+
+    if (feature_toggles["water"] == "1") and (water_process != None):
+    water_process.terminate()
+    water_process.wait()
+
+    if (feature_toggles["air"] == "1") and (air_process != None):
+    air_process.terminate()
+    air_process.wait()
+
 #terminates the program and all running subprocesses
 def terminate_program(): #Depends on: load_state(), 'sys', 'subprocess' #Modifies: heat_process, humidity_process, fan_process, light_process, camera_process, water_process
     global heat_process, humidity_process, fan_process, light_process, camera_process, water_process, air_process
 
     print("Terminating Program...")
-
-    load_state()
-
-    if (feature_toggles["heater"] == "1") and (heat_process != None): #go through toggles and kill active processes
-        heat_process.terminate()
-        heat_process.wait()
-
-    if (feature_toggles["humidifier"] == "1") and (humidity_process != None):
-        humidity_process.terminate()
-        humidity_process.wait()
-
-    if (feature_toggles["fan"] == "1") and (fan_process != None):
-        fan_process.terminate()
-        fan_process.wait()
-
-    if (feature_toggles["light"] == "1") and (light_process != None):
-        light_process.terminate()
-        light_process.wait()
-
-    if (feature_toggles["camera"] == "1") and (camera_process != None):
-        camera_process.terminate()
-        camera_process.wait()
-
-    if (feature_toggles["water"] == "1") and (water_process != None):
-        water_process.terminate()
-        water_process.wait()
-
-    if (feature_toggles["air"] == "1") and (air_process != None):
-        air_process.terminate()
-        air_process.wait()
-
+    clean up processes()
+    
     #flip "running" to 0
     write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "0")
 
     sys.exit()
 
-if __name__ == '__main__':
-
+def main_setup():
+    global data_timer, sensor_log_timer
+    
     #Load state variables to start the main program
     load_state()
 
@@ -357,8 +368,11 @@ if __name__ == '__main__':
 
     #start the clock for timimg .csv writes and data exchanges with server
     data_timer = time.time()
-    sensor_log_timer = time.time()
+    sensor_log_timer = time.time()    
 
+def main_loop():
+    global data_timer, sensor_log_timer, last_target_temperature, last_target_humidity
+    
     #launch main program loop
     try:
         print("------------------------------------------------------------")
@@ -423,10 +437,12 @@ if __name__ == '__main__':
             print("------------------------------------------------------------")
 
             #every hour, log past hour and shift 24 hours of sensor data
-            if time.time() - sensor_log_timer > 3600:
+            if time.time() - sensor_log_timer > 10:
 
                 if feature_toggles["temp_hum_sensor"] == "1":
 
+                    print("Entering temp & hum logging")
+                    
                     #replace each log with the next most recent one
                     device_state["temperature_log"]["1"] = device_state["temperature_log"]["0"]
                     device_state["temperature_log"]["2"] = device_state["temperature_log"]["1"]
@@ -477,8 +493,8 @@ if __name__ == '__main__':
                     device_state["humidity_log"]["23"] = device_state["humidity_log"]["22"]
 
                     #save new data to 1 hour ago
-                    device_state["temperature_log"]["0"] = temperature
-                    device_state["humidity_log"]["0"] = humidity
+                    device_state["temperature_log"]["0"] = str(temperature)
+                    device_state["humidity_log"]["0"] = str(humidity)
 
                     #push data to firebase if connected
                     if device_state["connected"]== "1":
@@ -496,20 +512,26 @@ if __name__ == '__main__':
             #write data and send to server after set time elapses
             if time.time() - data_timer > 5:
 
-                if feature_toggles["save_data"] == "1":
-                    #save data to .csv
-                    write_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv',{"time": [str(time.time())], "temperature": [temperature], "humidity": [humidity], "water_low": [water_low]})
+                try:
+            
+                    if feature_toggles["save_data"] == "1":
+                        #save data to .csv
+                        print("Writing to csv")
+                        write_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv',{"time": str(time.time()), "temperature": str(temperature), "humidity": str(humidity), "water_low": (water_low)})
 
-                if device_state["connected"]== "1":
-                    #patch data to firebase
-                    patch_firebase({"temperature": str(temperature), "humidity": str(humidity), "water_low": str(water_low)})
-                else:
-                    write_state("/home/pi/oasis-grow/configs/device_state.json", "temperature", str(temperature))
-                    write_state("/home/pi/oasis-grow/configs/device_state.json", "humidity", str(humidity))
-                    write_state("/home/pi/oasis-grow/configs/device_state.json", "water_low", str(water_low))
+                    if device_state["connected"]== "1":
+                        #patch data to firebase
+                        patch_firebase({"temperature": str(temperature), "humidity": str(humidity), "water_low": str(water_low)})
+                    else:
+                        write_state("/home/pi/oasis-grow/configs/device_state.json", "temperature", str(temperature))
+                        write_state("/home/pi/oasis-grow/configs/device_state.json", "humidity", str(humidity))
+                        write_state("/home/pi/oasis-grow/configs/device_state.json", "water_low", str(water_low))
 
-                #start clock
-                data_timer = time.time()
+                    data_timer = time.time()
+                    
+                except Exception as e:
+                    print(e)
+                    data_timer = time.time()
 
             #update actuators in use
             if feature_toggles["heater"] == "1":
@@ -531,12 +553,25 @@ if __name__ == '__main__':
             load_state()
             if device_state["running"] == "0":
                 terminate_program()
-
+            else:
+                pass
+            
             #give the program some time to breathe
             time.sleep(1)
 
     except (KeyboardInterrupt):
         terminate_program()
+    
     except Exception as e:
         print(e)
-        terminate_program()
+        if device_state["running"] == "1": #if there is an error, but device should stay running
+            clean_up_processes()
+            main_setup() #have the program reset itself and
+            main_loop() #recursively start itself up again
+        if device_state["running"] == "0":
+            terminate_program() 
+            
+if __name__ == '__main__':
+    main_setup()
+    main_loop()
+    
