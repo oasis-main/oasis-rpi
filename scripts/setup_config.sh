@@ -17,4 +17,5 @@ sudo cp /home/pi/oasis-grow/defaults/grow_params_default_template.json /home/pi/
 echo "Creating new core process log..."
 sudo cp /home/pi/oasis-grow/defaults/grow_ctrl_log_default_template.json /home/pi/oasis-grow/data_out/logs/grow_ctrl_log.json
 
-
+echo "Creating placeholder image..."
+sudo cp /home/pi/oasis-grow/defaults/default_placeholder_image.jpg /home/pi/image.jpg
