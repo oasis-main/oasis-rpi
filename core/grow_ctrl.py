@@ -325,11 +325,12 @@ def clean_up_processes():
     if (feature_toggles["air"] == "1") and (air_process != None):
         air_process.terminate()
         air_process.wait()
+        
+    gc.cleanup()
 
 #terminates the program and all running subprocesses
 def terminate_program(): #Depends on: load_state(), 'sys', 'subprocess' #Modifies: heat_process, humidity_process, fan_process, light_process, camera_process, water_process
-    global heat_process, humidity_process, fan_process, light_process, camera_process, water_process, air_process
-
+    
     print("Terminating Program...")
     clean_up_processes()
     
@@ -564,6 +565,7 @@ def main_loop():
     
     except Exception as e:
         print(e)
+        load_state()
         if device_state["running"] == "1": #if there is an error, but device should stay running
             clean_up_processes()
             main_setup() #have the program reset itself and
