@@ -99,7 +99,7 @@ def patch_firebase(dict): #Depends on: load_state(),'requests','json'; Modifies:
 #save key values to .json
 def write_state(path,field,value, loop_limit=100000): #Depends on: load_state(), patch_firebase, 'json'; Modifies: path
     load_state()
-    
+
     #these will be loaded in by the listener, so best to make sure we represent the change in firebase too
     if device_state["connected"] == "1": #write state to cloud
         try:
@@ -112,25 +112,25 @@ def write_state(path,field,value, loop_limit=100000): #Depends on: load_state(),
         try:
             with open(path, "r+") as x: # open the file.
                 data = json.load(x) # can we load a valid json?
-              
+
                 if path == "/home/pi/oasis-grow/configs/device_state.json": #are we working in device_state?
                     if data["device_state_write_available"] == "1": #check is the file is available to be written
                         data["device_state_write_available"] = "0" #let system know resource is not available
                         x.seek(0)
                         json.dump(data, x)
-                        x.truncate() 
+                        x.truncate()
 
                         data[field] = value #write the desired value
                         data["device_state_write_available"] = "1" #let system know resource is available again 
                         x.seek(0)
                         json.dump(data, x)
                         x.truncate()
-                        
+
                         break #break the loop when the write has been successful
-                        
+
                     else:
-                        pass                    
-   
+                        pass
+
                 elif path == "/home/pi/oasis-grow/configs/grow_params.json": #are we working in grow_params?
                     if data["grow_params_write_available"] == "1":
                         data["grow_params_write_available"] = "0" #let system know writer is not available
@@ -143,7 +143,7 @@ def write_state(path,field,value, loop_limit=100000): #Depends on: load_state(),
                         x.seek(0)
                         json.dump(data, x)
                         x.truncate()
-                        
+
                         break  #break the loop when the write has been successful
 
                 else: #otherwise, attempt a normal write
@@ -151,9 +151,9 @@ def write_state(path,field,value, loop_limit=100000): #Depends on: load_state(),
                     x.seek(0)
                     json.dump(data, x)
                     x.truncate()
-                    
+
                     break #break the loop when the write has been successful
-                    
+
         except Exception as e: #If any of the above fails:
             print("Tried to write while another write was occuring, retrying...")
             print(e)
@@ -364,15 +364,15 @@ def clean_up_processes():
     if (feature_toggles["air"] == "1") and (air_process != None):
         air_process.terminate()
         air_process.wait()
-        
-    gc.cleanup()
+
+    gc.collect()
 
 #terminates the program and all running subprocesses
 def terminate_program(): #Depends on: load_state(), 'sys', 'subprocess' #Modifies: heat_process, humidity_process, fan_process, light_process, camera_process, water_process
-    
+
     print("Terminating Program...")
     clean_up_processes()
-    
+
     #flip "running" to 0
     write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "0")
 
@@ -380,7 +380,7 @@ def terminate_program(): #Depends on: load_state(), 'sys', 'subprocess' #Modifie
 
 def main_setup():
     global data_timer, sensor_log_timer
-    
+
     #Load state variables to start the main program
     load_state()
 
@@ -408,11 +408,11 @@ def main_setup():
 
     #start the clock for timimg .csv writes and data exchanges with server
     data_timer = time.time()
-    sensor_log_timer = time.time()    
+    sensor_log_timer = time.time()
 
 def main_loop():
     global data_timer, sensor_log_timer, last_target_temperature, last_target_humidity, device_state
-    
+
     #launch main program loop
     try:
         print("------------------------------------------------------------")
@@ -477,12 +477,12 @@ def main_loop():
             print("------------------------------------------------------------")
 
             #every hour, log past hour and shift 24 hours of sensor data
-            if time.time() - sensor_log_timer > 10:
+            if time.time() - sensor_log_timer > 3600:
 
                 if feature_toggles["temp_hum_sensor"] == "1":
 
                     print("Entering temp & hum logging")
-                    
+
                     #replace each log with the next most recent one
                     device_state["temperature_log"]["1"] = device_state["temperature_log"]["0"]
                     device_state["temperature_log"]["2"] = device_state["temperature_log"]["1"]
@@ -568,7 +568,7 @@ def main_loop():
                         write_state("/home/pi/oasis-grow/configs/device_state.json", "water_low", str(water_low))
 
                     data_timer = time.time()
-                    
+
                 except Exception as e:
                     print(e)
                     data_timer = time.time()
@@ -595,13 +595,13 @@ def main_loop():
                 terminate_program()
             else:
                 pass
-            
+
             #give the program some time to breathe
             time.sleep(1)
 
     except (KeyboardInterrupt):
         terminate_program()
-    
+
     except Exception as e:
         print(e)
         load_state()
@@ -610,9 +610,9 @@ def main_loop():
             main_setup() #have the program reset itself and
             main_loop() #recursively start itself up again
         if device_state["running"] == "0":
-            terminate_program() 
-            
+            terminate_program()
+
 if __name__ == '__main__':
     main_setup()
     main_loop()
-    
+
