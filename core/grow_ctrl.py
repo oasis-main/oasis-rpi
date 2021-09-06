@@ -97,28 +97,67 @@ def patch_firebase(dict): #Depends on: load_state(),'requests','json'; Modifies:
     result = requests.patch(url,data)
 
 #save key values to .json
-def write_state(path,field,value): #Depends on: load_state(), 'json'; Modifies: path
-
+def write_state(path,field,value, loop_limit=100000): #Depends on: load_state(), patch_firebase, 'json'; Modifies: path
+    load_state()
+    
     #these will be loaded in by the listener, so best to make sure we represent the change in firebase too
     if device_state["connected"] == "1": #write state to cloud
-
-        dict = {field:value}
-
         try:
-            patch_firebase(dict)
-        except:
+            patch_firebase(field,value)
+        except Exception as e:
+            print(e)
             pass
 
-    try:
-        with open(path, "r+") as x: #write state to local files
-            data = json.load(x)
-            data[field] = value
-            x.seek(0)
-            json.dump(data, x)
-            x.truncate()
-    except Exception as e:
-        print("Tried to write while another write was occuring, retrying...")
-        write_state(path,field,value)
+    for i in list(xrange(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
+        try:
+            with open(path, "r+") as x: # open the file.
+                data = json.load(x) # can we load a valid json?
+              
+                if path == "/home/pi/oasis-grow/configs/device_state.json": #are we working in device_state?
+                    if data["device_state_write_available"] == "1": #check is the file is available to be written
+                        data["device_state_write_available"] = "0" #let system know resource is not available
+                        x.seek(0)
+                        json.dump(data, x)
+                        x.truncate() 
+
+                        data[field] = value #write the desired value
+                        data["device_state_write_available"] = "1" #let system know resource is available again 
+                        x.seek(0)
+                        json.dump(data, x)
+                        x.truncate()
+                        
+                        break #break the loop when the write has been successful
+                        
+                    else:
+                        pass                    
+   
+                elif path == "/home/pi/oasis-grow/configs/grow_params.json": #are we working in grow_params?
+                    if data["grow_params_write_available"] == "1":
+                        data["grow_params_write_available"] = "0" #let system know writer is not available
+                        x.seek(0)
+                        json.dump(data, x)
+                        x.truncate()
+
+                        data["grow_params_write_available"] = "1"
+                        data[field] = value #write the desired value
+                        x.seek(0)
+                        json.dump(data, x)
+                        x.truncate()
+                        
+                        break  #break the loop when the write has been successful
+
+                else: #otherwise, attempt a normal write
+                    data[field] = value #write the desired value
+                    x.seek(0)
+                    json.dump(data, x)
+                    x.truncate()
+                    
+                    break #break the loop when the write has been successful
+                    
+        except Exception as e: #If any of the above fails:
+            print("Tried to write while another write was occuring, retrying...")
+            print(e)
+            pass #continue the loop until write is successful or cieling is hit
 
 #write some data to a .csv, takes a dictionary and a path
 def write_csv(path, dict): #Depends on: 'pandas',
