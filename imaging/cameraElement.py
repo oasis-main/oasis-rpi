@@ -88,7 +88,7 @@ def save_to_feed(image_path):
     #timestamp image
     timestamp = time.time()
     #move timestamped image into feed
-    save_most_recent = Popen(["cp", str(image_path), "/home/pi/oasis-grow/data_out/image_feed/culture_image" + str(timestamp)+'.jpg'])
+    save_most_recent = Popen(["sudo", "cp", str(image_path), "/home/pi/oasis-grow/data_out/image_feed/culture_image" + str(timestamp)+'.jpg'])
     save_most_recent.wait()
 
 #define a function to actuate element
