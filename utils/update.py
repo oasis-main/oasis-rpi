@@ -22,7 +22,7 @@ hardware_config = None
 access_config = None
 
 #loads device state, grow_params, hardware, and access configurations
-def load_state_main(): #Depends on: 'json'; Modifies: device_state,hardware_config ,access_config
+def load_state(): #Depends on: 'json'; Modifies: device_state,hardware_config ,access_config
     global device_state, grow_params, hardware_config, access_config
 
     with open("/home/pi/oasis-grow/configs/device_state.json") as d:
@@ -50,7 +50,7 @@ def write_state(path,field,value, loop_limit=100000): #Depends on: load_state(),
 
     #We DON'T patch firebase when the listener writes, because it responsible for keeping local files up to date
     
-    for i in list(xrange(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
+    for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
         try:
             with open(path, "r+") as x: # open the file.
                 data = json.load(x) # can we load a valid json?
