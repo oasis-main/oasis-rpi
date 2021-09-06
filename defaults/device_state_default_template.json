@@ -12,6 +12,7 @@
  "humidity": "0",
  "water_low": "0",
  "deleted": "0",
+ "write_available: "0",
  "temperature_log": {
                     "0": null,
                     "1": null,
