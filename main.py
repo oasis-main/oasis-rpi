@@ -267,34 +267,6 @@ def check_updates(): #depends on: load_state(),'subproceess', update.py; modifie
         if update_process.returncode != 0:
             print("Failure " + str(update_process.returncode)+ " " +str(output)+str(error))
 
-#sets up the cloud data buffer with local, buffer used to blocks concurrent reading/ writing while editing state variables
-#def setup_buffers():
-#    try:
-#        with open("/home/pi/oasis-grow/state/device_state.json") as d: #verify that the listener is not currently writing
-#            device_state = json.load(d)
-#        copy_device_state_to_buffer = Popen(["sudo", "cp", "/home/pi/oasis-grow/state/device_state.json", "/home/pi/oasis-grow/state/concurrency_buffers/device_state_grow_ctrl.json"])
-#        copy_device_state_to_buffer.wait()
-#        copy_device_state_to_buffer = Popen(["sudo", "cp", "/home/pi/oasis-grow/state/device_state.json", "/home/pi/oasis-grow/state/concurrency_buffers/device_state_listener.json"])
-#        copy_device_state_to_buffer.wait()
-#        print("Established grow-params buffer")
-#    except Exception as e:
-#        print("concurrent writing collision: device_state not loading, resetting configs")
-#        print(e)
-#        reset_model.reset_device_state()
-#
-#    try:
-#        with open("/home/pi/oasis-grow/state/grow_params.json") as g:
-#            grow_params = json.load(g) #verify that the listener is not currently writing
-#        copy_grow_params_to_buffer = Popen(["sudo", "cp", "/home/pi/oasis-grow/state/grow_params.json", "/home/pi/oasis-grow/state/concurrency_buffers/grow_params_grow_ctrl.json"])
-#        copy_grow_params_to_buffer.wait()
-#        copy_grow_params_to_buffer = Popen(["sudo", "cp", "/home/pi/oasis-grow/state/grow_params.json", "/home/pi/oasis-grow/state/concurrency_buffers/grow_params_listener.json"])
-#        copy_grow_params_to_buffer.wait()
-#        print("Established grow-params buffer")
-#    except Exception as e:
-#        print("concurrent writing collision: grow_params_not loading, resetting configs")
-#        print(e)
-#        reset_model.reset_grow_params()
-
 #launches a script to detect changes in the database
 def launch_listener(): #depends on 'subprocess', modifies: state variables
     global listener
@@ -563,51 +535,6 @@ def update_LED(): #Depends on: load_state(), 'datetime'; Modifies: ser_out
     else:
         #print("no serial connection, cannot update LED view")
         pass
-
-#checks data of child processes for integrity and merges the child  buffer into main model. Last process in list has priority
-#Failed reads that collide with child writes should skip, children should follow information-hiding best practices
-#May want to make commits sequentially instead of overwriting the entire file. Information hiding fixes this by design, but its hard!
-#def sync_child_states(): #Depends on: 'json','subprocess'
-#
-#    try:
-#
-#        if device_state["connected"] == "1":
-#            #verify that the child is not current writing
-#            with open("/home/pi/oasis-grow/state/concurrency_buffers/device_state_listener.json") as d_buff:
-#                device_state_buffer = json.load(d_buff)
-#
-#            #if clear, copy buffers into the parent state
-#            copy_device_state_buffer = Popen(["sudo", "cp" , "/home/pi/oasis-grow/state/concurrency_buffers/device_state_listener.json", "/home/pi/oasis-grow/state/device_state.json"])
-#            copy_device_state_buffer.wait()
-#
-#            with open("/home/pi/oasis-grow/state/concurrency_buffers/grow_params_listener.json") as g_buff:
-#                grow_params_buffer = json.load(g_buff)
-
-            #if clear, copy buffers into the parent state
-#            copy_grow_params_buffer = Popen(["sudo", "cp", "/home/pi/oasis-grow/state/concurrency_buffers/grow_params_listener.json", "/home/pi/oasis-grow/state/grow_params.json"])
-#            copy_grow_params_buffer.wait()
-
-#        else:
-#            #verify that the child is not current writing
-#            with open("/home/pi/oasis-grow/state/concurrency_buffers/device_state_grow_ctrl.json") as d_buff:
-#                device_state_buffer = json.load(d_buff)
-
-            #if clear, copy buffers into the parent state
-#            copy_device_state_buffer = Popen(["sudo", "cp", "/home/pi/oasis-grow/state/concurrency_buffers/device_state_grow_ctrl.json", "/home/pi/oasis-grow/state/device_state.json"])
-#            copy_device_state_buffer.wait()
-
-            #verify that the child is not current writing
-#            with open("/home/pi/oasis-grow/state/concurrency_buffers/grow_params_grow_ctrl.json") as d_buff:
-#                grow_params_buffer = json.load(d_buff)
-
-            #if clear, copy buffers into the parent state
-#            copy_grow_params_buffer = Popen(["sudo", "cp", "/home/pi/oasis-grow/state/concurrency_buffers/grow_params_grow_ctrl.json", "/home/pi/oasis-grow/state/grow_params.json"])
-#            copy_grow_params_buffer.wait()
-
-#    except Exception as e:
-#        print("concurrent collision: tried to read while child writing, please wait a few milliseconds!")
-#        print(e)
-
 
 if __name__ == '__main__':
 
