@@ -103,7 +103,8 @@ def write_state(path,field,value, loop_limit=100000): #Depends on: load_state(),
     #these will be loaded in by the listener, so best to make sure we represent the change in firebase too
     if device_state["connected"] == "1": #write state to cloud
         try:
-            patch_firebase(field,value)
+            dict = {str(field):str(value)}
+            patch_firebase(dict)
         except Exception as e:
             print(e)
             pass
@@ -477,14 +478,14 @@ def main_loop():
             print("------------------------------------------------------------")
 
             #every hour, log past hour and shift 24 hours of sensor data
-            if time.time() - sensor_log_timer > 3600:
+            if time.time() - sensor_log_timer > 5:
 
                 if feature_toggles["temp_hum_sensor"] == "1":
 
                     print("Entering temp & hum logging")
 
                     #replace each log with the next most recent one
-                    device_state["temperature_log"]["1"] = device_state["temperature_log"]["0"]
+                    
                     device_state["temperature_log"]["2"] = device_state["temperature_log"]["1"]
                     device_state["temperature_log"]["3"] = device_state["temperature_log"]["2"]
                     device_state["temperature_log"]["4"] = device_state["temperature_log"]["3"]
@@ -507,8 +508,8 @@ def main_loop():
                     device_state["temperature_log"]["21"] = device_state["temperature_log"]["20"]
                     device_state["temperature_log"]["22"] = device_state["temperature_log"]["21"]
                     device_state["temperature_log"]["23"] = device_state["temperature_log"]["22"]
-
-                    device_state["humidity_log"]["1"] = device_state["humidity_log"]["0"]
+                    device_state["temperature_log"]["24"] = device_state["temperature_log"]["23"]
+                    
                     device_state["humidity_log"]["2"] = device_state["humidity_log"]["1"]
                     device_state["humidity_log"]["3"] = device_state["humidity_log"]["2"]
                     device_state["humidity_log"]["4"] = device_state["humidity_log"]["3"]
@@ -531,18 +532,13 @@ def main_loop():
                     device_state["humidity_log"]["21"] = device_state["humidity_log"]["20"]
                     device_state["humidity_log"]["22"] = device_state["humidity_log"]["21"]
                     device_state["humidity_log"]["23"] = device_state["humidity_log"]["22"]
+                    device_state["humidity_log"]["24"] = device_state["humidity_log"]["23"]
 
                     #save new data to 1 hour ago
-                    device_state["temperature_log"]["0"] = str(temperature)
-                    device_state["humidity_log"]["0"] = str(humidity)
+                    device_state["temperature_log"]["1"] = str(temperature)
+                    device_state["humidity_log"]["1"] = str(humidity)
 
-                    #push data to firebase if connected
-                    if device_state["connected"]== "1":
-                        #patch data to firebase
-                        patch_firebase({"temperature_log": device_state["temperature_log"],
-                                        "humidity_log": device_state["humidity_log"]})
-
-                    #push data to local json too
+                   #push data to local json too
                     write_state("/home/pi/oasis-grow/configs/device_state.json", "temperature_log", dict(device_state["temperature_log"]))
                     write_state("/home/pi/oasis-grow/configs/device_state.json", "humidity_log", dict(device_state["humidity_log"]))
 
@@ -559,13 +555,9 @@ def main_loop():
                         print("Writing to csv")
                         write_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv',{"time": [str(time.time())], "temperature": [str(temperature)], "humidity": [str(humidity)], "water_low": [str(water_low)]})
 
-                    if device_state["connected"]== "1":
-                        #patch data to firebase
-                        patch_firebase({"temperature": str(temperature), "humidity": str(humidity), "water_low": str(water_low)})
-                    else:
-                        write_state("/home/pi/oasis-grow/configs/device_state.json", "temperature", str(temperature))
-                        write_state("/home/pi/oasis-grow/configs/device_state.json", "humidity", str(humidity))
-                        write_state("/home/pi/oasis-grow/configs/device_state.json", "water_low", str(water_low))
+                    write_state("/home/pi/oasis-grow/configs/device_state.json", "temperature", str(temperature))
+                    write_state("/home/pi/oasis-grow/configs/device_state.json", "humidity", str(humidity))
+                    write_state("/home/pi/oasis-grow/configs/device_state.json", "water_low", str(water_low))
 
                     data_timer = time.time()
 
