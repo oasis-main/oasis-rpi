@@ -478,7 +478,7 @@ def main_loop():
             print("------------------------------------------------------------")
 
             #every hour, log past hour and shift 24 hours of sensor data
-            if time.time() - sensor_log_timer > 5:
+            if time.time() - sensor_log_timer > 3600:
 
                 if feature_toggles["temp_hum_sensor"] == "1":
 
