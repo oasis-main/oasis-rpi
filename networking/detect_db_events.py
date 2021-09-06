@@ -69,7 +69,7 @@ def write_state(path,field,value, loop_limit=100000): #Depends on: load_state(),
     load_state() 
 
     #We DON'T patch firebase when the listener writes, because it responsible for keeping local files up to date
-    for i in list(xrange(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
+    for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
         try:
             with open(path, "r+") as x: # open the file.
                 data = json.load(x) # can we load a valid json?
