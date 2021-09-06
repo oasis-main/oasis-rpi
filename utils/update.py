@@ -176,5 +176,5 @@ if __name__ == '__main__':
 
     #reboot
     print("Rebooting...")
-    reboot = Popen(["sudo","reboot"])
+    reboot = Popen(["sudo","systemctl","reboot"])
     reboot.wait()
