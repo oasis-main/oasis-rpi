@@ -115,7 +115,7 @@ def test_water():
 
 def test_air():
     try:
-        air_process = Popen(['python3', '/home/pi/oasis-grow/actuators/airElement.py', "10", "0"]) #If running, then skips. If idle then restarts, If no process, then fails
+        air_process = Popen(['python3', '/home/pi/oasis-grow/actuators/airElement.py', "0", "0", "10"]) #If running, then skips. If idle then restarts, If no process, then fails
         print("Air actuator launched, check to ensure correct behavior")
         water_process.wait()
     except:
