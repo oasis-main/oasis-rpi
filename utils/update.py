@@ -169,7 +169,7 @@ if __name__ == '__main__':
     output, error = update_commands.communicate()
 
     #load state to get configs & state for conn
-    load_state_main()
+    load_state()
 
     #change awaiting_update to "O" in firebase and locally
     write_state("/home/pi/oasis-grow/configs/device_state.json", "awaiting_update", "0")
