@@ -48,7 +48,11 @@ def reset_data_out():
     clear_sensor_feed.wait()
     clear_logs = Popen(["sudo", "rm", "-rf", "/home/pi/oasis-grow/data_out/logs"])
     clear_logs.wait()
-
+    clear_dir = Popen(["sudo", "rm", "-rf", "/home/pi/oasis-grow/data_out"])
+    clear_dir.wait()
+    
+    new_dir = Popen(["sudo", "mkdir", "/home/pi/oasis-grow/data_out"])
+    new_dir.wait()
     new_image_feed = Popen(["sudo", "mkdir", "/home/pi/oasis-grow/data_out/image_feed"])
     new_image_feed.wait()
     new_sensor_feed = Popen(["sudo", "mkdir", "/home/pi/oasis-grow/data_out/sensor_feed"])
@@ -57,6 +61,12 @@ def reset_data_out():
     new_logs.wait()
     reset_logs()
 
+def reset_image_feed()
+    clear_image_feed = Popen(["sudo", "rm", "-rf", "/home/pi/oasis-grow/data_out/image_feed"])
+    clear_image_feed.wait()
+    new_image_feed = Popen(["sudo", "mkdir", "/home/pi/oasis-grow/data_out/image_feed"])
+    new_image_feed.wait()
+    
 #function that runs all the other functions
 def reset_all():
     reset_device_state()
