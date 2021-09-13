@@ -26,5 +26,8 @@ python3 -m pip install -r /home/pi/oasis-grow/defaults/requirements.txt
 echo "Installing python 3.7 RPi.GPIO for OS..."
 sudo apt-get -y install python3-rpi.gpio
 
+echo "Installing python 3.7 OpenCV for OS..."
+sudo apt install python3-opencv
+
 echo "Installing streamlit to root so python can edit wpa_supplicant.conf.."
 sudo pip3 install streamlit==0.62.0
