@@ -61,7 +61,7 @@ def reset_data_out():
     new_logs.wait()
     reset_logs()
 
-def reset_image_feed()
+def reset_image_feed():
     clear_image_feed = Popen(["sudo", "rm", "-rf", "/home/pi/oasis-grow/data_out/image_feed"])
     clear_image_feed.wait()
     new_image_feed = Popen(["sudo", "mkdir", "/home/pi/oasis-grow/data_out/image_feed"])
