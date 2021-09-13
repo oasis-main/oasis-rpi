@@ -546,7 +546,7 @@ def main_loop():
                 sensor_log_timer = time.time()
 
             #write data and send to server after set time elapses
-            if time.time() - data_timer > 5:
+            if time.time() - data_timer > 300:
 
                 try:
 
@@ -599,7 +599,6 @@ def main_loop():
         load_state()
         if device_state["running"] == "1": #if there is an error, but device should stay running
             clean_up_processes()
-            main_setup() #have the program reset itself and
             main_loop() #recursively start itself up again
         if device_state["running"] == "0":
             terminate_program()
