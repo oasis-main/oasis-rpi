@@ -11,6 +11,7 @@ import sys
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
+sys.path.append('/home/pi/oasis-grow/utils')
 sys.path.append('/usr/lib/python37.zip')
 sys.path.append('/usr/lib/python3.7')
 sys.path.append('/usr/lib/python3.7/lib-dynload')
@@ -18,11 +19,20 @@ sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
 sys.path.append('/usr/local/lib/python3.7/dist-packages')
 sys.path.append('/usr/lib/python3/dist-packages')
 
+#dealing with specific times of the day
+import time
+import datetime
+import reset_model
+
+#get human readable datetime
+readable = datetime.datetime.fromtimestamp(time.time()).isoformat()
+
 #dir where images are stored
-image_folder = '/home/pi/Pictures'
+image_folder = '/home/pi/oasis-grow/data_out/image_feed'
+
 #name of output timelapse
 #.avi = audio visual imput, not being conceited this time ;)
-video_name = 'agar_timelapse.avi'
+video_name = '/home/pi/oasis-grow/data_out/'+ str(readable) + '_timelapse.avi'
 
 #loops throught the directory to get file names
 images = [img for img in os.listdir(image_folder) if img.endswith(".jpg")]
@@ -65,4 +75,4 @@ for image in sorted_list:
 #closes everything out correctly
 cv2.destroyAllWindows()
 video.release()
-
+reset_model.reset_image_feed()
