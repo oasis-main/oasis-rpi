@@ -13,16 +13,17 @@ while getopts ":b" opt; do
             echo "Adding controller bootloader..."
             sudo chmod +x /home/pi/oasis-grow/scripts/setup_bootloader.sh
             source /home/pi/oasis-grow/scripts/setup_bootloader.sh
+            
+            echo "Optimizing boot time..."
+            sudo chmod +x /home/pi/oasis-grow/scripts/optimize_boot.sh
+            source /home/pi/oasis-grow/scripts/optimize_boot.sh -no_bt        
+            
             ;;
         \?)
             echo "Invalid option: -$OPTARG"
             ;;
     esac
 done
-
-echo "Optimizing boot time..."
-sudo chmod +x /home/pi/oasis-grow/scripts/optimize_boot.sh
-source /home/pi/oasis-grow/scripts/optimize_boot.sh -no_bt
 
 echo "Returning to WiFi mode..."
 sudo cp /etc/dhcpcd_WiFi.conf /etc/dhcpcd.conf
