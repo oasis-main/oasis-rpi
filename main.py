@@ -261,12 +261,29 @@ def check_new_device(): #depends on: ;modifies:
 def check_updates(): #depends on: load_state(),'subproceess', update.py; modifies: system code, state variables
     load_state()
     if device_state["running"] == "0" and device_state["awaiting_update"] == "1": #replicated in the main loop
+        #kill listener
+        write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0") #make sure it doesn't write anything to the cloud, kill the listener
+        listener = None
         #launch update.py and wait to complete
         update_process = Popen(["sudo", "python3", "/home/pi/oasis-grow/utils/update.py"])
+        write_state("/home/pi/oasis-grow/configs/device_state.json","connected","1")#restore listener
         output, error = update_process.communicate()
         if update_process.returncode != 0:
             print("Failure " + str(update_process.returncode)+ " " +str(output)+str(error))
-
+    if device_state["running"] == "1" and device_state["awaiting_update"] == "1": #replicated in the main loop
+        #flip running to 0        
+        write_state("/home/pi/oasis-grow/configs/device_state.json","running","0")
+        #kill listener
+        write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0") #make sure it doesn't write anything to the cloud, kill the listener
+        listener = None
+        #launch update.py and wait to complete
+        update_process = Popen(["sudo", "python3", "/home/pi/oasis-grow/utils/update.py"])
+        write_state("/home/pi/oasis-grow/configs/device_state.json","running","1") #restore running
+        write_state("/home/pi/oasis-grow/configs/device_state.json","connected","1")#restore listener
+        output, error = update_process.communicate()
+        if update_process.returncode != 0:
+            print("Failure " + str(update_process.returncode)+ " " +str(output)+str(error))
+            
 #launches a script to detect changes in the database
 def launch_listener(): #depends on 'subprocess', modifies: state variables
     global listener
