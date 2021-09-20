@@ -618,7 +618,5 @@ if __name__ == '__main__':
                 update_LED()
                 led_timer = time.time()
 
-            #sync_child_states() #harvest data from children
-
     except(KeyboardInterrupt):
         GPIO.cleanup()
