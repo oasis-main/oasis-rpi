@@ -542,10 +542,6 @@ def main_loop():
                     device_state["temperature_log"][0] = str(temperature)
                     device_state["humidity_log"][0] = str(humidity)
                     
-                    #convert data back to json string
-                    device_state["temperature_log"] = json.dumps(device_state["temperature_log"])
-                    device_state["humidity_log"] = json.dumps(device_state["humidity_log"])
-                    
                     #push data to local json too
                     write_state("/home/pi/oasis-grow/configs/device_state.json", "temperature_log", device_state["temperature_log"])
                     write_state("/home/pi/oasis-grow/configs/device_state.json", "humidity_log", device_state["humidity_log"])
