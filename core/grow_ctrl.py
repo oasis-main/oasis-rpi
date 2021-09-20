@@ -598,10 +598,11 @@ def main_loop():
     except Exception as e:
         traceback.print_exc()
         if device_state["running"] == "1": #if there is an error, but device should stay running
-            clean_up_processes()
+            #clean_up_processes()
+            terminate_program()
         if device_state["running"] == "0":
             #terminate_program()
-            clean_up_processes()
+            terminate_program()
             
 if __name__ == '__main__':
     main_setup()
