@@ -159,12 +159,16 @@ def enable_WiFi(): #Depends on: 'subprocess'; Modifies: None
     systemctl_reboot.wait()
 
 def save_creds_exit(email, password, wifi_name, wifi_pass, device_name):
+    global st
+    
     #place credentials in proper locations
     modWiFiConfig(wifi_name, wifi_pass)
     print("Wifi creds added")
     modAccessConfig(device_name, email, password)
     print("Access creds added")
-
+    
+    st.error("Added WiFi & access credentials to device. Please reconnect computer to internet, leave this page, and log back into https://dashboard.oasis-gardens.io. If successful, you will see the device name appear under 'Your Fleet.'")
+    
     #reset_box
     reset_model.reset_device_state()
 
