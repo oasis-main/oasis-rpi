@@ -485,8 +485,8 @@ def main_loop():
 
                     print("Entering temp & hum logging")
 
-                    device_state["temperature_log"] = dict(device_state["temperature_log"])
-                    device_state["humidity_log"] = dict(device_state["humidity_log"])
+                    device_state["temperature_log"] = eval(device_state["temperature_log"])
+                    device_state["humidity_log"] = eval(device_state["humidity_log"])
                     
                     #replace each log with the next most recent one
                     
