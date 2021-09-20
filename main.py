@@ -75,6 +75,7 @@ def load_state(): #Depends on: 'json'; Modifies: device_state,hardware_config ,a
 
     except Exception as e:
         print("Main to read while children writing. Retrying...")
+        time.sleep(1)
         load_state()
 
 
