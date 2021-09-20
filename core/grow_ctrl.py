@@ -479,7 +479,7 @@ def main_loop():
             print("------------------------------------------------------------")
 
             #every hour, log past hour and shift 24 hours of sensor data
-            if time.time() - sensor_log_timer > 5:
+            if time.time() - sensor_log_timer > 3600:
 
                 if feature_toggles["temp_hum_sensor"] == "1":
 
@@ -540,9 +540,7 @@ def main_loop():
                     
                     #push data to local json too
                     write_state("/home/pi/oasis-grow/configs/device_state.json", "temperature_log", device_state["temperature_log"])
-                    print("wrote temperature")
                     write_state("/home/pi/oasis-grow/configs/device_state.json", "humidity_log", device_state["humidity_log"])
-                    print("wrote temperature")
                     
                 #start clock
                 sensor_log_timer = time.time()
@@ -599,10 +597,8 @@ def main_loop():
     except Exception as e:
         traceback.print_exc()
         if device_state["running"] == "1": #if there is an error, but device should stay running
-            #clean_up_processes()
-            terminate_program()
+            clean_up_processes()
         if device_state["running"] == "0":
-            #terminate_program()
             terminate_program()
             
 if __name__ == '__main__':
