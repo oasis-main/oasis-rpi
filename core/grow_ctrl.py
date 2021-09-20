@@ -488,7 +488,7 @@ def main_loop():
                     #replace each log with the next most recent one
                     
                     device_state["temperature_log"][1] = device_state["temperature_log"][0]
-                    evice_state["temperature_log"][2] = device_state["temperature_log"][1]
+                    device_state["temperature_log"][2] = device_state["temperature_log"][1]
                     device_state["temperature_log"][3] = device_state["temperature_log"][2]
                     device_state["temperature_log"][4] = device_state["temperature_log"][3]
                     device_state["temperature_log"][5] = device_state["temperature_log"][4]
@@ -512,7 +512,7 @@ def main_loop():
                     device_state["temperature_log"][23] = device_state["temperature_log"][22]
                     
                     device_state["humidity_log"][1] = device_state["humidity_log"][0]
-                    evice_state["humidity_log"][2] = device_state["humidity_log"][1]
+                    device_state["humidity_log"][2] = device_state["humidity_log"][1]
                     device_state["humidity_log"][3] = device_state["humidity_log"][2]
                     device_state["humidity_log"][4] = device_state["humidity_log"][3]
                     device_state["humidity_log"][5] = device_state["humidity_log"][4]
