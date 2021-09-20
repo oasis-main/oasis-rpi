@@ -22,6 +22,7 @@ import subprocess
 from subprocess import Popen, PIPE, STDOUT
 import signal
 import gc
+import traceback
 
 #communicating with firebase
 import requests
@@ -478,7 +479,7 @@ def main_loop():
             print("------------------------------------------------------------")
 
             #every hour, log past hour and shift 24 hours of sensor data
-            if time.time() - sensor_log_timer > 3600:
+            if time.time() - sensor_log_timer > 5:
 
                 if feature_toggles["temp_hum_sensor"] == "1":
 
@@ -539,8 +540,8 @@ def main_loop():
                     device_state["humidity_log"]["1"] = str(humidity)
 
                    #push data to local json too
-                    write_state("/home/pi/oasis-grow/configs/device_state.json", "temperature_log", dict(device_state["temperature_log"]))
-                    write_state("/home/pi/oasis-grow/configs/device_state.json", "humidity_log", dict(device_state["humidity_log"]))
+                    write_state("/home/pi/oasis-grow/configs/device_state.json", "temperature_log", json.dumps(device_state["temperature_log"]))
+                    write_state("/home/pi/oasis-grow/configs/device_state.json", "humidity_log", json.dumps(device_state["humidity_log"]))
 
                 #start clock
                 sensor_log_timer = time.time()
@@ -595,11 +596,9 @@ def main_loop():
         terminate_program()
 
     except Exception as e:
-        print(e)
-        load_state()
+        traceback.print_exc()
         if device_state["running"] == "1": #if there is an error, but device should stay running
             clean_up_processes()
-            main_loop() #recursively start itself up again
         if device_state["running"] == "0":
             terminate_program()
 
