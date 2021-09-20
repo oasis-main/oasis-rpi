@@ -540,8 +540,8 @@ def main_loop():
                     device_state["humidity_log"][0] = str(humidity)
 
                    #push data to local json too
-                    write_state("/home/pi/oasis-grow/configs/device_state.json", "temperature_log", device_state["temperature_log"]))
-                    write_state("/home/pi/oasis-grow/configs/device_state.json", "humidity_log", device_state["humidity_log"]))
+                    write_state("/home/pi/oasis-grow/configs/device_state.json", "temperature_log", device_state["temperature_log"])
+                    write_state("/home/pi/oasis-grow/configs/device_state.json", "humidity_log", device_state["humidity_log"])
 
                 #start clock
                 sensor_log_timer = time.time()
