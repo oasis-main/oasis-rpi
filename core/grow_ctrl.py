@@ -487,61 +487,61 @@ def main_loop():
 
                     #replace each log with the next most recent one
                     
-                    device_state["temperature_log"]["2"] = device_state["temperature_log"]["1"]
-                    device_state["temperature_log"]["3"] = device_state["temperature_log"]["2"]
-                    device_state["temperature_log"]["4"] = device_state["temperature_log"]["3"]
-                    device_state["temperature_log"]["5"] = device_state["temperature_log"]["4"]
-                    device_state["temperature_log"]["6"] = device_state["temperature_log"]["5"]
-                    device_state["temperature_log"]["7"] = device_state["temperature_log"]["6"]
-                    device_state["temperature_log"]["8"] = device_state["temperature_log"]["7"]
-                    device_state["temperature_log"]["9"] = device_state["temperature_log"]["8"]
-                    device_state["temperature_log"]["10"] = device_state["temperature_log"]["9"]
-                    device_state["temperature_log"]["11"] = device_state["temperature_log"]["10"]
-                    device_state["temperature_log"]["12"] = device_state["temperature_log"]["11"]
-                    device_state["temperature_log"]["13"] = device_state["temperature_log"]["12"]
-                    device_state["temperature_log"]["14"] = device_state["temperature_log"]["13"]
-                    device_state["temperature_log"]["15"] = device_state["temperature_log"]["14"]
-                    device_state["temperature_log"]["16"] = device_state["temperature_log"]["15"]
-                    device_state["temperature_log"]["17"] = device_state["temperature_log"]["16"]
-                    device_state["temperature_log"]["18"] = device_state["temperature_log"]["17"]
-                    device_state["temperature_log"]["19"] = device_state["temperature_log"]["18"]
-                    device_state["temperature_log"]["20"] = device_state["temperature_log"]["19"]
-                    device_state["temperature_log"]["21"] = device_state["temperature_log"]["20"]
-                    device_state["temperature_log"]["22"] = device_state["temperature_log"]["21"]
-                    device_state["temperature_log"]["23"] = device_state["temperature_log"]["22"]
-                    device_state["temperature_log"]["24"] = device_state["temperature_log"]["23"]
+                    device_state["temperature_log"][1] = device_state["temperature_log"][0]
+                    evice_state["temperature_log"][2] = device_state["temperature_log"][1]
+                    device_state["temperature_log"][3] = device_state["temperature_log"][2]
+                    device_state["temperature_log"][4] = device_state["temperature_log"][3]
+                    device_state["temperature_log"][5] = device_state["temperature_log"][4]
+                    device_state["temperature_log"][6] = device_state["temperature_log"][5]
+                    device_state["temperature_log"][7] = device_state["temperature_log"][6]
+                    device_state["temperature_log"][8] = device_state["temperature_log"][7]
+                    device_state["temperature_log"][9] = device_state["temperature_log"][8]
+                    device_state["temperature_log"][10] = device_state["temperature_log"][9]
+                    device_state["temperature_log"][11] = device_state["temperature_log"][10]
+                    device_state["temperature_log"][12] = device_state["temperature_log"][11]
+                    device_state["temperature_log"][13] = device_state["temperature_log"][12]
+                    device_state["temperature_log"][14] = device_state["temperature_log"][13]
+                    device_state["temperature_log"][15] = device_state["temperature_log"][14]
+                    device_state["temperature_log"][16] = device_state["temperature_log"][15]
+                    device_state["temperature_log"][17] = device_state["temperature_log"][16]
+                    device_state["temperature_log"][18] = device_state["temperature_log"][17]
+                    device_state["temperature_log"][19] = device_state["temperature_log"][18]
+                    device_state["temperature_log"][20] = device_state["temperature_log"][19]
+                    device_state["temperature_log"][21] = device_state["temperature_log"][20]
+                    device_state["temperature_log"][22] = device_state["temperature_log"][21]
+                    device_state["temperature_log"][23] = device_state["temperature_log"][22]
                     
-                    device_state["humidity_log"]["2"] = device_state["humidity_log"]["1"]
-                    device_state["humidity_log"]["3"] = device_state["humidity_log"]["2"]
-                    device_state["humidity_log"]["4"] = device_state["humidity_log"]["3"]
-                    device_state["humidity_log"]["5"] = device_state["humidity_log"]["4"]
-                    device_state["humidity_log"]["6"] = device_state["humidity_log"]["5"]
-                    device_state["humidity_log"]["7"] = device_state["humidity_log"]["6"]
-                    device_state["humidity_log"]["8"] = device_state["humidity_log"]["7"]
-                    device_state["humidity_log"]["9"] = device_state["humidity_log"]["8"]
-                    device_state["humidity_log"]["10"] = device_state["humidity_log"]["9"]
-                    device_state["humidity_log"]["11"] = device_state["humidity_log"]["10"]
-                    device_state["humidity_log"]["12"] = device_state["humidity_log"]["11"]
-                    device_state["humidity_log"]["13"] = device_state["humidity_log"]["12"]
-                    device_state["humidity_log"]["14"] = device_state["humidity_log"]["13"]
-                    device_state["humidity_log"]["15"] = device_state["humidity_log"]["14"]
-                    device_state["humidity_log"]["16"] = device_state["humidity_log"]["15"]
-                    device_state["humidity_log"]["17"] = device_state["humidity_log"]["16"]
-                    device_state["humidity_log"]["18"] = device_state["humidity_log"]["17"]
-                    device_state["humidity_log"]["19"] = device_state["humidity_log"]["18"]
-                    device_state["humidity_log"]["20"] = device_state["humidity_log"]["19"]
-                    device_state["humidity_log"]["21"] = device_state["humidity_log"]["20"]
-                    device_state["humidity_log"]["22"] = device_state["humidity_log"]["21"]
-                    device_state["humidity_log"]["23"] = device_state["humidity_log"]["22"]
-                    device_state["humidity_log"]["24"] = device_state["humidity_log"]["23"]
+                    device_state["humidity_log"][1] = device_state["humidity_log"][0]
+                    evice_state["humidity_log"][2] = device_state["humidity_log"][1]
+                    device_state["humidity_log"][3] = device_state["humidity_log"][2]
+                    device_state["humidity_log"][4] = device_state["humidity_log"][3]
+                    device_state["humidity_log"][5] = device_state["humidity_log"][4]
+                    device_state["humidity_log"][6] = device_state["humidity_log"][5]
+                    device_state["humidity_log"][7] = device_state["humidity_log"][6]
+                    device_state["humidity_log"][8] = device_state["humidity_log"][7]
+                    device_state["humidity_log"][9] = device_state["humidity_log"][8]
+                    device_state["humidity_log"][10] = device_state["humidity_log"][9]
+                    device_state["humidity_log"][11] = device_state["humidity_log"][10]
+                    device_state["humidity_log"][12] = device_state["humidity_log"][11]
+                    device_state["humidity_log"][13] = device_state["humidity_log"][12]
+                    device_state["humidity_log"][14] = device_state["humidity_log"][13]
+                    device_state["humidity_log"][15] = device_state["humidity_log"][14]
+                    device_state["humidity_log"][16] = device_state["humidity_log"][15]
+                    device_state["humidity_log"][17] = device_state["humidity_log"][16]
+                    device_state["humidity_log"][18] = device_state["humidity_log"][17]
+                    device_state["humidity_log"][19] = device_state["humidity_log"][18]
+                    device_state["humidity_log"][20] = device_state["humidity_log"][19]
+                    device_state["humidity_log"][21] = device_state["humidity_log"][20]
+                    device_state["humidity_log"][22] = device_state["humidity_log"][21]
+                    device_state["humidity_log"][23] = device_state["humidity_log"][22]
 
                     #save new data to 1 hour ago
-                    device_state["temperature_log"]["1"] = str(temperature)
-                    device_state["humidity_log"]["1"] = str(humidity)
+                    device_state["temperature_log"][0] = str(temperature)
+                    device_state["humidity_log"][0] = str(humidity)
 
                    #push data to local json too
-                    write_state("/home/pi/oasis-grow/configs/device_state.json", "temperature_log", json.dumps(device_state["temperature_log"]))
-                    write_state("/home/pi/oasis-grow/configs/device_state.json", "humidity_log", json.dumps(device_state["humidity_log"]))
+                    write_state("/home/pi/oasis-grow/configs/device_state.json", "temperature_log", device_state["temperature_log"]))
+                    write_state("/home/pi/oasis-grow/configs/device_state.json", "humidity_log", device_state["humidity_log"]))
 
                 #start clock
                 sensor_log_timer = time.time()
@@ -600,8 +600,9 @@ def main_loop():
         if device_state["running"] == "1": #if there is an error, but device should stay running
             clean_up_processes()
         if device_state["running"] == "0":
-            terminate_program()
-
+            #terminate_program()
+            clean_up_processes()
+            
 if __name__ == '__main__':
     main_setup()
     main_loop()
