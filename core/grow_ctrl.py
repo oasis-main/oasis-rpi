@@ -484,10 +484,6 @@ def main_loop():
                 if feature_toggles["temp_hum_sensor"] == "1":
 
                     print("Entering temp & hum logging")
-
-                    #extract workable dictionary from json string
-                    device_state["temperature_log"] = json.loads(device_state["temperature_log"])
-                    device_state["humidity_log"] = json.loads(device_state["humidity_log"])
                     
                     #replace each log with the next most recent one
                     device_state["temperature_log"][23] = device_state["temperature_log"][22]
