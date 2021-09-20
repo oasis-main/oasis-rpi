@@ -562,7 +562,6 @@ if __name__ == '__main__':
     start_serial()
     check_AP()
     connect_firebase()
-    #setup_buffers()
 
     load_state()
     if device_state["connected"] == "1":
