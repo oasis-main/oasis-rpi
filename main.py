@@ -537,7 +537,7 @@ def update_LED(): #Depends on: load_state(), 'datetime'; Modifies: ser_out
     HoD = now.hour
 
     if ser_out is not None:
-        if int(device_state["time_start_led"]) < int(device_state['time_stop_led']):
+        if int(device_state["time_start_led"]) < int(device_state["time_stop_led"]):
             if HoD >= int(device_state["time_start_led"]) and HoD < int(device_state["time_stop_led"]):
                 ser_out.write(bytes(str(device_state["led_status"]+"\n"), 'utf-8')) #write status
             if HoD < int(device_state["time_start_led"]) or HoD >= int(device_state["time_stop_led"]):
