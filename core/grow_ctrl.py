@@ -104,7 +104,7 @@ def write_state(path,field,value, loop_limit=100000): #Depends on: load_state(),
     #these will be loaded in by the listener, so best to make sure we represent the change in firebase too
     if device_state["connected"] == "1": #write state to cloud
         try:
-            dict = {str(field):str(value)}
+            dict = {str(field):value}
             patch_firebase(dict)
         except Exception as e:
             print(e)
