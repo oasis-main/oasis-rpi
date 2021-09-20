@@ -486,8 +486,8 @@ def main_loop():
                     print("Entering temp & hum logging")
 
                     #extract workable dictionary from json string
-                    device_state["temperature_log"] = eval(device_state["temperature_log"])
-                    device_state["humidity_log"] = eval(device_state["humidity_log"])
+                    device_state["temperature_log"] = eval(str(device_state["temperature_log"]))
+                    device_state["humidity_log"] = eval(str(device_state["humidity_log"]))
                     
                     #replace each log with the next most recent one
                     device_state["temperature_log"][23] = device_state["temperature_log"][22]
