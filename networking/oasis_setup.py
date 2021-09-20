@@ -167,7 +167,7 @@ def save_creds_exit(email, password, wifi_name, wifi_pass, device_name):
     modAccessConfig(device_name, email, password)
     print("Access creds added")
     
-    st.error("Added WiFi & access credentials to device. Please reconnect computer to internet, leave this page, and log back into https://dashboard.oasis-gardens.io. If successful, you will see the device name appear under 'Your Fleet.'")
+    st.success("Added WiFi & access credentials to device. Please reconnect computer to internet, leave this page, and log back into https://dashboard.oasis-gardens.io. If successful, you will see the device name appear under 'Your Fleet.'")
     
     #reset_box
     reset_model.reset_device_state()
