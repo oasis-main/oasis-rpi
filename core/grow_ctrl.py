@@ -486,8 +486,8 @@ def main_loop():
                     print("Entering temp & hum logging")
 
                     #extract workable dictionary from json string
-                    device_state["temperature_log"] = eval(device_state["temperature_log"])
-                    device_state["humidity_log"] = eval(device_state["humidity_log"])
+                    device_state["temperature_log"] = device_state["temperature_log"]
+                    device_state["humidity_log"] = device_state["humidity_log"]
                     
                     #replace each log with the next most recent one
                     device_state["temperature_log"][23] = device_state["temperature_log"][22]
@@ -543,8 +543,8 @@ def main_loop():
                     device_state["humidity_log"][0] = str(humidity)
                     
                     #convert data back to json string
-                    device_state["temperature_log"] = json.dumps(device_state["temperature_log"])
-                    device_state["humidity_log"] = json.dumps(device_state["humidity_log"])
+                    #device_state["temperature_log"] = json.dumps(device_state["temperature_log"])
+                    #device_state["humidity_log"] = json.dumps(device_state["humidity_log"])
                     
                     #push data to local json too
                     write_state("/home/pi/oasis-grow/configs/device_state.json", "temperature_log", device_state["temperature_log"])
