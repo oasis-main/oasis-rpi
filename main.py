@@ -56,28 +56,49 @@ start_stop_button = None #holds GPIO object for starting and stopping grow_ctrl 
 connect_internet_button = None #holds GPIO object for connecting device to internet
 run_water_button = None #holds GPIO object for triggering the watering aparatus
 
-#loads device state, hardware, and access configurations
-def load_state(): #Depends on: 'json'; Modifies: device_state,hardware_config ,access_config
-    global device_state, grow_params, hardware_config, access_config
+def load_state(loop_limit=100000): #Depends on: 'json'; Modifies: device_state,hardware_config ,access_config
+    global device_state, feature_toggles, access_config, grow_params
 
-    try:
-        with open("/home/pi/oasis-grow/configs/device_state.json") as d:
-            device_state = json.load(d) #get device state
+    for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
+        try:
+            with open("/home/pi/oasis-grow/configs/device_state.json") as d:
+                device_state = json.load(d) #get device state
 
-        with open("/home/pi/oasis-grow/configs/grow_params.json") as g:
-            grow_params = json.load(g) #get device state
+            for k,v in device_state.items(): 
+                if device_state[k] is None:
+                    print("Read NoneType in device_state")
+                    reset_model.reset_device_state()
+                    reset_model.reset_grow_params()
+                    reset_model.reset_nonhw_configs()
+                    reset_model.reset_data_out()
+                    reset_model.reset_logs()
+                    print("Device has been reset to default configuration") 
+                else: 
+                    pass    
+                
+            with open("/home/pi/oasis-grow/configs/grow_params.json") as g:
+                grow_params = json.load(g) #get grow params
 
-        with open("/home/pi/oasis-grow/configs/hardware_config.json") as h:
-            hardware_config = json.load(h) #get hardware state
-
-        with open("/home/pi/oasis-grow/configs/access_config.json") as a:
-            access_config = json.load(a) #get access state
-
-    except Exception as e:
-        print("Main to read while children writing. Retrying...")
-        time.sleep(1)
-        load_state()
-
+            for k,v in grow_params.items(): 
+                if grow_params[k] is None:
+                    print("Read NoneType in grow_params")
+                    reset_model.reset_device_state()
+                    reset_model.reset_grow_params()
+                    reset_model.reset_nonhw_configs()
+                    reset_model.reset_data_out()
+                    reset_model.reset_logs()
+                    print("Device has been reset to default configuration") 
+                else: 
+                    pass      
+                
+            with open("/home/pi/oasis-grow/configs/access_config.json") as a:
+                access_config = json.load(a) #get access state
+                
+            with open ("/home/pi/oasis-grow/configs/feature_toggles.json") as f:
+                feature_toggles = json.load(f) #get feature toggles
+        
+        except Exception as e:
+            print("Error occured while main.py reading. Retrying...")
 
 #modifies a firebase variable
 def patch_firebase(field,value): #Depends on: load_state(),'requests','json'; Modifies: database['field'], state variables
