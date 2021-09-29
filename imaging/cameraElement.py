@@ -95,7 +95,7 @@ def send_image(user, storage, path):
 
 def take_picture(image_path):
     #take picture and save to standard location
-    still = Popen(["sudo", "raspistill", "-o", str(image_path)]) #snap: call the camera
+    still = Popen(["sudo", "raspistill", "-awb", "greyworld", "-o", str(image_path)]) #snap: call the camera
     still.wait()
 
 def save_to_feed(image_path):
