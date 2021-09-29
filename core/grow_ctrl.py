@@ -94,7 +94,7 @@ def load_state(loop_limit=100000): #Depends on: 'json'; Modifies: device_state,h
             break
             
         except Exception as e:
-            print("Error occured while main.py reading. Retrying...")
+            print("Error occured while grow_ctrl.py reading. Retrying...")
 
 #modifies a firebase variable
 def patch_firebase(dict): #Depends on: load_state(),'requests','json'; Modifies: database{data}, state variables
