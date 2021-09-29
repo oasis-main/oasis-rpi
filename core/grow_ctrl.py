@@ -9,6 +9,7 @@ import sys
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
+sys.path.append('/home/pi/oasis-grow/utils')
 sys.path.append('/usr/lib/python37.zip')
 sys.path.append('/usr/lib/python3.7')
 sys.path.append('/usr/lib/python3.7/lib-dynload')
@@ -35,6 +36,9 @@ import pandas
 #dealing with specific times of the day
 import time
 import datetime
+
+#import other oasis packages
+import reset_model
 
 #declare state variables
 device_state = None #describes the current state of the system
@@ -68,27 +72,27 @@ sensor_log_timer = None
 
 #loads device state, hardware, and access configurations
 #checks first to see that main is not writing, if json valid, loads state
-def load_state(): #Depends on: 'json'; Modifies: device_state,hardware_config ,access_config
+def load_state(loop_limit=100000): #Depends on: 'json'; Modifies: device_state,hardware_config ,access_config
     global device_state, feature_toggles, access_config, grow_params
 
-    #verify that the child is not current writing
+    for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
+        try:
+            with open("/home/pi/oasis-grow/configs/device_state.json") as d:
+                device_state = json.load(d) #get device state
+                
+            with open("/home/pi/oasis-grow/configs/grow_params.json") as g:
+                grow_params = json.load(g) #get grow params
 
-    try:
-        with open("/home/pi/oasis-grow/configs/device_state.json") as d:
-            device_state = json.load(d) #get device state
+            with open("/home/pi/oasis-grow/configs/access_config.json") as a:
+                access_config = json.load(a) #get access state
 
-        with open("/home/pi/oasis-grow/configs/grow_params.json") as g:
-            grow_params = json.load(g) #get grow params
+            with open ("/home/pi/oasis-grow/configs/feature_toggles.json") as f:
+                feature_toggles = json.load(f) #get feature toggles
 
-        with open("/home/pi/oasis-grow/configs/access_config.json") as a:
-            access_config = json.load(a) #get access state
-
-        with open ("/home/pi/oasis-grow/configs/feature_toggles.json") as f:
-            feature_toggles = json.load(f) #get feature toggles
-
-    except Exception as e:
-        print("Tried to read while a write was occuring. Retrying...")
-        load_state()
+            break
+        
+        except Exception as e:
+            print("Error occured while grow_ctrl.py reading. Retrying...")
 
 #modifies a firebase variable
 def patch_firebase(dict): #Depends on: load_state(),'requests','json'; Modifies: database{data}, state variables
@@ -98,7 +102,7 @@ def patch_firebase(dict): #Depends on: load_state(),'requests','json'; Modifies:
     result = requests.patch(url,data)
 
 #save key values to .json
-def write_state(path,field,value, loop_limit=100000): #Depends on: load_state(), patch_firebase, 'json'; Modifies: path
+def write_state(path,field,value,loop_limit=100000): #Depends on: load_state(), patch_firebase, 'json'; Modifies: path
     load_state()
 
     #these will be loaded in by the listener, so best to make sure we represent the change in firebase too
