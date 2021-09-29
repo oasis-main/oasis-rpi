@@ -55,7 +55,7 @@ def load_state(loop_limit=100000): #Depends on: 'json'; Modifies: device_state,h
             break
             
         except Exception as e:
-            print("Error occured while listener reading. Retrying...")
+            print("Error occured while setup server reading. Retrying...")
 
 #update wpa_supplicant.conf
 def modWiFiConfig(SSID, password):
