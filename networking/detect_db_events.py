@@ -36,10 +36,11 @@ import pyrebase
 from multiprocessing import Process, Queue
 import json
 
-#declare state variables
-device_state = None #describes the current state of the system
-grow_params = None #holds growing parameters
-access_config = None #contains credentials for connecting to firebase
+#empty variables for state management
+device_state = None
+grow_params = None
+hardware_config = None
+access_config = None
 
 #declare listener list
 listener_list = []
