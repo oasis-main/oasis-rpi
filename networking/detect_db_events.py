@@ -69,7 +69,7 @@ def load_state(loop_limit=100000): #Depends on: 'json'; Modifies: device_state,h
             break
             
         except Exception as e:
-            print("Error occured while main.py reading. Retrying...")
+            print("Error occured while listener reading. Retrying...")
 
 #save key values to .json
 def write_state(path,field,value, loop_limit=100000): #Depends on: load_state(), patch_firebase, 'json'; Modifies: path
