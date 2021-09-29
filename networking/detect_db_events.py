@@ -248,7 +248,3 @@ if __name__ == "__main__":
 
     stop_condition("deleted","1")
 
-
-
-
-
