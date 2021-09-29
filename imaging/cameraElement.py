@@ -37,7 +37,7 @@ access_config = None #contains credentials for connecting to firebase
 feature_toggles = None #tells the system which features are in use
 
 def load_state(loop_limit=100000): #Depends on: 'json'; Modifies: device_state,hardware_config ,access_config
-    global device_state, feature_toggles, access_config, grow_params, hardware config
+    global device_state, feature_toggles, access_config, grow_params, hardware_config
 
     for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
         try:
