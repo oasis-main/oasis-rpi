@@ -39,13 +39,6 @@ import datetime
 #import other oasis packages
 import reset_model
 
-#declare state variables
-device_state = None #describes the current state of the system
-grow_params = None #describes the grow configuration of the system
-hardware_config = None #holds hardware I/O setting & pin #s
-access_config = None #contains credentials for connecting to firebase
-feature_toggles = None #tells the system which features are in use
-
 #declare process management variables
 listener = None
 ser_out = None #object for writing to the microcontroller via serial
@@ -57,8 +50,15 @@ start_stop_button = None #holds GPIO object for starting and stopping grow_ctrl 
 connect_internet_button = None #holds GPIO object for connecting device to internet
 run_water_button = None #holds GPIO object for triggering the watering aparatus
 
+#declare state variables
+device_state = None #describes the current state of the system
+grow_params = None #describes the grow configuration of the system
+hardware_config = None #holds hardware I/O setting & pin #s
+access_config = None #contains credentials for connecting to firebase
+feature_toggles = None #tells the system which features are in use
+
 def load_state(loop_limit=100000): #Depends on: 'json'; Modifies: device_state,hardware_config ,access_config
-    global device_state, feature_toggles, access_config, grow_params
+    global device_state, feature_toggles, access_config, grow_params, hardware config
 
     for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
         try:
@@ -98,6 +98,11 @@ def load_state(loop_limit=100000): #Depends on: 'json'; Modifies: device_state,h
             with open ("/home/pi/oasis-grow/configs/feature_toggles.json") as f:
                 feature_toggles = json.load(f) #get feature toggles
         
+            with open ("/home/pi/oasis-grow/configs/hardware_config.json") as h:
+                hardware_config = json.load(h) #get feature toggles
+        
+            break
+            
         except Exception as e:
             print("Error occured while main.py reading. Retrying...")
 
