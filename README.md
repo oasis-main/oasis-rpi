@@ -2,7 +2,7 @@
 
 ## Introduction
 
-oasis-grow, developed by Oasis, is an open-source toolkit for controlled environment cultivation, remote monitoring, and data collection. It is maintained with the goal of making the capabilities of automated gardening, precision agriculture, and cell culturing available to everyone. Users are encouraged to contribute data, projects, and technical expertise. See [Contributing](#contributing) for details.
+oasis-grow, developed by Oasis-X, is an open-source toolkit for controlled environment cultivation, remote monitoring, and data collection. It is maintained with the goal of making the capabilities of automated gardening, precision agriculture, and cell culturing available to everyone. Users are encouraged to contribute data, projects, and technical expertise. See [Contributing](#contributing) for details.
 
 This repository contains:
 1. Python scripts for monitoring the grow environment and interfacing with peripherals sensors and devices,
