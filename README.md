@@ -75,8 +75,8 @@ sudo git clone https://github.com/oasis-gardens/oasis-grow
 Change permissions and run the `master_setup.sh` script found in the repository's root directory. If you wish to run `controller.py` automatically at startup, at the `-b` flag.
 ```
 cd oasis-grow
-chmod +x master_setup.sh
-source ./master_setup.sh -b
+chmod +x install.sh
+source ./install.sh -b    #-b flag starts the bootloader, causing the interface to launch on startup in the background.
 ```
 When the system reboots automatically, the button interface]() and peripheral devices should be fully functional.
 
