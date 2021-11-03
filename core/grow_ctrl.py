@@ -1,8 +1,4 @@
-#---------------------------------------------------------------------------------------
-#IMPORTS
-#Shell, PID, Communication, Time
-#---------------------------------------------------------------------------------------
-#Setup Path
+#system
 import os
 import os.path
 import sys
@@ -54,17 +50,19 @@ air_process = None
 #declare sensor data variables
 temperature = 0
 humidity = 0
+water_low = 0
 last_temperature = 0
 last_humidity = 0
 last_target_temperature = 0
 last_target_humidity = 0
-water_low = 0
 
-#timekeeping variables
+#declare timekeeping variables
 data_timer = None
 sensor_log_timer = None
 
 #declare state variables
+#these should never be modified from within python, only loaded with load_state()
+#use write_state() to change a value 
 device_state = None #describes the current state of the system
 grow_params = None #describes the grow configuration of the system
 hardware_config = None #holds hardware I/O setting & pin #s
@@ -98,15 +96,12 @@ def load_state(loop_limit=100000): #Depends on: 'json'; Modifies: device_state,h
 
 #modifies a firebase variable
 def patch_firebase(dict): #Depends on: load_state(),'requests','json'; Modifies: database{data}, state variables
-    load_state()
     data = json.dumps(dict)
     url = "https://oasis-1757f.firebaseio.com/"+str(access_config["local_id"])+"/"+str(access_config["device_name"])+".json?auth="+str(access_config["id_token"])
     result = requests.patch(url,data)
 
 #save key values to .json
 def write_state(path,field,value,loop_limit=100000): #Depends on: load_state(), patch_firebase, 'json'; Modifies: path
-    load_state()
-
     #these will be loaded in by the listener, so best to make sure we represent the change in firebase too
     if device_state["connected"] == "1": #write state to cloud
         try:
