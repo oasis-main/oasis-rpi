@@ -200,7 +200,6 @@ def load_locks(loop_limit = 10000):
         try:
             with open("/home/pi/oasis-grow/configs/locks.json") as l:
                 locks = json.load(l) #get locks
-                
 
             for k,v in locks.items():
                 if locks[k] is None:
@@ -210,7 +209,7 @@ def load_locks(loop_limit = 10000):
                 else: 
                     pass
              
-             break   
+            break   
     
         except Exception as e:
             if i == int(loop_limit):
