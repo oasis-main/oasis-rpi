@@ -35,6 +35,10 @@ def reset_feature_toggles():
 def reset_logs():
     reset_l = Popen(["sudo", "cp", "/home/pi/oasis-grow/defaults/grow_ctrl_log_default_template.json", "/home/pi/oasis-grow/data_out/logs/grow_ctrl_log.json"])
     reset_l.wait()
+    
+def reset_locks():
+    reset_lox = Popen(["sudo", "cp", "/home/pi/oasis-grow/defaults/locks_default_template.json", "/home/pi/oasis-grow/configs/locks.json"])
+    reset_lox.wait()
 
 def reset_nonhw_configs():
     reset_device_state()
