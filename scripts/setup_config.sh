@@ -14,6 +14,9 @@ sudo cp /home/pi/oasis-grow/defaults/feature_toggles_default_template.json /home
 sudo cp /home/pi/oasis-grow/defaults/device_state_default_template.json /home/pi/oasis-grow/configs/device_state.json
 sudo cp /home/pi/oasis-grow/defaults/grow_params_default_template.json /home/pi/oasis-grow/configs/grow_params.json
 
+echo "Creating new lock_file..."
+sudo cp /home/pi/oasis-grow/defaults/locks_default_template.json /home/pi/oasis-grow/configs/locks.json
+
 echo "Creating new core process log..."
 sudo cp /home/pi/oasis-grow/defaults/grow_ctrl_log_default_template.json /home/pi/oasis-grow/data_out/logs/grow_ctrl_log.json
 
