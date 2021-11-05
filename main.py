@@ -387,8 +387,8 @@ def write_state(path,field,value,loop_limit=100000): #Depends on: load_state(), 
                         pass
 
         except Exception as e: #If any of the above fails:
-            if i == loop_limit:
-                print("Tried to load locks multiple times. File is corrupted. Resetting locks...")
+            if i == int(loop_limit):
+                print("Tried to write state multiple times. File is corrupted. Resetting locks...")
                 reset_model.reset_locks()
             else:
                 print(e)
