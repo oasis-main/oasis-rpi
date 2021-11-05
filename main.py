@@ -196,13 +196,16 @@ def patch_firebase(field,value): #Depends on: load_state(),'requests','json'; Mo
 
 def load_locks(loop_limit = 10000):
     global locks
-    
+    print("1")
     for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
         try:
             with open("/home/pi/oasis-grow/configs/locks.json") as l:
                 locks = json.load(l) #get locks
+                print("2")
 
-            for k,v in locks.items(): 
+            for k,v in locks.items():
+                print(k)
+                print(v)
                 if locks[k] is None:
                     print("Read NoneType in locks")
                     print("Resetting locks...")
