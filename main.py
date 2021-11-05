@@ -391,6 +391,7 @@ def write_state(path,field,value,loop_limit=100000): #Depends on: load_state(), 
                 print("Tried to load locks multiple times. File is corrupted. Resetting locks...")
                 reset_model.reset_locks()
             else:
+                print(e)
                 print("Could not load locks. If this error persists, the lock file is corrupted. Retrying...")
                 pass #continue the loop until write is successful or ceiling is hit
 
