@@ -211,7 +211,7 @@ def load_locks(loop_limit = 10000):
                 else: 
                     pass  
     
-    except Exception as e:
+        except Exception as e:
             if i == loop_limit:
                 print("Tried to load lock max number of times. File is corrupted. Resetting locks...")
                 reset_model.reset_locks()
