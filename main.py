@@ -80,7 +80,7 @@ def load_state(loop_limit=100000): #Depends on: 'json'; Modifies: device_state,h
             break
             
         except Exception as e:
-            if i == loop_limit:
+            if i == int(loop_limit):
                 reset_model.reset_device_state()
                 print("Main.py tried to read max # of times. File is corrupted. Resetting device state ...")
             else:
@@ -105,7 +105,7 @@ def load_state(loop_limit=100000): #Depends on: 'json'; Modifies: device_state,h
             break
             
         except Exception as e:
-            if i == loop_limit:
+            if i == int(loop_limit):
                 print("Main.py tried to read max # of times. File is corrupted. Resetting grow_params...")
                 reset_model.reset_grow_params()
             else:
@@ -130,7 +130,7 @@ def load_state(loop_limit=100000): #Depends on: 'json'; Modifies: device_state,h
             break
             
         except Exception as e:
-            if i == loop_limit:
+            if i == int(loop_limit):
                 print("Main.py tried to read max # of times. File is corrupted. Resetting access_config...")
                 reset_model.reset_access_config()
             else:
@@ -155,7 +155,7 @@ def load_state(loop_limit=100000): #Depends on: 'json'; Modifies: device_state,h
             break
             
         except Exception as e:
-            if i == loop_limit:
+            if i == int(loop_limit):
                 print("Main.py tried to read max # of times. File is corrupted. Resetting feature_toggles...")
                 reset_model.reset_feature_toggles()
             else:
@@ -180,7 +180,7 @@ def load_state(loop_limit=100000): #Depends on: 'json'; Modifies: device_state,h
             break
             
         except Exception as e:
-            if i == loop_limit:
+            if i == int(loop_limit):
                 print("Main.py tried to read max # of times. File is corrupted. Resetting hardware_config...")
                 reset_model.reset_hardware_config()
             else:
@@ -212,11 +212,11 @@ def load_locks(loop_limit = 10000):
                     pass  
     
         except Exception as e:
-            if i == loop_limit:
+            if i == int(loop_limit):
                 print("Tried to load lock max number of times. File is corrupted. Resetting locks...")
                 reset_model.reset_locks()
             else:
-                print("Main.py tried to read while hardware_config was being written. If this continues, file is corrupted.")
+                print("Main.py tried to read while locks were being written. If this continues, file is corrupted.")
                 pass
 
 def lock(file):
