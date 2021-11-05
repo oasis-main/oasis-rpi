@@ -220,6 +220,8 @@ def load_locks(loop_limit = 10000):
                 pass
 
 def lock(file):
+    global locks
+    
     with open("/home/pi/oasis-grow/configs/locks.json") as l:
         locks = json.load(l) #get lock
         
@@ -254,6 +256,8 @@ def lock(file):
             l.truncate()
 
 def unlock(file):
+    global locks
+    
     with open("/home/pi/oasis-grow/configs/locks.json") as l:
         locks = json.load(l) #get lock
         
