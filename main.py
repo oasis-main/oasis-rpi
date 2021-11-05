@@ -321,6 +321,7 @@ def write_state(path,field,value,loop_limit=100000): #Depends on: load_state(), 
 
                         unlock("device_state")
                         
+                        load_state()
                         break #break the loop when the write has been successful
 
                     else:
@@ -334,9 +335,10 @@ def write_state(path,field,value,loop_limit=100000): #Depends on: load_state(), 
                         x.seek(0)
                         json.dump(data, x)
                         x.truncate()
-
+            
                         unlock("grow_params")
                         
+                        load_state()
                         break #break the loop when the write has been successful
 
                     else:
@@ -353,6 +355,7 @@ def write_state(path,field,value,loop_limit=100000): #Depends on: load_state(), 
 
                         unlock("access_config")
                         
+                        load_state()
                         break #break the loop when the write has been successful
 
                     else:
@@ -369,6 +372,7 @@ def write_state(path,field,value,loop_limit=100000): #Depends on: load_state(), 
 
                         unlock("feature_toggles")
                         
+                        load_state()
                         break #break the loop when the write has been successful
 
                     else:
@@ -385,6 +389,7 @@ def write_state(path,field,value,loop_limit=100000): #Depends on: load_state(), 
 
                         unlock("hardware_config")
                         
+                        load_state()
                         break #break the loop when the write has been successful
 
                     else:
