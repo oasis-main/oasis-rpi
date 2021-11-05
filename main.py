@@ -198,7 +198,7 @@ def load_locks(loop_limit = 10000):
     global locks
     for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
         try:
-            with open("/home/pi/oasis-grow/configs/locks.json") as l:
+            with open("/home/pi/oasis-grow/configs/locks.json","r+") as l:
                 locks = json.load(l) #get locks
 
             for k,v in locks.items():
@@ -222,7 +222,7 @@ def load_locks(loop_limit = 10000):
 def lock(file):
     global locks
     
-    with open("/home/pi/oasis-grow/configs/locks.json") as l:
+    with open("/home/pi/oasis-grow/configs/locks.json", "r+") as l:
         locks = json.load(l) #get lock
         
         if file == "device_state":
@@ -258,7 +258,7 @@ def lock(file):
 def unlock(file):
     global locks
     
-    with open("/home/pi/oasis-grow/configs/locks.json") as l:
+    with open("/home/pi/oasis-grow/configs/locks.json", "r+") as l:
         locks = json.load(l) #get lock
         
         if file == "device_state":
