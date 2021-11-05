@@ -225,33 +225,33 @@ def lock(file):
         
         if file == "device_state":
             locks["device_state_write_available"] = "0" #let system know resource is not available
-                l.seek(0)
-                json.dump(locks, l)
-                l.truncate()
+            l.seek(0)
+            json.dump(locks, l)
+            l.truncate()
                 
         if file == "grow_params":
             locks["grow_params_write_available"] = "0" #let system know resource is not available
-                l.seek(0)
-                json.dump(locks, l)
-                l.truncate()
+            l.seek(0)
+            json.dump(locks, l)
+            l.truncate()
             
         if file == "access_config":
             locks["access_config_write_available"] = "0" #let system know resource is not available
-                l.seek(0)
-                json.dump(locks, l)
-                l.truncate()
+            l.seek(0)
+            json.dump(locks, l)
+            l.truncate()
     
         if file == "feature_toggles":
             locks["feature_toggles_write_available"] = "0" #let system know resource is not available
-                l.seek(0)
-                json.dump(locks, l)
-                l.truncate()
+            l.seek(0)
+            json.dump(locks, l)
+            l.truncate()
         
         if file == "hardware_config":
             locks["hardware_config_write_available"] = "0" #let system know resource is not available
-                l.seek(0)
-                json.dump(locks, l)
-                l.truncate()
+            l.seek(0)
+            json.dump(locks, l)
+            l.truncate()
 
 def unlock(file):
     with open("/home/pi/oasis-grow/configs/locks.json") as l:
@@ -259,33 +259,33 @@ def unlock(file):
         
         if file == "device_state":
             locks["device_state_write_available"] = "1" #let system know resource is not available
-                l.seek(0)
-                json.dump(locks, l)
-                l.truncate()
+            l.seek(0)
+            json.dump(locks, l)
+            l.truncate()
                 
         if file == "grow_params":
             locks["grow_params_write_available"] = "1" #let system know resource is not available
-                l.seek(0)
-                json.dump(locks, l)
-                l.truncate()
+            l.seek(0)
+            json.dump(locks, l)
+            l.truncate()
             
         if file == "access_config":
             locks["access_config_write_available"] = "1" #let system know resource is not available
-                l.seek(0)
-                json.dump(locks, l)
-                l.truncate()
+            l.seek(0)
+            json.dump(locks, l)
+            l.truncate()
     
         if file == "feature_toggles":
             locks["feature_toggles_write_available"] = "1" #let system know resource is not available
-                l.seek(0)
-                json.dump(locks, l)
-                l.truncate()
+            l.seek(0)
+            json.dump(locks, l)
+            l.truncate()
         
         if file == "hardware_config":
             locks["hardware_config_write_available"] = "1" #let system know resource is not available
-                l.seek(0)
-                json.dump(locks, l)
-                l.truncate()
+            l.seek(0)
+            json.dump(locks, l)
+            l.truncate()
             
 #save key values to .json
 def write_state(path,field,value,loop_limit=100000): #Depends on: load_state(), patch_firebase, 'json'; Modifies: path
