@@ -1,15 +1,12 @@
 //Include modules
 #include <Wire.h>
-#include <Adafruit_AM2315.h>
+#include <DHT.h>
 #include <FastLED.h>
 
-// Connect RED of the AM2315 sensor to 5.0V
-// Connect BLACK to Ground
-// Connect WHITE to i2c clock (A5)
-// Connect YELLOW to i2c data (A4)
-
 // intiialize temp & hum sensor
-Adafruit_AM2315 am2315; 
+#define DHTTYPE DHT22   // DHT 22  (AM2302)
+#define DHTPIN 5
+DHT dht(DHTPIN, DHTTYPE);
 
 //sensor pin for water level
 int water_level_pin = 2;
@@ -23,13 +20,9 @@ String led_mode = "off";
 void setup() {
   FastLED.addLeds<WS2812B, LEDPIN, GRB>(leds, NUMOFLEDS);
   Serial.begin(9600);
+  dht.begin();
   while (!Serial) {
     delay(10);
-  }
-  
-  if (! am2315.begin()) {
-     Serial.println("Sensor not found, check wiring & pullups!");
-     while (1);
   }
 
   pinMode(water_level_pin, INPUT_PULLUP);
@@ -53,13 +46,10 @@ int waterSig0 = 0;
 void loop() {
   //Serial Data Out
   float temperature, humidity;
-  int water_low;
+  int water_low = 0;
 
-  if (! am2315.readTemperatureAndHumidity(&temperature, &humidity)) {
-    temperature = -1;
-    humidity = -1;
-    return;
-  }
+  humidity = dht.readHumidity();
+  temperature = dht.readTemperature();
 
   if (digitalRead(water_level_pin) == HIGH)
   {
