@@ -31,10 +31,6 @@ def reset_hardware_config():
 def reset_feature_toggles():
     reset_f = Popen(["sudo", "cp", "/home/pi/oasis-grow/defaults/feature_toggles_default_template.json", "/home/pi/oasis-grow/configs/feature_toggles.json"])
     reset_f.wait()
-
-def reset_logs():
-    reset_l = Popen(["sudo", "cp", "/home/pi/oasis-grow/defaults/grow_ctrl_log_default_template.json", "/home/pi/oasis-grow/data_out/logs/grow_ctrl_log.json"])
-    reset_l.wait()
     
 def reset_locks():
     reset_lox = Popen(["sudo", "cp", "/home/pi/oasis-grow/defaults/locks_default_template.json", "/home/pi/oasis-grow/configs/locks.json"])
@@ -50,8 +46,6 @@ def reset_data_out():
     clear_image_feed.wait()
     clear_sensor_feed = Popen(["sudo", "rm", "-rf", "/home/pi/oasis-grow/data_out/sensor_feed"])
     clear_sensor_feed.wait()
-    clear_logs = Popen(["sudo", "rm", "-rf", "/home/pi/oasis-grow/data_out/logs"])
-    clear_logs.wait()
     clear_dir = Popen(["sudo", "rm", "-rf", "/home/pi/oasis-grow/data_out"])
     clear_dir.wait()
     
@@ -61,9 +55,6 @@ def reset_data_out():
     new_image_feed.wait()
     new_sensor_feed = Popen(["sudo", "mkdir", "/home/pi/oasis-grow/data_out/sensor_feed"])
     new_sensor_feed.wait()
-    new_logs = Popen(["sudo", "mkdir", "/home/pi/oasis-grow/data_out/logs"])
-    new_logs.wait()
-    reset_logs()
 
 def reset_image_feed():
     clear_image_feed = Popen(["sudo", "rm", "-rf", "/home/pi/oasis-grow/data_out/image_feed"])
