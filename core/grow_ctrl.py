@@ -644,14 +644,11 @@ def main_setup():
     #Exit early if opening subprocess daemon
     if str(sys.argv[1]) == "daemon":
         print("grow_ctrl daemon started")
-        #log daemon start
-        #write_state('/home/pi/oasis-grow/data_out/logs/grow_ctrl_log.json','last_start_mode',"daemon")
         #kill the program
         sys.exit()
     if str(sys.argv[1]) == "main":
         print("grow_ctrl main started")
         #log main start
-        #write_state('/home/pi/oasis-grow/data_out/logs/grow_ctrl_log.json','last_start_mode',"main")
         #flip "running" to 1 to make usable from command line
         write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "1")
         #continue with program execution

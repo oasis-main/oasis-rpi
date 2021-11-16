@@ -263,12 +263,12 @@ def unlock(file):
 def write_state(path,field,value,loop_limit=100000): #Depends on: load_state(), patch_firebase, 'json'; Modifies: path
     
     #these will be loaded in by the listener, so best to make sure we represent the change in firebase too
-    if device_state["connected"] == "1": #write state to cloud
-        try:
-            patch_firebase(field,value)
-        except Exception as e:
-            print(e)
-            pass
+    #if device_state["connected"] == "1": #write state to cloud
+    #    try:
+    #        patch_firebase(field,value)
+    #    except Exception as e:
+    #        print(e)
+    #        pass
   
     for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so, 
         
@@ -289,7 +289,7 @@ def write_state(path,field,value,loop_limit=100000): #Depends on: load_state(), 
 
                         unlock("device_state")
                         
-                        load_state()
+                        load_state() #get the most recent 
                         break #break the loop when the write has been successful
 
                     else:
