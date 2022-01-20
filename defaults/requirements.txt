@@ -1,3 +1,4 @@
+serial
 setuptools
 cython
 numpy
@@ -14,3 +15,5 @@ pickle5
 pyserial
 Pillow
 RPi.GPIO
+opencv-python
+streamlit==0.62.0
