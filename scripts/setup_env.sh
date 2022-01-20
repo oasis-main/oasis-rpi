@@ -17,7 +17,7 @@ sudo timedatectl set-timezone America/New_York
 
 echo "Configuring PATH variable..."
 echo "export PATH=/home/pi/.local/bin:$PATH/" | sudo tee -a /home/pi/.bashrc
-source /home/pi/.bashrc
+ . /home/pi/.bashrc
 
 echo "Installing pip3 & Python 3.7 modules..."
 sudo apt install python3-pip -y

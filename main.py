@@ -521,7 +521,7 @@ def check_updates(): #depends on: load_state(),'subproceess', update.py; modifie
         write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0") #make sure it doesn't write anything to the cloud, kill the listener
         listener = None
         #launch update.py and wait to complete
-        update_process = Popen(["sudo", "python3", "/home/pi/oasis-grow/utils/update.py"])
+        update_process = Popen(["python3", "/home/pi/oasis-grow/utils/update.py"])
         write_state("/home/pi/oasis-grow/configs/device_state.json","connected","1")#restore listener
         output, error = update_process.communicate()
         if update_process.returncode != 0:
@@ -533,7 +533,7 @@ def check_updates(): #depends on: load_state(),'subproceess', update.py; modifie
         write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0") #make sure it doesn't write anything to the cloud, kill the listener
         listener = None
         #launch update.py and wait to complete
-        update_process = Popen(["sudo", "python3", "/home/pi/oasis-grow/utils/update.py"])
+        update_process = Popen(["python3", "/home/pi/oasis-grow/utils/update.py"])
         write_state("/home/pi/oasis-grow/configs/device_state.json","running","1") #restore running
         write_state("/home/pi/oasis-grow/configs/device_state.json","connected","1")#restore listener
         output, error = update_process.communicate()
@@ -635,7 +635,7 @@ def check_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); M
     load_state()
     if device_state["access_point"] == "1":
         #launch server subprocess to accept credentials over Oasis wifi network, does not wait
-        server_process = Popen(["sudo", "streamlit", "run", "/home/pi/oasis-grow/networking/oasis_setup.py", "--server.headless=true", "--server.port=80", "--server.address=192.168.4.1", "--server.enableCORS=false", "--server.enableWebsocketCompression=false"])
+        server_process = Popen(["streamlit", "run", "/home/pi/oasis-grow/networking/oasis_setup.py", "--server.headless=true", "--server.port=80", "--server.address=192.168.4.1", "--server.enableCORS=false", "--server.enableWebsocketCompression=false"])
         print("Access Point Mode enabled")
 
         setup_button_AP()
@@ -673,7 +673,7 @@ def setup_growctrl_process(): #Depends on: load_state(), write_state(), 'subproc
     if device_state["running"] == "1":
 
         #launch grow_ctrl main
-        grow_ctrl_process = Popen(["sudo", "python3", "/home/pi/oasis-grow/core/grow_ctrl.py", "main"])
+        grow_ctrl_process = Popen(["python3", "/home/pi/oasis-grow/core/grow_ctrl.py", "main"])
 
         if device_state["connected"] == "1": #if connected
             #LEDmode = "connected_running"
@@ -686,7 +686,7 @@ def setup_growctrl_process(): #Depends on: load_state(), write_state(), 'subproc
     else:
 
         #launch sensing-feedback subprocess in daemon mode
-        grow_ctrl_process = Popen(["sudo", "python3", "/home/pi/oasis-grow/core/grow_ctrl.py", "daemon"])
+        grow_ctrl_process = Popen(["python3", "/home/pi/oasis-grow/core/grow_ctrl.py", "daemon"])
 
         if device_state["connected"] == "1": #if connected
             #LEDmode = "connected_idle"
@@ -719,7 +719,7 @@ def check_growctrl_running(): #Depends on: load_state(), write_state(), 'subproc
         poll_grow_ctrl = grow_ctrl_process.poll() #check if grow_ctrl process is running
         if poll_grow_ctrl is not None: #if it is not running
             #launch it
-            grow_ctrl_process = Popen(["sudo", "python3", "/home/pi/oasis-grow/core/grow_ctrl.py", "main"])
+            grow_ctrl_process = Popen(["python3", "/home/pi/oasis-grow/core/grow_ctrl.py", "main"])
             print("launched grow-ctrl")
 
             if device_state["connected"] == "1": #if connected

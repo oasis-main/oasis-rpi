@@ -157,7 +157,7 @@ def transfer_compatible_configs(config_path,temp_config_path):
         json.dump(config, x)
         x.truncate()
 
-    remove_temp = Popen(["sudo", "rm", temp_config_path])
+    remove_temp = Popen(["rm", temp_config_path])
     remove_temp.wait()
 
 if __name__ == '__main__':
@@ -175,7 +175,7 @@ if __name__ == '__main__':
     print("Transfered compatible state & configs, removing temporary files")
 
     #run external update commands
-    update_commands = Popen(["sudo", "python3", "/home/pi/oasis-grow/utils/update_commands.py"])
+    update_commands = Popen(["python3", "/home/pi/oasis-grow/utils/update_commands.py"])
     output, error = update_commands.communicate()
 
     #load state to get configs & state for conn

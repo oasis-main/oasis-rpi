@@ -70,13 +70,13 @@ sudo apt-get install -y git
 Use git to clone the oasis-grow repository into `/home/pi`:
 ```
 cd ~
-sudo git clone https://github.com/oasis-gardens/oasis-grow
+git clone https://github.com/oasis-gardens/oasis-grow
 ```
 Change permissions and run the `master_setup.sh` script found in the repository's root directory. If you wish to run `controller.py` automatically at startup, at the `-b` flag.
 ```
 cd oasis-grow
 chmod +x install.sh
-source ./install.sh -b    #-b flag starts the bootloader, causing the interface to launch on startup in the background.
+ . /install.sh -b    #-b flag starts the bootloader, causing the interface to launch on startup in the background via rc-local.
 ```
 When the system reboots automatically, the button interface]() and peripheral devices should be fully functional.
 
@@ -108,7 +108,7 @@ Note: We are not dedicated electrical engineers, as some of you may be able to t
 
 ### Button Interface
 
-If you have followed the DIY wiring guide, the three buttons on the control interface will function as follows provided `controller.py` is running (see below).
+If you have followed the DIY wiring guide, the three buttons on the control interface will function as follows provided `main.py` is running (see below).
 
 **Start/Stop Button**: starts or stops the main grow-ctrl process which modulates temperature, humidity, and airflow, cycles lighting + watering aparatuses, and takes pictures at set intervals.
 
