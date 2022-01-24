@@ -1,10 +1,20 @@
+from cgi import test
+import os
+import os.path
 import sys
 import subprocess
 from subprocess import Popen
 import json
+import requests
+import time
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
+sys.path.append('/home/pi/oasis-grow/core')
+sys.path.append('/home/pi/oasis-grow/utils')
+sys.path.append('/home/pi/oasis-grow/imaging')
+sys.path.append('/home/pi/oasis-grow/networking')
+sys.path.append('/home/pi/oasis-grow/actuators')
 sys.path.append('/usr/lib/python37.zip')
 sys.path.append('/usr/lib/python3.7')
 sys.path.append('/usr/lib/python3.7/lib-dynload')
@@ -12,138 +22,119 @@ sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
 sys.path.append('/usr/local/lib/python3.7/dist-packages')
 sys.path.append('/usr/lib/python3/dist-packages')
 
-#declare process management variables
-ser_in = None
-sensor_info = None
-heat_process = None
-hum_process = None
-fan_process = None
-light_process = None
-camera_process = None
-water_process = None
+import main
+import grow_ctrl
+import detect_db_events, oasis_setup
+import cameraElement
+import update, reset_model, send_image_test
 
-#declare sensor data variables
-temp = 0
-hum = 0
-last_temp = 0
-last_hum = 0
-last_targetT = 0
-last_targetH = 0
-waterLow = 0
+def test_state_handlers():
+    
+    main.load_state()
+    main.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"))
+    main.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"))
 
-#loads device state, hardware, and access configurations
-def load_state(): #Depends on: 'json'; Modifies: device_state,hardware_config ,access_config
-    global device_state, feature_toggles, access_config, grow_params
+    grow_ctrl.load_state()
+    grow_ctrl.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"))
+    grow_ctrl.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"))
 
-    with open("/home/pi/oasis-grow/configs/device_state.json") as d:
-        device_state = json.load(d)
-    d.close()
+    detect_db_events.load_state()
+    detect_db_events.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"))
+    detect_db_events.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"))
 
-    with open("/home/pi/oasis-grow/configs/grow_params.json") as g:
-        grow_params = json.load(g)
-    g.close()
+    oasis_setup.load_state()
+    oasis_setup.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"))
+    oasis_setup.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"))
 
-    with open("/home/pi/oasis-grow/configs/access_config.json") as a:
-        access_config = json.load(a)
-    a.close()
+    cameraElement.load_state()
+    cameraElement.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"))
+    cameraElement.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"))
 
-    with open ("/home/pi/oasis-grow/configs/feature_toggles.json") as f:
-        feature_toggles = json.load(f)
-    f.close()
+    update.load_state()
+    update.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"))
+    update.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"))
+
+    print("All state handlers working.")
+
+def test_reset_model():
+    reset_model.reset_device_state()
+    reset_model.reset_grow_params()
+    reset_model.reset_locks()
+
+    print("Most common reset-model functions operational")
 
 def test_serial_connections():
-    global ser_in
+    main.start_serial()
+    print("Main serial is working")
 
-    try:
-        try:
-            ser_in = serial.Serial("/dev/ttyUSB0", 9600)
-            print("Serial communication with Arduino Nano: Working.")
-        except:
-            ser_in = serial.Serial("/dev/ttyACM0", 9600)
-            print("Serial communication with Arduino Uno: Working.")
-    except Exception as e:
-        #ser_in = None
-        print("Serial connection not working")
+    grow_ctrl.start_serial()
+    print("Core serial is working")
+
+def test_listen():
+    grow_ctrl.listen()
+    print("Listening for data from Arduino")
+    print(str(grow_ctrl.temperature))
+    print(str(grow_ctrl.humidity))
 
 def test_camera():
-    try:
-        camera_process = Popen(['python3', '/home/pi/oasis-grow/imaging/cameraElement.py', "10"]) #If running, then skips. If idle then restarts, If no process, then fails
-        print("Camera launched, check to ensure correct behavior")
-        camera_process.wait()
-    except:
-        print("Camera not triggering, there is a problem with the software")
+    grow_ctrl.run_camera(0)
+    print("Is camera working?")
 
 def test_heater():
-    try:
-        heat_process = Popen(['python3', '/home/pi/oasis-grow/actuators/heatingElement.py', str(100)]) #If running, then skips. If idle then restarts, If no process, then fails
-        print("Heat actuator launched, check to ensure correct behavior")
-        heat_process.wait()
-    except:
-        print("Heat actuator not triggering, there is a problem with the software")
+    grow_ctrl.run_heat(20)
+    print("Is heater working?")
 
-def test_humidifier():
-    try:
-        hum_process = Popen(['python3', '/home/pi/oasis-grow/actuators/humidityElement.py', str(100)]) #If running, then skips. If idle then restarts, If no process, then fails
-        print("Humidity actuator launched, check to ensure correct behavior")
-        hum_process.wait()
-    except:
-        print("Humidity actuator not triggering, there is a problem with the software")
+def test_dehumidifier():
+    grow_ctrl.run_hum(50)
+    print("Is dehumidifier working?")
 
-def test_fan():
-    try:
-        fan_process = Popen(['python3', '/home/pi/oasis-grow/actuators/fanElement.py', str(100)]) #If running, then skips. If idle then restarts, If no process, then fails
-        print("Fan actuator launched, check to ensure correct behavior")
-        fan_process.wait()
-    except:
-        print("Fan actuator not triggering, there is a problem with the software")
-
-def test_light():
-    try:
-        light_process = Popen(['python3', '/home/pi/oasis-grow/actuators/lightingElement.py', "0", "0", "10"]) #If running, then skips. If idle then restarts, If no process, then fails
-        print("Lighting actuator launched, check to ensure correct behavior")
-        light_process.wait()
-    except:
-        print("Lighting actuator not triggering, there is a problem with the software")
-
-def test_water():
-    try:
-        water_process = Popen(['python3', '/home/pi/oasis-grow/actuators/wateringElement.py', "10", "0"]) #If running, then skips. If idle then restarts, If no process, then fails
-        print("Water actuator launched, check to ensure correct behavior")
-        water_process.wait()
-    except:
-        print("Water actuator not triggering, there is a problem with the software")
-
-def test_air():
-    try:
-        air_process = Popen(['python3', '/home/pi/oasis-grow/actuators/airElement.py', "0", "0", "10"]) #If running, then skips. If idle then restarts, If no process, then fails
-        print("Air actuator launched, check to ensure correct behavior")
-        water_process.wait()
-    except:
-        print("Air actuator not triggering, there is a problem with the software")
+def test_save_csv():
+    tod = str(time.strftime('%l:%M%p %Z, %b %d %Y'))
+    temperature = str(70)
+    humidity = str(50)
+    grow_ctrl.write_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv', {"time": tod, "temperature": temperature, "humidity": humidity})
+    print("wrote data to csv")
 
 def test_cloud_connection():
-    load_state()
-    print("Testing firebase connection")
-    try:
-        dict = {"connected": device_state["connected"]}
-        data = json.dumps(dict)
-        url = "https://oasis-1757f.firebaseio.com/"+str(access_config["local_id"])+"/"+str(access_config["device_name"])+".json?auth="+str(access_config["id_token"])
-        result = requests.patch(url,data)
-        print("Firebase connection working")
-    except:
-        print("Firebase connection not working")
+    main.connect_firebase()
 
-def run_all_tests():
+def test_send_image():
+    send_image_test.send_image_test()
+
+def test_update():
+    update.get_update_test()
+
+def test_install():
+    stage = Popen(["chmod" ,"+x", "/home/pi/oasis-grow/scripts/validate_install.sh"])
+    stage.wait()
+
+    validator = Popen(["sh", "/home/pi/oasis-grow/scripts/validate_install.sh"])
+    output, error = validator.communicate()
+
+def test_AP_up():
+    main.enable_AP()
+
+def test_WiFi_setup():
+    main.check_AP()
+
+def test_AP_down():
+    main.enable_WiFi()
+
+def test_all_components():
+    #test_install()
+    test_state_handlers()
+    test_reset_model()
     test_serial_connections()
-    test_camera()
+    test_listen()
+    #test_camera()
     test_heater()
-    test_humidifier()
-    test_fan()
-    test_light()
-    test_water()
-    test_air()
-    test_cloud_connection()
+    test_dehumidifier()
+    test_save_csv()
+    #test_cloud_connection()
+    #test_send_image()
+    #test_update()
+    
 
 if __name__ == "__main__":
-   load_state()
-   run_all_tests()
+   test_all_components()
+

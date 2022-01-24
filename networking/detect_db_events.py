@@ -24,6 +24,7 @@ import time
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
+sys.path.append('/home/pi/oasis-grow/utils')
 sys.path.append('/usr/lib/python37.zip')
 sys.path.append('/usr/lib/python3.7')
 sys.path.append('/usr/lib/python3.7/lib-dynload')
@@ -277,12 +278,12 @@ def unlock(file):
 def write_state(path,field,value,loop_limit=100000): #Depends on: load_state(), patch_firebase, 'json'; Modifies: path
     
     #these will be loaded in by the listener, so best to make sure we represent the change in firebase too
-    if device_state["connected"] == "1": #write state to cloud
-        try:
-            patch_firebase(field,value)
-        except Exception as e:
-            print(e)
-            pass
+    #if device_state["connected"] == "1": #write state to cloud
+    #    try:
+    #        patch_firebase(field,value)
+    #    except Exception as e:
+    #        print(e)
+    #        pass
   
     for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so, 
         

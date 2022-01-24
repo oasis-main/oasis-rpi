@@ -1,4 +1,4 @@
-# oasis-grow
+#oasis-grow
 
 ## Introduction
 
@@ -33,7 +33,7 @@ Users have two options for install: using a pre-built image to flash oasis-grow 
 ### Using pre-built image
 
 Install the image onto your Raspberry Pi:
-1. Download the oasis-grow image here: [NOT YET AVAILABLE].
+1. Download theoasis-grow image here: [NOT YET AVAILABLE].
 2. Download [Balena Etcher](https://www.balena.io/etcher/).
 3. Connect a microSD card to your personal computer.
 4. Format the microSD card in the MS-DOS (FAT) style using your operating system's disk formatting utility.
@@ -67,7 +67,7 @@ Next, install git:
 ```
 sudo apt-get install -y git
 ```
-Use git to clone the oasis-grow repository into `/home/pi`:
+Use git to clone theoasis-grow repository into `/home/pi`:
 ```
 cd ~
 git clone https://github.com/oasis-gardens/oasis-grow
