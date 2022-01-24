@@ -1,4 +1,4 @@
-# oasis-grow
+#oasis-grow
 
 ## Introduction
 
@@ -28,12 +28,12 @@ All functions can be deployed with a RaspberryPi (for networking, scheduling, ta
   - [Contributing](#contributing)
 
 ## Raspberry Pi Setup
-Users have two options for install: using a pre-built image to flash oasis-grow and its requisite packages directly to an SD card, or using the [setup scripts](scripts) to build the repository and its requirements onto a fresh install of Raspbian Lite.
+Users have two options for install: using a pre-built image to flashoasis-grow and its requisite packages directly to an SD card, or using the [setup scripts](scripts) to build the repository and its requirements onto a fresh install of Raspbian Lite.
 
 ### Using pre-built image
 
 Install the image onto your Raspberry Pi:
-1. Download the oasis-grow image here: [NOT YET AVAILABLE].
+1. Download theoasis-grow image here: [NOT YET AVAILABLE].
 2. Download [Balena Etcher](https://www.balena.io/etcher/).
 3. Connect a microSD card to your personal computer.
 4. Format the microSD card in the MS-DOS (FAT) style using your operating system's disk formatting utility.
@@ -67,14 +67,14 @@ Next, install git:
 ```
 sudo apt-get install -y git
 ```
-Use git to clone the oasis-grow repository into `/home/pi`:
+Use git to clone theoasis-grow repository into `/home/pi`:
 ```
 cd ~
 git clone https://github.com/oasis-gardens/oasis-grow
 ```
 Change permissions and run the `master_setup.sh` script found in the repository's root directory. If you wish to run `controller.py` automatically at startup, at the `-b` flag.
 ```
-cd oasis-grow
+cdoasis-grow
 chmod +x install.sh
  . /install.sh -b    #-b flag starts the bootloader, causing the interface to launch on startup in the background via rc-local.
 ```

@@ -40,6 +40,7 @@ import reset_model
 ser_in = None
 sensor_info = None
 heat_process = None
+dehumidify_process= None
 humidity_process = None
 fan_process = None
 light_process = None
@@ -417,11 +418,19 @@ def write_state(path,field,value,loop_limit=100000): #Depends on: load_state(), 
                 pass #continue the loop until write is successful or ceiling is hit
 
 #write some data to a .csv, takes a dictionary and a path
-def write_csv(path, dict): #Depends on: 'pandas',
-    #load dict into dataframe
-    df = pandas.DataFrame(dict)
-    #.csv write
-    df.to_csv(str(path), sep='\t', header=None, mode='a+')
+def write_csv(filename, dict): #Depends on: 'pandas',
+    file_exists = os.path.isfile(filename)
+
+    with open (filename, 'a') as csvfile:
+        headers = ["time", "temperature", "humidity"]
+        writer = csv.DictWriter(csvfile, delimiter=',', lineterminator='\n',fieldnames=headers)
+
+        if not file_exists:
+            writer.writeheader()  # file doesn't exist yet, write a header
+
+        writer.writerow(dict)
+    
+    return 
 
 #attempts connection to microcontroller
 def start_serial(): #Depends on:'serial'; Modifies: ser_out
@@ -463,18 +472,44 @@ def listen(): #Depends on 'serial', start_serial(); Modifies: ser_in, sensor_inf
 
 #PD controller to modulate heater feedback
 def heat_pd(temperature, target_temperature, last_temperature, last_target_temperature, P_heat, D_heat): #no dependencies
-    err_temperature = target_temperature-temperature
 
-    temperature_dot = temperature-last_temperature
+    err_temperature = target_temperature-temperature    #If target is 70 and temperature is 60, this value = 10, more heat
+                                                        #If target is 50 and temperature is 60, this value is negative, less heat
 
-    target_temperature_dot = target_temperature-last_target_temperature
+    temperature_dot = temperature-last_temperature  #If temp is increasing, this value is positive (+#)
+                                                    #If temp is decreasing, this value is negative (-#)
 
-    err_dot_temperature = target_temperature_dot-temperature_dot
+    target_temperature_dot = target_temperature-last_target_temperature #When target remains the same, this value is 0
+                                                                        #When adjusting target up, this value is positive (+#)
+                                                                        #When adjusting target down, this value is negative (-#)
 
-    heat_level  = P_heat*err_temperature + D_heat*err_dot_temperature
-    heat_level  = max(min(int(heat_level),100),0)
+    err_dot_temperature = target_temperature_dot-temperature_dot    #When positive, boosts heat signal
+                                                                    #When negative, dampens heat signal
+    heat_level  = P_heat * err_temperature + D_heat * err_dot_temperature
+    heat_level  = max(min(int(heat_level), 100), 0)
 
     return heat_level
+
+#PD controller to modulate dehumidifier feedback
+def dehum_pd(humidity, target_humidity, last_humidity, last_target_humidity, P_hum, D_hum): #no dependencies
+
+    err_humidity = humidity - target_humidity   #If target is 60 and humidity is 30, this value is negative, less dehum
+                                                #If target is 30 and humidity is 60, this value = 30, more dehum
+ 
+    humidity_dot = last_humidity - humidity #If hum increasing, this value is negative (-#)
+                                            #If hum decreasing, this value is positive (+#)
+
+    target_humidity_dot = last_target_humidity - target_humidity    #When target remains the same, this value is 0
+                                                                    #When adjusting target down, this value is positive (+#)
+                                                                    #When adjusting target up, this value is negative (-#)
+
+    err_dot_humidity = humidity_dot - target_humidity_dot   #When positive, dampens dehum signal
+                                                            #When negative, boosts duhum signal
+
+    dehumidify_level  = P_hum * err_humidity + D_hum * (0 - err_dot_humidity)
+    dehumidify_level  = max(min(int(dehumidify_level), 100), 0)
+
+    return dehumidify_level
 
 #PD controller to modulate humidifier feedback
 def hum_pd(humidity, target_humidity, last_humidity, last_target_humidity, P_hum, D_hum): #no dependencies
@@ -531,6 +566,18 @@ def run_hum(intensity): #Depends on: 'subprocess'; Modifies: hum_process
             humidity_process = Popen(['python3', '/home/pi/oasis-grow/actuators/humidityElement.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
         humidity_process = Popen(['python3', '/home/pi/oasis-grow/actuators/humidityElement.py', str(intensity)]) #If no process, then starts
+
+#poll dehumidify subprocess if applicable and relaunch/update actuators
+def run_dehum(intensity): #Depends on: 'subprocess'; Modifies: hum_process
+    global dehumidify_process
+
+    try:
+        poll_dehumidify = dehumidify_process.poll() #dehumidify
+        if poll_dehumidify is not None:
+            dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/actuators/dehumidifyElement.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
+    except:
+        dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/actuators/dehumidifyElement.py', str(intensity)]) #If no process, then starts
+
 
 #poll fan subprocess if applicable and relaunch/update actuators
 def run_fan(intensity): #Depends on: 'subprocess'; Modifies: humidity_process
@@ -662,10 +709,9 @@ def main_setup():
 
     #start the clock for timimg .csv writes and data exchanges with server
     data_timer = time.time()
-    sensor_log_timer = time.time()
 
 def main_loop():
-    global data_timer, sensor_log_timer, last_target_temperature, last_target_humidity, device_state
+    global data_timer, last_target_temperature, last_target_humidity, device_state
 
     #launch main program loop
     try:
@@ -676,7 +722,7 @@ def main_loop():
             last_target_temperature = int(grow_params["target_temperature"]) #save last temperature and humidity targets to calculate delta for PD controllers
             last_target_humidity = int(grow_params["target_humidity"])
 
-            load_state() #regresh the state variables to get new parameters
+            load_state() #refresh the state variables to get new parameters
 
 
             if (feature_toggles["temp_hum_sensor"] == "1") or (feature_toggles["water_low_sensor"] == "1"):
@@ -729,74 +775,6 @@ def main_loop():
                     print("Water Level Low!")
 
             print("------------------------------------------------------------")
-
-            #every hour, log past hour and shift 24 hours of sensor data
-            if time.time() - sensor_log_timer > 3600:
-
-                if feature_toggles["temp_hum_sensor"] == "1":
-
-                    print("Entering temp & hum logging")
-                    
-                    #replace each log with the next most recent one
-                    device_state["temperature_log"][23] = device_state["temperature_log"][22]
-                    device_state["temperature_log"][22] = device_state["temperature_log"][21]
-                    device_state["temperature_log"][21] = device_state["temperature_log"][20]
-                    device_state["temperature_log"][20] = device_state["temperature_log"][19]
-                    device_state["temperature_log"][19] = device_state["temperature_log"][18]
-                    device_state["temperature_log"][18] = device_state["temperature_log"][17]
-                    device_state["temperature_log"][17] = device_state["temperature_log"][16]
-                    device_state["temperature_log"][16] = device_state["temperature_log"][15]
-                    device_state["temperature_log"][15] = device_state["temperature_log"][14]
-                    device_state["temperature_log"][14] = device_state["temperature_log"][13]
-                    device_state["temperature_log"][13] = device_state["temperature_log"][12]
-                    device_state["temperature_log"][12] = device_state["temperature_log"][11]
-                    device_state["temperature_log"][11] = device_state["temperature_log"][10]
-                    device_state["temperature_log"][10] = device_state["temperature_log"][9]
-                    device_state["temperature_log"][9] = device_state["temperature_log"][8]
-                    device_state["temperature_log"][8] = device_state["temperature_log"][7]
-                    device_state["temperature_log"][7] = device_state["temperature_log"][6]
-                    device_state["temperature_log"][6] = device_state["temperature_log"][5]
-                    device_state["temperature_log"][5] = device_state["temperature_log"][4]
-                    device_state["temperature_log"][4] = device_state["temperature_log"][3]
-                    device_state["temperature_log"][3] = device_state["temperature_log"][2]
-                    device_state["temperature_log"][2] = device_state["temperature_log"][1]
-                    device_state["temperature_log"][1] = device_state["temperature_log"][0]
-                    
-                    device_state["humidity_log"][23] = device_state["humidity_log"][22]
-                    device_state["humidity_log"][22] = device_state["humidity_log"][21]
-                    device_state["humidity_log"][21] = device_state["humidity_log"][20]
-                    device_state["humidity_log"][20] = device_state["humidity_log"][19]
-                    device_state["humidity_log"][19] = device_state["humidity_log"][18]
-                    device_state["humidity_log"][18] = device_state["humidity_log"][17]
-                    device_state["humidity_log"][17] = device_state["humidity_log"][16]
-                    device_state["humidity_log"][16] = device_state["humidity_log"][15]
-                    device_state["humidity_log"][15] = device_state["humidity_log"][14]
-                    device_state["humidity_log"][14] = device_state["humidity_log"][13]
-                    device_state["humidity_log"][13] = device_state["humidity_log"][12]
-                    device_state["humidity_log"][12] = device_state["humidity_log"][11]
-                    device_state["humidity_log"][11] = device_state["humidity_log"][10]
-                    device_state["humidity_log"][10] = device_state["humidity_log"][9]
-                    device_state["humidity_log"][9] = device_state["humidity_log"][8]
-                    device_state["humidity_log"][8] = device_state["humidity_log"][7]
-                    device_state["humidity_log"][7] = device_state["humidity_log"][6]
-                    device_state["humidity_log"][6] = device_state["humidity_log"][5]
-                    device_state["humidity_log"][5] = device_state["humidity_log"][4]
-                    device_state["humidity_log"][4] = device_state["humidity_log"][3]
-                    device_state["humidity_log"][3] = device_state["humidity_log"][2]
-                    device_state["humidity_log"][2] = device_state["humidity_log"][1]
-                    device_state["humidity_log"][1] = device_state["humidity_log"][0]
-
-                    #save new data to 1 hour ago
-                    device_state["temperature_log"][0] = temperature
-                    device_state["humidity_log"][0] = humidity
-                    
-                    #push data to local json too
-                    write_state("/home/pi/oasis-grow/configs/device_state.json", "temperature_log", device_state["temperature_log"])
-                    write_state("/home/pi/oasis-grow/configs/device_state.json", "humidity_log", device_state["humidity_log"])
-                    
-                #start clock
-                sensor_log_timer = time.time()
-
             #write data and send to server after set time elapses
             if time.time() - data_timer > 300:
 
@@ -805,7 +783,7 @@ def main_loop():
                     if feature_toggles["save_data"] == "1":
                         #save data to .csv
                         print("Writing to csv")
-                        write_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv',{"time": [str(time.time())], "temperature": [str(temperature)], "humidity": [str(humidity)], "water_low": [str(water_low)]})
+                        write_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv',{"time": [str(time.strftime('%l:%M%p %Z %b %d, %Y'))], "temperature": [str(temperature)], "humidity": [str(humidity)], "water_low": [str(water_low)]})
 
                     write_state("/home/pi/oasis-grow/configs/device_state.json", "temperature", str(temperature))
                     write_state("/home/pi/oasis-grow/configs/device_state.json", "humidity", str(humidity))
@@ -831,9 +809,9 @@ def main_loop():
             if feature_toggles["water"] == "1":
                 run_water(int(grow_params["watering_duration"]),int(grow_params["watering_interval"]))
             if feature_toggles["air"] == "1":
-            	run_air(int(grow_params["time_start_air"]), int(grow_params["time_stop_air"]),  int(grow_params["air_interval"]))
+                run_air(int(grow_params["time_start_air"]), int(grow_params["time_stop_air"]),  int(grow_params["air_interval"]))
 
-            #set exit condition
+            #set exit condition    
             load_state()
             if device_state["running"] == "0":
                 terminate_program()

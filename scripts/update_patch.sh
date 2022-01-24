@@ -2,5 +2,6 @@
 
 echo "Running shell commands to update system environment..."
  . /home/pi/oasis-grow/scripts/setup_config.sh
- . /home/pi/oasis-grow/scripts/optimize_boot.sh -no_bt
+ . /home/pi/oasis-grow/scripts/optimize_boot.sh
+ 
 
