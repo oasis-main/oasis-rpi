@@ -84,15 +84,36 @@ def test_heater():
     grow_ctrl.run_heat(20)
     print("Is heater working?")
 
-def test_dehumidifier():
+def test_humidifier():
     grow_ctrl.run_hum(50)
+    print("Is humidifier working?")   
+    
+def test_dehumidifier():
+    grow_ctrl.run_dehum(50)
     print("Is dehumidifier working?")
 
+def test_fan():
+    grow_ctrl.run_fan(50)
+    print("Is fan working?")
+    
+def test_light():
+    grow_ctrl.run_light(0,0,10)
+    print("Is light working?")
+
+def test_water():
+    grow_ctrl.run_water(15,0)
+    print("Is water working?")
+
+def test_air():
+    grow_ctrl.run_air(0,0,10)
+    print("Is air working?")
+    
 def test_save_csv():
     tod = str(time.strftime('%l:%M%p %Z, %b %d %Y'))
     temperature = str(70)
     humidity = str(50)
-    grow_ctrl.write_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv', {"time": tod, "temperature": temperature, "humidity": humidity})
+    water_low = str(0)
+    grow_ctrl.write_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv', {"time": tod, "temperature": temperature, "humidity": humidity, "water_low": water_low})
     print("wrote data to csv")
 
 def test_cloud_connection():
@@ -103,14 +124,7 @@ def test_send_image():
 
 def test_update():
     update.get_update_test()
-
-def test_install():
-    stage = Popen(["chmod" ,"+x", "/home/pi/oasis-grow/scripts/validate_install.sh"])
-    stage.wait()
-
-    validator = Popen(["sh", "/home/pi/oasis-grow/scripts/validate_install.sh"])
-    output, error = validator.communicate()
-
+    
 def test_AP_up():
     main.enable_AP()
 
@@ -126,8 +140,13 @@ def test_all_components():
     #test_serial_connections()
     #test_listen()
     test_camera()
-    #test_heater()
-    #test_dehumidifier()
+    test_heater()
+    test_humidifier()
+    test_dehumidifier()
+    test_fan()
+    test_light()
+    test_water()
+    test_air()
     test_save_csv()
     #test_cloud_connection()
     #test_send_image()
