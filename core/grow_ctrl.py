@@ -421,7 +421,7 @@ def write_csv(filename, dict): #Depends on: 'pandas',
     file_exists = os.path.isfile(filename)
 
     with open (filename, 'a') as csvfile:
-        headers = ["time", "temperature", "humidity"]
+        headers = ["time", "temperature", "humidity", "water_low"]
         writer = csv.DictWriter(csvfile, delimiter=',', lineterminator='\n',fieldnames=headers)
 
         if not file_exists:
