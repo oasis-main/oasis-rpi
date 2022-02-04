@@ -464,7 +464,7 @@ if __name__ == '__main__':
 
     device_name = st.text_input('Name this device:', default)
 
-    st.button('Launch', on_click=save_creds_exit, args=[email, password, wifi_name, wifi_pass, device_name]) #only for recent streamlit versions
+    #st.button('Launch', on_click=save_creds_exit, args=[email, password, wifi_name, wifi_pass, device_name]) #only for recent streamlit versions
 
     if st.button("Launch"):
         save_creds_exit(email, password, wifi_name, wifi_pass, device_name)
