@@ -26,7 +26,7 @@ import main
 import grow_ctrl
 import detect_db_events, oasis_setup
 import cameraElement
-import update, reset_model, send_image_test
+import update, reset_model
 
 def test_state_handlers():
     
