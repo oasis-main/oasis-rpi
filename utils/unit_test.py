@@ -60,6 +60,8 @@ def test_reset_model():
     reset_model.reset_device_state()
     reset_model.reset_grow_params()
     reset_model.reset_locks()
+    reset_model.reset_data_out()
+    reset_model.reset_image_feed()
 
     print("Most common reset-model functions operational")
 
