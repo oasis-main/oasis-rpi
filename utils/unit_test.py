@@ -26,7 +26,7 @@ import main
 import grow_ctrl
 import detect_db_events, oasis_setup
 import cameraElement
-import update, reset_model
+import update, reset_model, send_image_test
 
 def test_state_handlers():
     
@@ -121,7 +121,6 @@ def test_AP_down():
     main.enable_WiFi()
 
 def test_all_components():
-    #test_install()
     test_state_handlers()
     test_reset_model()
     #test_serial_connections()
@@ -129,7 +128,7 @@ def test_all_components():
     test_camera()
     #test_heater()
     #test_dehumidifier()
-    #test_save_csv()
+    test_save_csv()
     #test_cloud_connection()
     #test_send_image()
     #test_update()
