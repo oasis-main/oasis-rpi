@@ -19,5 +19,5 @@ def send_image_test():
     return
 
 if __name__ == '__main__':  
-    send_test()
+    send_image_test()
   
