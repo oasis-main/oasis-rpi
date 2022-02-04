@@ -27,7 +27,6 @@ import requests
 #data handling
 import json
 import csv
-import pandas
 
 #dealing with specific times of the day
 import time
