@@ -30,17 +30,6 @@ All functions can be deployed with a RaspberryPi (for networking, scheduling, ta
 ## Raspberry Pi Setup
 Users have two options for install: using a pre-built image to flash oasis-grow and its requisite packages directly to an SD card, or using the [setup scripts](scripts) to build the repository and its requirements onto a fresh install of Raspbian Lite.
 
-### Using pre-built image
-
-Install the image onto your Raspberry Pi:
-1. Download theoasis-grow image here: [NOT YET AVAILABLE].
-2. Download [Balena Etcher](https://www.balena.io/etcher/).
-3. Connect a microSD card to your personal computer.
-4. Format the microSD card in the MS-DOS (FAT) style using your operating system's disk formatting utility.
-5. Open Balena Etcher and follow the on-screen instructions to flash the image to your microSD.
-6. Place the SD card into the front slot of the Raspberry Pi.
-7. Connect a keyboard, monitor, and sufficient power supply to the Pi.
-
 ### Using setup scripts
 
 Install Raspbian Lite onto your Raspberry Pi:
@@ -67,16 +56,29 @@ Next, install git:
 ```
 sudo apt-get install -y git
 ```
-Use git to clone theoasis-grow repository into `/home/pi`:
+Use git to clone the oasis-grow repository into `/home/pi`:
 ```
 cd ~
 git clone https://github.com/oasis-gardens/oasis-grow
 ```
-Change permissions and run the `master_setup.sh` script found in the repository's root directory. If you wish to run `controller.py` automatically at startup, at the `-b` flag.
+Change permissions and run the `install.sh` script found in the repository's root directory. The system should reboot after this has completed.
 ```
 cd oasis-grow
 chmod +x install.sh
- . /install.sh -b    #-b flag starts the bootloader, causing the interface to launch on startup in the background via rc-local.
+ . /install.sh
+```
+Test your installation with the following.
+```
+cd oasis-grow
+chmod +x install.sh
+ . /install.sh
+```
+
+If you wish to run the program automatically at startup, execute the setup_rclocal.sh script located in oasis-grow/scripts.
+```
+cd /home/pi/oasis-grow/scripts
+chmod +x setup_rclocal.sh
+ . setup_rclocal.sh
 ```
 When the system reboots automatically, the button interface]() and peripheral devices should be fully functional.
 
@@ -124,7 +126,7 @@ sudo nano /etc/rc.local
 ```
 Check the following line is present & uncommented ie. if there is a leading hashtag, remove it. If you ran the setup script with the "-b" flag or are using a pre-flashed image, this should already be done for you:
 ```
-python3 /home/pi/grow-ctrl/controller.py
+python3 /home/pi/grow-ctrl/main.py
 ```
 If you do not see this line, add the command to `/etc/rc.local` before the `exit 0` command.
 
@@ -142,7 +144,7 @@ oasis-grow can be run directly from the command line. This is the ideal option f
 
 Start by opening a terminal and run the following command to enter the project directory:
 ```
-cd ~/grow-ctrl
+cd ~/asdfadsf
 ```
 Running the following command to start a grow cycle with default settings. This begins the process of sensing temperature, humidity, & water level, regulating heat, humidity, airflow, light, & water, and capturing images at regular intervals.
 ```
