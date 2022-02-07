@@ -2,15 +2,15 @@
 
 ## Introduction
 
-oasis-grow, developed by Oasis-X, is an open-source toolkit for controlled environment cultivation, remote monitoring, and data collection. It is maintained with the goal of making the capabilities of automated gardening, precision agriculture, and cell culturing available to everyone. Users are encouraged to contribute data, projects, and technical expertise. See [Contributing](#contributing) for details.
+oasis-grow, developed by Oasis-X, is an open-source toolkit for Controlled Environment Agriculture that enables sensing, data collection, environmental control, automation, and remote monitoring applications. It is a configurable vertical farm nervous system, right out of the box. This codebase is maintained with the goal to offer the capabilities of available to everyone. Users are encouraged to contribute data, projects, and technical expertise. See [Contributing](#contributing) for details.
 
 This repository contains:
-1. Python scripts for monitoring the grow environment and interfacing with peripherals sensors and devices,
-2. Configuration files for peripheral hardware,
-3. An Arduino source file for use with sensors and LEDs,
-4. Shell scripts for installing and configuring necessary packages.
+1. Python scripts for monitoring the growing environment and interfacing with peripherals sensors and devices
+2. Configuration files for grow parameters, peripheral hardware, access control, and device_state.
+3. Arduino/microcontroller "minion" files for use with sensors and LEDs
+4. Shell scripts for installing and configuring necessary packages
 
-All functions can be deployed with a RaspberryPi (for networking, scheduling, task management, & control) + an Arduino (for precision sensors, LED management, and other real-time applications). The resulting system is controllable via shell or web interface (currently in Beta).
+All functions can be deployed with a RaspberryPi (networking, scheduling, task management, & control) + an Arduino (precision sensors, LED management, other real-time applications). The resulting system is controllable via command line or web interface at https://dashboard.oasis-x.io
 
 ## Table of Contents
 
@@ -28,12 +28,12 @@ All functions can be deployed with a RaspberryPi (for networking, scheduling, ta
   - [Contributing](#contributing)
 
 ## Raspberry Pi Setup
-Users have two options for install: using a pre-built image to flash oasis-grow and its requisite packages directly to an SD card, or using the [setup scripts](scripts) to build the repository and its requirements onto a fresh install of Raspbian Lite.
+Users may using the [setup scripts](scripts) to build the repository and its requirements onto a fresh install of Raspbian Buster Lite (Release 05/07/2021). A pre-built image will be released alongside our next generation of devices for easier setup and deployment.
 
-### Using setup scripts
+### Using Setup Scripts
 
 Install Raspbian Lite onto your Raspberry Pi:
-1. Download the latest Raspbian Lite image from the [official download site](https://www.raspberrypi.org/software/operating-systems/).
+1. Download Raspbian Lite from [official download site](https://www.raspberrypi.org/software/operating-systems/). The firmware will not work on newer releases which utilize LibCamera instead of raspi-still.
 2. Download [Balena Etcher](https://www.balena.io/etcher/).
 3. Connect a microSD card to your personal computer.
 4. Format the microSD card in the MS-DOS (FAT) style using your operating system's disk formatting utility.
@@ -58,53 +58,78 @@ sudo apt-get install -y git
 ```
 Use git to clone the oasis-grow repository into `/home/pi`:
 ```
-cd ~
+cd /home/pi
 git clone https://github.com/oasis-gardens/oasis-grow
 ```
 Change permissions and run the `install.sh` script found in the repository's root directory. The system should reboot after this has completed.
 ```
-cd oasis-grow
-chmod +x install.sh
- . /install.sh
-```
-Test your installation with the following.
-```
-cd oasis-grow
-chmod +x install.sh
- . /install.sh
+chmod +x /home/pi/oasis-grow/install.sh
+ . /home/pi/oasis-grow/install.sh
 ```
 
-If you wish to run the program automatically at startup, execute the setup_rclocal.sh script located in oasis-grow/scripts.
+Test your build with the following. Install any modules that may have been missed during the initial setup.
+```
+source /home/pi/oasis-grow_venv/bin/activate
+python3 /home/pi/oasis-grow/utils/unit_test.py
+```
+
+Test your build with the following. Install any modules that may have been missed during the initial setup.
+```
+source /home/pi/oasis-grow_venv/bin/activate
+python3 /home/pi/oasis-grow/utils/unit_test.py
+```
+
+Start the grow controller during from the command line like so:
+```
+source /home/pi/oasis-grow_venv/bin/activate #if virtual environment not already activated
+python3 /home/pi/oasis-grow/main.py run
+
+OR
+
+chmod +x /home/pi/oasis-grow/start.sh #if file does not already have execute permissions
+. /home/pi/oasis-grow/start.sh #automatically handles virtual environment activation & run flag
+```
+The "run" flag after main.py starts the core controller process. This is the part of the program that ingests sensor & image data for continuous monitoring, reacts to measurements to control the environment, and communicates with the dashboard server (only if connected by the user). If main.py is executed without the "run" flag, then the controller is idle upon program startup. For example:
+
+```
+python3 /home/pi/oasis-grow/main.py
+```
+Launches the the button interface and networking setup, but not the core environmental controller. The only difference between these two commands is the state that our launched program starts in (run -> running (1), none -> idle (0).
+
+If you wish to run the program automatically at startup, please execute the setup_rclocal.sh script located in oasis-grow/scripts.
 ```
 cd /home/pi/oasis-grow/scripts
 chmod +x setup_rclocal.sh
  . setup_rclocal.sh
+ sudo reboot
 ```
-When the system reboots automatically, the button interface]() and peripheral devices should be fully functional.
 
-Set your local time EST 
+When the system reboots automatically, everything should be fully functional and running in the background. We will be adding an API soon to interact with the system as it runs headless. For now you can use the [button interface](#button-interface), control everything via [Oasis-x Dashboard](https//:dashboard.oasis-x.io), or turn the core controller on-and-off by changing the "running" parameter from 0 to 1 in /home/pi/oasis-grow/configs/device_state.json. Yyou can also change the growth parameters by editing /home/pi/oasis-grow/configs/grow_params.json 
+
+Lastly, make sure to set your local time! If not, you may find yourself wondering why none of your timers work. 
 ```
 timedatectl list-timezones
 timedatectl set-timezone <timezone>
 ```
 
-## Hardware Setup
 
 ### Arduino Setup
 
 Follow these instructions if you are using peripheral sensors or an LED indicator light.
 1. Download the Arduino IDE (on your personal computer) from the [official download site](www.arduino.cc/en/software).
 2. Plug the Arduino into your computer via USB.
-3. Download the [.ino sketch](Oasis_AM2315_LLS_LEDs.ino) found in this repository and install the libraries using the Arduino IDE.
+3. Download the [Oasis_DHT22_LLS_60xLEDs.ino sketch](.ino) found in this repository and install the libraries using the Arduino IDE.
 4. Verify and load the sketch onto the board.
 5. Find the serial port on the Raspberry Pi.
 6. Plug the Arduino into the Pi via USB.
 
-### DIY Wiring
+### Hardware Setup & DIY
 
-DIYers can purchase a complete PCB (currently in Beta) to get a jump on wiring or instead follow the [prototype wiring diagram](https://drive.google.com/drive/folders/1jkARU0VrMkFMp18-Fvo4N2hcPtA7zahQ?usp=sharing).
+Capable DIY enthusiasts may follow the [prototype wiring diagram]().
 
-Note: We are not dedicated electrical engineers, as some of you may be able to tell from the wiring guide. If you know how to make good circuit diagrams, we could use your help, so shoot us an email!
+Note: Assemble the AC Relay & Power Management circuit at your own risk. Wiring up alternating current from power mains is extremely dangerous, so much that a single mistake can lead to serious injury or even death! Because of this, we recommend this project for INTERMEDIATE to ADVANCED Makers only. If you or someone on your team does not have experience working with high voltage, please consult a professional electrician before doing so. Oasis-X is not liable if you hurt yourself.
+
+We are currently developing next-generation hardware for our systems that will work out of the box, no wiring required. 
 
 ## Usage
 
@@ -120,51 +145,23 @@ If you have followed the DIY wiring guide, the three buttons on the control inte
 
 ### Using the Button Interface
 
-To use the platform with the [button interface](#button-interface) and OASIS app, follow the instructions immediately below. If you wish to run oasis-grow from the command line, skip to the **Using the Command Line** header. Begin by opening a terminal on the Raspberry Pi and opening `/etc/rc.local`:
+To use the platform with the [button interface](#button-interface) and OASIS-X app, follow the instructions immediately below. If you wish to run oasis-grow from the command line, skip to the **Using the Command Line** header. Begin by opening a terminal on the Raspberry Pi and opening `/etc/rc.local`:
 ```
 sudo nano /etc/rc.local
 ```
 Check the following line is present & uncommented ie. if there is a leading hashtag, remove it. If you ran the setup script with the "-b" flag or are using a pre-flashed image, this should already be done for you:
 ```
-python3 /home/pi/grow-ctrl/main.py
+python3 /home/pi/oasis-grow/main.py
 ```
-If you do not see this line, add the command to `/etc/rc.local` before the `exit 0` command.
+If you do not see this line, add the command to `/etc/rc.local` before the `exit 0` command. Alternatively, just run the setup_rclocal.sh setup script in /home/pi/oasis-grow/scripts. It does the same thing.
 
 
-This line launches our interface script on startup which accepts button inputs, controls the growing environment, collects harvest data, and manages the optional connection process with the Oasis cloud and mobile app. This all happens on reboot, so we'll run the following command to get it up and running:
+This line launches our interface script on startup which accepts button inputs, controls the growing environment, collects harvest data, and manages the optional connection process with the Oasis cloud and dashboard. This all happens on reboot, so we'll run the following command to get it up and running:
 ```
 sudo systemctl reboot
 ```
 
-Once `controller.py` is running, and if wiring has been [set up correctly](#diy-wiring), the buttons can be used to control the grow environment according to the functions described [here](#button-interface).
-
-**Using the Command Line**
-
-oasis-grow can be run directly from the command line. This is the ideal option for those who would like to use custom interfaces and integrate their own scripts + programming (we are accepting collaborators, contributions, & pull requests! Hit us up mike@oasisregenerative.com, or see [Contributing](#contributing)). In order to do this, please obtain the required hardware running grow-ctrl as a pre-flashed image (contact us) or built from source (see below).
-
-Start by opening a terminal and run the following command to enter the project directory:
-```
-cd ~/asdfadsf
-```
-Running the following command to start a grow cycle with default settings. This begins the process of sensing temperature, humidity, & water level, regulating heat, humidity, airflow, light, & water, and capturing images at regular intervals.
-```
-python3 grow_ctrl.py main
-```
-To make use of the [button interface](#button-interface) for controlling the grow cycles, use this instead:
-```
-python3 controller.py
-```
-If you want to run `controller.py` automatically at startup, open `rc.local` with
-```
-sudo nano /etc/rc.local
-```
-and make sure the following line is present and uncommented:
-```
-python3 /home/pi/grow-ctrl/controller.py
-```
-Remove the leading hashtag if there is one. If you do not see this line, add the command to `/etc/rc.local` before the `exit 0` command.
-
-Two configuration files, `grow_params.json` and `feature_toggles.json`, can be edited directly from the command line using a text editor like `nano`. More details can be found under [Configuration](#configuration).
+Once `main.py` is running, and if wiring has been [set up correctly](#diy-wiring), the buttons can be used to control the grow environment according to the functions described [here](#button-interface).
 
 ## Configuration
 
@@ -187,16 +184,17 @@ oasis-grow contains two important configuration files, both located in the repos
 `grow_params.json` modifies grow parameters:
 | Field | Value | Function |
 | ----- | ----- | -------- |
-| `targetT` | int 0 to 100 | sets target temperature |
-| `targetH` | int 0 to 100 | sets target humidity |
-| `targetL` | "on" or "off" | turns light on or off |
-| `LtimeOn` | int 0 to 23 | hour that light turns on |
-| `LtimeOff` | int 0 to 23 | hour that light turns off |
-| `lightInterval` | int 0 to inf | time (s) between light mode refresh |
-| `cameraInterval` | int 0 to inf | time (s) between camera snapshots |
-| `waterMode` | "on" or "off" | turns watering apparatus on or off |
-| `waterDuration` | int 0 to inf | duration (s) for grow to be watered |
-| `waterInterval` | int 0 to inf | time (s) between each watering |
+| `target_temperature` | int 0 to 100 | sets target temperature |
+| `target_humidity` | int 0 to 100 | sets target humidity |
+| `time_start_light` | int 0 to 23 | hour that light turns on |
+| `time_start_light` | int 0 to 23 | hour that light turns off |
+| `lighting_interval` | int 0 to inf | time (s) between light mode refresh |
+| `camera_interval` | int 0 to inf | time (s) between camera snapshots |
+| `water_duration` | int 0 to inf | duration (s) for grow to be watered |
+| `water_interval` | int 0 to inf | time (s) between each watering |
+|`time_start_air` | int 0 to 23 | hour that air turns on |
+| `time_start_air` | int 0 to 23 | hour that air turns off |
+| `air_interval` | int 0 to inf | time (s) between air mode refresh |
 | `P_temp` | int | proportional feedback response for temperature (advanced)
 | `D_temp` | int | dampening feedback response for temperature (advanced)
 | `P_hum` | int | proportional feedback response for humidity (advanced)
@@ -207,7 +205,7 @@ oasis-grow contains two important configuration files, both located in the repos
 | `Dh_fan` | int | dampening feedback response for fan with respect to humidity (advanced)
 
 ## Sample Projects
-oasis-grow provides a highly modular interface with countless possible applications. A forthcoming wiki will provide detailed instructions for common projects as well as a gallery of existing OASIS applications:
+Oasis-grow provides a highly modular interface with countless possible applications. Forthcoming instructions will provide detailed instructions for common projects as well as a gallery of existing oasis-x applications:
 - time lapse cameras
 - incubators
 - mushroom growing chambers
@@ -218,7 +216,7 @@ oasis-grow provides a highly modular interface with countless possible applicati
 - much more!
 
 ## Contributing
-oasis-grow welcomes open-source contributors and is currently accepting pull requests. Contact mike@oasisregenerative.com with questions or proposals.
+oasis-grow welcomes open-source contributors and is currently accepting pull requests. Contact hello@oasis-x.com with questions or proposals.
 
 A wiki with additional information on building from source and the makeup of the core python scripts is in the works.
 
