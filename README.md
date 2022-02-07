@@ -112,7 +112,6 @@ timedatectl list-timezones
 timedatectl set-timezone <timezone>
 ```
 
-
 ### Arduino Setup
 
 Follow these instructions if you are using peripheral sensors or an LED indicator light.
@@ -125,7 +124,7 @@ Follow these instructions if you are using peripheral sensors or an LED indicato
 
 ### Hardware Setup & DIY
 
-Capable DIY enthusiasts may follow the [prototype wiring diagram]().
+Capable DIY enthusiasts may follow the [prototype wiring diagram](https://docs.google.com/presentation/d/1E4D3Sl3dR-raVRRaoH5YC-TudYASd4O9N7d49p5N9X8/edit?usp=sharing).
 
 Note: Assemble the AC Relay & Power Management circuit at your own risk. Wiring up alternating current from power mains is extremely dangerous, so much that a single mistake can lead to serious injury or even death! Because of this, we recommend this project for INTERMEDIATE to ADVANCED Makers only. If you or someone on your team does not have experience working with high voltage, please consult a professional electrician before doing so. Oasis-X is not liable if you hurt yourself.
 
