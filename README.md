@@ -1,5 +1,3 @@
-#oasis-grow
-
 ## Introduction
 
 oasis-grow, developed by Oasis-X, is an open-source toolkit for Controlled Environment Agriculture that enables sensing, data collection, environmental control, automation, and remote monitoring applications. It is a configurable nervous system for your high-tech farm, right out of the box. This codebase is maintained with the goal to offer the capabilities of available to everyone. Users are encouraged to contribute data, projects, and technical expertise. See [Contributing](#contributing) for details.
@@ -59,7 +57,7 @@ sudo apt-get install -y git
 Use git to clone the oasis-grow repository into `/home/pi`:
 ```
 cd /home/pi
-git clone https://github.com/oasis-gardens/oasis-grow
+git clone https://github.com/oasis-gardens/oasis-grow.git
 ```
 Change permissions and run the `install.sh` script found in the repository's root directory. The system should reboot after this has completed.
 ```
