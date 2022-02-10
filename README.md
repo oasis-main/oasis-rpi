@@ -1,6 +1,6 @@
 ## Introduction
 
-oasis-grow, developed by Oasis-X, is an open-source toolkit for Controlled Environment Agriculture that enables sensing, data collection, environmental control, automation, and remote monitoring applications. It is a configurable nervous system for your high-tech farm, right out of the box. This codebase is maintained with the goal to offer the capabilities of available to everyone. Users are encouraged to contribute data, projects, and technical expertise. See [Contributing](#contributing) for details.
+oasis-grow, developed by Oasis-X, is an open-source toolkit for controlled environment agriculture (CEA). It is a configurable nervous system for your high-tech farm, right out of the box. providing sensing, data collection, environmental control, automation, and remote monitoring functionality. This codebase is maintained with the goal to offer these capabilities to everyone. Users are encouraged to contribute data, projects, and technical expertise. See [Contributing](#contributing) for details.
 
 This repository contains:
 1. Python scripts for monitoring the growing environment and interfacing with peripherals sensors and devices
