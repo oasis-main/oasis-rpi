@@ -418,6 +418,7 @@ def start_serial(): #Depends on:'serial'; Modifies: ser_out
             ser_out.flush()
             print("Started serial communication with Arduino Uno.")
     except Exception as e:
+        print(str(e))
         ser_out = None
         print("Serial connection not found")
 
@@ -839,6 +840,7 @@ if __name__ == '__main__':
     #start the clock for timing credential refresh &  data exchanges with LED
     led_timer = time.time()
     token_timer = time.time()
+    serial_timer = time.time()
 
     try:
         while True:
