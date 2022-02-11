@@ -840,7 +840,6 @@ if __name__ == '__main__':
     #start the clock for timing credential refresh &  data exchanges with LED
     led_timer = time.time()
     token_timer = time.time()
-    serial_timer = time.time()
 
     try:
         while True:
