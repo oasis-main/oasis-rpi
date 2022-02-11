@@ -34,6 +34,7 @@ import datetime
 
 #import other oasis packages
 import reset_model
+import concurrent_state as stately
 
 #declare process management variables
 ser_in = None
@@ -59,362 +60,6 @@ last_target_humidity = 0
 #declare timekeeping variables
 data_timer = None
 sensor_log_timer = None
-
-#declare state variables
-#these should never be modified from within python, only loaded with load_state()
-#use write_state() to change a value 
-device_state = None #describes the current state of the system
-grow_params = None #describes the grow configuration of the system
-hardware_config = None #holds hardware I/O setting & pin #s
-access_config = None #contains credentials for connecting to firebase
-feature_toggles = None #tells the system which features are in use
-
-#declare locking variables
-locks = None
-
-def load_state(loop_limit=100000): #Depends on: 'json'; Modifies: device_state,hardware_config ,access_config
-    global device_state, grow_params, access_config, feature_toggles, hardware_config
-
-    #load device state
-    for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
-        try:
-            with open("/home/pi/oasis-grow/configs/device_state.json") as d:
-                device_state = json.load(d) #get device state
-
-            for k,v in device_state.items(): 
-                if device_state[k] is None:
-                    print("Read NoneType in device_state")
-                    print("Resetting device_state...") 
-                    reset_model.reset_device_state()
-                else: 
-                    pass    
-        
-            break
-            
-        except Exception as e:
-            if i == int(loop_limit):
-                reset_model.reset_device_state()
-                print("Main.py tried to read max # of times. File is corrupted. Resetting device state ...")
-            else:
-                print("Main.py tried to read while file was being written. If this continues, file is corrupted.")
-                pass
-    
-    #load grow_params
-    for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
-        try:
-            with open("/home/pi/oasis-grow/configs/grow_params.json") as g:
-                grow_params = json.load(g) #get device state
-
-            for k,v in grow_params.items(): 
-                if grow_params[k] is None:
-                    print("Read NoneType in grow_params")
-                    print("Resetting grow_params...")
-                    reset_model.reset_grow_params()
-                     
-                else: 
-                    pass    
-        
-            break
-            
-        except Exception as e:
-            if i == int(loop_limit):
-                print("Main.py tried to read max # of times. File is corrupted. Resetting grow_params...")
-                reset_model.reset_grow_params()
-            else:
-                print("Main.py tried to read while grow_params was being written. If this continues, file is corrupted.")
-                pass   
-
-    #load access_config
-    for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
-        try:
-            with open("/home/pi/oasis-grow/configs/access_config.json") as a:
-                access_config = json.load(a) #get device state
-
-            for k,v in access_config.items(): 
-                if access_config[k] is None:
-                    print("Read NoneType in access_config")
-                    print("Resetting access_config...")
-                    reset_model.reset_access_config()
-                     
-                else: 
-                    pass    
-        
-            break
-            
-        except Exception as e:
-            if i == int(loop_limit):
-                print("Main.py tried to read max # of times. File is corrupted. Resetting access_config...")
-                reset_model.reset_access_config()
-            else:
-                print("Main.py tried to read while access_config was being written. If this continues, file is corrupted.")
-                pass               
-
-    #load feature_toggles
-    for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
-        try:
-            with open("/home/pi/oasis-grow/configs/feature_toggles.json") as f:
-                feature_toggles = json.load(f) #get device state
-
-            for k,v in feature_toggles.items(): 
-                if feature_toggles[k] is None:
-                    print("Read NoneType in feature_toggles")
-                    print("Resetting feature_toggles...")
-                    reset_model.reset_feature_toggles()
-                     
-                else: 
-                    pass    
-        
-            break
-            
-        except Exception as e:
-            if i == int(loop_limit):
-                print("Main.py tried to read max # of times. File is corrupted. Resetting feature_toggles...")
-                reset_model.reset_feature_toggles()
-            else:
-                print("Main.py tried to read while feature_toggles was being written. If this continues, file is corrupted.")
-                pass
-            
-    #load hardware_config
-    for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
-        try:
-            with open("/home/pi/oasis-grow/configs/hardware_config.json") as h:
-                hardware_config = json.load(h) #get device state
-
-            for k,v in hardware_config.items(): 
-                if hardware_config[k] is None:
-                    print("Read NoneType in hardware_config")
-                    print("Resetting hardware_config...")
-                    reset_model.reset_hardware_config()
-                     
-                else: 
-                    pass    
-        
-            break
-            
-        except Exception as e:
-            if i == int(loop_limit):
-                print("Main.py tried to read max # of times. File is corrupted. Resetting hardware_config...")
-                reset_model.reset_hardware_config()
-            else:
-                print("Main.py tried to read while hardware_config was being written. If this continues, file is corrupted.")
-                pass
-            
-#modifies a firebase variable
-def patch_firebase(field,value): #Depends on: load_state(),'requests','json'; Modifies: database['field'], state variables
-    load_state()
-    data = json.dumps({field: value})
-    url = "https://oasis-1757f.firebaseio.com/"+str(access_config["local_id"])+"/"+str(access_config["device_name"])+".json?auth="+str(access_config["id_token"])
-    result = requests.patch(url,data)
-
-def load_locks(loop_limit = 10000):
-    global locks
-    for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
-        try:
-            with open("/home/pi/oasis-grow/configs/locks.json","r+") as l:
-                locks = json.load(l) #get locks
-
-            for k,v in locks.items():
-                if locks[k] is None:
-                    print("Read NoneType in locks")
-                    print("Resetting locks...")
-                    reset_model.reset_locks()  
-                else: 
-                    pass
-             
-            break   
-    
-        except Exception as e:
-            if i == int(loop_limit):
-                print("Tried to load lock max number of times. File is corrupted. Resetting locks...")
-                reset_model.reset_locks()
-            else:
-                print("Main.py tried to read while locks were being written. If this continues, file is corrupted.")
-                pass
-
-def lock(file):
-    global locks
-    
-    with open("/home/pi/oasis-grow/configs/locks.json", "r+") as l:
-        locks = json.load(l) #get lock
-        
-        if file == "device_state":
-            locks["device_state_write_available"] = "0" #let system know resource is not available
-            l.seek(0)
-            json.dump(locks, l)
-            l.truncate()
-                
-        if file == "grow_params":
-            locks["grow_params_write_available"] = "0" #let system know resource is not available
-            l.seek(0)
-            json.dump(locks, l)
-            l.truncate()
-            
-        if file == "access_config":
-            locks["access_config_write_available"] = "0" #let system know resource is not available
-            l.seek(0)
-            json.dump(locks, l)
-            l.truncate()
-    
-        if file == "feature_toggles":
-            locks["feature_toggles_write_available"] = "0" #let system know resource is not available
-            l.seek(0)
-            json.dump(locks, l)
-            l.truncate()
-        
-        if file == "hardware_config":
-            locks["hardware_config_write_available"] = "0" #let system know resource is not available
-            l.seek(0)
-            json.dump(locks, l)
-            l.truncate()
-
-def unlock(file):
-    global locks
-    
-    with open("/home/pi/oasis-grow/configs/locks.json", "r+") as l:
-        locks = json.load(l) #get lock
-        
-        if file == "device_state":
-            locks["device_state_write_available"] = "1" #let system know resource is not available
-            l.seek(0)
-            json.dump(locks, l)
-            l.truncate()
-                
-        if file == "grow_params":
-            locks["grow_params_write_available"] = "1" #let system know resource is not available
-            l.seek(0)
-            json.dump(locks, l)
-            l.truncate()
-            
-        if file == "access_config":
-            locks["access_config_write_available"] = "1" #let system know resource is not available
-            l.seek(0)
-            json.dump(locks, l)
-            l.truncate()
-    
-        if file == "feature_toggles":
-            locks["feature_toggles_write_available"] = "1" #let system know resource is not available
-            l.seek(0)
-            json.dump(locks, l)
-            l.truncate()
-        
-        if file == "hardware_config":
-            locks["hardware_config_write_available"] = "1" #let system know resource is not available
-            l.seek(0)
-            json.dump(locks, l)
-            l.truncate()
-            
-#save key values to .json
-def write_state(path,field,value,loop_limit=100000): #Depends on: load_state(), patch_firebase, 'json'; Modifies: path
-    
-    #these will be loaded in by the listener, so best to make sure we represent the change in firebase too
-    if device_state["connected"] == "1": #write state to cloud
-        try:
-            patch_firebase(field,value)
-        except Exception as e:
-            print(e)
-            pass
-  
-    for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so, 
-        
-        load_locks()
-        
-        try:
-            with open(path, "r+") as x: # open the file.
-                data = json.load(x) # can we load a valid json?
-
-                if path == "/home/pi/oasis-grow/configs/device_state.json": #are we working in device_state?
-                    if locks["device_state_write_available"] == "1": #check is the file is available to be written
-                        lock("device_state")
-
-                        data[field] = value #write the desired value
-                        x.seek(0)
-                        json.dump(data, x)
-                        x.truncate()
-
-                        unlock("device_state")
-                        
-                        load_state()
-                        break #break the loop when the write has been successful
-
-                    else:
-                        pass
-                    
-                if path == "/home/pi/oasis-grow/configs/grow_params.json": #are we working in device_state?
-                    if locks["grow_params_write_available"] == "1": #check is the file is available to be written
-                        lock("grow_params")
-
-                        data[field] = value #write the desired value
-                        x.seek(0)
-                        json.dump(data, x)
-                        x.truncate()
-            
-                        unlock("grow_params")
-                        
-                        load_state()
-                        break #break the loop when the write has been successful
-
-                    else:
-                        pass
-                    
-                if path == "/home/pi/oasis-grow/configs/access_config.json": #are we working in device_state?
-                    if locks["access_config_write_available"] == "1": #check is the file is available to be written
-                        lock("access_config")
-
-                        data[field] = value #write the desired value
-                        x.seek(0)
-                        json.dump(data, x)
-                        x.truncate()
-
-                        unlock("access_config")
-                        
-                        load_state()
-                        break #break the loop when the write has been successful
-
-                    else:
-                        pass
-                    
-                if path == "/home/pi/oasis-grow/configs/feature_toggles.json": #are we working in device_state?
-                    if locks["feature_toggles_write_available"] == "1": #check is the file is available to be written
-                        lock("feature_toggles")
-
-                        data[field] = value #write the desired value
-                        x.seek(0)
-                        json.dump(data, x)
-                        x.truncate()
-
-                        unlock("feature_toggles")
-                        
-                        load_state()
-                        break #break the loop when the write has been successful
-
-                    else:
-                        pass
-                    
-                if path == "/home/pi/oasis-grow/configs/hardware_config.json": #are we working in device_state?
-                    if locks["hardware_config_write_available"] == "1": #check is the file is available to be written
-                        lock("hardware_config")
-
-                        data[field] = value #write the desired value
-                        x.seek(0)
-                        json.dump(data, x)
-                        x.truncate()
-
-                        unlock("hardware_config")
-                        
-                        load_state()
-                        break #break the loop when the write has been successful
-
-                    else:
-                        pass
-
-        except Exception as e: #If any of the above fails:
-            if i == int(loop_limit):
-                print("Tried to write state multiple times. File is corrupted. Resetting locks...")
-                reset_model.reset_locks()
-            else:
-                print(e)
-                print("Could not load locks. If this error persists, the lock file is corrupted. Retrying...")
-                pass #continue the loop until write is successful or ceiling is hit
 
 #write some data to a .csv, takes a dictionary and a path
 def write_csv(filename, dict): #Depends on: 'pandas',
@@ -638,46 +283,46 @@ def clean_up_processes():
     global heat_process, humidity_process, fan_process, light_process, camera_process, water_process, air_process        
 
     #clean up all processes
-    load_state()
+    stately.load_state()
 
-    if (feature_toggles["heater"] == "1") and (heat_process != None): #go through toggles and kill active processes
+    if (stately.feature_toggles["heater"] == "1") and (heat_process != None): #go through toggles and kill active processes
         heat_process.terminate()
         heat_process.wait()
 
-    if (feature_toggles["humidifier"] == "1") and (humidity_process != None):
+    if (stately.feature_toggles["humidifier"] == "1") and (humidity_process != None):
         humidity_process.terminate()
         humidity_process.wait()
 
-    if (feature_toggles["fan"] == "1") and (fan_process != None):
+    if (stately.feature_toggles["fan"] == "1") and (fan_process != None):
         fan_process.terminate()
         fan_process.wait()
 
-    if (feature_toggles["light"] == "1") and (light_process != None):
+    if (stately.feature_toggles["light"] == "1") and (light_process != None):
         light_process.terminate()
         light_process.wait()
 
-    if (feature_toggles["camera"] == "1") and (camera_process != None):
+    if (stately.feature_toggles["camera"] == "1") and (camera_process != None):
         camera_process.terminate()
         camera_process.wait()
 
-    if (feature_toggles["water"] == "1") and (water_process != None):
+    if (stately.feature_toggles["water"] == "1") and (water_process != None):
         water_process.terminate()
         water_process.wait()
 
-    if (feature_toggles["air"] == "1") and (air_process != None):
+    if (stately.feature_toggles["air"] == "1") and (air_process != None):
         air_process.terminate()
         air_process.wait()
 
     gc.collect()
 
 #terminates the program and all running subprocesses
-def terminate_program(): #Depends on: load_state(), 'sys', 'subprocess' #Modifies: heat_process, humidity_process, fan_process, light_process, camera_process, water_process
+def terminate_program(): #Depends on: stately.load_state(), 'sys', 'subprocess' #Modifies: heat_process, humidity_process, fan_process, light_process, camera_process, water_process
 
     print("Terminating Program...")
     clean_up_processes()
 
     #flip "running" to 0
-    write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "0")
+    stately.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "0")
 
     sys.exit()
 
@@ -685,7 +330,7 @@ def main_setup():
     global data_timer, sensor_log_timer
 
     #Load state variables to start the main program
-    load_state()
+    stately.load_state()
 
     #Exit early if opening subprocess daemon
     if str(sys.argv[1]) == "daemon":
@@ -696,7 +341,7 @@ def main_setup():
         print("grow_ctrl main started")
         #log main start
         #flip "running" to 1 to make usable from command line
-        write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "1")
+        stately.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "1")
         #continue with program execution
         pass
     else:
@@ -710,7 +355,7 @@ def main_setup():
     data_timer = time.time()
 
 def main_loop():
-    global data_timer, last_target_temperature, last_target_humidity, device_state
+    global data_timer, last_target_temperature, last_target_humidity
 
     #launch main program loop
     try:
@@ -718,58 +363,58 @@ def main_loop():
 
         while True:
 
-            last_target_temperature = int(grow_params["target_temperature"]) #save last temperature and humidity targets to calculate delta for PD controllers
-            last_target_humidity = int(grow_params["target_humidity"])
+            last_target_temperature = int(stately.grow_params["target_temperature"]) #save last temperature and humidity targets to calculate delta for PD controllers
+            last_target_humidity = int(stately.grow_params["target_humidity"])
 
-            load_state() #refresh the state variables to get new parameters
+            stately.load_state() #refresh the state variables to get new parameters
 
 
-            if (feature_toggles["temp_hum_sensor"] == "1") or (feature_toggles["water_low_sensor"] == "1"):
+            if (stately.feature_toggles["temp_hum_sensor"] == "1") or (stately.feature_toggles["water_low_sensor"] == "1"):
                 try: #attempt to read data from sensor, raise exception if there is a problem
                     listen() #this will be changed to run many sensor functions as opposed to one serial listener
                 except Exception as e:
                     print(e)
                     print("Serial Port Failure")
 
-            if feature_toggles["heater"] == "1":
-                print("Target Temperature: %.1f F | Current: %.1f F | Temp_PID: %s %%"%(int(grow_params["target_temperature"]),temperature, heat_pd(temperature,
-                                                                                                                                  int(grow_params["target_temperature"]),
+            if stately.feature_toggles["heater"] == "1":
+                print("Target Temperature: %.1f F | Current: %.1f F | Temp_PID: %s %%"%(int(stately.grow_params["target_temperature"]),temperature, heat_pd(temperature,
+                                                                                                                                  int(stately.grow_params["target_temperature"]),
                                                                                                                                   last_temperature,
                                                                                                                                   last_target_temperature,
-                                                                                                                                  int(grow_params["P_temp"]),
-                                                                                                                                  int(grow_params["D_temp"]))))
-            if feature_toggles["humidifier"] == "1":
-                print("Target Humidity: %.1f %% | Current: %.1f %% | Hum_PID: %s %%"%(int(grow_params["target_humidity"]), humidity, hum_pd(humidity,
-                                                                                                                               int(grow_params["target_humidity"]),
+                                                                                                                                  int(stately.grow_params["P_temp"]),
+                                                                                                                                  int(stately.grow_params["D_temp"]))))
+            if stately.feature_toggles["humidifier"] == "1":
+                print("Target Humidity: %.1f %% | Current: %.1f %% | Hum_PID: %s %%"%(int(stately.grow_params["target_humidity"]), humidity, hum_pd(humidity,
+                                                                                                                               int(stately.grow_params["target_humidity"]),
                                                                                                                                last_humidity,
                                                                                                                                last_target_humidity,
-                                                                                                                               int(grow_params["P_hum"]),
-                                                                                                                               int(grow_params["D_hum"]))))
+                                                                                                                               int(stately.grow_params["P_hum"]),
+                                                                                                                               int(stately.grow_params["D_hum"]))))
 
-            if feature_toggles["fan"] == "1":
+            if stately.feature_toggles["fan"] == "1":
                 print("Fan PD: %s %%"%(fan_pd(temperature,
                                               humidity,
-                                              int(grow_params["target_temperature"]),
-                                              int(grow_params["target_humidity"]),
+                                              int(stately.grow_params["target_temperature"]),
+                                              int(stately.grow_params["target_humidity"]),
                                               last_temperature,
                                               last_humidity,
                                               last_target_temperature,
                                               last_target_humidity,
-                                              int(grow_params["Pt_fan"]),
-                                              int(grow_params["Ph_fan"]),
-                                              int(grow_params["Dt_fan"]),
-                                              int(grow_params["Dh_fan"]))))
+                                              int(stately.grow_params["Pt_fan"]),
+                                              int(stately.grow_params["Ph_fan"]),
+                                              int(stately.grow_params["Dt_fan"]),
+                                              int(stately.grow_params["Dh_fan"]))))
 
-            if feature_toggles["light"] == "1":
-                print("Light Turns on at: %i :00 Local Time  | Turns off at: %i :00 Local Time"%(int(grow_params["time_start_light"]), int(grow_params["time_start_dark"])))
+            if stately.feature_toggles["light"] == "1":
+                print("Light Turns on at: %i :00 Local Time  | Turns off at: %i :00 Local Time"%(int(stately.grow_params["time_start_light"]), int(stately.grow_params["time_start_dark"])))
 
-            if feature_toggles["camera"] == "1":
-                print("Image every %i minute(s)"%(int(grow_params["camera_interval"])))
+            if stately.feature_toggles["camera"] == "1":
+                print("Image every %i minute(s)"%(int(stately.grow_params["camera_interval"])))
 
-            if feature_toggles["water"] == "1":
-                print("Watering for: %i second(s) every: %i hour(s)"%(int(grow_params["watering_duration"]), int(grow_params["watering_interval"])))
+            if stately.feature_toggles["water"] == "1":
+                print("Watering for: %i second(s) every: %i hour(s)"%(int(stately.grow_params["watering_duration"]), int(stately.grow_params["watering_interval"])))
 
-            if feature_toggles["water_low_sensor"] == "1":
+            if stately.feature_toggles["water_low_sensor"] == "1":
                 if water_low == 1:
                     print("Water Level Low!")
 
@@ -779,14 +424,14 @@ def main_loop():
 
                 try:
 
-                    if feature_toggles["save_data"] == "1":
+                    if stately.feature_toggles["save_data"] == "1":
                         #save data to .csv
                         print("Writing to csv")
                         write_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv',{"time": [str(time.strftime('%l:%M%p %Z %b %d, %Y'))], "temperature": [str(temperature)], "humidity": [str(humidity)], "water_low": [str(water_low)]})
 
-                    write_state("/home/pi/oasis-grow/configs/device_state.json", "temperature", str(temperature))
-                    write_state("/home/pi/oasis-grow/configs/device_state.json", "humidity", str(humidity))
-                    write_state("/home/pi/oasis-grow/configs/device_state.json", "water_low", str(water_low))
+                    stately.write_state("/home/pi/oasis-grow/configs/device_state.json", "temperature", str(temperature))
+                    stately.write_state("/home/pi/oasis-grow/configs/device_state.json", "humidity", str(humidity))
+                    stately.write_state("/home/pi/oasis-grow/configs/device_state.json", "water_low", str(water_low))
 
                     data_timer = time.time()
 
@@ -795,24 +440,24 @@ def main_loop():
                     data_timer = time.time()
 
             #update actuators in use
-            if feature_toggles["heater"] == "1":
-                run_heat(str(heat_pd(temperature,int(grow_params["target_temperature"]),last_temperature,last_target_temperature,int(grow_params["P_temp"]),int(grow_params["D_temp"]))))
-            if feature_toggles["humidifier"] == "1":
-                run_hum(str(hum_pd(humidity,int(grow_params["target_humidity"]),last_humidity,last_target_humidity,int(grow_params["P_hum"]),int(grow_params["D_hum"]))))
-            if feature_toggles["fan"] == "1":
-                run_fan(fan_pd(temperature,humidity,int(grow_params["target_temperature"]),int(grow_params["target_humidity"]),last_temperature,last_humidity,last_target_temperature,last_target_humidity,int(grow_params["Pt_fan"]),int(grow_params["Ph_fan"]),int(grow_params["Dt_fan"]),int(grow_params["Dh_fan"])))
-            if feature_toggles["light"] == "1":
-                run_light(int(grow_params["time_start_light"]), int(grow_params["time_start_dark"]), int(grow_params["lighting_interval"]))
-            if feature_toggles["camera"] == "1":
-                run_camera(int(grow_params["camera_interval"]))
-            if feature_toggles["water"] == "1":
-                run_water(int(grow_params["watering_duration"]),int(grow_params["watering_interval"]))
-            if feature_toggles["air"] == "1":
-                run_air(int(grow_params["time_start_air"]), int(grow_params["time_stop_air"]),  int(grow_params["air_interval"]))
+            if stately.feature_toggles["heater"] == "1":
+                run_heat(str(heat_pd(temperature,int(stately.grow_params["target_temperature"]),last_temperature,last_target_temperature,int(stately.grow_params["P_temp"]),int(stately.grow_params["D_temp"]))))
+            if stately.feature_toggles["humidifier"] == "1":
+                run_hum(str(hum_pd(humidity,int(stately.grow_params["target_humidity"]),last_humidity,last_target_humidity,int(stately.grow_params["P_hum"]),int(stately.grow_params["D_hum"]))))
+            if stately.feature_toggles["fan"] == "1":
+                run_fan(fan_pd(temperature,humidity,int(stately.grow_params["target_temperature"]),int(stately.grow_params["target_humidity"]),last_temperature,last_humidity,last_target_temperature,last_target_humidity,int(stately.grow_params["Pt_fan"]),int(stately.grow_params["Ph_fan"]),int(stately.grow_params["Dt_fan"]),int(stately.grow_params["Dh_fan"])))
+            if stately.feature_toggles["light"] == "1":
+                run_light(int(stately.grow_params["time_start_light"]), int(stately.grow_params["time_start_dark"]), int(stately.grow_params["lighting_interval"]))
+            if stately.feature_toggles["camera"] == "1":
+                run_camera(int(stately.grow_params["camera_interval"]))
+            if stately.feature_toggles["water"] == "1":
+                run_water(int(stately.grow_params["watering_duration"]),int(stately.grow_params["watering_interval"]))
+            if stately.feature_toggles["air"] == "1":
+                run_air(int(stately.grow_params["time_start_air"]), int(stately.grow_params["time_stop_air"]),  int(stately.grow_params["air_interval"]))
 
             #set exit condition    
-            load_state()
-            if device_state["running"] == "0":
+            stately.load_state()
+            if stately.device_state["running"] == "0":
                 terminate_program()
             else:
                 pass
@@ -825,9 +470,9 @@ def main_loop():
 
     except Exception as e:
         traceback.print_exc()
-        if device_state["running"] == "1": #if there is an error, but device should stay running
+        if stately.device_state["running"] == "1": #if there is an error, but device should stay running
             clean_up_processes()
-        if device_state["running"] == "0":
+        if stately.device_state["running"] == "0":
             terminate_program()
             
 if __name__ == '__main__':
