@@ -1,4 +1,4 @@
-serial
+pyserial
 setuptools
 cython
 firebase
@@ -10,7 +10,6 @@ pycairo
 requests>=2.20.0
 requests-toolbelt==0.7.0
 pickle5
-pyserial
 Pillow
 RPi.GPIO
 opencv-python

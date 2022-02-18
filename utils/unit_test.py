@@ -30,29 +30,29 @@ import update, reset_model, send_image_test
 
 def test_state_handlers():
     
-    main.load_state()
-    main.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"))
-    main.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"))
+    main.cs.load_state()
+    main.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"))
+    main.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"))
 
-    grow_ctrl.load_state()
-    grow_ctrl.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"))
-    grow_ctrl.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"))
+    grow_ctrl.cs.load_state()
+    grow_ctrl.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"))
+    grow_ctrl.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"))
 
-    detect_db_events.load_state()
-    detect_db_events.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"))
-    detect_db_events.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"))
+    detect_db_events.cs.load_state()
+    detect_db_events.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"))
+    detect_db_events.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"))
 
-    oasis_setup.load_state()
-    oasis_setup.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"))
-    oasis_setup.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"))
+    oasis_setup.cs.load_state()
+    oasis_setup.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"))
+    oasis_setup.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"))
 
-    cameraElement.load_state()
-    cameraElement.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"))
-    cameraElement.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"))
+    cameraElement.cs.load_state()
+    cameraElement.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"))
+    cameraElement.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"))
 
-    update.load_state()
-    update.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"))
-    update.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"))
+    update.cs.load_state()
+    update.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"))
+    update.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"))
 
     print("All state handlers working.")
 
