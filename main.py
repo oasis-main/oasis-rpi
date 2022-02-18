@@ -38,7 +38,7 @@ import datetime
 
 #import other oasis packages
 import reset_model
-import concurrent_state as stately
+import concurrent_state as cs
 
 #declare process management variables
 listener = None
@@ -69,7 +69,7 @@ def start_serial(): #Depends on:'serial'; Modifies: ser_out
         print("Serial connection not found")
 
 #gets new refresh token from firebase
-def get_refresh_token(web_api_key,email,password): #Depends on: 'requests', 'json', stately.write_state; Modifies: None
+def get_refresh_token(web_api_key,email,password): #Depends on: 'requests', 'json', cs.write_state; Modifies: None
     sign_in_url = "https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key=" + web_api_key
     sign_in_payload = json.dumps({"email": email, "password": password, "returnSecureToken": "true"})
     r = requests.post(sign_in_url, sign_in_payload)
@@ -77,12 +77,12 @@ def get_refresh_token(web_api_key,email,password): #Depends on: 'requests', 'jso
     return data["refreshToken"]
 
 #get local_id and id_token from firebase
-def get_local_credentials(refresh_token): #Depends on: stately.load_state(), stately.write_state(), 'requests'; Modifies: state variables,  stately.access_config.json
+def get_local_credentials(refresh_token): #Depends on: cs.load_state(), cs.write_state(), 'requests'; Modifies: state variables,  cs.access_config.json
     #load state so we can use access credentials
-    stately.load_state()
-    wak = stately.access_config["wak"]
-    email = stately.access_config["e"]
-    password = stately.access_config["p"]
+    cs.load_state()
+    wak = cs.access_config["wak"]
+    email = cs.access_config["e"]
+    password = cs.access_config["p"]
 
     #get local credentials
     refresh_url = "https://securetoken.googleapis.com/v1/token?key=" + wak
@@ -90,18 +90,18 @@ def get_local_credentials(refresh_token): #Depends on: stately.load_state(), sta
     refresh_req = requests.post(refresh_url, data=refresh_payload)
 
     #write local credentials to access config
-    stately.write_state("/home/pi/oasis-grow/configs/access_config.json","id_token",refresh_req.json()["id_token"])
-    stately.write_state("/home/pi/oasis-grow/configs/access_config.json","local_id",refresh_req.json()["user_id"])
+    cs.write_state("/home/pi/oasis-grow/configs/access_config.json","id_token",refresh_req.json()["id_token"])
+    cs.write_state("/home/pi/oasis-grow/configs/access_config.json","local_id",refresh_req.json()["user_id"])
 
     print("Obtained local credentials")
 
 #connects system to firebase
-def connect_firebase(): #depends on: stately.load_state(), stately.write_state(), patch_firebase(), 'requests'; Modifies: access_config.json, stately.device_state.json
+def connect_firebase(): #depends on: cs.load_state(), cs.write_state(), cs.patch_firebase(), 'requests'; Modifies: access_config.json, cs.device_state.json
     #load state so we can use access credentials
-    stately.load_state()
-    wak = stately.access_config["wak"]
-    email = stately.access_config["e"]
-    password = stately.access_config["p"]
+    cs.load_state()
+    wak = cs.access_config["wak"]
+    email = cs.access_config["e"]
+    password = cs.access_config["p"]
 
     print("Checking for connection...")
 
@@ -112,77 +112,78 @@ def connect_firebase(): #depends on: stately.load_state(), stately.write_state()
         refresh_token = get_refresh_token(wak, email, password)
 
         #fetch refresh token and save to access_config
-        stately.write_state("/home/pi/oasis-grow/configs/access_config.json","refresh_token", refresh_token)
+        cs.write_state("/home/pi/oasis-grow/configs/access_config.json","refresh_token", refresh_token)
 
         #bring in the refresh token for use further down
-        stately.load_state()
-        refresh_token = stately.access_config["refresh_token"]
+        cs.load_state()
+        refresh_token = cs.access_config["refresh_token"]
         print("Obtained refresh token")
 
         #fetch a new id_token & local_id
         get_local_credentials(refresh_token)
 
         #let firebase know the connection was successful
-        patch_firebase("connected","1")
+        cs.patch_firebase("connected","1")
 
         #update the device state to "connected"
-        stately.write_state('/home/pi/oasis-grow/configs/device_state.json',"connected","1")
+        cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"connected","1")
         print("Device is connected to the Oasis Network")
 
     except Exception as e:
         print(e) #display error
         #write state as not connected
-        stately.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0")
+        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0")
         print("Could not connect to Oasis Network")
 
 #check if the device is waiting to be added to firebase, if it is then add it, otherwise skip
 def check_new_device(): #depends on: ;modifies:
-    stately.load_state()
+    cs.load_state()
 
-    if stately.device_state["new_device"] == "1":
+    if cs.device_state["new_device"] == "1":
 
         #assemble data to initialize firebase
         setup_dict = {}
-        setup_dict.update(stately.device_state)
-        setup_dict.update(stately.grow_params)
-        setup_dict_named = {stately.access_config["device_name"] : setup_dict}
+        setup_dict.update(cs.device_state)
+        setup_dict.update(cs.grow_params)
+        setup_dict.update(cs.feature_toggles)
+        setup_dict_named = {cs.access_config["device_name"] : setup_dict}
         my_data = json.dumps(setup_dict_named)
         #print(my_data)
         #print(type(my_data))
 
         #add box data to firebase
-        url = "https://oasis-1757f.firebaseio.com/"+stately.access_config["local_id"]+".json?auth="+stately.access_config["id_token"]
+        url = "https://oasis-1757f.firebaseio.com/"+cs.access_config["local_id"]+".json?auth="+cs.access_config["id_token"]
         post_request = requests.patch(url,my_data)
         #print(post_request.ok)
         if post_request.ok:
-            stately.write_state("/home/pi/oasis-grow/configs/stately.device_state.json","new_device","0")
+            cs.write_state("/home/pi/oasis-grow/configs/cs.device_state.json","new_device","0")
             print("New device added to firebase")
         else:
             print("Failed to add new device")
 
 #checks for available updates, executes if connected & idle, waits for completion
-def check_updates(): #depends on: stately.load_state(),'subproceess', update.py; modifies: system code, state variables
-    stately.load_state()
-    if stately.device_state["running"] == "0" and stately.device_state["awaiting_update"] == "1": #replicated in the main loop
+def check_updates(): #depends on: cs.load_state(),'subproceess', update.py; modifies: system code, state variables
+    cs.load_state()
+    if cs.device_state["running"] == "0" and cs.device_state["awaiting_update"] == "1": #replicated in the main loop
         #kill listener
-        stately.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0") #make sure it doesn't write anything to the cloud, kill the listener
+        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0") #make sure it doesn't write anything to the cloud, kill the listener
         listener = None
         #launch update.py and wait to complete
         update_process = Popen(["python3", "/home/pi/oasis-grow/utils/update.py"])
-        stately.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","1")#restore listener
+        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","1")#restore listener
         output, error = update_process.communicate()
         if update_process.returncode != 0:
             print("Failure " + str(update_process.returncode)+ " " +str(output)+str(error))
-    if stately.device_state["running"] == "1" and stately.device_state["awaiting_update"] == "1": #replicated in the main loop
+    if cs.device_state["running"] == "1" and cs.device_state["awaiting_update"] == "1": #replicated in the main loop
         #flip running to 0        
-        stately.write_state("/home/pi/oasis-grow/configs/device_state.json","running","0")
+        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","0")
         #kill listener
-        stately.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0") #make sure it doesn't write anything to the cloud, kill the listener
+        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0") #make sure it doesn't write anything to the cloud, kill the listener
         listener = None
         #launch update.py and wait to complete
         update_process = Popen(["python3", "/home/pi/oasis-grow/utils/update.py"])
-        stately.write_state("/home/pi/oasis-grow/configs/device_state.json","running","1") #restore running
-        stately.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","1")#restore listener
+        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","1") #restore running
+        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","1")#restore listener
         output, error = update_process.communicate()
         if update_process.returncode != 0:
             print("Failure " + str(update_process.returncode)+ " " +str(output)+str(error))
@@ -195,10 +196,10 @@ def launch_listener(): #depends on 'subprocess', modifies: state variables
 #deletes a box if the cloud is indicating that it should do so
 def check_deleted():
     global listener
-    stately.load_state()
-    if stately.device_state["deleted"] == "1" and listener is not None:
+    cs.load_state()
+    if cs.device_state["deleted"] == "1" and listener is not None:
         print("Removing device from Oasis Network...")
-        stately.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0") #make sure it doesn't write anything to the cloud, kill the listener
+        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0") #make sure it doesn't write anything to the cloud, kill the listener
         listener = None
         print("Database monitoring deactivated")
         reset_model.reset_device_state()
@@ -211,18 +212,18 @@ def check_deleted():
 
 
 #setup buttons for the main program interface
-def setup_button_interface(): #depends on: stately.load_state(), 'RPi.GPIO'; modifies: start_stop_button, connect_internet_button, run_water_button, state variables
+def setup_button_interface(): #depends on: cs.load_state(), 'RPi.GPIO'; modifies: start_stop_button, connect_internet_button, run_water_button, state variables
     global start_stop_button, connect_internet_button, run_water_button
     #specify gpio pin number mode
     GPIO.setmode(GPIO.BCM)
 
     #get hardware configuration
-    stately.load_state()
+    cs.load_state()
 
     #set button pins
-    start_stop_button = stately.hardware_config["button_gpio_map"]["start_stop_button"]
-    connect_internet_button = stately.hardware_config["button_gpio_map"]["connect_internet_button"]
-    run_water_button = stately.hardware_config["button_gpio_map"]["run_water_button"]
+    start_stop_button = cs.hardware_config["button_gpio_map"]["start_stop_button"]
+    connect_internet_button = cs.hardware_config["button_gpio_map"]["connect_internet_button"]
+    run_water_button = cs.hardware_config["button_gpio_map"]["run_water_button"]
 
     #Setup buttons
     GPIO.setup(start_stop_button, GPIO.IN,pull_up_down=GPIO.PUD_UP)
@@ -230,15 +231,15 @@ def setup_button_interface(): #depends on: stately.load_state(), 'RPi.GPIO'; mod
     GPIO.setup(run_water_button,GPIO.IN,pull_up_down=GPIO.PUD_UP)
 
 #setup restart button for Access Point Button
-def setup_button_AP(): #Depends on: stately.load_state(), 'RPi.GPIO'; Modifies: connect_internet_button, state variables
+def setup_button_AP(): #Depends on: cs.load_state(), 'RPi.GPIO'; Modifies: connect_internet_button, state variables
     global connect_internet_button
     GPIO.setmode(GPIO.BCM)
 
     #get hardware configuration
-    stately.load_state()
+    cs.load_state()
 
     #set button pins
-    connect_internet_button = stately.hardware_config["button_gpio_map"]["connect_internet_button"]
+    connect_internet_button = cs.hardware_config["button_gpio_map"]["connect_internet_button"]
 
     #Setup buttons
     GPIO.setup(connect_internet_button,GPIO.IN,pull_up_down=GPIO.PUD_UP)
@@ -249,9 +250,9 @@ def get_button_state(button): #Depends on: RPi.GPIO; Modifies: None
     return state
 
 #reconfigures network interface, tells system to boot with Access Point, restarts
-def enable_AP(): #Depends on: stately.write_state(), 'subprocess'; Modifies: stately.device_state.json, configuration files
+def enable_AP(): #Depends on: cs.write_state(), 'subprocess'; Modifies: cs.device_state.json, configuration files
     #tell system that the access point should be launched on next controller startup
-    stately.write_state("/home/pi/oasis-grow/configs/device_state.json","access_point","1")
+    cs.write_state("/home/pi/oasis-grow/configs/device_state.json","access_point","1")
 
     #disable WiFi, enable AP, reboot
     config_ap_dhcpcd = Popen(["sudo", "cp", "/etc/dhcpcd_AP.conf", "/etc/dhcpcd.conf"])
@@ -263,9 +264,9 @@ def enable_AP(): #Depends on: stately.write_state(), 'subprocess'; Modifies: sta
     systemctl_reboot = Popen(["sudo", "systemctl", "reboot"])
 
 #reconfigures network interface, tells system to boot with WiF, restarts
-def enable_WiFi(): #Depends on: stately.write_state(), 'subprocess'; Modifies: stately.device_state.json, configuration files
+def enable_WiFi(): #Depends on: cs.write_state(), 'subprocess'; Modifies: cs.device_state.json, configuration files
     #tell system that the access point should not be launched on next controller startup
-    stately.write_state("/home/pi/oasis-grow/configs/device_state.json","access_point","0")
+    cs.write_state("/home/pi/oasis-grow/configs/device_state.json","access_point","0")
 
     #disable WiFi, enable AP, reboot
     config_wifi_dchpcd = Popen(["sudo", "cp", "/etc/dhcpcd_WiFi.conf", "/etc/dhcpcd.conf"])
@@ -277,10 +278,10 @@ def enable_WiFi(): #Depends on: stately.write_state(), 'subprocess'; Modifies: s
     systemctl_reboot = Popen(["sudo", "systemctl", "reboot"])
 
 #checks whether system is booting in Access Point Mode, launches connection script if so
-def check_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); Modifies: state_variables, 'ser_out', stately.device_state.json
+def check_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); Modifies: state_variables, 'ser_out', cs.device_state.json
     global ser_out, connect_internet_button
-    stately.load_state()
-    if stately.device_state["access_point"] == "1":
+    cs.load_state()
+    if cs.device_state["access_point"] == "1":
         #launch server subprocess to accept credentials over Oasis wifi network, does not wait
         server_process = Popen(["sudo", "streamlit", "run", "/home/pi/oasis-grow/networking/oasis_setup.py", "--server.headless=true", "--server.port=80", "--server.address=192.168.4.1", "--server.enableCORS=false", "--server.enableWebsocketCompression=false"])
         print("Access Point Mode enabled")
@@ -289,15 +290,15 @@ def check_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); M
 
         if ser_out is not None:
             #set led_status = "connectWifi"
-            stately.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","accepting_wifi_connection")
-            stately.load_state()
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","accepting_wifi_connection")
+            cs.load_state()
             #write LED state to seriaL
             while True: #place the "exit button" here to leave connection mode
-                ser_out.write(bytes(str(stately.device_state["led_status"]+"\n"), "utf-8"))
+                ser_out.write(bytes(str(cs.device_state["led_status"]+"\n"), "utf-8"))
                 cbutton_state = get_button_state(connect_internet_button)
                 if cbutton_state == 0:
-                    stately.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","offline_idle")
-                    ser_out.write(bytes(str(stately.device_state["led_status"]+"\n"), "utf-8"))
+                    cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","offline_idle")
+                    ser_out.write(bytes(str(cs.device_state["led_status"]+"\n"), "utf-8"))
                     server_process.terminate()
                     server_process.wait()
                     enable_WiFi()
@@ -312,21 +313,21 @@ def check_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); M
                     time.sleep(1)
 
 #check if grow_ctrl is supposed to be running, launch it if so. Do nothing if not
-def setup_growctrl_process(): #Depends on: stately.load_state(), stately.write_state(), 'subprocess'; Modifies: grow_ctrl_process, state_variables, device_state.json
+def setup_growctrl_process(): #Depends on: cs.load_state(), cs.write_state(), 'subprocess'; Modifies: grow_ctrl_process, state_variables, device_state.json
     global grow_ctrl_process
-    stately.load_state()
+    cs.load_state()
 
     #if the device is supposed to be running
-    if stately.device_state["running"] == "1":
+    if cs.device_state["running"] == "1":
 
         #launch grow_ctrl main
         grow_ctrl_process = Popen(["python3", "/home/pi/oasis-grow/core/grow_ctrl.py", "main"])
 
-        if stately.device_state["connected"] == "1": #if connected
+        if cs.device_state["connected"] == "1": #if connected
             #LEDmode = "connected_running"
-            stately.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","connected_running")
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","connected_running")
         else: #if not connected
-            stately.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","offline_running")
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","offline_running")
 
         print("launched grow controller")
 
@@ -335,11 +336,11 @@ def setup_growctrl_process(): #Depends on: stately.load_state(), stately.write_s
         #launch sensing-feedback subprocess in daemon mode
         grow_ctrl_process = Popen(["python3", "/home/pi/oasis-grow/core/grow_ctrl.py", "daemon"])
 
-        if stately.device_state["connected"] == "1": #if connected
+        if cs.device_state["connected"] == "1": #if connected
             #LEDmode = "connected_idle"
-            stately.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","connected_idle")
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","connected_idle")
         else: #if not connected
-            stately.write_state('/home/pi/oasis-grow/configs/device_state.json',"led_status","offline_idle")
+            cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"led_status","offline_idle")
 
         print("grow controller not launched")
 
@@ -347,21 +348,21 @@ def setup_growctrl_process(): #Depends on: stately.load_state(), stately.write_s
 def cmd_line_args():
     try:
         if sys.argv[1] == "run":
-            stately.write_state("/home/pi/oasis-grow/configs/device_state.json","running","1")
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","1")
             print("Command line argument set to run")
         if sys.argv[1] == "idle":
-            stately.write_state("/home/pi/oasis-grow/configs/device_state.json","running","0")
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","0")
             print("Command line argument set to idle")
     except Exception as e:
         print("Defaulting to last saved mode...")
 
 #checks if growctrl should be running, starts it if so, kills it otherwise
-def check_growctrl_running(): #Depends on: stately.load_state(), stately.write_state(), 'subprocess'; Modifies: grow_ctrl_process, state variables, device_state.json
+def check_growctrl_running(): #Depends on: cs.load_state(), cs.write_state(), 'subprocess'; Modifies: grow_ctrl_process, state variables, device_state.json
     global grow_ctrl_process
-    stately.load_state()
+    cs.load_state()
 
     #if the device is supposed to be running
-    if stately.device_state["running"] == "1":
+    if cs.device_state["running"] == "1":
 
         poll_grow_ctrl = grow_ctrl_process.poll() #check if grow_ctrl process is running
         if poll_grow_ctrl is not None: #if it is not running
@@ -369,12 +370,12 @@ def check_growctrl_running(): #Depends on: stately.load_state(), stately.write_s
             grow_ctrl_process = Popen(["python3", "/home/pi/oasis-grow/core/grow_ctrl.py", "main"])
             print("launched grow-ctrl")
 
-            if stately.device_state["connected"] == "1": #if connected
+            if cs.device_state["connected"] == "1": #if connected
                 #send LEDmode = "connected_running"
-                stately.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","connected_running")
+                cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","connected_running")
             else: #if not connected
                 #send LEDmode = "offline_running"
-                stately.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","offline_running")
+                cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","offline_running")
 
     else:
 
@@ -387,35 +388,35 @@ def check_growctrl_running(): #Depends on: stately.load_state(), stately.write_s
             except:
                 pass
 
-            if stately.device_state["connected"] == "1": #if connected
+            if cs.device_state["connected"] == "1": #if connected
                 #send LEDmode = "connected_idle"
-                stately.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","connected_idle")
+                cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","connected_idle")
             else: #if not connected
                 #send LEDmode = "offline_idle"
-                stately.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","offline_idle")
+                cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","offline_idle")
 
 #checks if growctrl is running, kills it if so, starts it otherwise
-def switch_growctrl_running(): #Depends on: stately.load_state(), stately.write_state(), patch_firebase(), 'subprocess'; Modifies: device_state.json, state_variables
-    stately.load_state()
+def switch_growctrl_running(): #Depends on: cs.load_state(), cs.write_state(), cs.patch_firebase(), 'subprocess'; Modifies: device_state.json, state_variables
+    cs.load_state()
 
     #if the device is set to running
-    if stately.device_state["running"] == "1":
+    if cs.device_state["running"] == "1":
         #set running state to off = 0
-        stately.write_state("/home/pi/oasis-grow/configs/device_state.json","running","0")
+        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","0")
 
     #if not set to running
     else:
         #set running state to on = 1
-        stately.write_state("/home/pi/oasis-grow/configs/device_state.json","running","1")
+        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","1")
 
 #sets up the watering aparatus
-def setup_water(): #Depends on: stately.load_state(), 'RPi.GPIO'; Modifies: water_relay
+def setup_water(): #Depends on: cs.load_state(), 'RPi.GPIO'; Modifies: water_relay
     global water_relay
     #get hardware configuration
-    stately.load_state()
+    cs.load_state()
 
     #set watering GPIO
-    water_relay = stately.hardware_config["actuator_gpio_map"]["water_relay"] #watering aparatus
+    water_relay = cs.hardware_config["actuator_gpio_map"]["water_relay"] #watering aparatus
     GPIO.setwarnings(False)
     GPIO.setup(water_relay, GPIO.OUT) #GPIO setup
     GPIO.output(water_relay, GPIO.LOW) #relay open = GPIO.LOW, closed = GPIO.HIGH
@@ -431,27 +432,27 @@ def run_water(interval): #Depends on: 'RPi.GPIO'; Modifies: water_relay
     GPIO.output(water_relay, GPIO.LOW)
 
 #updates the state of the LED, serial must be set up,
-def update_LED(): #Depends on: stately.load_state(), 'datetime'; Modifies: ser_out
+def update_LED(): #Depends on: cs.load_state(), 'datetime'; Modifies: ser_out
     global ser_out
-    stately.load_state()
+    cs.load_state()
 
     #write "off" or write status depending on ToD + settings
     now = datetime.datetime.now()
     HoD = now.hour
 
     if ser_out is not None:
-        if int(stately.device_state["time_start_led"]) < int(stately.device_state["time_stop_led"]):
-            if HoD >= int(stately.device_state["time_start_led"]) and HoD < int(stately.device_state["time_stop_led"]):
-                ser_out.write(bytes(str(stately.device_state["led_status"]+"\n"), 'utf-8')) #write status
-            if HoD < int(stately.device_state["time_start_led"]) or HoD >= int(stately.device_state["time_stop_led"]):
+        if int(cs.device_state["time_start_led"]) < int(cs.device_state["time_stop_led"]):
+            if HoD >= int(cs.device_state["time_start_led"]) and HoD < int(cs.device_state["time_stop_led"]):
+                ser_out.write(bytes(str(cs.device_state["led_status"]+"\n"), 'utf-8')) #write status
+            if HoD < int(cs.device_state["time_start_led"]) or HoD >= int(cs.device_state["time_stop_led"]):
                 ser_out.write(bytes(str("off"+"\n"), 'utf-8')) #write off
-        if int(stately.device_state["time_start_led"]) > int(stately.device_state["time_stop_led"]):
-            if HoD >=  int(stately.device_state["time_start_led"]) or HoD < int(stately.device_state["time_stop_led"]):
-                ser_out.write(bytes(str(stately.device_state["led_status"]+"\n"), 'utf-8')) #write status
-            if HoD < int(stately.device_state["time_start_led"]) and  HoD >= int(stately.device_state["time_stop_led"]):
+        if int(cs.device_state["time_start_led"]) > int(cs.device_state["time_stop_led"]):
+            if HoD >=  int(cs.device_state["time_start_led"]) or HoD < int(cs.device_state["time_stop_led"]):
+                ser_out.write(bytes(str(cs.device_state["led_status"]+"\n"), 'utf-8')) #write status
+            if HoD < int(cs.device_state["time_start_led"]) and  HoD >= int(cs.device_state["time_stop_led"]):
                 ser_out.write(bytes(str("off"+"\n"), 'utf-8')) #write off
-        if int(stately.device_state["time_start_led"]) == int(stately.device_state["time_stop_led"]):
-                ser_out.write(bytes(str(stately.device_state["led_status"]+"\n"), 'utf-8')) #write status
+        if int(cs.device_state["time_start_led"]) == int(cs.device_state["time_stop_led"]):
+                ser_out.write(bytes(str(cs.device_state["led_status"]+"\n"), 'utf-8')) #write status
     else:
         #print("no serial connection, cannot update LED view")
         pass
@@ -461,13 +462,13 @@ if __name__ == '__main__':
     #Initialize Oasis:
     print("Initializing...")
     time.sleep(10)
-    stately.load_state()
+    cs.load_state()
     start_serial()
     check_AP()
     connect_firebase()
 
-    stately.load_state()
-    if stately.device_state["connected"] == "1":
+    cs.load_state()
+    if cs.device_state["connected"] == "1":
         check_new_device()
         check_updates()
         check_deleted()
@@ -489,16 +490,16 @@ if __name__ == '__main__':
 
     try:
         while True:
-            stately.load_state() #refresh the state variables
+            cs.load_state() #refresh the state variables
 
             check_growctrl_running() #check if growctrl is supposed to be running
 
-            if stately.device_state["connected"] == "1":
+            if cs.device_state["connected"] == "1":
                check_updates() #check if the machine needs to be update
                check_deleted() #check if the user is trying to delete this device
                if time.time() - token_timer > 600: #refresh the local credentials every 10 min (600s)
                     token_timer = time.time()
-                    get_local_credentials(stately.access_config["refresh_token"])
+                    get_local_credentials(cs.access_config["refresh_token"])
 
             sbutton_state = get_button_state(start_stop_button) #Start Button
             if sbutton_state == 0:

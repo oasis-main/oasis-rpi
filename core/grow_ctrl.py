@@ -34,7 +34,7 @@ import datetime
 
 #import other oasis packages
 import reset_model
-import concurrent_state as stately
+import concurrent_state as cs
 
 #declare process management variables
 ser_in = None
@@ -283,46 +283,46 @@ def clean_up_processes():
     global heat_process, humidity_process, fan_process, light_process, camera_process, water_process, air_process        
 
     #clean up all processes
-    stately.load_state()
+    cs.load_state()
 
-    if (stately.feature_toggles["heater"] == "1") and (heat_process != None): #go through toggles and kill active processes
+    if (cs.feature_toggles["heater"] == "1") and (heat_process != None): #go through toggles and kill active processes
         heat_process.terminate()
         heat_process.wait()
 
-    if (stately.feature_toggles["humidifier"] == "1") and (humidity_process != None):
+    if (cs.feature_toggles["humidifier"] == "1") and (humidity_process != None):
         humidity_process.terminate()
         humidity_process.wait()
 
-    if (stately.feature_toggles["fan"] == "1") and (fan_process != None):
+    if (cs.feature_toggles["fan"] == "1") and (fan_process != None):
         fan_process.terminate()
         fan_process.wait()
 
-    if (stately.feature_toggles["light"] == "1") and (light_process != None):
+    if (cs.feature_toggles["light"] == "1") and (light_process != None):
         light_process.terminate()
         light_process.wait()
 
-    if (stately.feature_toggles["camera"] == "1") and (camera_process != None):
+    if (cs.feature_toggles["camera"] == "1") and (camera_process != None):
         camera_process.terminate()
         camera_process.wait()
 
-    if (stately.feature_toggles["water"] == "1") and (water_process != None):
+    if (cs.feature_toggles["water"] == "1") and (water_process != None):
         water_process.terminate()
         water_process.wait()
 
-    if (stately.feature_toggles["air"] == "1") and (air_process != None):
+    if (cs.feature_toggles["air"] == "1") and (air_process != None):
         air_process.terminate()
         air_process.wait()
 
     gc.collect()
 
 #terminates the program and all running subprocesses
-def terminate_program(): #Depends on: stately.load_state(), 'sys', 'subprocess' #Modifies: heat_process, humidity_process, fan_process, light_process, camera_process, water_process
+def terminate_program(): #Depends on: cs.load_state(), 'sys', 'subprocess' #Modifies: heat_process, humidity_process, fan_process, light_process, camera_process, water_process
 
     print("Terminating Program...")
     clean_up_processes()
 
     #flip "running" to 0
-    stately.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "0")
+    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "0")
 
     sys.exit()
 
@@ -330,7 +330,7 @@ def main_setup():
     global data_timer, sensor_log_timer
 
     #Load state variables to start the main program
-    stately.load_state()
+    cs.load_state()
 
     #Exit early if opening subprocess daemon
     if str(sys.argv[1]) == "daemon":
@@ -341,7 +341,7 @@ def main_setup():
         print("grow_ctrl main started")
         #log main start
         #flip "running" to 1 to make usable from command line
-        stately.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "1")
+        cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "1")
         #continue with program execution
         pass
     else:
@@ -363,58 +363,58 @@ def main_loop():
 
         while True:
 
-            last_target_temperature = int(stately.grow_params["target_temperature"]) #save last temperature and humidity targets to calculate delta for PD controllers
-            last_target_humidity = int(stately.grow_params["target_humidity"])
+            last_target_temperature = int(cs.grow_params["target_temperature"]) #save last temperature and humidity targets to calculate delta for PD controllers
+            last_target_humidity = int(cs.grow_params["target_humidity"])
 
-            stately.load_state() #refresh the state variables to get new parameters
+            cs.load_state() #refresh the state variables to get new parameters
 
 
-            if (stately.feature_toggles["temp_hum_sensor"] == "1") or (stately.feature_toggles["water_low_sensor"] == "1"):
+            if (cs.feature_toggles["temp_hum_sensor"] == "1") or (cs.feature_toggles["water_low_sensor"] == "1"):
                 try: #attempt to read data from sensor, raise exception if there is a problem
                     listen() #this will be changed to run many sensor functions as opposed to one serial listener
                 except Exception as e:
                     print(e)
                     print("Serial Port Failure")
 
-            if stately.feature_toggles["heater"] == "1":
-                print("Target Temperature: %.1f F | Current: %.1f F | Temp_PID: %s %%"%(int(stately.grow_params["target_temperature"]),temperature, heat_pd(temperature,
-                                                                                                                                  int(stately.grow_params["target_temperature"]),
+            if cs.feature_toggles["heater"] == "1":
+                print("Target Temperature: %.1f F | Current: %.1f F | Temp_PID: %s %%"%(int(cs.grow_params["target_temperature"]),temperature, heat_pd(temperature,
+                                                                                                                                  int(cs.grow_params["target_temperature"]),
                                                                                                                                   last_temperature,
                                                                                                                                   last_target_temperature,
-                                                                                                                                  int(stately.grow_params["P_temp"]),
-                                                                                                                                  int(stately.grow_params["D_temp"]))))
-            if stately.feature_toggles["humidifier"] == "1":
-                print("Target Humidity: %.1f %% | Current: %.1f %% | Hum_PID: %s %%"%(int(stately.grow_params["target_humidity"]), humidity, hum_pd(humidity,
-                                                                                                                               int(stately.grow_params["target_humidity"]),
+                                                                                                                                  int(cs.grow_params["P_temp"]),
+                                                                                                                                  int(cs.grow_params["D_temp"]))))
+            if cs.feature_toggles["humidifier"] == "1":
+                print("Target Humidity: %.1f %% | Current: %.1f %% | Hum_PID: %s %%"%(int(cs.grow_params["target_humidity"]), humidity, hum_pd(humidity,
+                                                                                                                               int(cs.grow_params["target_humidity"]),
                                                                                                                                last_humidity,
                                                                                                                                last_target_humidity,
-                                                                                                                               int(stately.grow_params["P_hum"]),
-                                                                                                                               int(stately.grow_params["D_hum"]))))
+                                                                                                                               int(cs.grow_params["P_hum"]),
+                                                                                                                               int(cs.grow_params["D_hum"]))))
 
-            if stately.feature_toggles["fan"] == "1":
+            if cs.feature_toggles["fan"] == "1":
                 print("Fan PD: %s %%"%(fan_pd(temperature,
                                               humidity,
-                                              int(stately.grow_params["target_temperature"]),
-                                              int(stately.grow_params["target_humidity"]),
+                                              int(cs.grow_params["target_temperature"]),
+                                              int(cs.grow_params["target_humidity"]),
                                               last_temperature,
                                               last_humidity,
                                               last_target_temperature,
                                               last_target_humidity,
-                                              int(stately.grow_params["Pt_fan"]),
-                                              int(stately.grow_params["Ph_fan"]),
-                                              int(stately.grow_params["Dt_fan"]),
-                                              int(stately.grow_params["Dh_fan"]))))
+                                              int(cs.grow_params["Pt_fan"]),
+                                              int(cs.grow_params["Ph_fan"]),
+                                              int(cs.grow_params["Dt_fan"]),
+                                              int(cs.grow_params["Dh_fan"]))))
 
-            if stately.feature_toggles["light"] == "1":
-                print("Light Turns on at: %i :00 Local Time  | Turns off at: %i :00 Local Time"%(int(stately.grow_params["time_start_light"]), int(stately.grow_params["time_start_dark"])))
+            if cs.feature_toggles["light"] == "1":
+                print("Light Turns on at: %i :00 Local Time  | Turns off at: %i :00 Local Time"%(int(cs.grow_params["time_start_light"]), int(cs.grow_params["time_start_dark"])))
 
-            if stately.feature_toggles["camera"] == "1":
-                print("Image every %i minute(s)"%(int(stately.grow_params["camera_interval"])))
+            if cs.feature_toggles["camera"] == "1":
+                print("Image every %i minute(s)"%(int(cs.grow_params["camera_interval"])))
 
-            if stately.feature_toggles["water"] == "1":
-                print("Watering for: %i second(s) every: %i hour(s)"%(int(stately.grow_params["watering_duration"]), int(stately.grow_params["watering_interval"])))
+            if cs.feature_toggles["water"] == "1":
+                print("Watering for: %i second(s) every: %i hour(s)"%(int(cs.grow_params["watering_duration"]), int(cs.grow_params["watering_interval"])))
 
-            if stately.feature_toggles["water_low_sensor"] == "1":
+            if cs.feature_toggles["water_low_sensor"] == "1":
                 if water_low == 1:
                     print("Water Level Low!")
 
@@ -424,14 +424,14 @@ def main_loop():
 
                 try:
 
-                    if stately.feature_toggles["save_data"] == "1":
+                    if cs.feature_toggles["save_data"] == "1":
                         #save data to .csv
                         print("Writing to csv")
                         write_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv',{"time": [str(time.strftime('%l:%M%p %Z %b %d, %Y'))], "temperature": [str(temperature)], "humidity": [str(humidity)], "water_low": [str(water_low)]})
 
-                    stately.write_state("/home/pi/oasis-grow/configs/device_state.json", "temperature", str(temperature))
-                    stately.write_state("/home/pi/oasis-grow/configs/device_state.json", "humidity", str(humidity))
-                    stately.write_state("/home/pi/oasis-grow/configs/device_state.json", "water_low", str(water_low))
+                    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "temperature", str(temperature))
+                    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "humidity", str(humidity))
+                    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "water_low", str(water_low))
 
                     data_timer = time.time()
 
@@ -440,24 +440,24 @@ def main_loop():
                     data_timer = time.time()
 
             #update actuators in use
-            if stately.feature_toggles["heater"] == "1":
-                run_heat(str(heat_pd(temperature,int(stately.grow_params["target_temperature"]),last_temperature,last_target_temperature,int(stately.grow_params["P_temp"]),int(stately.grow_params["D_temp"]))))
-            if stately.feature_toggles["humidifier"] == "1":
-                run_hum(str(hum_pd(humidity,int(stately.grow_params["target_humidity"]),last_humidity,last_target_humidity,int(stately.grow_params["P_hum"]),int(stately.grow_params["D_hum"]))))
-            if stately.feature_toggles["fan"] == "1":
-                run_fan(fan_pd(temperature,humidity,int(stately.grow_params["target_temperature"]),int(stately.grow_params["target_humidity"]),last_temperature,last_humidity,last_target_temperature,last_target_humidity,int(stately.grow_params["Pt_fan"]),int(stately.grow_params["Ph_fan"]),int(stately.grow_params["Dt_fan"]),int(stately.grow_params["Dh_fan"])))
-            if stately.feature_toggles["light"] == "1":
-                run_light(int(stately.grow_params["time_start_light"]), int(stately.grow_params["time_start_dark"]), int(stately.grow_params["lighting_interval"]))
-            if stately.feature_toggles["camera"] == "1":
-                run_camera(int(stately.grow_params["camera_interval"]))
-            if stately.feature_toggles["water"] == "1":
-                run_water(int(stately.grow_params["watering_duration"]),int(stately.grow_params["watering_interval"]))
-            if stately.feature_toggles["air"] == "1":
-                run_air(int(stately.grow_params["time_start_air"]), int(stately.grow_params["time_stop_air"]),  int(stately.grow_params["air_interval"]))
+            if cs.feature_toggles["heater"] == "1":
+                run_heat(str(heat_pd(temperature,int(cs.grow_params["target_temperature"]),last_temperature,last_target_temperature,int(cs.grow_params["P_temp"]),int(cs.grow_params["D_temp"]))))
+            if cs.feature_toggles["humidifier"] == "1":
+                run_hum(str(hum_pd(humidity,int(cs.grow_params["target_humidity"]),last_humidity,last_target_humidity,int(cs.grow_params["P_hum"]),int(cs.grow_params["D_hum"]))))
+            if cs.feature_toggles["fan"] == "1":
+                run_fan(fan_pd(temperature,humidity,int(cs.grow_params["target_temperature"]),int(cs.grow_params["target_humidity"]),last_temperature,last_humidity,last_target_temperature,last_target_humidity,int(cs.grow_params["Pt_fan"]),int(cs.grow_params["Ph_fan"]),int(cs.grow_params["Dt_fan"]),int(cs.grow_params["Dh_fan"])))
+            if cs.feature_toggles["light"] == "1":
+                run_light(int(cs.grow_params["time_start_light"]), int(cs.grow_params["time_start_dark"]), int(cs.grow_params["lighting_interval"]))
+            if cs.feature_toggles["camera"] == "1":
+                run_camera(int(cs.grow_params["camera_interval"]))
+            if cs.feature_toggles["water"] == "1":
+                run_water(int(cs.grow_params["watering_duration"]),int(cs.grow_params["watering_interval"]))
+            if cs.feature_toggles["air"] == "1":
+                run_air(int(cs.grow_params["time_start_air"]), int(cs.grow_params["time_stop_air"]),  int(cs.grow_params["air_interval"]))
 
             #set exit condition    
-            stately.load_state()
-            if stately.device_state["running"] == "0":
+            cs.load_state()
+            if cs.device_state["running"] == "0":
                 terminate_program()
             else:
                 pass
@@ -470,9 +470,9 @@ def main_loop():
 
     except Exception as e:
         traceback.print_exc()
-        if stately.device_state["running"] == "1": #if there is an error, but device should stay running
+        if cs.device_state["running"] == "1": #if there is an error, but device should stay running
             clean_up_processes()
-        if stately.device_state["running"] == "0":
+        if cs.device_state["running"] == "0":
             terminate_program()
             
 if __name__ == '__main__':

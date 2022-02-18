@@ -21,7 +21,7 @@ import pickle5 as pickle
 
 #import custom modules
 import reset_model
-import concurrent_state as stately
+import concurrent_state as cs
 
 #create a password-protected lan interface for accepting credentials
 import streamlit as st
@@ -52,24 +52,24 @@ def modWiFiConfig(SSID, password):
 
 #update access_config.json
 def modAccessConfig(name, e, p):
-    stately.access_config = {}
-    stately.access_config["device_name"] = str(name)
-    stately.access_config["wak"] = "AIzaSyD-szNCnHbvC176y5K6haapY1J7or8XtKc"
-    stately.access_config["e"] = str(e)
-    stately.access_config["p"] = str(p)
-    stately.access_config["refresh_token"] = " "
-    stately.access_config["id_token"] = " "
-    stately.access_config["local_id"] = " "
+    cs.access_config = {}
+    cs.access_config["device_name"] = str(name)
+    cs.access_config["wak"] = "AIzaSyD-szNCnHbvC176y5K6haapY1J7or8XtKc"
+    cs.access_config["e"] = str(e)
+    cs.access_config["p"] = str(p)
+    cs.access_config["refresh_token"] = " "
+    cs.access_config["id_token"] = " "
+    cs.access_config["local_id"] = " "
 
     with open("/home/pi/oasis-grow/configs/access_config.json", "r+") as a:
         a.seek(0)
-        json.dump(stately.access_config, a)
+        json.dump(cs.access_config, a)
         a.truncate()
 
     print("Access configs added")
 
 def enable_WiFi(): #Depends on: 'subprocess'; Modifies: None
-    stately.write_state("/home/pi/oasis-grow/configs/device_state.json", "access_point", "0", offline_only=True)
+    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "access_point", "0", offline_only=True)
 
     config_wifi_dchpcd = Popen("sudo cp /etc/dhcpcd_WiFi.conf /etc/dhcpcd.conf", shell = True)
     config_wifi_dchpcd.wait()
@@ -95,7 +95,7 @@ def save_creds_exit(email, password, wifi_name, wifi_pass, device_name):
     reset_model.reset_device_state()
 
     #set new_device to "0" before rebooting
-    stately.write_state("/home/pi/oasis-grow/configs/device_state.json", "new_device", "1", offline_only=True)
+    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "new_device", "1", offline_only=True)
 
     #stand up wifi and reboot
     enable_WiFi()

@@ -24,7 +24,7 @@ from subprocess import Popen
 import requests
 import json
 import pyrebase
-import concurrent_state as stately
+import concurrent_state as cs
 
 def initialize_user(refresh_token):
 #app configuration information
@@ -44,11 +44,11 @@ def initialize_user(refresh_token):
 
 def send_image(user, storage, path):
     #send new image to firebase
-    storage.child(user['userId'] + "/" + stately.access_config["device_name"] + "/image.jpg").put(path, user['idToken'])
+    storage.child(user['userId'] + "/" + cs.access_config["device_name"] + "/image.jpg").put(path, user['idToken'])
     print("sent image")
 
     #tell firebase that there is a new image
-    patch_firebase("new_image","1")
+    cs.patch_firebase("new_image","1")
     print("firebase has an image in waiting")
 
 def take_picture(image_path):
@@ -65,16 +65,16 @@ def save_to_feed(image_path):
 
 #define a function to actuate element
 def actuate(interval): #amount of time between shots in minutes
-    stately.load_state()
+    cs.load_state()
     take_picture('/home/pi/image.jpg')
 
-    if stately.feature_toggles["save_images"] == "1":
+    if cs.feature_toggles["save_images"] == "1":
         save_to_feed('/home/pi/image.jpg')
 
-    if stately.device_state["connected"] == "1":
+    if cs.device_state["connected"] == "1":
 
         #get user info
-        user, db, storage = initialize_user(stately.access_config["refresh_token"])
+        user, db, storage = initialize_user(cs.access_config["refresh_token"])
         print("got credentials")
 
         #send new image to firebase

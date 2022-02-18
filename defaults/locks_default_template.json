@@ -1,7 +1,7 @@
 {
 "device_state_write_available": "1",
 "grow_params_write_available": "1",
-"stately.access_config_write_available": "1",
+"access_config_write_available": "1",
 "hardware_config_write_available": "1",
 "feature_toggles_write_available": "1"
 }

@@ -36,7 +36,7 @@ import signal
 import pyrebase
 from multiprocessing import Process, Queue
 import json
-import concurrent_state as stately
+import concurrent_state as cs
 
 #declare listener list
 listener_list = []
@@ -84,7 +84,7 @@ def stream_handler(m):
         input()
 
 def detect_field_event(user, db, field):
-    my_stream = db.child(user['userId']+'/'+stately.access_config["device_name"]+"/"+field).stream(stream_handler, user['idToken'], stream_id=field)
+    my_stream = db.child(user['userId']+'/'+cs.access_config["device_name"]+"/"+field).stream(stream_handler, user['idToken'], stream_id=field)
 
 #https://stackoverflow.com/questions/2046603/is-it-possible-to-run-function-in-a-subprocess-without-threading-or-writing-a-se
 #https://stackoverflow.com/questions/200469/what-is-the-difference-between-a-process-and-a-thread#:~:text=A%20process%20is%20an%20execution,sometimes%20called%20a%20lightweight%20process.
@@ -99,17 +99,17 @@ def detect_multiple_field_events(user, db, fields):
         listener_list.append(p)
 
 #This function launches a thread that checks whether the device has been deleted and kills this script if so
-def stop_condition(field,value): #Depends on: os, Process,stately.load_state(); Modifies: listener_list, stops this whole script
+def stop_condition(field,value): #Depends on: os, Process,cs.load_state(); Modifies: listener_list, stops this whole script
     global listener_list
 
     def check_exit(f,v): #This should be launched in its own thread, otherwise will hang the script
         while True:
             try:
-                stately.load_state()
+                cs.load_state()
             except:
                 pass
 
-            if stately.device_state[f] == v:
+            if cs.device_state[f] == v:
                 print("Exiting database listener...")
                 for listener in listener_list:
                     listener.terminate()
@@ -125,8 +125,8 @@ def act_on_event(field, new_data):
 
     #checks if file exists and makes a blank one if not
     #the path has to be set for box
-    device_state_fields = list(stately.device_state.keys())
-    grow_params_fields = list(stately.grow_params.keys())
+    device_state_fields = list(cs.device_state.keys())
+    grow_params_fields = list(cs.grow_params.keys())
 
     if str(field) in device_state_fields:
         path = "/home/pi/oasis-grow/configs/device_state.json"
@@ -141,13 +141,13 @@ def act_on_event(field, new_data):
     #open data config file
     #edit appropriate spot
     #print(path)
-    stately.write_state(path, field, new_data, offline_only = True)
+    cs.write_state(path, field, new_data, offline_only = True)
 
 if __name__ == "__main__":
     print("Starting listener...")
-    stately.load_state()
+    cs.load_state()
     try:
-        user, db = initialize_user(stately.access_config["refresh_token"])
+        user, db = initialize_user(cs.access_config["refresh_token"])
         print("Database monitoring: active")
     except Exception as e:
         print("Listener could not connect")
@@ -155,8 +155,8 @@ if __name__ == "__main__":
         sys.exit()
     #print(get_user_data(user, db)) #Avi what do these lines do
     #actual section that launches the listener
-    device_state_fields = list(stately.device_state.keys())
-    grow_params_fields = list(stately.grow_params.keys())
+    device_state_fields = list(cs.device_state.keys())
+    grow_params_fields = list(cs.grow_params.keys())
     fields = device_state_fields + grow_params_fields
     detect_multiple_field_events(user, db, fields)
 

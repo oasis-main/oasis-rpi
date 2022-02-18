@@ -6,7 +6,7 @@ import json
 import requests
 from subprocess import Popen
 import reset_model
-import concurrent_state as stately
+import concurrent_state as cs
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
@@ -85,10 +85,10 @@ def get_update():
     output, error = update_commands.communicate()
 
     #load state to get configs & state for conn
-    stately.load_state()
+    cs.load_state()
 
     #change awaiting_update to "O" in firebase and locally
-    stately.write_state("/home/pi/oasis-grow/configs/device_state.json", "awaiting_update", "0")
+    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "awaiting_update", "0")
 
     #reboot
     print("Rebooting...")
@@ -113,10 +113,10 @@ def get_update_test():
     output, error = update_commands.communicate()
 
     #load state to get configs & state for conn
-    stately.load_state()
+    cs.load_state()
 
     #change awaiting_update to "O" in firebase and locally
-    stately.write_state("/home/pi/oasis-grow/configs/device_state.json", "awaiting_update", "0")
+    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "awaiting_update", "0")
 
     #reboot (not called during test)
     #print("Rebooting...")

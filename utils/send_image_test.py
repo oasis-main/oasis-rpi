@@ -13,8 +13,8 @@ sys.path.append('/usr/lib/python3/dist-packages')
 import cameraElement as cam
 
 def send_image_test():
-    cam.stately.load_state()
-    user, db, storage = cam.initialize_user(cam.stately.access_config["refresh_token"])
+    cam.cs.load_state()
+    user, db, storage = cam.initialize_user(cam.cs.access_config["refresh_token"])
     cam.send_image(user, storage, "/home/pi/image.jpg")
     return
 
