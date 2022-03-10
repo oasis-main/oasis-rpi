@@ -14,6 +14,7 @@ import os
 import os.path
 import sys
 import json
+import requests
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
