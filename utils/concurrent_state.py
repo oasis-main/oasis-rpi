@@ -8,7 +8,6 @@
 ##oasis_setup(offline only)
 ##detect_db_events(offline only)
 
-
 #import modules
 import os
 import os.path
@@ -376,10 +375,13 @@ def write_state(path, field, value, loop_limit=100000, offline_only = False): #D
                         pass
 
         except Exception as e: #If any of the above fails:
-            if i == int(loop_limit):
+            if i >= int(loop_limit):
                 print("Tried to write state multiple times. File is corrupted. Resetting locks...")
                 reset_model.reset_locks()
+                reset_model.reset_device_state()
+                reset_model.reset_grow_params()
+                break
             else:
                 print(e)
-                print("Could not load locks. If this error persists, the lock file is corrupted. Retrying...")
+                print("Resource was locked. Trying write again. If this persists, the lock file is corrupted...")
                 pass #continue the loop until write is successful or ceiling is hit
