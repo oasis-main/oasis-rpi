@@ -1,4 +1,5 @@
-{"temp_hum_sensor": "1",
+{"device_type": "oasis-grow",
+"temp_hum_sensor": "1",
 "water_low_sensor": "1",
 "heater": "1",
 "humidifier": "1",
