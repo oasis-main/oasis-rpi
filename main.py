@@ -97,7 +97,7 @@ def get_local_credentials(refresh_token): #Depends on: cs.load_state(), cs.write
     print("Obtained local credentials")
 
 #connects system to firebase
-def connect_firebase(): #depends on: cs.load_state(), cs.write_state(), cs.patch_firebase(), 'requests'; Modifies: access_config.json, cs.device_state.json
+def connect_firebase(): #depends on: cs.load_state(), cs.write_state(), cs.patch_firebase(), 'requests'; Modifies: access_config.json, device_state.json
     #load state so we can use access credentials
     cs.load_state()
     wak = cs.access_config["wak"]
@@ -157,7 +157,7 @@ def check_new_device(): #depends on: ;modifies:
         post_request = requests.patch(url,my_data)
         #print(post_request.ok)
         if post_request.ok:
-            cs.write_state("/home/pi/oasis-grow/configs/cs.device_state.json","new_device","0")
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","new_device","0")
             print("New device added to firebase")
         else:
             print("Failed to add new device")
@@ -251,7 +251,7 @@ def get_button_state(button): #Depends on: RPi.GPIO; Modifies: None
     return state
 
 #reconfigures network interface, tells system to boot with Access Point, restarts
-def enable_AP(): #Depends on: cs.write_state(), 'subprocess'; Modifies: cs.device_state.json, configuration files
+def enable_AP(): #Depends on: cs.write_state(), 'subprocess'; Modifies: device_state.json, configuration files
     #tell system that the access point should be launched on next controller startup
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json","access_point","1")
 
@@ -265,7 +265,7 @@ def enable_AP(): #Depends on: cs.write_state(), 'subprocess'; Modifies: cs.devic
     systemctl_reboot = Popen(["sudo", "systemctl", "reboot"])
 
 #reconfigures network interface, tells system to boot with WiF, restarts
-def enable_WiFi(): #Depends on: cs.write_state(), 'subprocess'; Modifies: cs.device_state.json, configuration files
+def enable_WiFi(): #Depends on: cs.write_state(), 'subprocess'; Modifies: device_state.json, configuration files
     #tell system that the access point should not be launched on next controller startup
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json","access_point","0")
 
@@ -279,7 +279,7 @@ def enable_WiFi(): #Depends on: cs.write_state(), 'subprocess'; Modifies: cs.dev
     systemctl_reboot = Popen(["sudo", "systemctl", "reboot"])
 
 #checks whether system is booting in Access Point Mode, launches connection script if so
-def check_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); Modifies: state_variables, 'ser_out', cs.device_state.json
+def check_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); Modifies: state_variables, 'ser_out', device_state.json
     global ser_out, connect_internet_button
     cs.load_state()
     if cs.device_state["access_point"] == "1":
