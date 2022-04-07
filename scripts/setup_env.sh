@@ -25,12 +25,12 @@ echo "Installing pip3 & Python 3.7 modules..."
 sudo apt install python3-pip -y
 sudo apt-get install python3-venv -y
 python3 -m venv /home/pi/oasis-grow/oasis_venv
-. /home/pi/oasis-grow/oasis_venv/bin/activate
-/usr/bin/env python3 -m pip install -r /home/pi/oasis-grow/defaults/requirements.txt
+#. /home/pi/oasis-grow/oasis_venv/bin/activate
+#/usr/bin/env python3 -m pip install -r /home/pi/oasis-grow/defaults/requirements.txt
 
 echo "Installing python 3.7 RPi.GPIO for OS..."
 sudo apt-get -y install python3-rpi.gpio
 
 echo "Installing python 3.7 OpenCV for OS..."
 sudo apt install python3-opencv -y
-sudo pip3 install streamlit==0.62.0 pickle5
+#sudo pip3 install streamlit==0.62.0 pickle5
