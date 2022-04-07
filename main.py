@@ -207,7 +207,6 @@ def check_deleted():
         reset_model.reset_grow_params()
         reset_model.reset_nonhw_configs()
         #reset_model.reset_data_out()
-        reset_model.reset_logs()
         print("Device has been reset to default configuration")
         systemctl_reboot = Popen(["sudo", "systemctl", "reboot"])
 
