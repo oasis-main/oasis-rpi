@@ -203,13 +203,9 @@ def check_deleted():
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0") #make sure it doesn't write anything to the cloud, kill the listener
         listener = None
         print("Database monitoring deactivated")
-        reset_model.reset_device_state()
-        reset_model.reset_grow_params()
         reset_model.reset_nonhw_configs()
-        #reset_model.reset_data_out()
         print("Device has been reset to default configuration")
         systemctl_reboot = Popen(["sudo", "systemctl", "reboot"])
-
 
 #setup buttons for the main program interface
 def setup_button_interface(): #depends on: cs.load_state(), 'RPi.GPIO'; modifies: start_stop_button, connect_internet_button, run_water_button, state variables
