@@ -269,7 +269,7 @@ def enable_WiFi(): #Depends on: cs.write_state(), 'subprocess'; Modifies: device
     config_wifi_dchpcd.wait()
     config_wifi_dns = Popen(["sudo", "cp", "/etc/dnsmasq_WiFi.conf", "/etc/dnsmasq.conf"])
     config_wifi_dns.wait()
-    disable_hostapd = Popen(["sudo", "systemctl", "disable hostapd"])
+    disable_hostapd = Popen(["sudo", "systemctl", "disable", "hostapd"])
     disable_hostapd.wait()
     systemctl_reboot = Popen(["sudo", "systemctl", "reboot"])
 
