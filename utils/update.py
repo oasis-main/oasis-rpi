@@ -89,7 +89,7 @@ def get_update(test=False):
     sh_stage = Popen(["sudo", "chmod" ,"+x", "/home/pi/oasis-grow/scripts/update_patch.sh"])
     output, error = sh_stage.communicate()
 
-    sh_patch = Popen(["sudo", ".", "/home/pi/oasis-grow/scripts/update_patch.sh"])
+    sh_patch = Popen(["sudo", "/home/pi/oasis-grow/scripts/update_patch.sh"])
     output, error = sh_patch.communicate()
 
     #load state to get configs & state
