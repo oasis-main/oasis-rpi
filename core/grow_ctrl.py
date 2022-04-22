@@ -102,10 +102,10 @@ def listen(): #Depends on 'serial', start_serial(); Modifies: ser_in, sensor_inf
     #listen for data from aurdino
     sensor_info = ser_in.readline().decode('UTF-8').strip().split(' ')
 
-    if len(sensor_info)<3:
+    if len(sensor_info)<3: 
         pass
     else:
-        #print and save our data
+        #legacy sensor app: data is space-separated string
         last_humidity = humidity
         humidity =float(sensor_info[0])
 
