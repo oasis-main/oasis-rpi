@@ -20,13 +20,16 @@ sys.path.append('/usr/lib/python3/dist-packages')
 
 #get latest code from designated repository
 def git_pull():
-    gitpull = Popen(["git", "pull", "origin", "main"])
+    gitpull = Popen(["git", "pull"]) #should be whatever branch the code was installed from
     gitpull.wait()
 
-    print("Pulled most recent production repo")
+    print("Pulled most recent code changes from repository.")
 
 #save existing data into temps
 def save_old_configs():
+    savefeatures = Popen(["cp", "/home/pi/oasis-grow/configs/feature_toggles.json", "/home/pi/oasis-grow/configs/feature_toggles_temp.json"])
+    savefeatures.wait()
+    
     savehardware = Popen(["cp", "/home/pi/oasis-grow/configs/hardware_config.json", "/home/pi/oasis-grow/configs/hardware_config_temp.json"])
     savehardware.wait()
 
@@ -67,13 +70,14 @@ def transfer_compatible_configs(config_path,temp_config_path):
     remove_temp = Popen(["rm", temp_config_path])
     remove_temp.wait()
 
-def get_update():
+def get_update(test=False):
     #get latest code
     git_pull()
 
     #back up the configs & state that can survive update
     save_old_configs()
     reset_model.reset_all()
+    transfer_compatible_configs('/home/pi/oasis-grow/configs/feature_toggles.json', '/home/pi/oasis-grow/configs/feature_toggles_temp.json')
     transfer_compatible_configs('/home/pi/oasis-grow/configs/hardware_config.json', '/home/pi/oasis-grow/configs/hardware_config_temp.json')
     transfer_compatible_configs('/home/pi/oasis-grow/configs/access_config.json', '/home/pi/oasis-grow/configs/access_config_temp.json')
     transfer_compatible_configs('/home/pi/oasis-grow/configs/device_state.json', '/home/pi/oasis-grow/configs/device_state_temp.json')
@@ -81,47 +85,23 @@ def get_update():
     print("Transfered compatible state & configs, removing temporary files")
 
     #run external update commands
-    update_commands = Popen(["python3", "/home/pi/oasis-grow/utils/update_commands.py"])
-    output, error = update_commands.communicate()
+    sh_stage = Popen(["chmod" ,"+x", "/home/pi/oasis-grow/scripts/update_patch.sh"])
+    output, error = sh_stage.communicate()
 
-    #load state to get configs & state for conn
+    sh_patch = Popen([".", "/home/pi/oasis-grow/scripts/update_patch.sh"])
+    output, error = sh_patch.communicate()
+
+    #load state to get configs & state
     cs.load_state()
 
     #change awaiting_update to "O" in firebase and locally
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "awaiting_update", "0")
 
-    #reboot
-    print("Rebooting...")
-    reboot = Popen(["sudo","systemctl","reboot"])
-    reboot.wait()
-
-def get_update_test():
-    #get latest code
-    git_pull()
-
-    #back up the configs & state that can survive update
-    save_old_configs()
-    reset_model.reset_all()
-    transfer_compatible_configs('/home/pi/oasis-grow/configs/hardware_config.json', '/home/pi/oasis-grow/configs/hardware_config_temp.json')
-    transfer_compatible_configs('/home/pi/oasis-grow/configs/access_config.json', '/home/pi/oasis-grow/configs/access_config_temp.json')
-    transfer_compatible_configs('/home/pi/oasis-grow/configs/device_state.json', '/home/pi/oasis-grow/configs/device_state_temp.json')
-    transfer_compatible_configs('/home/pi/oasis-grow/configs/grow_params.json', '/home/pi/oasis-grow/configs/grow_params_temp.json')
-    print("Transfered compatible state & configs, removing temporary files")
-
-    #run external update commands
-    update_commands = Popen(["python3", "/home/pi/oasis-grow/utils/update_commands.py"])
-    output, error = update_commands.communicate()
-
-    #load state to get configs & state for conn
-    cs.load_state()
-
-    #change awaiting_update to "O" in firebase and locally
-    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "awaiting_update", "0")
-
-    #reboot (not called during test)
-    #print("Rebooting...")
-    #reboot = Popen(["sudo","systemctl","reboot"])
-    #reboot.wait()
+    if not test:
+        #reboot
+        print("Rebooting...")
+        reboot = Popen(["sudo","systemctl","reboot"])
+        reboot.wait()
 
 if __name__ == '__main__':
     get_update()

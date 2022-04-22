@@ -39,7 +39,7 @@ def load_state(loop_limit=100000): #Depends on: 'json'; Modifies: device_state,h
     global device_state, grow_params, access_config, feature_toggles, hardware_config
 
     #load device state
-    for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
+    for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke if so,  
         try:
             with open("/home/pi/oasis-grow/configs/device_state.json") as d:
                 device_state = json.load(d) #get device state
@@ -50,12 +50,12 @@ def load_state(loop_limit=100000): #Depends on: 'json'; Modifies: device_state,h
                     print("Resetting device_state...") 
                     reset_model.reset_device_state()
                 else: 
-                    pass    
+                    pass
         
             break
             
         except Exception as e:
-            if i == int(loop_limit):
+            if i >= int(loop_limit):
                 reset_model.reset_device_state()
                 print("Main.py tried to read max # of times. File is corrupted. Resetting device state ...")
             else:
@@ -281,7 +281,7 @@ def write_state(path, field, value, loop_limit=100000, offline_only = False): #D
                 print(e)
                 pass
 
-    for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so, 
+    for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke if so, 
         
         load_locks()
         

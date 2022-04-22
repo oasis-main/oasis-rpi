@@ -153,11 +153,14 @@ if __name__ == "__main__":
         print("Listener could not connect")
         print("Database monitoring: inactive")
         sys.exit()
-    #print(get_user_data(user, db)) #Avi what do these lines do
+    
+    print(get_user_data(user, db))
+    
     #actual section that launches the listener
     device_state_fields = list(cs.device_state.keys())
     grow_params_fields = list(cs.grow_params.keys())
     fields = device_state_fields + grow_params_fields
+    
     detect_multiple_field_events(user, db, fields)
 
     stop_condition("deleted","1")
