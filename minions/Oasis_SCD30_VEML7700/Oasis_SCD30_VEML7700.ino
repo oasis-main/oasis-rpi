@@ -1,174 +1,100 @@
-//Include modules
-#include <Wire.h>
-#include <DHT.h>
-#include <FastLED.h>
+// Basic demo for readings from Adafruit SCD30
+#include <Adafruit_SCD30.h>
+#include <Adafruit_VEML7700.h>
 
-// intiialize temp & hum sensor
-#define DHTTYPE DHT22   // DHT 22  (AM2302)
-#define DHTPIN 5
-DHT dht(DHTPIN, DHTTYPE);
-
-//sensor pin for water level
-int water_level_pin = 2;
-
-//set up LED controller
-#define LEDPIN 7
-#define NUMOFLEDS 60
-CRGB leds[NUMOFLEDS];
-String led_mode = "off";
+Adafruit_SCD30  scd30;
+Adafruit_VEML7700 veml = Adafruit_VEML7700();
 
 void setup() {
-  FastLED.addLeds<WS2812B, LEDPIN, GRB>(leds, NUMOFLEDS);
   Serial.begin(9600);
-  dht.begin();
-  while (!Serial) {
-    delay(10);
-  }
+  while (!Serial) delay(10);     // will pause until serial console opens
 
-  pinMode(water_level_pin, INPUT_PULLUP);
+  //Serial.println("Initialized Serial Port.");
 
-  //off (none, looping)
-  if (led_mode == "off"){
-    for (int i = 0; i <= 59; i++) {
-      leds[i] = CRGB (0, 0, 0);
-      FastLED.show();
-      delay(40);
-    }
+  // Try to initialize scd30
+  if (!scd30.begin()) {
+    //Serial.println("Failed to find SCD30 Temp, Hum, & Co2 Sensor.");
+    while (1) { delay(10); }
   }
+  //Serial.println("SCD30 is online.");
+
+
+  if (!veml.begin()) {
+    //Serial.println("Failed to find VEML7700 Lux Sensor.");
+    while (1);
+  }
+  //Serial.println("VEML7700 is online.");
+  
+  veml.setGain(VEML7700_GAIN_1);
+  veml.setIntegrationTime(VEML7700_IT_800MS);
+  veml.setLowThreshold(10000);
+  veml.setHighThreshold(20000);
+  veml.interruptEnable(true);
+
+  //veml7700 debug
+  //Serial.print(F("Gain: "));
+  //switch (veml.getGain()) {
+  //  case VEML7700_GAIN_1: Serial.println("1"); break;
+  //  case VEML7700_GAIN_2: Serial.println("2"); break;
+  //  case VEML7700_GAIN_1_4: Serial.println("1/4"); break;
+  //  case VEML7700_GAIN_1_8: Serial.println("1/8"); break;
+  //}
+
+  //Serial.print(F("Integration Time (ms): "));
+  //switch (veml.getIntegrationTime()) {
+  //  case VEML7700_IT_25MS: Serial.println("25"); break;
+  //  case VEML7700_IT_50MS: Serial.println("50"); break;
+  //  case VEML7700_IT_100MS: Serial.println("100"); break;
+  //  case VEML7700_IT_200MS: Serial.println("200"); break;
+  //  case VEML7700_IT_400MS: Serial.println("400"); break;
+  //  case VEML7700_IT_800MS: Serial.println("800"); break;
+  //}
+
+  //veml.powerSaveEnable(true);
+  //veml.setPowerSaveMode(VEML7700_POWERSAVE_MODE4);
+
+  //scd30 debug
+  // if (!scd30.setMeasurementInterval(10)){
+  //   Serial.println("Failed to set measurement interval");
+  //   while(1){ delay(10);}
+  // }
+  //Serial.print("Measurement Interval: "); 
+  //Serial.print(scd30.getMeasurementInterval()); 
+  //Serial.println(" seconds");
 }
 
-int waterSig4 = 0;
-int waterSig3 = 0;
-int waterSig2 = 0;
-int waterSig1 = 0;
-int waterSig0 = 0;
- 
 void loop() {
-  //Serial Data Out
-  float temperature, humidity;
-  int water_low = 0;
+  if (scd30.dataReady()){
+    //Serial.println("Data available!");
 
-  humidity = dht.readHumidity();
-  temperature = dht.readTemperature();
-
-  if (digitalRead(water_level_pin) == HIGH)
-  {
-    waterSig0 = waterSig1;
-    waterSig1 = waterSig2;
-    waterSig2 = waterSig3;
-    waterSig3 = waterSig4;
-    waterSig4 = 1;
-  }
-  else
-  {
-    waterSig0 = waterSig1;
-    waterSig1 = waterSig2;
-    waterSig2 = waterSig3;
-    waterSig3 = waterSig4;
-    waterSig4 = 0;
-  }
-
-  if (waterSig4 == 1 || waterSig3 == 1 || waterSig2 == 1 || waterSig1 == 1 || waterSig0 == 1)
-  {
-    water_low = 1;
-  }
-  else
-  {
-    water_low = 0;
-  }
-  
-  Serial.print(humidity);
-  Serial.print(" "); 
-  Serial.print(temperature*(1.800)+32); //need to manually adjust the sensor smh
-  Serial.print(" ");
-  Serial.print(water_low);
-  Serial.println(); 
-
-  //Mode Management
-  if (Serial.available() > 0) {
-    String led_data = Serial.readStringUntil('\n');
-    led_mode = led_data;
-  }
-  
-  //Connected, Running (green, looping)
-  if (led_mode =="connected_running"){
-    for (int i = 0; i <= 59; i++) {
-      leds[i] = CRGB (0, 10, 0);
-      FastLED.show();
-      delay(40);
+    if (!scd30.read()){
+      //Serial.println("Error reading sensor data"); 
+      return;
     }
-    for (int i = 0; i <= 59; i++) {
-      leds[i] = CRGB (0, 5, 0);
-      FastLED.show();
-      delay(40);
-    } 
+
+    Serial.print("{"); //start the json
+
+    Serial.print("temperature: ");
+    Serial.print(scd30.temperature*(1.8)+32);
+    Serial.print(", ");
+    
+    Serial.print("humidity: ");
+    Serial.print(scd30.relative_humidity);
+    Serial.print(", ");
+    
+    Serial.print("co2: ");
+    Serial.print(scd30.CO2, 2);
+    Serial.print(", ");
+
+    Serial.print("lux: ");
+    Serial.print(veml.readLux());
+    //Serial.print(", "); //no trailing comma, this is the last json field
+    
+    Serial.print("}"); //close the json and issue new line
+    Serial.println();
+  } else {
+    //Serial.println("No data");
   }
 
-  //Connected, Idle (green, static)
-  if (led_mode =="connected_idle"){
-    for (int i = 0; i <= 59; i++) {
-      leds[i] = CRGB (0, 5, 0);
-      FastLED.show();
-      delay(40);
-    }  
-  }
-
-  //Island, Running (white, looping)
-  if (led_mode =="offline_running"){
-    for (int i = 0; i <= 59; i++) {
-      leds[i] = CRGB (10, 10, 10);
-      FastLED.show();
-      delay(40);
-    }
-    for (int i = 0; i <= 59; i++) {
-      leds[i] = CRGB (5, 5, 5);
-      FastLED.show();
-      delay(40);
-    } 
-  }
-
-  //Island, Idle (white, static)
-  if (led_mode =="offline_idle"){
-    for (int i = 0; i <= 59; i++) {
-      leds[i] = CRGB (5, 5, 5);
-      FastLED.show();
-      delay(40);
-    }  
-  }
-
-  //Master sends error message (red, static)
-  if (led_mode =="error"){
-    for (int i = 0; i <= 59; i++) {
-      leds[i] = CRGB (5, 0, 0);
-      FastLED.show();
-      delay(40);
-    }  
-  }
-
-  //AP-mode, Server accepting connections (blue, looping)
-  if (led_mode =="accepting_wifi_connection"){
-    for (int i = 0; i <= 59; i++) {
-      leds[i] = CRGB (0, 0, 10);
-      FastLED.show();
-      delay(40);
-    }
-    for (int i = 0; i <= 59; i++) {
-      leds[i] = CRGB (0, 0, 5);
-      FastLED.show();
-      delay(40);
-    } 
-  }
-
-  //off (none, looping)
-  if (led_mode == "off"){
-    for (int i = 0; i <= 59; i++) {
-      leds[i] = CRGB (0, 0, 0);
-      FastLED.show();
-      delay(40);
-    }
-  }
-
-  //Serial.println(led_mode);  
-  
-  delay(1);
+  delay(100);
 }

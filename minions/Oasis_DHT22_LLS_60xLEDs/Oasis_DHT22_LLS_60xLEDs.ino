@@ -42,11 +42,11 @@ int waterSig3 = 0;
 int waterSig2 = 0;
 int waterSig1 = 0;
 int waterSig0 = 0;
- 
+float temperature, humidity;
+int water_low = 0;
+
 void loop() {
   //Serial Data Out
-  float temperature, humidity;
-  int water_low = 0;
 
   humidity = dht.readHumidity();
   temperature = dht.readTemperature();
