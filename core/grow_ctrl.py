@@ -91,10 +91,10 @@ def start_serial(): #Depends on:'serial'; Modifies: ser_out
         #ser_in = None
         print("Serial connection not found")
 
-#gets data from serial THIS WILL HAVE TO BE DEPRECATED SOON IN FAVOR OF AN ON-BOARD SENSOR SUITE
+#gets data from serial, will parse a simple string or accept a dictionary
 def listen(): #Depends on 'serial', start_serial(); Modifies: ser_in, sensor_info, temperature, humidity, last_temperature, last_humidity, water_low
     #load in global vars
-    global ser_in,sensor_info,temperature,humidity,last_temperature,last_humidity,water_low
+    global ser_in, sensor_info, temperature, humidity, last_temperature, last_humidity, water_low
 
     if ser_in == None:
         return

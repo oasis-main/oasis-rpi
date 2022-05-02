@@ -10,6 +10,13 @@
  "new_device": "0",
  "temperature": "0",
  "humidity": "0",
+ "vpd": "0",
  "water_low": "0",
- "deleted": "0"
+ "co2": "0",
+ "lux": "0",
+ "ph": "0",
+ "soil_moisture": "0",
+ "deleted": "0",
+ "device_error": "None",
+ "onboard_led": "0"
 }
