@@ -6,8 +6,7 @@
 "lux_sensor": "1",
 "ph_sensor": "0",
 "tds_sensor": "0",
-"saturation_sensor": "0",
-"save_data": "1",
+"soil_moisture_sensor": "0",
 "heater": "1",
 "heat_pid": "1",
 "humidifier": "1",
@@ -22,4 +21,5 @@
 "air": "1",
 "camera": "1",
 "ndvi": "0",
-"save_images": "1"}
+"save_images": "1",
+"save_data": "1"}

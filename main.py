@@ -1,4 +1,4 @@
-#This is the program root, main.py. Run this file from the command line, in cron, or in rc.local(preferred).
+#This is the program root, main.py. Run this file from the command line, in cron, through systemd, or in rc.local(preferred).
 
 #Tips:
 # Use the -b when installing with 'source ./master_setup.sh" to setup the bootloader ie. 'source ./master_setup.sh -b'
@@ -65,7 +65,7 @@ def start_serial(): #Depends on:'serial'; Modifies: ser_out
             ser_out.flush()
             print("Started serial communication with Arduino Uno.")
     except Exception as e:
-        print(str(e))
+        #print(str(e))
         ser_out = None
         print("Serial connection not found")
 
@@ -437,17 +437,17 @@ def update_LED(): #Depends on: cs.load_state(), 'datetime'; Modifies: ser_out
     HoD = now.hour
 
     if ser_out is not None:
-        if int(cs.device_state["time_start_led"]) < int(cs.device_state["time_stop_led"]):
-            if HoD >= int(cs.device_state["time_start_led"]) and HoD < int(cs.device_state["time_stop_led"]):
+        if int(cs.grow_params["time_start_led"]) < int(cs.grow_params["time_stop_led"]):
+            if HoD >= int(cs.grow_params["time_start_led"]) and HoD < int(cs.grow_params["time_stop_led"]):
                 ser_out.write(bytes(str(cs.device_state["led_status"]+"\n"), 'utf-8')) #write status
-            if HoD < int(cs.device_state["time_start_led"]) or HoD >= int(cs.device_state["time_stop_led"]):
+            if HoD < int(cs.grow_params["time_start_led"]) or HoD >= int(cs.grow_params["time_stop_led"]):
                 ser_out.write(bytes(str("off"+"\n"), 'utf-8')) #write off
-        if int(cs.device_state["time_start_led"]) > int(cs.device_state["time_stop_led"]):
-            if HoD >=  int(cs.device_state["time_start_led"]) or HoD < int(cs.device_state["time_stop_led"]):
+        if int(cs.grow_params["time_start_led"]) > int(cs.grow_params["time_stop_led"]):
+            if HoD >=  int(cs.grow_params["time_start_led"]) or HoD < int(cs.grow_params["time_stop_led"]):
                 ser_out.write(bytes(str(cs.device_state["led_status"]+"\n"), 'utf-8')) #write status
-            if HoD < int(cs.device_state["time_start_led"]) and  HoD >= int(cs.device_state["time_stop_led"]):
+            if HoD < int(cs.grow_params["time_start_led"]) and  HoD >= int(cs.grow_params["time_stop_led"]):
                 ser_out.write(bytes(str("off"+"\n"), 'utf-8')) #write off
-        if int(cs.device_state["time_start_led"]) == int(cs.device_state["time_stop_led"]):
+        if int(cs.grow_params["time_start_led"]) == int(cs.grow_params["time_stop_led"]):
                 ser_out.write(bytes(str(cs.device_state["led_status"]+"\n"), 'utf-8')) #write status
     else:
         #print("no serial connection, cannot update LED view")

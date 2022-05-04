@@ -40,13 +40,13 @@ def set_humidity_target(value):
     print("Relative humidity target was set to: " + str(value) + " percent.")
     return
 
-def set_light_timer(time_start_light, time_start_dark, lighting_interval):
+def set_light_timer(time_start_light, time_stop_light, lighting_interval):
     cs.load_state()
     cs.write_state("/home/pi/oasis-grow/configs/grow_params.json", "time_start_light", str(time_start_light))
-    cs.write_state("/home/pi/oasis-grow/configs/grow_params.json", "time_start_dark", str(time_start_dark))
+    cs.write_state("/home/pi/oasis-grow/configs/grow_params.json", "time_stop_light", str(time_stop_light))
     cs.write_state("/home/pi/oasis-grow/configs/grow_params.json", "lighting_interval", str(lighting_interval))
     print("Lights will turn on at " + str(time_start_light) + ":00.")
-    print("Lights will turn off at " + str(time_start_dark) + ":00.")
+    print("Lights will turn off at " + str(time_stop_light) + ":00.")
     print("Lights will refresh every " + str(lighting_interval) + " seconds.")
     return
 

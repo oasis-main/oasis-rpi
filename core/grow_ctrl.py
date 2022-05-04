@@ -1,4 +1,5 @@
 #system
+from multiprocessing.context import set_spawning_popen
 import os
 import os.path
 import sys
@@ -38,7 +39,6 @@ import concurrent_state as cs
 
 #declare process management variables
 ser_in = None
-sensor_info = None
 heat_process = None
 dehumidify_process= None
 humidity_process = None
@@ -50,16 +50,32 @@ air_process = None
 
 #declare sensor data variables
 temperature = 0
-humidity = 0
-water_low = 0
 last_temperature = 0
-last_humidity = 0
 last_target_temperature = 0
+error_cum_temperature = 0
+
+humidity = 0
+last_humidity = 0
 last_target_humidity = 0
+error_cum_humidity = 0
+
+co2 = 0
+last_co2 = 0
+last_target_co2 = 0
+error_cum_co2 = 0
+
+soil_moisture = 0
+last_soil_moisture = 0
+last_target_soil_moisture = 0
+error_cum_soil_moisture = 0
+
+vpd = 0
+water_low = 0
+lux = 0
+ph = 0
 
 #declare timekeeping variables
 data_timer = None
-sensor_log_timer = None
 
 #write some data to a .csv, takes a dictionary and a path
 def write_csv(filename, dict): #Depends on: 'pandas',
@@ -88,23 +104,21 @@ def start_serial(): #Depends on:'serial'; Modifies: ser_out
             ser_in = serial.Serial("/dev/ttyACM0", 9600)
             print("Started serial communication with Arduino Uno.")
     except Exception as e:
-        #ser_in = None
+        ser_in = None
         print("Serial connection not found")
 
 #gets data from serial, will parse a simple string or accept a dictionary
 def listen(): #Depends on 'serial', start_serial(); Modifies: ser_in, sensor_info, temperature, humidity, last_temperature, last_humidity, water_low
     #load in global vars
-    global ser_in, sensor_info, temperature, humidity, last_temperature, last_humidity, water_low
+    global ser_in, temperature, humidity, last_temperature, last_humidity, water_low
 
     if ser_in == None:
         return
 
-    #listen for data from aurdino
-    sensor_info = ser_in.readline().decode('UTF-8').strip().split(' ')
-
-    if len(sensor_info)<3: 
-        pass
-    else:
+    try:
+        #listen for data from aurdino, split it by space
+        sensor_info = ser_in.readline().decode('UTF-8').strip().split(' ')
+        
         #legacy sensor app: data is space-separated string
         last_humidity = humidity
         humidity =float(sensor_info[0])
@@ -113,15 +127,22 @@ def listen(): #Depends on 'serial', start_serial(); Modifies: ser_in, sensor_inf
         temperature =float(sensor_info[1])
 
         water_low = int(sensor_info[2])
+    except Exception as e:
+        sensor_info = json.loads(str(ser_in.readline().decode('UTF-8').strip()))
+        print(type(sensor_info))
+
 
 #PD controller to modulate heater feedback
-def heat_pd(temperature, target_temperature, last_temperature, last_target_temperature, P_heat, D_heat): #no dependencies
+def heat_pd(temperature, target_temperature, last_temperature, last_target_temperature, P_heat, I_heat, D_heat): #no dependencies
+    global error_cum_temperature
 
     err_temperature = target_temperature-temperature    #If target is 70 and temperature is 60, this value = 10, more heat
                                                         #If target is 50 and temperature is 60, this value is negative, less heat
 
     temperature_dot = temperature-last_temperature  #If temp is increasing, this value is positive (+#)
                                                     #If temp is decreasing, this value is negative (-#)
+
+    err_cum_temperature = err_cum_temperature + err_temperature
 
     target_temperature_dot = target_temperature-last_target_temperature #When target remains the same, this value is 0
                                                                         #When adjusting target up, this value is positive (+#)
@@ -136,6 +157,7 @@ def heat_pd(temperature, target_temperature, last_temperature, last_target_tempe
 
 #PD controller to modulate dehumidifier feedback
 def dehum_pd(humidity, target_humidity, last_humidity, last_target_humidity, P_hum, D_hum): #no dependencies
+    global error_cum_humidity
 
     err_humidity = humidity - target_humidity   #If target is 60 and humidity is 30, this value is negative, less dehum
                                                 #If target is 30 and humidity is 60, this value = 30, more dehum
@@ -157,6 +179,8 @@ def dehum_pd(humidity, target_humidity, last_humidity, last_target_humidity, P_h
 
 #PD controller to modulate humidifier feedback
 def hum_pd(humidity, target_humidity, last_humidity, last_target_humidity, P_hum, D_hum): #no dependencies
+    global error_cum_humidity
+    
     err_humidity = target_humidity-humidity
 
     humidity_dot = humidity-last_humidity
@@ -172,6 +196,8 @@ def hum_pd(humidity, target_humidity, last_humidity, last_target_humidity, P_hum
 
 #PD controller to modulate fan feedback
 def fan_pd(temperature, humidity, target_temperature, target_humidity, last_temperature, last_humidity, last_target_temperature, last_target_humidity, Pt_fan, Ph_fan, Dt_fan, Dh_fan): #no dependencies
+    global error_cum_temperature, error_cum_humidity, error_cum_co2
+    
     err_temperature = temperature-target_temperature
     err_humidity = humidity-target_humidity
 
@@ -327,7 +353,7 @@ def terminate_program(): #Depends on: cs.load_state(), 'sys', 'subprocess' #Modi
     sys.exit()
 
 def main_setup():
-    global data_timer, sensor_log_timer
+    global data_timer
 
     #Load state variables to start the main program
     cs.load_state()
@@ -406,7 +432,7 @@ def main_loop():
                                               int(cs.grow_params["Dh_fan"]))))
 
             if cs.feature_toggles["light"] == "1":
-                print("Light Turns on at: %i :00 Local Time  | Turns off at: %i :00 Local Time"%(int(cs.grow_params["time_start_light"]), int(cs.grow_params["time_start_dark"])))
+                print("Light Turns on at: %i :00 Local Time  | Turns off at: %i :00 Local Time"%(int(cs.grow_params["time_start_light"]), int(cs.grow_params["time_stop_light"])))
 
             if cs.feature_toggles["camera"] == "1":
                 print("Image every %i minute(s)"%(int(cs.grow_params["camera_interval"])))
@@ -447,7 +473,7 @@ def main_loop():
             if cs.feature_toggles["fan"] == "1":
                 run_fan(fan_pd(temperature,humidity,int(cs.grow_params["target_temperature"]),int(cs.grow_params["target_humidity"]),last_temperature,last_humidity,last_target_temperature,last_target_humidity,int(cs.grow_params["Pt_fan"]),int(cs.grow_params["Ph_fan"]),int(cs.grow_params["Dt_fan"]),int(cs.grow_params["Dh_fan"])))
             if cs.feature_toggles["light"] == "1":
-                run_light(int(cs.grow_params["time_start_light"]), int(cs.grow_params["time_start_dark"]), int(cs.grow_params["lighting_interval"]))
+                run_light(int(cs.grow_params["time_start_light"]), int(cs.grow_params["time_stop_light"]), int(cs.grow_params["lighting_interval"]))
             if cs.feature_toggles["camera"] == "1":
                 run_camera(int(cs.grow_params["camera_interval"]))
             if cs.feature_toggles["water"] == "1":

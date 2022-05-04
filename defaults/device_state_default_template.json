@@ -3,8 +3,6 @@
  "running": "0",
  "led_status": "off",
  "access_point": "0",
- "time_start_led": "0",
- "time_stop_led": "0",
  "awaiting_update": "0",
  "new_image": "0",
  "new_device": "0",
@@ -17,6 +15,5 @@
  "ph": "0",
  "soil_moisture": "0",
  "deleted": "0",
- "device_error": "None",
- "onboard_led": "0"
+ "device_error": "None"
 }
