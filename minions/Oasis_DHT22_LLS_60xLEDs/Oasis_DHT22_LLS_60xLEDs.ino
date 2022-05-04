@@ -17,6 +17,14 @@ int water_level_pin = 2;
 CRGB leds[NUMOFLEDS];
 String led_mode = "off";
 
+float temperature, humidity;
+int water_low = 0;
+int waterSig4 = 0;
+int waterSig3 = 0;
+int waterSig2 = 0;
+int waterSig1 = 0;
+int waterSig0 = 0;
+
 void setup() {
   FastLED.addLeds<WS2812B, LEDPIN, GRB>(leds, NUMOFLEDS);
   Serial.begin(9600);
@@ -36,14 +44,6 @@ void setup() {
     }
   }
 }
-
-int waterSig4 = 0;
-int waterSig3 = 0;
-int waterSig2 = 0;
-int waterSig1 = 0;
-int waterSig0 = 0;
-float temperature, humidity;
-int water_low = 0;
 
 void loop() {
   //Serial Data Out
@@ -152,12 +152,7 @@ void loop() {
       FastLED.show();
       delay(40);
     }
-    for (int i = 0; i <= 59; i++) {
-      leds[i] = CRGB (0, 0, 5);
-      FastLED.show();
-      delay(40);
-    } 
-  }
+   }
 
   //off (none, looping)
   if (led_mode == "off"){

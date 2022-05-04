@@ -15,7 +15,10 @@ DHT dht(DHTPIN, DHTTYPE);
 #define LEDPIN 7
 #define NUMOFLEDS 60
 CRGB leds[NUMOFLEDS];
-String led_mode = "off";
+String led_mode = "off";\
+
+float temperature, humidity;
+int water_low = 0;
 
 void setup() {
   FastLED.addLeds<WS2812B, LEDPIN, GRB>(leds, NUMOFLEDS);
@@ -44,9 +47,6 @@ void setup() {
 //int waterSig0 = 0;
  
 void loop() {
-  //Serial Data Out
-  float temperature, humidity;
-  int water_low = 0;
 
   humidity = dht.readHumidity();
   temperature = dht.readTemperature();

@@ -20,6 +20,15 @@ int water_level_pin = 2;
 CRGB leds[NUMOFLEDS];
 String led_mode = "off";
 
+float temperature, humidity;
+int water_low;
+int waterSig4 = 0;
+int waterSig3 = 0;
+int waterSig2 = 0;
+int waterSig1 = 0;
+int waterSig0 = 0;
+
+
 void setup() {
   FastLED.addLeds<WS2812B, LEDPIN, GRB>(leds, NUMOFLEDS);
   Serial.begin(9600);
@@ -43,17 +52,8 @@ void setup() {
     }
   }
 }
-
-int waterSig4 = 0;
-int waterSig3 = 0;
-int waterSig2 = 0;
-int waterSig1 = 0;
-int waterSig0 = 0;
  
 void loop() {
-  //Serial Data Out
-  float temperature, humidity;
-  int water_low;
 
   if (! am2315.readTemperatureAndHumidity(&temperature, &humidity)) {
     temperature = -1;

@@ -43,6 +43,8 @@ void setup() {
   }
 }
 
+float temperature, humidity;
+int waterLow;
 int waterSig4 = 0;
 int waterSig3 = 0;
 int waterSig2 = 0;
@@ -50,9 +52,6 @@ int waterSig1 = 0;
 int waterSig0 = 0;
  
 void loop() {
-  //Serial Data Out
-  float temperature, humidity;
-  int waterLow;
 
   if (! am2315.readTemperatureAndHumidity(&temperature, &humidity)) {
   temperature = -1;
