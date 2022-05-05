@@ -25,7 +25,7 @@ sys.path.append('/usr/lib/python3/dist-packages')
 import main
 import grow_ctrl
 import detect_db_events, oasis_setup
-import cameraElement
+import camera_element
 import update, reset_model, send_image_test
 
 def test_state_handlers():
@@ -46,9 +46,9 @@ def test_state_handlers():
     oasis_setup.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"))
     oasis_setup.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"))
 
-    cameraElement.cs.load_state()
-    cameraElement.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"))
-    cameraElement.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"))
+    camera_element.cs.load_state()
+    camera_element.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"))
+    camera_element.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"))
 
     update.cs.load_state()
     update.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"))

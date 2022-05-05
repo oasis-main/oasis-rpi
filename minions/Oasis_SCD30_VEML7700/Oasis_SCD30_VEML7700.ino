@@ -75,7 +75,7 @@ void loop() {
     Serial.print("{"); //start the json
 
     Serial.print("temperature: ");
-    Serial.print(scd30.temperature*(1.8)+32);
+    Serial.print((double(scd30.temperature)*double(1.8))+double(32));
     Serial.print(", ");
     
     Serial.print("humidity: ");

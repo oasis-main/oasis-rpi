@@ -3,7 +3,7 @@
 ##main.py
 ##grow_ctrl.py
 ##update.py
-##cameraElement.py
+##camera_element.py
 
 ##oasis_setup(offline only)
 ##detect_db_events(offline only)

@@ -10,7 +10,7 @@ sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
 sys.path.append('/usr/local/lib/python3.7/dist-packages')
 sys.path.append('/usr/lib/python3/dist-packages')
 
-import cameraElement as cam
+import camera_element as cam
 
 def send_image_test():
     cam.cs.load_state()

@@ -31,7 +31,7 @@ GPIO.setup(H2o_GPIO, GPIO.OUT) #GPIO setup
 GPIO.output(H2o_GPIO, GPIO.LOW) #relay open = GPIO.HIGH, closed = GPIO.LOW
 
 #define a function to actuate element
-def actuate(duration = 30, interval = 24): #amoubnt of time between waterings
+def actuate_interval(duration = 30, interval = 24): #amount of time between waterings (seconds, hours)
 
     GPIO.output(H2o_GPIO, GPIO.HIGH)
     time.sleep(float(duration))
@@ -39,7 +39,7 @@ def actuate(duration = 30, interval = 24): #amoubnt of time between waterings
     time.sleep(float(interval)*float(3600))
 
 try:
-    actuate(str(sys.argv[1]),str(sys.argv[2]))
+    actuate_interval(str(sys.argv[1]),str(sys.argv[2]))
     GPIO.cleanup()
 except KeyboardInterrupt:
     print("Interrupted")

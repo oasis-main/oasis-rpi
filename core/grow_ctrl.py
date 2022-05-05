@@ -1,5 +1,8 @@
+#Yes, I understand the core is a procedural mess. It runs without bugs, for now
+#We're working on refactoring this to an object oriented and functional approach in v2
+#This will make it easier to and add new features, expand existing ones, and change behavior.
+
 #system
-from multiprocessing.context import set_spawning_popen
 import os
 import os.path
 import sys
@@ -28,6 +31,7 @@ import requests
 #data handling
 import json
 import csv
+import math
 
 #dealing with specific times of the day
 import time
@@ -52,22 +56,22 @@ air_process = None
 temperature = 0
 last_temperature = 0
 last_target_temperature = 0
-error_cum_temperature = 0
+err_cum_temperature = 0
 
 humidity = 0
 last_humidity = 0
 last_target_humidity = 0
-error_cum_humidity = 0
+err_cum_humidity = 0
 
 co2 = 0
 last_co2 = 0
 last_target_co2 = 0
-error_cum_co2 = 0
+err_cum_co2 = 0
 
 soil_moisture = 0
 last_soil_moisture = 0
 last_target_soil_moisture = 0
-error_cum_soil_moisture = 0
+err_cum_soil_moisture = 0
 
 vpd = 0
 water_low = 0
@@ -78,7 +82,7 @@ ph = 0
 data_timer = None
 
 #write some data to a .csv, takes a dictionary and a path
-def write_csv(filename, dict): #Depends on: 'pandas',
+def write_csv(filename, dict): #Depends on: 'pandas'
     file_exists = os.path.isfile(filename)
 
     with open (filename, 'a') as csvfile:
@@ -93,48 +97,91 @@ def write_csv(filename, dict): #Depends on: 'pandas',
     return 
 
 #attempts connection to microcontroller
-def start_serial(): #Depends on:'serial'; Modifies: ser_out
+def start_serial(): #Depends on:'serial'
     global ser_in
 
     try:
+        
         try:
             ser_in = serial.Serial("/dev/ttyUSB0", 9600)
             print("Started serial communication with Arduino Nano.")
+        
         except:
             ser_in = serial.Serial("/dev/ttyACM0", 9600)
             print("Started serial communication with Arduino Uno.")
+    
     except Exception as e:
         ser_in = None
         print("Serial connection not found")
 
 #gets data from serial, will parse a simple string or accept a dictionary
-def listen(): #Depends on 'serial', start_serial(); Modifies: ser_in, sensor_info, temperature, humidity, last_temperature, last_humidity, water_low
-    #load in global vars
-    global ser_in, temperature, humidity, last_temperature, last_humidity, water_low
+def listen(): #Depends on 'serial', start_serial()
+    global ser_in, temperature,  humidity,  co2,  soil_moisture, vpd, water_low, lux, ph  
+    global last_temperature, last_humidity, last_co2, last_soil_moisture #past readings for derivative calculations
 
     if ser_in == None:
         return
 
-    try:
+    try: #legacy sensor app: parse space-separated string of floats
         #listen for data from aurdino, split it by space
         sensor_info = ser_in.readline().decode('UTF-8').strip().split(' ')
         
-        #legacy sensor app: data is space-separated string
-        last_humidity = humidity
-        humidity =float(sensor_info[0])
+        if cs.feature_toggles["humidity_sensor"] == "1":
+            last_humidity = humidity
+            humidity =float(sensor_info[0]) #should fail if trying to read json string
 
-        last_temperature = temperature
-        temperature =float(sensor_info[1])
+        if cs.feature_toggles["temperature_sensor"] == "1":    
+            last_temperature = temperature
+            temperature =float(sensor_info[1])
 
-        water_low = int(sensor_info[2])
-    except Exception as e:
+        if cs.feature_toggles["water_level_sensor"] == "1":
+            water_low = int(sensor_info[2])
+    
+    except (SyntaxError, ValueError) as e: #v1.5 parse disct from json string
         sensor_info = json.loads(str(ser_in.readline().decode('UTF-8').strip()))
-        print(type(sensor_info))
+        
+        #print(type(sensor_info))
+        #print(e)
 
+        if cs.feature_toggles["temperature_sensor"] == "1":
+            last_temperature = temperature
+            temperature = float(sensor_info["temperature"])
+        
+        if cs.feature_toggles["humidity_sensor"] == "1":
+            last_humidity = humidity
+            humidity = float(sensor_info["humidity"])
+        
+        if cs.feature_toggles["co2_sensor"] == "1":
+            last_co2 = co2
+            co2 = float(sensor_info["temperature"])
 
-#PD controller to modulate heater feedback
-def heat_pd(temperature, target_temperature, last_temperature, last_target_temperature, P_heat, I_heat, D_heat): #no dependencies
-    global error_cum_temperature
+        if cs.feature_toggles["soil_moisture_sensor"] == "1":
+            last_soil_moisture = soil_moisture
+            soil_moisture = float(sensor_info["soil_moisture"])
+
+        if cs.feature_toggles["vpd_calculation"] == "1":
+            es = 0.6108 * math.exp(17.27 * temperature / (temperature + 237.3))
+            ea = humidity / 100 * es 
+            vpd = ea-es
+        
+        if cs.feature_toggles["water_level_sensor"] == "1":
+            water_low = float(sensor_info["water_low"])
+        
+        if cs.feature_toggles["lux_sensor"] == "1":
+            lux = float(sensor_info["lux"])
+        
+        if cs.feature_toggles["ph_sensor"] == "1":
+            ph = float(sensor_info["ph"])
+    
+    except Exception as e:
+        #print(e)
+        return
+
+#PID controller to modulate heater feedback
+def heat_pid(temperature, target_temperature, last_temperature, last_target_temperature,
+             P_heat, I_heat, D_heat):    
+    
+    global err_cum_temperature
 
     err_temperature = target_temperature-temperature    #If target is 70 and temperature is 60, this value = 10, more heat
                                                         #If target is 50 and temperature is 60, this value is negative, less heat
@@ -142,7 +189,7 @@ def heat_pd(temperature, target_temperature, last_temperature, last_target_tempe
     temperature_dot = temperature-last_temperature  #If temp is increasing, this value is positive (+#)
                                                     #If temp is decreasing, this value is negative (-#)
 
-    err_cum_temperature = err_cum_temperature + err_temperature
+    err_cum_temperature = max(min(err_cum_temperature + err_temperature, 50), -50)
 
     target_temperature_dot = target_temperature-last_target_temperature #When target remains the same, this value is 0
                                                                         #When adjusting target up, this value is positive (+#)
@@ -150,81 +197,140 @@ def heat_pd(temperature, target_temperature, last_temperature, last_target_tempe
 
     err_dot_temperature = target_temperature_dot-temperature_dot    #When positive, boosts heat signal
                                                                     #When negative, dampens heat signal
-    heat_level  = P_heat * err_temperature + D_heat * err_dot_temperature
+    heat_level  = P_heat * err_temperature + I_heat * err_cum_temperature + D_heat * err_dot_temperature
     heat_level  = max(min(int(heat_level), 100), 0)
 
     return heat_level
 
-#PD controller to modulate dehumidifier feedback
-def dehum_pd(humidity, target_humidity, last_humidity, last_target_humidity, P_hum, D_hum): #no dependencies
-    global error_cum_humidity
-
-    err_humidity = humidity - target_humidity   #If target is 60 and humidity is 30, this value is negative, less dehum
-                                                #If target is 30 and humidity is 60, this value = 30, more dehum
- 
-    humidity_dot = last_humidity - humidity #If hum increasing, this value is negative (-#)
-                                            #If hum decreasing, this value is positive (+#)
-
-    target_humidity_dot = last_target_humidity - target_humidity    #When target remains the same, this value is 0
-                                                                    #When adjusting target down, this value is positive (+#)
-                                                                    #When adjusting target up, this value is negative (-#)
-
-    err_dot_humidity = humidity_dot - target_humidity_dot   #When positive, dampens dehum signal
-                                                            #When negative, boosts duhum signal
-
-    dehumidify_level  = P_hum * err_humidity + D_hum * (0 - err_dot_humidity)
-    dehumidify_level  = max(min(int(dehumidify_level), 100), 0)
-
-    return dehumidify_level
-
-#PD controller to modulate humidifier feedback
-def hum_pd(humidity, target_humidity, last_humidity, last_target_humidity, P_hum, D_hum): #no dependencies
-    global error_cum_humidity
+#PID controller to modulate humidifier feedback, feedback pushes up towards target
+def hum_pid(humidity, target_humidity, last_humidity, last_target_humidity, 
+            P_hum, I_hum, D_hum):
     
-    err_humidity = target_humidity-humidity
+    global err_cum_humidity
+    
+    err_humidity = target_humidity - humidity
 
-    humidity_dot = humidity-last_humidity
+    humidity_dot = humidity - last_humidity
 
-    target_humidity_dot = target_humidity-last_target_humidity
+    err_cum_humidity = max(min(err_cum_humidity + err_humidity, 50), -50)
 
-    err_dot_humidity = target_humidity_dot-humidity_dot
+    target_humidity_dot = target_humidity - last_target_humidity
 
-    humidity_level  = P_hum*err_humidity + D_hum*err_dot_humidity
+    err_dot_humidity = target_humidity_dot - humidity_dot
+
+    humidity_level  = P_hum*err_humidity + I_hum * err_cum_humidity + D_hum*err_dot_humidity #positive response
     humidity_level  = max(min(int(humidity_level),100),0)
 
     return humidity_level
 
-#PD controller to modulate fan feedback
-def fan_pd(temperature, humidity, target_temperature, target_humidity, last_temperature, last_humidity, last_target_temperature, last_target_humidity, Pt_fan, Ph_fan, Dt_fan, Dh_fan): #no dependencies
-    global error_cum_temperature, error_cum_humidity, error_cum_co2
+#PID controller to modulate dehumidifier feedback pushes down towards target
+def dehum_pid(humidity, target_humidity, last_humidity, last_target_humidity,
+              P_dehum, I_dehum, D_dehum):
     
-    err_temperature = temperature-target_temperature
-    err_humidity = humidity-target_humidity
+    global err_cum_humidity
+
+    err_humidity = target_humidity - humidity
+                                                
+    humidity_dot = humidity - last_humidity 
+
+    if cs.feature_toggles["hum_pid"] == "0":
+        err_cum_humidity = max(min(err_cum_humidity + err_humidity, 50), -50) 
+
+    target_humidity_dot = target_humidity - last_target_humidity
+
+    err_dot_humidity = target_humidity_dot - humidity_dot
+
+    dehumidify_level  = P_dehum*(0-err_humidity)+I_dehum*(0-err_cum_humidity)+D_dehum*(0-err_dot_humidity)
+    dehumidify_level  = max(min(int(dehumidify_level), 100), 0)
+
+    return dehumidify_level
+
+#PID controller to modulate fan feedback, pushes down temp, hum, & c02 towards target
+def fan_pid(temperature, humidity, co2,
+            target_temperature, target_humidity, target_co2,
+            last_temperature, last_humidity, last_co2,
+            last_target_temperature, last_target_humidity, last_target_co2,
+            Pt_fan, It_fan, Dt_fan, Ph_fan, Ih_fan, Dh_fan, Pc_fan, Ic_fan, Dc_fan):
+    
+    global err_cum_temperature, err_cum_humidity, err_cum_co2
+    
+    err_temperature = target_temperature - temperature
+    err_humidity = target_humidity - humidity
+    err_co2 = target_co2 - co2
 
     temperature_dot = temperature-last_temperature
     humidity_dot = humidity-last_humidity
+    co2_dot = co2 - last_co2
 
-    target_temperature_dot = target_temperature-last_target_temperature
-    target_humidity_dot = target_humidity-last_target_humidity
+    if cs.feature_toggles["heat_pid"] == "0":
+        err_cum_temperature = max(min(err_cum_temperature + err_temperature, 50), -50)
 
-    err_dot_temperature = temperature_dot-target_temperature_dot
-    err_dot_humidity = humidity_dot-target_humidity_dot
+    if (cs.feature_toggles["hum_pid"] == "0") and (cs.feature_toggles["dehum_pid"] == "0"):
+        err_cum_humidity = max(min(err_cum_humidity + err_humidity, 50), -50)
 
-    fan_level  = Pt_fan*err_temperature + Ph_fan*err_humidity + Dt_fan*err_dot_temperature + Dh_fan*err_dot_humidity
+    err_cum_co2 = max(min(err_cum_humidity + err_humidity, 50), -50)
+
+    target_temperature_dot = target_temperature - last_target_temperature
+    target_humidity_dot = target_humidity - last_target_humidity
+    target_co2_dot = target_co2 - last_target_co2
+
+    err_dot_temperature = target_temperature_dot - temperature_dot
+    err_dot_humidity = target_humidity_dot - humidity_dot
+    err_dot_co2 = target_co2_dot - co2_dot
+
+    fan_level  = Pt_fan*(0-err_temperature)+It_fan*(0-err_cum_temperature)+Dt_fan*(0-err_dot_temperature) \
+                +Ph_fan*(0-err_humidity)+Ih_fan*(0-err_cum_humidity)+Dh_fan*(0-err_dot_humidity) \
+                +Pc_fan*(0-err_co2)+Ic_fan*(0-err_cum_co2)+Dc_fan*(0-err_dot_co2)    
+    
     fan_level  = max(min(int(fan_level),100),0)
 
     return fan_level
+
+#PID controller to modulate heater feedback
+def water_pid(soil_moisture, target_soil_moisture, last_soil_moisture, last_target_soil_moisture,
+              P_water, I_water, D_water):    
+    
+    global err_cum_soil_moisture
+
+    err_soil_moisture = target_soil_moisture - soil_moisture   #If target is 70 and temperature is 60, this value = 10, more heat
+                                                        #If target is 50 and temperature is 60, this value is negative, less heat
+
+    soil_moisture_dot = soil_moisture-last_soil_moisture  #If temp is increasing, this value is positive (+#)
+                                                    #If temp is decreasing, this value is negative (-#)
+
+    err_cum_soil_moisture = max(min(err_cum_soil_moisture + err_soil_moisture, 50), -50)
+
+    target_soil_moisture_dot = target_soil_moisture-last_target_soil_moisture #When target remains the same, this value is 0
+                                                                        #When adjusting target up, this value is positive (+#)
+                                                                        #When adjusting target down, this value is negative (-#)
+
+    err_dot_soil_moisture = target_soil_moisture_dot-soil_moisture_dot    #When positive, boosts heat signal
+                                                                    #When negative, dampens heat signal
+    water_level  = P_water * err_soil_moisture \
+                   + I_water * err_cum_soil_moisture \
+                   + D_water * err_dot_soil_moisture
+    
+    water_level  = max(min(int(water_level), 100), 0)
+
+    return water_level
 
 #poll heat subprocess if applicable and relaunch/update actuators
 def run_heat(intensity): #Depends on: 'subprocess'; Modifies: heat_process
     global heat_process
 
-    try:
+    try: #actuates heat process
         poll_heat = heat_process.poll() #heat
-        if poll_heat is not None:
-            heat_process = Popen(['python3', '/home/pi/oasis-grow/actuators/heatingElement.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
-    except:
-        heat_process = Popen(['python3', '/home/pi/oasis-grow/actuators/heatingElement.py', str(intensity)]) #If no process, then starts
+        if poll_heat is not None: #active processes return None, exited processes return 0
+            if cs.feature_toggles["heat_pid"] == "1":
+                heat_process = Popen(['python3', '/home/pi/oasis-grow/actuators/heating_element.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
+            else:
+                heat_process = Popen(['python3', '/home/pi/oasis-grow/actuators/heating_element.py', cs.grow_params["heater_duration"], cs.grow_params["heater_interval"]])
+                
+    except: #launches heat process on program startup, when heat_process itself is none
+        if cs.feature_toggles["heat_pid"] == "1":
+            heat_process = Popen(['python3', '/home/pi/oasis-grow/actuators/heating_element.py', str(intensity)]) #If no process, then starts
+        else:
+            heat_process = Popen(['python3', '/home/pi/oasis-grow/actuators/heating_element.py', cs.grow_params["heater_duration"], cs.grow_params["heater_interval"]])
 
 #poll humidityf subprocess if applicable and relaunch/update actuators
 def run_hum(intensity): #Depends on: 'subprocess'; Modifies: hum_process
@@ -233,9 +339,9 @@ def run_hum(intensity): #Depends on: 'subprocess'; Modifies: hum_process
     try:
         poll_humidity = humidity_process.poll() #humidity
         if poll_humidity is not None:
-            humidity_process = Popen(['python3', '/home/pi/oasis-grow/actuators/humidityElement.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
+            humidity_process = Popen(['python3', '/home/pi/oasis-grow/actuators/humidity_element.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
-        humidity_process = Popen(['python3', '/home/pi/oasis-grow/actuators/humidityElement.py', str(intensity)]) #If no process, then starts
+        humidity_process = Popen(['python3', '/home/pi/oasis-grow/actuators/humidity_element.py', str(intensity)]) #If no process, then starts
 
 #poll dehumidify subprocess if applicable and relaunch/update actuators
 def run_dehum(intensity): #Depends on: 'subprocess'; Modifies: hum_process
@@ -244,9 +350,9 @@ def run_dehum(intensity): #Depends on: 'subprocess'; Modifies: hum_process
     try:
         poll_dehumidify = dehumidify_process.poll() #dehumidify
         if poll_dehumidify is not None:
-            dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/actuators/dehumidifyElement.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
+            dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/actuators/dehumidify_element.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
-        dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/actuators/dehumidifyElement.py', str(intensity)]) #If no process, then starts
+        dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/actuators/dehumidify_element.py', str(intensity)]) #If no process, then starts
 
 
 #poll fan subprocess if applicable and relaunch/update actuators
@@ -256,9 +362,9 @@ def run_fan(intensity): #Depends on: 'subprocess'; Modifies: humidity_process
     try:
         poll_fan = fan_process.poll() #fan
         if poll_fan is not None:
-            fan_process = Popen(['python3', '/home/pi/oasis-grow/actuators/fanElement.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
+            fan_process = Popen(['python3', '/home/pi/oasis-grow/actuators/fan_element.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
-        fan_process = Popen(['python3', '/home/pi/oasis-grow/actuators/fanElement.py', str(intensity)]) #If no process, then starts
+        fan_process = Popen(['python3', '/home/pi/oasis-grow/actuators/fan_element.py', str(intensity)]) #If no process, then starts
 
 #poll light subprocess if applicable and relaunch/update actuators
 def run_light(time_on, time_off, refresh_frequency):
@@ -267,9 +373,9 @@ def run_light(time_on, time_off, refresh_frequency):
     try:
         poll_light = light_process.poll() #light
         if poll_light is not None:
-            light_process = Popen(['python3', '/home/pi/oasis-grow/actuators/lightingElement.py', str(time_on), str(time_off), str(refresh_frequency)]) #If running, then skips. If idle then restarts, If no process, then fails
+            light_process = Popen(['python3', '/home/pi/oasis-grow/actuators/lighting_element.py', str(time_on), str(time_off), str(refresh_frequency)]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
-        light_process = Popen(['python3', '/home/pi/oasis-grow/actuators/lightingElement.py', str(time_on), str(time_off), str(refresh_frequency)]) #If no process, then starts
+        light_process = Popen(['python3', '/home/pi/oasis-grow/actuators/lighting_element.py', str(time_on), str(time_off), str(refresh_frequency)]) #If no process, then starts
 
 #poll camera subprocess if applicable and relaunch/update actuators
 def run_camera(picture_frequency): #Depends on: 'subprocess'; Modifies: camera_process
@@ -278,9 +384,9 @@ def run_camera(picture_frequency): #Depends on: 'subprocess'; Modifies: camera_p
     try:
         poll_camera = camera_process.poll() #camera
         if poll_camera is not None:
-            camera_process = Popen(['python3', '/home/pi/oasis-grow/imaging/cameraElement.py', str(picture_frequency)]) #If running, then skips. If idle then restarts, If no process, then fails
+            camera_process = Popen(['python3', '/home/pi/oasis-grow/imaging/camera_element.py', str(picture_frequency)]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
-        camera_process = Popen(['python3', '/home/pi/oasis-grow/imaging/cameraElement.py', str(picture_frequency)]) #If no process, then starts
+        camera_process = Popen(['python3', '/home/pi/oasis-grow/imaging/camera_element.py', str(picture_frequency)]) #If no process, then starts
 
 #poll water subprocess if applicable and relaunch/update actuators
 def run_water(watering_duration, watering_frequency): #Depends on: 'subprocess'; Modifies: water_process
@@ -289,9 +395,9 @@ def run_water(watering_duration, watering_frequency): #Depends on: 'subprocess';
     try:
         poll_water = water_process.poll() #water
         if poll_water is not None:
-            water_process = Popen(['python3', '/home/pi/oasis-grow/actuators/wateringElement.py', str(watering_duration), str(watering_frequency)]) #If running, then skips. If idle then restarts, If no process, then fails
+            water_process = Popen(['python3', '/home/pi/oasis-grow/actuators/watering_element.py', str(watering_duration), str(watering_frequency)]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
-        water_process = Popen(['python3', '/home/pi/oasis-grow/actuators/wateringElement.py', str(watering_duration), str(watering_frequency)]) #If no process, then starts
+        water_process = Popen(['python3', '/home/pi/oasis-grow/actuators/watering_element.py', str(watering_duration), str(watering_frequency)]) #If no process, then starts
 
 #poll air subprocess if applicable and relaunch/update actuators
 def run_air(time_on, time_off, refresh_frequency):
@@ -300,9 +406,9 @@ def run_air(time_on, time_off, refresh_frequency):
     try:
         poll_air = air_process.poll() #light
         if poll_air is not None:
-            air_process = Popen(['python3', '/home/pi/oasis-grow/actuators/airElement.py', str(time_on), str(time_off), str(refresh_frequency)]) #If running, then skips. If idle then restarts, If no proce$
+            air_process = Popen(['python3', '/home/pi/oasis-grow/actuators/air_element.py', str(time_on), str(time_off), str(refresh_frequency)]) #If running, then skips. If idle then restarts, If no proce$
     except Exception as e:
-        air_process = Popen(['python3', '/home/pi/oasis-grow/actuators/airElement.py', str(time_on), str(time_off), str(refresh_frequency)]) #If no process, then starts
+        air_process = Popen(['python3', '/home/pi/oasis-grow/actuators/air_element.py', str(time_on), str(time_off), str(refresh_frequency)]) #If no process, then starts
 
 
 def clean_up_processes():
@@ -381,7 +487,7 @@ def main_setup():
     data_timer = time.time()
 
 def main_loop():
-    global data_timer, last_target_temperature, last_target_humidity
+    global data_timer, last_target_temperature, last_target_humidity, last_target_co2, last_target_soil_moisture
 
     #launch main program loop
     try:
@@ -389,8 +495,10 @@ def main_loop():
 
         while True:
 
-            last_target_temperature = int(cs.grow_params["target_temperature"]) #save last temperature and humidity targets to calculate delta for PD controllers
-            last_target_humidity = int(cs.grow_params["target_humidity"])
+            last_target_temperature = float(cs.grow_params["target_temperature"]) #save last temperature and humidity targets to calculate delta for PD controllers
+            last_target_humidity = float(cs.grow_params["target_humidity"])
+            last_target_co2 = float(cs.grow_params["target_soil_co2"])
+            last_target_soil_moisture = float(cs.grow_params["target_soil_moisture"])
 
             cs.load_state() #refresh the state variables to get new parameters
 
@@ -403,14 +511,14 @@ def main_loop():
                     print("Serial Port Failure")
 
             if cs.feature_toggles["heater"] == "1":
-                print("Target Temperature: %.1f F | Current: %.1f F | Temp_PID: %s %%"%(int(cs.grow_params["target_temperature"]),temperature, heat_pd(temperature,
+                print("Target Temperature: %.1f F | Current: %.1f F | Temp_PID: %s %%"%(int(cs.grow_params["target_temperature"]),temperature, heat_pid(temperature,
                                                                                                                                   int(cs.grow_params["target_temperature"]),
                                                                                                                                   last_temperature,
                                                                                                                                   last_target_temperature,
                                                                                                                                   int(cs.grow_params["P_temp"]),
                                                                                                                                   int(cs.grow_params["D_temp"]))))
             if cs.feature_toggles["humidifier"] == "1":
-                print("Target Humidity: %.1f %% | Current: %.1f %% | Hum_PID: %s %%"%(int(cs.grow_params["target_humidity"]), humidity, hum_pd(humidity,
+                print("Target Humidity: %.1f %% | Current: %.1f %% | Hum_PID: %s %%"%(int(cs.grow_params["target_humidity"]), humidity, hum_pid(humidity,
                                                                                                                                int(cs.grow_params["target_humidity"]),
                                                                                                                                last_humidity,
                                                                                                                                last_target_humidity,
@@ -418,7 +526,7 @@ def main_loop():
                                                                                                                                int(cs.grow_params["D_hum"]))))
 
             if cs.feature_toggles["fan"] == "1":
-                print("Fan PD: %s %%"%(fan_pd(temperature,
+                print("Fan PD: %s %%"%(fan_pid(temperature,
                                               humidity,
                                               int(cs.grow_params["target_temperature"]),
                                               int(cs.grow_params["target_humidity"]),
@@ -467,11 +575,11 @@ def main_loop():
 
             #update actuators in use
             if cs.feature_toggles["heater"] == "1":
-                run_heat(str(heat_pd(temperature,int(cs.grow_params["target_temperature"]),last_temperature,last_target_temperature,int(cs.grow_params["P_temp"]),int(cs.grow_params["D_temp"]))))
+                run_heat(str(heat_pid(temperature,int(cs.grow_params["target_temperature"]),last_temperature,last_target_temperature,int(cs.grow_params["P_temp"]),int(cs.grow_params["D_temp"]))))
             if cs.feature_toggles["humidifier"] == "1":
-                run_hum(str(hum_pd(humidity,int(cs.grow_params["target_humidity"]),last_humidity,last_target_humidity,int(cs.grow_params["P_hum"]),int(cs.grow_params["D_hum"]))))
+                run_hum(str(hum_pid(humidity,int(cs.grow_params["target_humidity"]),last_humidity,last_target_humidity,int(cs.grow_params["P_hum"]),int(cs.grow_params["D_hum"]))))
             if cs.feature_toggles["fan"] == "1":
-                run_fan(fan_pd(temperature,humidity,int(cs.grow_params["target_temperature"]),int(cs.grow_params["target_humidity"]),last_temperature,last_humidity,last_target_temperature,last_target_humidity,int(cs.grow_params["Pt_fan"]),int(cs.grow_params["Ph_fan"]),int(cs.grow_params["Dt_fan"]),int(cs.grow_params["Dh_fan"])))
+                run_fan(fan_pid(temperature,humidity,int(cs.grow_params["target_temperature"]),int(cs.grow_params["target_humidity"]),last_temperature,last_humidity,last_target_temperature,last_target_humidity,int(cs.grow_params["Pt_fan"]),int(cs.grow_params["Ph_fan"]),int(cs.grow_params["Dt_fan"]),int(cs.grow_params["Dh_fan"])))
             if cs.feature_toggles["light"] == "1":
                 run_light(int(cs.grow_params["time_start_light"]), int(cs.grow_params["time_stop_light"]), int(cs.grow_params["lighting_interval"]))
             if cs.feature_toggles["camera"] == "1":
