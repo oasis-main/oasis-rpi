@@ -26,38 +26,38 @@ import time
 import datetime
 import json
 
-#get hardware config
-with open('/home/pi/oasis-grow/configs/hardware_config.json') as h:
-  hardware_config = json.load(h)
+from utils import concurrent_state as cs
+
+cs.load_state()
 
 #setup GPIO
 GPIO.setmode(GPIO.BCM) #GPIO Numbers instead of board numbers
-Air_GPIO = hardware_config["actuator_gpio_map"]["air_relay"] #heater pin pulls from config file
+Air_GPIO = cs.hardware_config["actuator_gpio_map"]["air_relay"] #heater pin pulls from config file
 GPIO.setup(Air_GPIO, GPIO.OUT) #GPIO setup relay open = GPIO.HIGH, closed = GPIO.LOW
 GPIO.output(Air_GPIO, GPIO.LOW) #relay open = GPIO.HIGH, closed = GPIO.LOW
 
 #define a function to actuate element
-def actuate(timeOn = 0, timeOff = 0, interval = 900): #time on must be less than time off
+def actuate(time_on = 0, time_off = 0, interval = 900): #time on must be less than time off
 
     now = datetime.datetime.now()
     HoD = now.hour
 
 
-    if timeOn < timeOff:
-        if HoD >= timeOn and HoD < timeOff:
+    if time_on < time_off:
+        if HoD >= time_on and HoD < time_off:
             GPIO.output(Air_GPIO, GPIO.HIGH) #light on (relay closed)
             time.sleep(interval)
-        if HoD < timeOn or HoD >= timeOff:
+        if HoD < time_on or HoD >= time_off:
             GPIO.output(Air_GPIO, GPIO.LOW)
             time.sleep(interval)
-    if timeOn > timeOff:
-        if HoD >=  timeOn or HoD < timeOff:
+    if time_on > time_off:
+        if HoD >=  time_on or HoD < time_off:
             GPIO.output(Air_GPIO, GPIO.HIGH) #light on (relay closed)
             time.sleep(interval)
-        if HoD < timeOn and  HoD >= timeOff:
+        if HoD < time_on and  HoD >= time_off:
             GPIO.output(Air_GPIO, GPIO.LOW) #light on (relay closed)
             time.sleep(interval)
-    if timeOn == timeOff:
+    if time_on == time_off:
         GPIO.output(Air_GPIO, GPIO.HIGH)
         time.sleep(interval)
 

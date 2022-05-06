@@ -1,6 +1,6 @@
 {"temperature_sensor": "1",
 "humidity_sensor": "1",
-"vpd_calculation": "0",
+"vpd_calculation": "1",
 "water_level_sensor": "1",
 "co2_sensor": "1",
 "lux_sensor": "1",
@@ -21,5 +21,8 @@
 "air": "1",
 "camera": "1",
 "ndvi": "0",
+"video": "0",
+"audio": "0",
 "save_images": "1",
-"save_data": "1"}
+"save_data": "1",
+"onboard_led": "0"}

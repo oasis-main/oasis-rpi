@@ -38,19 +38,19 @@ import time
 import datetime
 
 #import other oasis packages
-import reset_model
-import concurrent_state as cs
+from utils import reset_model
+from utils import concurrent_state as cs
 
 #declare process management variables
 ser_in = None
 heat_process = None
-dehumidify_process= None
 humidity_process = None
+dehumidify_process= None
 fan_process = None
 light_process = None
-camera_process = None
 water_process = None
 air_process = None
+camera_process = None
 
 #declare sensor data variables
 temperature = 0
@@ -336,12 +336,18 @@ def run_heat(intensity): #Depends on: 'subprocess'; Modifies: heat_process
 def run_hum(intensity): #Depends on: 'subprocess'; Modifies: hum_process
     global humidity_process
 
-    try:
+    try:  #launches heat process on program startup, when heat_process itself is none
         poll_humidity = humidity_process.poll() #humidity
-        if poll_humidity is not None:
-            humidity_process = Popen(['python3', '/home/pi/oasis-grow/actuators/humidity_element.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
-    except:
-        humidity_process = Popen(['python3', '/home/pi/oasis-grow/actuators/humidity_element.py', str(intensity)]) #If no process, then starts
+        if poll_humidity is not None:  #active processes return None, exited processes return 0
+            if cs.feature_toggles["hum_pid"] == "1":
+                humidity_process = Popen(['python3', '/home/pi/oasis-grow/actuators/humidity_element.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
+            else:
+                humidity_process = Popen(['python3', '/home/pi/oasis-grow/actuators/humidity_element.py', cs.grow_params["humidifier_duration"], cs.grow_params["humidifier_interval"]])
+    except:  #launches heat process on program startup, when heat_process itself is none
+        if cs.feature_toggles["hum_pid"] == "1":
+            humidity_process = Popen(['python3', '/home/pi/oasis-grow/actuators/humidity_element.py', str(intensity)])
+        else:
+            humidity_process = Popen(['python3', '/home/pi/oasis-grow/actuators/humidity_element.py', cs.grow_params["humidifier_duration"], cs.grow_params["humidifier_interval"]])
 
 #poll dehumidify subprocess if applicable and relaunch/update actuators
 def run_dehum(intensity): #Depends on: 'subprocess'; Modifies: hum_process
@@ -350,10 +356,15 @@ def run_dehum(intensity): #Depends on: 'subprocess'; Modifies: hum_process
     try:
         poll_dehumidify = dehumidify_process.poll() #dehumidify
         if poll_dehumidify is not None:
-            dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/actuators/dehumidify_element.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
+            if cs.feature_toggles["hum_pid"] == "1":
+                dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/actuators/dehumidify_element.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
+            else:
+                dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/actuators/dehumidify_element.py', cs.grow_params["dehumidifier_duration"], cs.grow_params["dehumidifier_interval"]])
     except:
-        dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/actuators/dehumidify_element.py', str(intensity)]) #If no process, then starts
-
+        if cs.feature_toggles["hum_pid"] == "1":
+            dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/actuators/dehumidify_element.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
+        else:
+            dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/actuators/dehumidify_element.py', cs.grow_params["dehumidifier_duration"], cs.grow_params["dehumidifier_interval"]])
 
 #poll fan subprocess if applicable and relaunch/update actuators
 def run_fan(intensity): #Depends on: 'subprocess'; Modifies: humidity_process
@@ -361,55 +372,66 @@ def run_fan(intensity): #Depends on: 'subprocess'; Modifies: humidity_process
 
     try:
         poll_fan = fan_process.poll() #fan
-        if poll_fan is not None:
-            fan_process = Popen(['python3', '/home/pi/oasis-grow/actuators/fan_element.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
-    except:
-        fan_process = Popen(['python3', '/home/pi/oasis-grow/actuators/fan_element.py', str(intensity)]) #If no process, then starts
-
-#poll light subprocess if applicable and relaunch/update actuators
-def run_light(time_on, time_off, refresh_frequency):
-    global light_process #Depends on: 'subprocess'; Modifies: light_process
-
-    try:
-        poll_light = light_process.poll() #light
-        if poll_light is not None:
-            light_process = Popen(['python3', '/home/pi/oasis-grow/actuators/lighting_element.py', str(time_on), str(time_off), str(refresh_frequency)]) #If running, then skips. If idle then restarts, If no process, then fails
-    except:
-        light_process = Popen(['python3', '/home/pi/oasis-grow/actuators/lighting_element.py', str(time_on), str(time_off), str(refresh_frequency)]) #If no process, then starts
-
-#poll camera subprocess if applicable and relaunch/update actuators
-def run_camera(picture_frequency): #Depends on: 'subprocess'; Modifies: camera_process
-    global camera_process
-
-    try:
-        poll_camera = camera_process.poll() #camera
-        if poll_camera is not None:
-            camera_process = Popen(['python3', '/home/pi/oasis-grow/imaging/camera_element.py', str(picture_frequency)]) #If running, then skips. If idle then restarts, If no process, then fails
-    except:
-        camera_process = Popen(['python3', '/home/pi/oasis-grow/imaging/camera_element.py', str(picture_frequency)]) #If no process, then starts
+        if poll_fan is not None: #If running, then skips. If idle then restarts, If no process, then fails
+            if cs.feature_toggles["hum_pid"] == "1":
+                fan_process = Popen(['python3', '/home/pi/oasis-grow/actuators/fan_element.py', str(intensity)]) 
+            else:
+                fan_process = Popen(['python3', '/home/pi/oasis-grow/actuators/fan_element.py', cs.grow_params["fan_duration"], cs.grow_params["fan_interval"]])
+    except: #If no process, then starts
+        if cs.feature_toggles["hum_pid"] == "1":
+            fan_process = Popen(['python3', '/home/pi/oasis-grow/actuators/fan_element.py', str(intensity)]) 
+        else:
+            fan_process = Popen(['python3', '/home/pi/oasis-grow/actuators/fan_element.py', cs.grow_params["fan_duration"], cs.grow_params["fan_interval"]])
 
 #poll water subprocess if applicable and relaunch/update actuators
-def run_water(watering_duration, watering_frequency): #Depends on: 'subprocess'; Modifies: water_process
+def run_water(intensity): #Depends on: 'subprocess'; Modifies: water_process
     global water_process
 
     try:
         poll_water = water_process.poll() #water
         if poll_water is not None:
-            water_process = Popen(['python3', '/home/pi/oasis-grow/actuators/watering_element.py', str(watering_duration), str(watering_frequency)]) #If running, then skips. If idle then restarts, If no process, then fails
+            if cs.feature_toggles["water_pid"] == "1":
+                water_process = Popen(['python3', '/home/pi/oasis-grow/actuators/watering_element.py', str(intensity)])
+            else:
+                water_process = Popen(['python3', '/home/pi/oasis-grow/actuators/watering_element.py', str(cs.grow_params["watering_duration"]), str(cs.grow_params["watering_frequency"])]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
-        water_process = Popen(['python3', '/home/pi/oasis-grow/actuators/watering_element.py', str(watering_duration), str(watering_frequency)]) #If no process, then starts
+        if cs.feature_toggles["water_pid"] == "1":
+            water_process = Popen(['python3', '/home/pi/oasis-grow/actuators/watering_element.py', str(intensity)])
+        else:
+            water_process = Popen(['python3', '/home/pi/oasis-grow/actuators/watering_element.py', str(cs.grow_params["watering_duration"]), str(cs.grow_params["watering_frequency"])]) #If running, then skips. If idle then restarts, If no process, then fails        
+
+#poll light subprocess if applicable and relaunch/update actuators
+def run_light():
+    global light_process #Depends on: 'subprocess'; Modifies: light_process
+
+    try:
+        poll_light = light_process.poll() #light
+        if poll_light is not None:
+            light_process = Popen(['python3', '/home/pi/oasis-grow/actuators/lighting_element.py', cs.grow_params["time_start_light"], cs.grow_params["time_stop_light"], cs.grow_params["lighting_interval"]]) #If running, then skips. If idle then restarts, If no process, then fails
+    except:
+        light_process = Popen(['python3', '/home/pi/oasis-grow/actuators/lighting_element.py', cs.grow_params["time_start_light"], cs.grow_params["time_stop_light"], cs.grow_params["lighting_interval"]]) #If running, then skips. If idle then restarts, If no process, then fails
 
 #poll air subprocess if applicable and relaunch/update actuators
-def run_air(time_on, time_off, refresh_frequency):
+def run_air():
     global air_process #Depends on: 'subprocess'; Modifies: light_process
 
     try:
         poll_air = air_process.poll() #light
         if poll_air is not None:
-            air_process = Popen(['python3', '/home/pi/oasis-grow/actuators/air_element.py', str(time_on), str(time_off), str(refresh_frequency)]) #If running, then skips. If idle then restarts, If no proce$
+            air_process = Popen(['python3', '/home/pi/oasis-grow/actuators/air_element.py', cs.grow_params["time_start_air"], cs.grow_params["time_stop_air"], cs.grow_params["air_interval"]]) #If running, then skips. If idle then restarts, If no process
     except Exception as e:
-        air_process = Popen(['python3', '/home/pi/oasis-grow/actuators/air_element.py', str(time_on), str(time_off), str(refresh_frequency)]) #If no process, then starts
+        air_process = Popen(['python3', '/home/pi/oasis-grow/actuators/air_element.py', cs.grow_params["time_start_air"], cs.grow_params["time_stop_air"], cs.grow_params["air_interval"]]) #If no process, then starts
 
+#poll camera subprocess if applicable and relaunch/update actuators
+def run_camera(): #Depends on: 'subprocess'; Modifies: camera_process
+    global camera_process
+
+    try:
+        poll_camera = camera_process.poll() #camera
+        if poll_camera is not None:
+            camera_process = Popen(['python3', '/home/pi/oasis-grow/imaging/camera_element.py', cs.grow_params["camera_interval"]]) #If running, then skips. If idle then restarts, If no process, then fails
+    except:
+        camera_process = Popen(['python3', '/home/pi/oasis-grow/imaging/camera_element.py', cs.grow_params["camera_interval"]]) #If no process, then starts
 
 def clean_up_processes():
     global heat_process, humidity_process, fan_process, light_process, camera_process, water_process, air_process        

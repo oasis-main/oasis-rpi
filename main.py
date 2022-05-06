@@ -37,8 +37,8 @@ from time import sleep
 import datetime
 
 #import other oasis packages
-import reset_model
-import concurrent_state as cs
+from utils import reset_model
+from utils import concurrent_state as cs
 
 #declare process management variables
 listener = None

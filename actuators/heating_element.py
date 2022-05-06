@@ -105,7 +105,7 @@ def actuate_pid(temp_ctrl = 50):
         GPIO.output(Heat_GPIO,GPIO.HIGH)
         time.sleep(10) #on for 10
 
-def actuate_interval(duration = 15, interval = 40): #amount of time between waterings (seconds, seconds)
+def actuate_interval(duration = 15, interval = 45): #amount of time between waterings (seconds, seconds)
     GPIO.output(Heat_GPIO, GPIO.HIGH)
     time.sleep(float(duration))
     GPIO.output(Heat_GPIO, GPIO.LOW)
