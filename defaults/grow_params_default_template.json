@@ -15,6 +15,7 @@
 "D_dehum": "10",
 "dehumidifier_duration": "15",
 "dehumidifier_interval": "45",
+"target_co2": "1000",
 "Pt_fan": "100",
 "It_fan": "0", 
 "Dt_fan": "1", 

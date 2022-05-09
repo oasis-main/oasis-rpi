@@ -17,12 +17,13 @@
 "fan_pid": "1",
 "light": "1",
 "water": "1",
-"water_pid": "0",
+"water_pid": "1",
 "air": "1",
 "camera": "1",
-"ndvi": "0",
+"ndvi": "1",
 "video": "0",
 "audio": "0",
 "save_images": "1",
 "save_data": "1",
-"onboard_led": "0"}
+"onboard_led": "0" ,
+"debug": "0"}

@@ -67,22 +67,29 @@ co2 = 0
 last_co2 = 0
 last_target_co2 = 0
 err_cum_co2 = 0
-
+ 
 soil_moisture = 0
 last_soil_moisture = 0
 last_target_soil_moisture = 0
 err_cum_soil_moisture = 0
 
-vpd = 0
 water_low = 0
+vpd = 0
 lux = 0
 ph = 0
 
-#declare timekeeping variables
+#actuator output variables
+temp_feedback = 0
+hum_feedback = 0
+dehum_feedback = 0
+fan_feedback  = 0
+water_feedback = 0
+
+#timekeeping variables
 data_timer = None
 
 #write some data to a .csv, takes a dictionary and a path
-def write_csv(filename, dict): #Depends on: 'pandas'
+def write_csv(filename, dict): #Depends on: "os" "csv"
     file_exists = os.path.isfile(filename)
 
     with open (filename, 'a') as csvfile:
@@ -153,7 +160,7 @@ def listen(): #Depends on 'serial', start_serial()
         
         if cs.feature_toggles["co2_sensor"] == "1":
             last_co2 = co2
-            co2 = float(sensor_info["temperature"])
+            co2 = float(sensor_info["co2"])
 
         if cs.feature_toggles["soil_moisture_sensor"] == "1":
             last_soil_moisture = soil_moisture
@@ -287,7 +294,8 @@ def fan_pid(temperature, humidity, co2,
     return fan_level
 
 #PID controller to modulate heater feedback
-def water_pid(soil_moisture, target_soil_moisture, last_soil_moisture, last_target_soil_moisture,
+def water_pid(soil_moisture, target_soil_moisture, 
+              last_soil_moisture, last_target_soil_moisture,
               P_water, I_water, D_water):    
     
     global err_cum_soil_moisture
@@ -434,7 +442,7 @@ def run_camera(): #Depends on: 'subprocess'; Modifies: camera_process
         camera_process = Popen(['python3', '/home/pi/oasis-grow/imaging/camera_element.py', cs.grow_params["camera_interval"]]) #If no process, then starts
 
 def clean_up_processes():
-    global heat_process, humidity_process, fan_process, light_process, camera_process, water_process, air_process        
+    global heat_process, humidity_process, dehumidify_process, fan_process, light_process, camera_process, water_process, air_process        
 
     #clean up all processes
     cs.load_state()
@@ -447,25 +455,29 @@ def clean_up_processes():
         humidity_process.terminate()
         humidity_process.wait()
 
+    if (cs.feature_toggles["dehumidifier"] == "1") and (dehumidify_process != None):
+        dehumidify_process.terminate()
+        dehumidify_process.wait()
+
     if (cs.feature_toggles["fan"] == "1") and (fan_process != None):
         fan_process.terminate()
         fan_process.wait()
-
-    if (cs.feature_toggles["light"] == "1") and (light_process != None):
-        light_process.terminate()
-        light_process.wait()
-
-    if (cs.feature_toggles["camera"] == "1") and (camera_process != None):
-        camera_process.terminate()
-        camera_process.wait()
 
     if (cs.feature_toggles["water"] == "1") and (water_process != None):
         water_process.terminate()
         water_process.wait()
 
+    if (cs.feature_toggles["light"] == "1") and (light_process != None):
+        light_process.terminate()
+        light_process.wait()
+
     if (cs.feature_toggles["air"] == "1") and (air_process != None):
         air_process.terminate()
         air_process.wait()
+
+    if (cs.feature_toggles["camera"] == "1") and (camera_process != None):
+        camera_process.terminate()
+        camera_process.wait()
 
     gc.collect()
 
@@ -502,124 +514,216 @@ def main_setup():
         print("please offer valid run parameters")
         sys.exit()
 
-    #attempt to make serial connection
-    start_serial()
+    #attempt to make serial connection but only if there is a sensor active
+    if ((cs.feature_toggles["temperature_sensor"] == "1") \
+                or (cs.feature_toggles["humidity_sensor"] == "1") \
+                    or (cs.feature_toggles["water_level_sensor"] == "1") \
+                        or (cs.feature_toggles["co2_sensor"] == "1") \
+                            or (cs.feature_toggles["lux_sensor"] == "1") \
+                                or (cs.feature_toggles["ph_sensor"] == "1") \
+                                    or (cs.feature_toggles["tds_sensor"] == "1") \
+                                        or (cs.feature_toggles["soil_moisture_sensor"] == "1")):
+        start_serial()
 
     #start the clock for timimg .csv writes and data exchanges with server
     data_timer = time.time()
 
+def update_derivative_banks():
+    global last_target_temperature, last_target_humidity, last_target_co2, last_target_soil_moisture
+
+    #save last temperature and humidity targets to calculate delta for PD controllers
+    last_target_temperature = float(cs.grow_params["target_temperature"]) 
+    last_target_humidity = float(cs.grow_params["target_humidity"])
+    last_target_co2 = float(cs.grow_params["target_soil_co2"])
+    last_target_soil_moisture = float(cs.grow_params["target_soil_moisture"])
+
+def smart_listener():
+    if ((cs.feature_toggles["temperature_sensor"] == "1") \
+                or (cs.feature_toggles["humidity_sensor"] == "1") \
+                    or (cs.feature_toggles["water_level_sensor"] == "1") \
+                        or (cs.feature_toggles["co2_sensor"] == "1") \
+                            or (cs.feature_toggles["lux_sensor"] == "1") \
+                                or (cs.feature_toggles["ph_sensor"] == "1") \
+                                    or (cs.feature_toggles["tds_sensor"] == "1") \
+                                        or (cs.feature_toggles["soil_moisture_sensor"] == "1")):
+        try: #attempt to read data from sensor, raise exception if there is a problem
+            listen() #this will be changed to run many sensor functions as opposed to one serial listener
+        except Exception as e:
+            print(e)
+            print("Serial Port Failure")
+
+def console_log_data():
+    
+    #temperature sensor
+    if cs.feature_toggles["heater"] == "1":
+        print("Target Temperature: %.1f F | Current: %.1f F | Temp_PID: %s %%"%(str(cs.grow_params["target_temperature"]),temperature, temp_feedback))
+    
+    
+    if cs.feature_toggles["humidifier"] == "1":
+        print("Target Humidity: %.1f %% | Current: %.1f %% | Hum_PID: %s %%"%(str(cs.grow_params["target_humidity"]), humidity, hum_feedback))
+
+    if cs.feature_toggles["fan"] == "1":
+        print("Fan PD: %s %%"%(fan_feedback))
+
+    if cs.feature_toggles["light"] == "1":
+        print("Light Turns on at: %i :00 Local Time  | Turns off at: %i :00 Local Time"%(str(cs.grow_params["time_start_light"]), str(cs.grow_params["time_stop_light"])))
+
+    if cs.feature_toggles["camera"] == "1":
+        print("Image every %i minute(s)"%(str(cs.grow_params["camera_interval"])))
+
+    if cs.feature_toggles["water"] == "1":
+        print("Watering for: %i second(s) every: %i hour(s)"%(str(cs.grow_params["watering_duration"]), str(cs.grow_params["watering_interval"])))
+
+    if cs.feature_toggles["water_level_sensor"] == "1":
+        if water_low == 1:
+            print("Water Level Low!")
+
+def run_active_actuators():
+    
+    global temp_feedback, hum_feedback, dehum_feedback, fan_feedback, water_feedback
+
+    # calculat feedback level and update actuators in use
+    if cs.feature_toggles["heater"] == "1":
+        if cs.feature_toggles["heat_pid"] == "1":
+            temp_feedback = str(heat_pid(temperature,
+                                        int(cs.grow_params["target_temperature"]),
+                                        last_temperature,
+                                        last_target_temperature,
+                                        int(cs.grow_params["P_temp"]),
+                                        int(cs.grow_params["I_temp"]),
+                                        int(cs.grow_params["D_temp"])))
+        run_heat(temp_feedback)
+    
+    if cs.feature_toggles["humidifier"] == "1":
+        if cs.feature_toggles["hum_pid"] == "1":
+            hum_feedback = str(hum_pid(humidity,
+                                        int(cs.grow_params["target_humidity"]),
+                                        last_humidity,
+                                        last_target_humidity,
+                                        int(cs.grow_params["P_hum"]),
+                                        int(cs.grow_params["I_hum"]),
+                                        int(cs.grow_params["D_hum"])))
+        run_hum(hum_feedback)
+    
+    if cs.feature_toggles["dehumidifier"] == "1":
+        if cs.feature_toggles["dehum_pid"] == "1":
+            dehum_feedback = str(hum_pid(humidity,
+                                        int(cs.grow_params["target_humidity"]),
+                                        last_humidity,
+                                        last_target_humidity,
+                                        int(cs.grow_params["P_dehum"]),
+                                        int(cs.grow_params["I_dehum"]),
+                                        int(cs.grow_params["D_dehum"])))
+        run_dehum(dehum_feedback)
+
+    if cs.feature_toggles["fan"] == "1":
+        if cs.feature_toggles["fan_pid"] == "1":
+            fan_feedback = str(fan_pid(temperature , humidity, co2,
+                                int(cs.grow_params["target_temperature"]), int(cs.grow_params["target_humidity"]), int(cs.grow_params["target_co2"]),
+                                last_temperature,last_humidity, last_co2,
+                                last_target_temperature,last_target_humidity, last_target_co2,
+                                int(cs.grow_params["Pt_fan"]), int(cs.grow_params["It_fan"]), int(cs.grow_params["Dt_fan"]),
+                                int(cs.grow_params["Ph_fan"]), int(cs.grow_params["Ih_fan"]), int(cs.grow_params["Dh_fan"]),
+                                int(cs.grow_params["Pc_fan"]), int(cs.grow_params["Ic_fan"]), int(cs.grow_params["Dc_fan"])))
+        run_fan(fan_feedback)
+    
+    '''
+    def water_pid(soil_moisture, target_soil_moisture, 
+              last_soil_moisture, last_target_soil_moisture,
+              P_water, I_water, D_water):    '''
+
+    if cs.feature_toggles["water"] == "1":
+        if cs.feature_toggles["water_pid"] == "1":
+            water_feedback = str(water_pid(soil_moisture, int(cs.grow_params["target_soil_moisture"]),
+                                last_soil_moisture, last_target_soil_moisture,
+                                int(cs.grow_params["P_water"]), int(cs.grow_params["I_water"]), int(cs.grow_params["D_water"])))
+        run_water(water_feedback)
+
+    if cs.feature_toggles["light"] == "1":
+        run_light()
+
+    if cs.feature_toggles["air"] == "1":
+        run_air()
+
+    if cs.feature_toggles["camera"] == "1":
+        run_camera()
+
+def data_out():
+    global data_timer
+    
+    #write data and send to server after set time elapses
+    if time.time() - data_timer > 300:
+
+        try:
+
+            if cs.feature_toggles["save_data"] == "1":
+                #save data to .csv
+                print("Writing to csv")
+                write_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv',
+                            {"time": [str(time.strftime('%l:%M%p %Z %b %d, %Y'))], 
+                             "temperature": [str(temperature)], 
+                             "humidity": [str(humidity)], 
+                             "water_low": [str(water_low)]})
+
+            #write data to disk and exchange with coud if connected
+
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "last_heartbeat", str(datetime.datetime.now()))
+            
+            if cs.feature_toggles["temperature_sensor"] == "1":
+                cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "temperature", str(temperature))
+            if cs.feature_toggles["humidity_sensor"] == "1":
+                cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "humidity", str(humidity))
+            if cs.feature_toggles["vpd_calculation"] == "1":
+                cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "vpd", str(vpd))
+            if cs.feature_toggles["water_level_sensor"] == "1":
+                cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "water_low", str(water_low))
+            if cs.feature_toggles["co2_sensor"] == "1":
+                cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "co2", str(co2))
+            if cs.feature_toggles["lux_sensor"] == "1":
+                cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "lux", str(lux))
+            if cs.feature_toggles["ph_sensor"] == "1":
+                cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "ph", str(ph))
+            if cs.feature_toggles["soil_moisture_sensor"] == "1":
+                cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "soil_moisture", str(soil_moisture))
+
+
+            data_timer = time.time()
+
+        except Exception as e:
+            print(e)
+            data_timer = time.time()
+
+def check_exit():
+    #set exit condition    
+    cs.load_state()
+    if cs.device_state["running"] == "0":
+        terminate_program()
+    else:
+        pass
+
+    #give the program some time to breathe
+    time.sleep(1)
+
 def main_loop():
-    global data_timer, last_target_temperature, last_target_humidity, last_target_co2, last_target_soil_moisture
+    global data_timer
 
     #launch main program loop
     try:
         print("------------------------------------------------------------")
 
         while True:
+            
+            update_derivative_banks() #this occurs in near-realtime, as opposed to storage and exchange every 5 min
 
-            last_target_temperature = float(cs.grow_params["target_temperature"]) #save last temperature and humidity targets to calculate delta for PD controllers
-            last_target_humidity = float(cs.grow_params["target_humidity"])
-            last_target_co2 = float(cs.grow_params["target_soil_co2"])
-            last_target_soil_moisture = float(cs.grow_params["target_soil_moisture"])
+            cs.load_state() 
 
-            cs.load_state() #refresh the state variables to get new parameters
+            smart_listener()
 
+            console_log_data()
 
-            if (cs.feature_toggles["temp_hum_sensor"] == "1") or (cs.feature_toggles["water_low_sensor"] == "1"):
-                try: #attempt to read data from sensor, raise exception if there is a problem
-                    listen() #this will be changed to run many sensor functions as opposed to one serial listener
-                except Exception as e:
-                    print(e)
-                    print("Serial Port Failure")
+            run_active_actuators()
 
-            if cs.feature_toggles["heater"] == "1":
-                print("Target Temperature: %.1f F | Current: %.1f F | Temp_PID: %s %%"%(int(cs.grow_params["target_temperature"]),temperature, heat_pid(temperature,
-                                                                                                                                  int(cs.grow_params["target_temperature"]),
-                                                                                                                                  last_temperature,
-                                                                                                                                  last_target_temperature,
-                                                                                                                                  int(cs.grow_params["P_temp"]),
-                                                                                                                                  int(cs.grow_params["D_temp"]))))
-            if cs.feature_toggles["humidifier"] == "1":
-                print("Target Humidity: %.1f %% | Current: %.1f %% | Hum_PID: %s %%"%(int(cs.grow_params["target_humidity"]), humidity, hum_pid(humidity,
-                                                                                                                               int(cs.grow_params["target_humidity"]),
-                                                                                                                               last_humidity,
-                                                                                                                               last_target_humidity,
-                                                                                                                               int(cs.grow_params["P_hum"]),
-                                                                                                                               int(cs.grow_params["D_hum"]))))
-
-            if cs.feature_toggles["fan"] == "1":
-                print("Fan PD: %s %%"%(fan_pid(temperature,
-                                              humidity,
-                                              int(cs.grow_params["target_temperature"]),
-                                              int(cs.grow_params["target_humidity"]),
-                                              last_temperature,
-                                              last_humidity,
-                                              last_target_temperature,
-                                              last_target_humidity,
-                                              int(cs.grow_params["Pt_fan"]),
-                                              int(cs.grow_params["Ph_fan"]),
-                                              int(cs.grow_params["Dt_fan"]),
-                                              int(cs.grow_params["Dh_fan"]))))
-
-            if cs.feature_toggles["light"] == "1":
-                print("Light Turns on at: %i :00 Local Time  | Turns off at: %i :00 Local Time"%(int(cs.grow_params["time_start_light"]), int(cs.grow_params["time_stop_light"])))
-
-            if cs.feature_toggles["camera"] == "1":
-                print("Image every %i minute(s)"%(int(cs.grow_params["camera_interval"])))
-
-            if cs.feature_toggles["water"] == "1":
-                print("Watering for: %i second(s) every: %i hour(s)"%(int(cs.grow_params["watering_duration"]), int(cs.grow_params["watering_interval"])))
-
-            if cs.feature_toggles["water_low_sensor"] == "1":
-                if water_low == 1:
-                    print("Water Level Low!")
-
-            print("------------------------------------------------------------")
-            #write data and send to server after set time elapses
-            if time.time() - data_timer > 300:
-
-                try:
-
-                    if cs.feature_toggles["save_data"] == "1":
-                        #save data to .csv
-                        print("Writing to csv")
-                        write_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv',{"time": [str(time.strftime('%l:%M%p %Z %b %d, %Y'))], "temperature": [str(temperature)], "humidity": [str(humidity)], "water_low": [str(water_low)]})
-
-                    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "temperature", str(temperature))
-                    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "humidity", str(humidity))
-                    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "water_low", str(water_low))
-
-                    data_timer = time.time()
-
-                except Exception as e:
-                    print(e)
-                    data_timer = time.time()
-
-            #update actuators in use
-            if cs.feature_toggles["heater"] == "1":
-                run_heat(str(heat_pid(temperature,int(cs.grow_params["target_temperature"]),last_temperature,last_target_temperature,int(cs.grow_params["P_temp"]),int(cs.grow_params["D_temp"]))))
-            if cs.feature_toggles["humidifier"] == "1":
-                run_hum(str(hum_pid(humidity,int(cs.grow_params["target_humidity"]),last_humidity,last_target_humidity,int(cs.grow_params["P_hum"]),int(cs.grow_params["D_hum"]))))
-            if cs.feature_toggles["fan"] == "1":
-                run_fan(fan_pid(temperature,humidity,int(cs.grow_params["target_temperature"]),int(cs.grow_params["target_humidity"]),last_temperature,last_humidity,last_target_temperature,last_target_humidity,int(cs.grow_params["Pt_fan"]),int(cs.grow_params["Ph_fan"]),int(cs.grow_params["Dt_fan"]),int(cs.grow_params["Dh_fan"])))
-            if cs.feature_toggles["light"] == "1":
-                run_light(int(cs.grow_params["time_start_light"]), int(cs.grow_params["time_stop_light"]), int(cs.grow_params["lighting_interval"]))
-            if cs.feature_toggles["camera"] == "1":
-                run_camera(int(cs.grow_params["camera_interval"]))
-            if cs.feature_toggles["water"] == "1":
-                run_water(int(cs.grow_params["watering_duration"]),int(cs.grow_params["watering_interval"]))
-            if cs.feature_toggles["air"] == "1":
-                run_air(int(cs.grow_params["time_start_air"]), int(cs.grow_params["time_stop_air"]),  int(cs.grow_params["air_interval"]))
-
-            #set exit condition    
-            cs.load_state()
-            if cs.device_state["running"] == "0":
-                terminate_program()
-            else:
-                pass
-
-            #give the program some time to breathe
-            time.sleep(1)
+            check_exit()
 
     except (KeyboardInterrupt):
         terminate_program()

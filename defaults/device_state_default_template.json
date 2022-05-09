@@ -14,5 +14,5 @@
  "ph": "0",
  "soil_moisture": "0",
  "deleted": "0",
- "debug": "0",
+ "last_hearbeat": "None",
  "device_error": "None"}

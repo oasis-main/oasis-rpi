@@ -55,19 +55,22 @@ run_water_button = None #holds GPIO object for triggering the watering aparatus
 def start_serial(): #Depends on:'serial'; Modifies: ser_out
     global ser_out
 
-    try:
+    if cs.feature_toggles["onboard_led"] == "1":
+        pass
+    else:
         try:
-            ser_out = serial.Serial("/dev/ttyUSB0", 9600, timeout=1)
-            ser_out.flush()
-            print("Started serial communication with Arduino Nano.")
-        except:
-            ser_out = serial.Serial("/dev/ttyACM0", 9600, timeout=1)
-            ser_out.flush()
-            print("Started serial communication with Arduino Uno.")
-    except Exception as e:
-        #print(str(e))
-        ser_out = None
-        print("Serial connection not found")
+            try:
+                ser_out = serial.Serial("/dev/ttyUSB0", 9600, timeout=1)
+                ser_out.flush()
+                print("Started serial communication with Arduino Nano.")
+            except:
+                ser_out = serial.Serial("/dev/ttyACM0", 9600, timeout=1)
+                ser_out.flush()
+                print("Started serial communication with Arduino Uno.")
+        except Exception as e:
+            #print(str(e))
+            ser_out = None
+            print("Serial connection not found")
 
 #gets new refresh token from firebase
 def get_refresh_token(web_api_key,email,password): #Depends on: 'requests', 'json', cs.write_state; Modifies: None

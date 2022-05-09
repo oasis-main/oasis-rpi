@@ -18,4 +18,4 @@ echo "Creating new lock_file..."
 cp /home/pi/oasis-grow/defaults/locks_default_template.json /home/pi/oasis-grow/configs/locks.json
 
 echo "Creating placeholder image..."
-cp /home/pi/oasis-grow/defaults/default_placeholder_image.jpg /home/pi/image.jpg
+cp /home/pi/oasis-grow/defaults/default_placeholder_image.jpg /home/pi/oasis-grow/data_out/image.jpg
