@@ -172,7 +172,7 @@ def listen(): #Depends on 'serial', start_serial()
             vpd = ea-es
         
         if cs.feature_toggles["water_level_sensor"] == "1":
-            water_low = float(sensor_info["water_low"])
+            water_low = int(sensor_info["water_low"])
         
         if cs.feature_toggles["lux_sensor"] == "1":
             lux = float(sensor_info["lux"])
@@ -554,10 +554,38 @@ def smart_listener():
 
 def console_log_data():
     
-    #temperature sensor
+    #Sensors
+
+    if cs.feature_toggles["temperature_sensor"] == "1":
+        print("Temperature Reading (*F): "+str(temperature))
+    
+    if cs.feature_toggles["humidity_sensor"] == "1":
+        print("Relative Humidity (%): "+str(humidity))
+    
+    if cs.feature_toggles["co2_sensor"] == "1":
+        print ("Atmospheric Co2 Parts Per Million (ppm): " + str(co2))
+
+    if cs.feature_toggles["soil_moisture_sensor"] == "1":
+        print ("Soil Moisture Saturation (%): " + str(soil_moisture))
+
+    if cs.feature_toggles["vpd_calculation"] == "1":
+        print ("Vapure Pressure Deficit (kPa): " + str(vpd))
+    
+    if cs.feature_toggles["water_level_sensor"] == "1":
+        if water_low == 1:
+            print("Tank level is below sensor. Please fill!")
+        else:
+            print("Tank level is above sensor.")
+
+    if cs.feature_toggles["lux_sensor"] == "1":
+        print("Light Intensity (Lux -> Lumen/M^2): "+str(lux))
+    
+    if cs.feature_toggles["ph_sensor"] == "1":
+        print(ph)
+
+    #Actuators
     if cs.feature_toggles["heater"] == "1":
         print("Target Temperature: %.1f F | Current: %.1f F | Temp_PID: %s %%"%(str(cs.grow_params["target_temperature"]),temperature, temp_feedback))
-    
     
     if cs.feature_toggles["humidifier"] == "1":
         print("Target Humidity: %.1f %% | Current: %.1f %% | Hum_PID: %s %%"%(str(cs.grow_params["target_humidity"]), humidity, hum_feedback))
@@ -565,18 +593,16 @@ def console_log_data():
     if cs.feature_toggles["fan"] == "1":
         print("Fan PD: %s %%"%(fan_feedback))
 
-    if cs.feature_toggles["light"] == "1":
-        print("Light Turns on at: %i :00 Local Time  | Turns off at: %i :00 Local Time"%(str(cs.grow_params["time_start_light"]), str(cs.grow_params["time_stop_light"])))
-
-    if cs.feature_toggles["camera"] == "1":
-        print("Image every %i minute(s)"%(str(cs.grow_params["camera_interval"])))
-
     if cs.feature_toggles["water"] == "1":
         print("Watering for: %i second(s) every: %i hour(s)"%(str(cs.grow_params["watering_duration"]), str(cs.grow_params["watering_interval"])))
 
-    if cs.feature_toggles["water_level_sensor"] == "1":
-        if water_low == 1:
-            print("Water Level Low!")
+    if cs.feature_toggles["light"] == "1":
+        print("Light Turns on at: %i :00 Local Time  | Turns off at: %i :00 Local Time"%(str(cs.grow_params["time_start_light"]), str(cs.grow_params["time_stop_light"])))
+
+    #Imaging
+
+    if cs.feature_toggles["camera"] == "1":
+        print("Image every %i minute(s)"%(str(cs.grow_params["camera_interval"])))
 
 def run_active_actuators():
     
@@ -626,11 +652,6 @@ def run_active_actuators():
                                 int(cs.grow_params["Ph_fan"]), int(cs.grow_params["Ih_fan"]), int(cs.grow_params["Dh_fan"]),
                                 int(cs.grow_params["Pc_fan"]), int(cs.grow_params["Ic_fan"]), int(cs.grow_params["Dc_fan"])))
         run_fan(fan_feedback)
-    
-    '''
-    def water_pid(soil_moisture, target_soil_moisture, 
-              last_soil_moisture, last_target_soil_moisture,
-              P_water, I_water, D_water):    '''
 
     if cs.feature_toggles["water"] == "1":
         if cs.feature_toggles["water_pid"] == "1":

@@ -25,5 +25,5 @@
 "audio": "0",
 "save_images": "1",
 "save_data": "1",
-"onboard_led": "0" ,
+"onboard_led": "1" ,
 "debug": "0"}

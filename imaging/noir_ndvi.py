@@ -1,15 +1,10 @@
+
+
 import cv2
 import numpy as np
 from fastiecm import fastiecm
 from picamera import PiCamera
 import picamera.array
-from fastiecm import fastiecm
-
-#create and configure camera object 
-cam = PiCamera()
-cam.rotation = 180
-cam.resolution = (1920, 1080) # Uncomment if using a Pi Noir camera
-#cam.resolution = (2592, 1952) # Comment this line if using a Pi Noir camera
 
 #create and capture stream object
 def capture_stream():
@@ -54,35 +49,56 @@ def calc_ndvi(image):
     return ndvi
 
 def take_pictiure():
+    #create and configure camera object 
+    cam = PiCamera()
+    cam.rotation = 180
+    cam.resolution = (1920, 1080) # Uncomment if using a Pi Noir camera
+    #cam.resolution = (2592, 1952) # Comment this line if using a Pi Noir camera
+
     original = capture_stream()#create and capture stream object
-    display(original, 'Original')
+    #display(original, 'Original')
     contrasted = contrast_stretch(original)
-    display(contrasted, 'Contrasted original')
+    #display(contrasted, 'Contrasted original')
     cv2.imwrite('/home/pi/oasis-grow/data_out/contrasted.png', contrasted)
     ndvi = calc_ndvi(contrasted)
-    display(ndvi, 'NDVI')
+    #display(ndvi, 'NDVI')
     cv2.imwrite('/home/pi/oasis-grow/data_out/ndvi.png', ndvi)
     ndvi_contrasted = contrast_stretch(ndvi)
-    display(ndvi_contrasted, 'NDVI Contrasted')
+    #display(ndvi_contrasted, 'NDVI Contrasted')
     cv2.imwrite('/home/pi/oasis-grow/data_out/ndvi_contrasted.png', ndvi_contrasted)
     color_mapped_prep = ndvi_contrasted.astype(np.uint8)
     color_mapped_image = cv2.applyColorMap(color_mapped_prep, fastiecm)
-    display(color_mapped_image, 'Color mapped')
+    #display(color_mapped_image, 'Color mapped')
     cv2.imwrite('/home/pi/oasis-grow/data_out/color_mapped_image.png', color_mapped_image)
 
 
 if __name__ == "main":
-    original = capture_stream()#create and capture stream object
+    #create and configure camera object 
+    cam = PiCamera()
+    cam.rotation = 180
+    cam.resolution = (1920, 1080) # Uncomment if using a Pi Noir camera
+    #cam.resolution = (2592, 1952) # Comment this line if using a Pi Noir camer
+    
+    #create and capture stream object
+    original = capture_stream()
     display(original, 'Original')
+    
+    #apply contrast
     contrasted = contrast_stretch(original)
     display(contrasted, 'Contrasted original')
     cv2.imwrite('/home/pi/oasis-grow/data_out/contrasted.png', contrasted)
+    
+    #calculate ndvi from contrast
     ndvi = calc_ndvi(contrasted)
     display(ndvi, 'NDVI')
     cv2.imwrite('/home/pi/oasis-grow/data_out/ndvi.png', ndvi)
+    
+    #apply contrast to ndvi
     ndvi_contrasted = contrast_stretch(ndvi)
     display(ndvi_contrasted, 'NDVI Contrasted')
     cv2.imwrite('/home/pi/oasis-grow/data_out/ndvi_contrasted.png', ndvi_contrasted)
+    
+    #convert ndvi into a color-mapped version 
     color_mapped_prep = ndvi_contrasted.astype(np.uint8)
     color_mapped_image = cv2.applyColorMap(color_mapped_prep, fastiecm)
     display(color_mapped_image, 'Color mapped')

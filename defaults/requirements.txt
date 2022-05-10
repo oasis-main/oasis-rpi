@@ -12,5 +12,6 @@ requests-toolbelt==0.7.0
 pickle5
 Pillow
 RPi.GPIO
+picamera
 opencv-python
 streamlit==0.62.0
