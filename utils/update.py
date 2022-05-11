@@ -40,7 +40,7 @@ def save_old_configs():
     savestate = Popen(["cp", "/home/pi/oasis-grow/configs/device_state.json", "/home/pi/oasis-grow/configs/device_state_temp.json"])
     savestate.wait()
 
-    saveparams = Popen(["cp", "/home/pi/oasis-grow/configs/grow_params.json", "/home/pi/oasis-grow/configs/grow_params_temp.json"])
+    saveparams = Popen(["cp", "/home/pi/oasis-grow/configs/device_params.json", "/home/pi/oasis-grow/configs/device_params_temp.json"])
     saveparams.wait()
 
     print("Saved existing configs to temporary files")
@@ -82,7 +82,7 @@ def get_update(test=False):
     transfer_compatible_configs('/home/pi/oasis-grow/configs/hardware_config.json', '/home/pi/oasis-grow/configs/hardware_config_temp.json')
     transfer_compatible_configs('/home/pi/oasis-grow/configs/access_config.json', '/home/pi/oasis-grow/configs/access_config_temp.json')
     transfer_compatible_configs('/home/pi/oasis-grow/configs/device_state.json', '/home/pi/oasis-grow/configs/device_state_temp.json')
-    transfer_compatible_configs('/home/pi/oasis-grow/configs/grow_params.json', '/home/pi/oasis-grow/configs/grow_params_temp.json')
+    transfer_compatible_configs('/home/pi/oasis-grow/configs/device_params.json', '/home/pi/oasis-grow/configs/device_params_temp.json')
     print("Transfered compatible state & configs, removing temporary files")
 
     #run external update commands

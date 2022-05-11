@@ -102,7 +102,7 @@ chmod +x setup_rclocal.sh
  sudo reboot
 ```
 
-When the system reboots automatically, everything should be fully functional and running in the background. We will be adding an API soon to interact with the system as it runs headless. For now you can use the [button interface](#button-interface), control everything via [Oasis-x Dashboard](https//:dashboard.oasis-x.io), or turn the core controller on-and-off by changing the "running" parameter from 0 to 1 in /home/pi/oasis-grow/configs/device_state.json. Yyou can also change the growth parameters by editing /home/pi/oasis-grow/configs/grow_params.json 
+When the system reboots automatically, everything should be fully functional and running in the background. We will be adding an API soon to interact with the system as it runs headless. For now you can use the [button interface](#button-interface), control everything via [Oasis-x Dashboard](https//:dashboard.oasis-x.io), or turn the core controller on-and-off by changing the "running" parameter from 0 to 1 in /home/pi/oasis-grow/configs/device_state.json. Yyou can also change the growth parameters by editing /home/pi/oasis-grow/configs/device_params.json 
 
 Lastly, make sure to set your local time! If not, you may find yourself wondering why none of your timers work. 
 ```
@@ -178,7 +178,7 @@ oasis-grow contains two important configuration files, both located in the repos
 | `save_images` | `0` or `1` | determines whether the camera is saving images to a continuous feed that can be used to generate timelapses |
 | `save_data` | `0` or `1` | determines whether the grow control process is logging sensor data to a `.csv` file
 
-`grow_params.json` modifies grow parameters:
+`device_params.json` modifies grow parameters:
 | Field | Value | Function |
 | ----- | ----- | -------- |
 | `target_temperature` | int 0 to 100 | sets target temperature |

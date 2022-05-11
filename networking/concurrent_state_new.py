@@ -11,7 +11,6 @@
 #import modules
 import os
 import os.path
-from re import S
 import sys
 import json
 import requests
@@ -26,12 +25,9 @@ sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
 sys.path.append('/usr/local/lib/python3.7/dist-packages')
 sys.path.append('/usr/lib/python3/dist-packages')
 
-import reset_model
-
 #declare state variables
 device_state = None #describes the current state of the system
 device_params = None #describes the grow configuration of the system
-sensor_info = None
 hardware_config = None #holds hardware I/O setting & pin #s
 access_config = None #contains credentials for connecting to firebase
 feature_toggles = None #tells the system which features are in use
@@ -40,7 +36,7 @@ feature_toggles = None #tells the system which features are in use
 locks = None
 
 def load_state(loop_limit=100000): #Depends on: 'json'; Modifies: device_state,hardware_config ,access_config
-    global device_state, device_params, sensor_info, access_config, feature_toggles, hardware_config
+    global device_state, device_params, access_config, feature_toggles, hardware_config
 
     #load device state
     for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke if so,  
@@ -69,8 +65,8 @@ def load_state(loop_limit=100000): #Depends on: 'json'; Modifies: device_state,h
     #load device_params
     for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
         try:
-            with open("/home/pi/oasis-grow/configs/device_params.json") as p:
-                device_params = json.load(p) #get device state
+            with open("/home/pi/oasis-grow/configs/device_params.json") as g:
+                device_params = json.load(g) #get device state
 
             for k,v in device_params.items(): 
                 if device_params[k] is None:
@@ -89,31 +85,6 @@ def load_state(loop_limit=100000): #Depends on: 'json'; Modifies: device_state,h
                 reset_model.reset_device_params()
             else:
                 print("Main.py tried to read while device_params was being written. If this continues, file is corrupted.")
-                pass   
-
-    #load sensor_info
-    for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
-        try:
-            with open("/home/pi/oasis-grow/configs/sensor_info.json") as s:
-                sensor_info = json.load(s) #get device state
-
-            for k,v in sensor_info.items(): 
-                if sensor_info[k] is None:
-                    print("Read NoneType key in sensor_info")
-                    print("Resetting sensor_info...")
-                    #reset_model.reset_sensor_info()
-                     
-                else: 
-                    pass    
-        
-            break
-            
-        except Exception as e:
-            if i == int(loop_limit):
-                print("Main.py tried to read max # of times. File is corrupted. Resetting device_params...")
-                reset_model.reset_device_params()
-            else:
-                print("Main.py tried to read while sensor_info was being written. If this continues, file is corrupted.")
                 pass   
 
     #load access_config
@@ -242,12 +213,6 @@ def lock(file):
             l.seek(0)
             json.dump(locks, l)
             l.truncate()
-
-        if file == "sensor_info":
-            locks["sensor_info_write_available"] = "0" #let system know resource is not available
-            l.seek(0)
-            json.dump(locks, l)
-            l.truncate()
             
         if file == "access_config":
             locks["access_config_write_available"] = "0" #let system know resource is not available
@@ -282,12 +247,6 @@ def unlock(file):
                 
         if file == "device_params":
             locks["device_params_write_available"] = "1" #let system know resource is not available
-            l.seek(0)
-            json.dump(locks, l)
-            l.truncate()
-
-        if file == "sensor_info":
-            locks["sensor_info_write_available"] = "1" #let system know resource is not available
             l.seek(0)
             json.dump(locks, l)
             l.truncate()
@@ -364,23 +323,6 @@ def write_state(path, field, value, loop_limit=100000, offline_only = False): #D
                     else:
                         pass
                     
-                if path == "/home/pi/oasis-grow/configs/sensor_info.json": #are we working in device_state?
-                    if locks["sensor_info_write_available"] == "1": #check is the file is available to be written
-                        lock("sensor_info")
-
-                        data[field] = value #write the desired value
-                        x.seek(0)
-                        json.dump(data, x)
-                        x.truncate()
-            
-                        unlock("sensor_info")
-                        
-                        load_state()
-                        break #break the loop when the write has been successful
-
-                    else:
-                        pass
-
                 if path == "/home/pi/oasis-grow/configs/access_config.json": #are we working in device_state?
                     if locks["access_config_write_available"] == "1": #check is the file is available to be written
                         lock("access_config")

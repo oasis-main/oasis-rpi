@@ -126,12 +126,12 @@ def act_on_event(field, new_data):
     #checks if file exists and makes a blank one if not
     #the path has to be set for box
     device_state_fields = list(cs.device_state.keys())
-    grow_params_fields = list(cs.grow_params.keys())
+    device_params_fields = list(cs.device_params.keys())
 
     if str(field) in device_state_fields:
         path = "/home/pi/oasis-grow/configs/device_state.json"
-    if str(field) in grow_params_fields:
-        path = "/home/pi/oasis-grow/configs/grow_params.json"
+    if str(field) in device_params_fields:
+        path = "/home/pi/oasis-grow/configs/device_params.json"
 
     if os.path.exists(path) == False:
         f = open(path, "w")
@@ -158,8 +158,8 @@ if __name__ == "__main__":
     
     #actual section that launches the listener
     device_state_fields = list(cs.device_state.keys())
-    grow_params_fields = list(cs.grow_params.keys())
-    fields = device_state_fields + grow_params_fields
+    device_params_fields = list(cs.device_params.keys())
+    fields = device_state_fields + device_params_fields
     
     detect_multiple_field_events(user, db, fields)
 

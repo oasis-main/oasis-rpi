@@ -332,13 +332,13 @@ def run_heat(intensity): #Depends on: 'subprocess'; Modifies: heat_process
             if cs.feature_toggles["heat_pid"] == "1":
                 heat_process = Popen(['python3', '/home/pi/oasis-grow/actuators/heating_element.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
             else:
-                heat_process = Popen(['python3', '/home/pi/oasis-grow/actuators/heating_element.py', cs.grow_params["heater_duration"], cs.grow_params["heater_interval"]])
+                heat_process = Popen(['python3', '/home/pi/oasis-grow/actuators/heating_element.py', cs.device_params["heater_duration"], cs.device_params["heater_interval"]])
                 
     except: #launches heat process on program startup, when heat_process itself is none
         if cs.feature_toggles["heat_pid"] == "1":
             heat_process = Popen(['python3', '/home/pi/oasis-grow/actuators/heating_element.py', str(intensity)]) #If no process, then starts
         else:
-            heat_process = Popen(['python3', '/home/pi/oasis-grow/actuators/heating_element.py', cs.grow_params["heater_duration"], cs.grow_params["heater_interval"]])
+            heat_process = Popen(['python3', '/home/pi/oasis-grow/actuators/heating_element.py', cs.device_params["heater_duration"], cs.device_params["heater_interval"]])
 
 #poll humidityf subprocess if applicable and relaunch/update actuators
 def run_hum(intensity): #Depends on: 'subprocess'; Modifies: hum_process
@@ -350,12 +350,12 @@ def run_hum(intensity): #Depends on: 'subprocess'; Modifies: hum_process
             if cs.feature_toggles["hum_pid"] == "1":
                 humidity_process = Popen(['python3', '/home/pi/oasis-grow/actuators/humidity_element.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
             else:
-                humidity_process = Popen(['python3', '/home/pi/oasis-grow/actuators/humidity_element.py', cs.grow_params["humidifier_duration"], cs.grow_params["humidifier_interval"]])
+                humidity_process = Popen(['python3', '/home/pi/oasis-grow/actuators/humidity_element.py', cs.device_params["humidifier_duration"], cs.device_params["humidifier_interval"]])
     except:  #launches heat process on program startup, when heat_process itself is none
         if cs.feature_toggles["hum_pid"] == "1":
             humidity_process = Popen(['python3', '/home/pi/oasis-grow/actuators/humidity_element.py', str(intensity)])
         else:
-            humidity_process = Popen(['python3', '/home/pi/oasis-grow/actuators/humidity_element.py', cs.grow_params["humidifier_duration"], cs.grow_params["humidifier_interval"]])
+            humidity_process = Popen(['python3', '/home/pi/oasis-grow/actuators/humidity_element.py', cs.device_params["humidifier_duration"], cs.device_params["humidifier_interval"]])
 
 #poll dehumidify subprocess if applicable and relaunch/update actuators
 def run_dehum(intensity): #Depends on: 'subprocess'; Modifies: hum_process
@@ -367,12 +367,12 @@ def run_dehum(intensity): #Depends on: 'subprocess'; Modifies: hum_process
             if cs.feature_toggles["hum_pid"] == "1":
                 dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/actuators/dehumidify_element.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
             else:
-                dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/actuators/dehumidify_element.py', cs.grow_params["dehumidifier_duration"], cs.grow_params["dehumidifier_interval"]])
+                dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/actuators/dehumidify_element.py', cs.device_params["dehumidifier_duration"], cs.device_params["dehumidifier_interval"]])
     except:
         if cs.feature_toggles["hum_pid"] == "1":
             dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/actuators/dehumidify_element.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
         else:
-            dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/actuators/dehumidify_element.py', cs.grow_params["dehumidifier_duration"], cs.grow_params["dehumidifier_interval"]])
+            dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/actuators/dehumidify_element.py', cs.device_params["dehumidifier_duration"], cs.device_params["dehumidifier_interval"]])
 
 #poll fan subprocess if applicable and relaunch/update actuators
 def run_fan(intensity): #Depends on: 'subprocess'; Modifies: humidity_process
@@ -384,12 +384,12 @@ def run_fan(intensity): #Depends on: 'subprocess'; Modifies: humidity_process
             if cs.feature_toggles["hum_pid"] == "1":
                 fan_process = Popen(['python3', '/home/pi/oasis-grow/actuators/fan_element.py', str(intensity)]) 
             else:
-                fan_process = Popen(['python3', '/home/pi/oasis-grow/actuators/fan_element.py', cs.grow_params["fan_duration"], cs.grow_params["fan_interval"]])
+                fan_process = Popen(['python3', '/home/pi/oasis-grow/actuators/fan_element.py', cs.device_params["fan_duration"], cs.device_params["fan_interval"]])
     except: #If no process, then starts
         if cs.feature_toggles["hum_pid"] == "1":
             fan_process = Popen(['python3', '/home/pi/oasis-grow/actuators/fan_element.py', str(intensity)]) 
         else:
-            fan_process = Popen(['python3', '/home/pi/oasis-grow/actuators/fan_element.py', cs.grow_params["fan_duration"], cs.grow_params["fan_interval"]])
+            fan_process = Popen(['python3', '/home/pi/oasis-grow/actuators/fan_element.py', cs.device_params["fan_duration"], cs.device_params["fan_interval"]])
 
 #poll water subprocess if applicable and relaunch/update actuators
 def run_water(intensity): #Depends on: 'subprocess'; Modifies: water_process
@@ -401,12 +401,12 @@ def run_water(intensity): #Depends on: 'subprocess'; Modifies: water_process
             if cs.feature_toggles["water_pid"] == "1":
                 water_process = Popen(['python3', '/home/pi/oasis-grow/actuators/watering_element.py', str(intensity)])
             else:
-                water_process = Popen(['python3', '/home/pi/oasis-grow/actuators/watering_element.py', str(cs.grow_params["watering_duration"]), str(cs.grow_params["watering_frequency"])]) #If running, then skips. If idle then restarts, If no process, then fails
+                water_process = Popen(['python3', '/home/pi/oasis-grow/actuators/watering_element.py', str(cs.device_params["watering_duration"]), str(cs.device_params["watering_frequency"])]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
         if cs.feature_toggles["water_pid"] == "1":
             water_process = Popen(['python3', '/home/pi/oasis-grow/actuators/watering_element.py', str(intensity)])
         else:
-            water_process = Popen(['python3', '/home/pi/oasis-grow/actuators/watering_element.py', str(cs.grow_params["watering_duration"]), str(cs.grow_params["watering_frequency"])]) #If running, then skips. If idle then restarts, If no process, then fails        
+            water_process = Popen(['python3', '/home/pi/oasis-grow/actuators/watering_element.py', str(cs.device_params["watering_duration"]), str(cs.device_params["watering_frequency"])]) #If running, then skips. If idle then restarts, If no process, then fails        
 
 #poll light subprocess if applicable and relaunch/update actuators
 def run_light():
@@ -415,9 +415,9 @@ def run_light():
     try:
         poll_light = light_process.poll() #light
         if poll_light is not None:
-            light_process = Popen(['python3', '/home/pi/oasis-grow/actuators/lighting_element.py', cs.grow_params["time_start_light"], cs.grow_params["time_stop_light"], cs.grow_params["lighting_interval"]]) #If running, then skips. If idle then restarts, If no process, then fails
+            light_process = Popen(['python3', '/home/pi/oasis-grow/actuators/lighting_element.py', cs.device_params["time_start_light"], cs.device_params["time_stop_light"], cs.device_params["lighting_interval"]]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
-        light_process = Popen(['python3', '/home/pi/oasis-grow/actuators/lighting_element.py', cs.grow_params["time_start_light"], cs.grow_params["time_stop_light"], cs.grow_params["lighting_interval"]]) #If running, then skips. If idle then restarts, If no process, then fails
+        light_process = Popen(['python3', '/home/pi/oasis-grow/actuators/lighting_element.py', cs.device_params["time_start_light"], cs.device_params["time_stop_light"], cs.device_params["lighting_interval"]]) #If running, then skips. If idle then restarts, If no process, then fails
 
 #poll air subprocess if applicable and relaunch/update actuators
 def run_air():
@@ -426,9 +426,9 @@ def run_air():
     try:
         poll_air = air_process.poll() #light
         if poll_air is not None:
-            air_process = Popen(['python3', '/home/pi/oasis-grow/actuators/air_element.py', cs.grow_params["time_start_air"], cs.grow_params["time_stop_air"], cs.grow_params["air_interval"]]) #If running, then skips. If idle then restarts, If no process
+            air_process = Popen(['python3', '/home/pi/oasis-grow/actuators/air_element.py', cs.device_params["time_start_air"], cs.device_params["time_stop_air"], cs.device_params["air_interval"]]) #If running, then skips. If idle then restarts, If no process
     except Exception as e:
-        air_process = Popen(['python3', '/home/pi/oasis-grow/actuators/air_element.py', cs.grow_params["time_start_air"], cs.grow_params["time_stop_air"], cs.grow_params["air_interval"]]) #If no process, then starts
+        air_process = Popen(['python3', '/home/pi/oasis-grow/actuators/air_element.py', cs.device_params["time_start_air"], cs.device_params["time_stop_air"], cs.device_params["air_interval"]]) #If no process, then starts
 
 #poll camera subprocess if applicable and relaunch/update actuators
 def run_camera(): #Depends on: 'subprocess'; Modifies: camera_process
@@ -437,9 +437,9 @@ def run_camera(): #Depends on: 'subprocess'; Modifies: camera_process
     try:
         poll_camera = camera_process.poll() #camera
         if poll_camera is not None:
-            camera_process = Popen(['python3', '/home/pi/oasis-grow/imaging/camera_element.py', cs.grow_params["camera_interval"]]) #If running, then skips. If idle then restarts, If no process, then fails
+            camera_process = Popen(['python3', '/home/pi/oasis-grow/imaging/camera_element.py', cs.device_params["camera_interval"]]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
-        camera_process = Popen(['python3', '/home/pi/oasis-grow/imaging/camera_element.py', cs.grow_params["camera_interval"]]) #If no process, then starts
+        camera_process = Popen(['python3', '/home/pi/oasis-grow/imaging/camera_element.py', cs.device_params["camera_interval"]]) #If no process, then starts
 
 def clean_up_processes():
     global heat_process, humidity_process, dehumidify_process, fan_process, light_process, camera_process, water_process, air_process        
@@ -500,11 +500,11 @@ def main_setup():
 
     #Exit early if opening subprocess daemon
     if str(sys.argv[1]) == "daemon":
-        print("grow_ctrl daemon started")
+        print("core daemon started")
         #kill the program
         sys.exit()
     if str(sys.argv[1]) == "main":
-        print("grow_ctrl main started")
+        print("core main started")
         #log main start
         #flip "running" to 1 to make usable from command line
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "1")
@@ -532,10 +532,10 @@ def update_derivative_banks():
     global last_target_temperature, last_target_humidity, last_target_co2, last_target_soil_moisture
 
     #save last temperature and humidity targets to calculate delta for PD controllers
-    last_target_temperature = float(cs.grow_params["target_temperature"]) 
-    last_target_humidity = float(cs.grow_params["target_humidity"])
-    last_target_co2 = float(cs.grow_params["target_soil_co2"])
-    last_target_soil_moisture = float(cs.grow_params["target_soil_moisture"])
+    last_target_temperature = float(cs.device_params["target_temperature"]) 
+    last_target_humidity = float(cs.device_params["target_humidity"])
+    last_target_co2 = float(cs.device_params["target_soil_co2"])
+    last_target_soil_moisture = float(cs.device_params["target_soil_moisture"])
 
 def smart_listener():
     if ((cs.feature_toggles["temperature_sensor"] == "1") \
@@ -585,24 +585,24 @@ def console_log_data():
 
     #Actuators
     if cs.feature_toggles["heater"] == "1":
-        print("Target Temperature: %.1f F | Current: %.1f F | Temp_PID: %s %%"%(str(cs.grow_params["target_temperature"]),temperature, temp_feedback))
+        print("Target Temperature: %.1f F | Current: %.1f F | Temp_PID: %s %%"%(str(cs.device_params["target_temperature"]),temperature, temp_feedback))
     
     if cs.feature_toggles["humidifier"] == "1":
-        print("Target Humidity: %.1f %% | Current: %.1f %% | Hum_PID: %s %%"%(str(cs.grow_params["target_humidity"]), humidity, hum_feedback))
+        print("Target Humidity: %.1f %% | Current: %.1f %% | Hum_PID: %s %%"%(str(cs.device_params["target_humidity"]), humidity, hum_feedback))
 
     if cs.feature_toggles["fan"] == "1":
         print("Fan PD: %s %%"%(fan_feedback))
 
     if cs.feature_toggles["water"] == "1":
-        print("Watering for: %i second(s) every: %i hour(s)"%(str(cs.grow_params["watering_duration"]), str(cs.grow_params["watering_interval"])))
+        print("Watering for: %i second(s) every: %i hour(s)"%(str(cs.device_params["watering_duration"]), str(cs.device_params["watering_interval"])))
 
     if cs.feature_toggles["light"] == "1":
-        print("Light Turns on at: %i :00 Local Time  | Turns off at: %i :00 Local Time"%(str(cs.grow_params["time_start_light"]), str(cs.grow_params["time_stop_light"])))
+        print("Light Turns on at: %i :00 Local Time  | Turns off at: %i :00 Local Time"%(str(cs.device_params["time_start_light"]), str(cs.device_params["time_stop_light"])))
 
     #Imaging
 
     if cs.feature_toggles["camera"] == "1":
-        print("Image every %i minute(s)"%(str(cs.grow_params["camera_interval"])))
+        print("Image every %i minute(s)"%(str(cs.device_params["camera_interval"])))
 
 def run_active_actuators():
     
@@ -612,52 +612,52 @@ def run_active_actuators():
     if cs.feature_toggles["heater"] == "1":
         if cs.feature_toggles["heat_pid"] == "1":
             temp_feedback = str(heat_pid(temperature,
-                                        int(cs.grow_params["target_temperature"]),
+                                        int(cs.device_params["target_temperature"]),
                                         last_temperature,
                                         last_target_temperature,
-                                        int(cs.grow_params["P_temp"]),
-                                        int(cs.grow_params["I_temp"]),
-                                        int(cs.grow_params["D_temp"])))
+                                        int(cs.device_params["P_temp"]),
+                                        int(cs.device_params["I_temp"]),
+                                        int(cs.device_params["D_temp"])))
         run_heat(temp_feedback)
     
     if cs.feature_toggles["humidifier"] == "1":
         if cs.feature_toggles["hum_pid"] == "1":
             hum_feedback = str(hum_pid(humidity,
-                                        int(cs.grow_params["target_humidity"]),
+                                        int(cs.device_params["target_humidity"]),
                                         last_humidity,
                                         last_target_humidity,
-                                        int(cs.grow_params["P_hum"]),
-                                        int(cs.grow_params["I_hum"]),
-                                        int(cs.grow_params["D_hum"])))
+                                        int(cs.device_params["P_hum"]),
+                                        int(cs.device_params["I_hum"]),
+                                        int(cs.device_params["D_hum"])))
         run_hum(hum_feedback)
     
     if cs.feature_toggles["dehumidifier"] == "1":
         if cs.feature_toggles["dehum_pid"] == "1":
             dehum_feedback = str(hum_pid(humidity,
-                                        int(cs.grow_params["target_humidity"]),
+                                        int(cs.device_params["target_humidity"]),
                                         last_humidity,
                                         last_target_humidity,
-                                        int(cs.grow_params["P_dehum"]),
-                                        int(cs.grow_params["I_dehum"]),
-                                        int(cs.grow_params["D_dehum"])))
+                                        int(cs.device_params["P_dehum"]),
+                                        int(cs.device_params["I_dehum"]),
+                                        int(cs.device_params["D_dehum"])))
         run_dehum(dehum_feedback)
 
     if cs.feature_toggles["fan"] == "1":
         if cs.feature_toggles["fan_pid"] == "1":
             fan_feedback = str(fan_pid(temperature , humidity, co2,
-                                int(cs.grow_params["target_temperature"]), int(cs.grow_params["target_humidity"]), int(cs.grow_params["target_co2"]),
+                                int(cs.device_params["target_temperature"]), int(cs.device_params["target_humidity"]), int(cs.device_params["target_co2"]),
                                 last_temperature,last_humidity, last_co2,
                                 last_target_temperature,last_target_humidity, last_target_co2,
-                                int(cs.grow_params["Pt_fan"]), int(cs.grow_params["It_fan"]), int(cs.grow_params["Dt_fan"]),
-                                int(cs.grow_params["Ph_fan"]), int(cs.grow_params["Ih_fan"]), int(cs.grow_params["Dh_fan"]),
-                                int(cs.grow_params["Pc_fan"]), int(cs.grow_params["Ic_fan"]), int(cs.grow_params["Dc_fan"])))
+                                int(cs.device_params["Pt_fan"]), int(cs.device_params["It_fan"]), int(cs.device_params["Dt_fan"]),
+                                int(cs.device_params["Ph_fan"]), int(cs.device_params["Ih_fan"]), int(cs.device_params["Dh_fan"]),
+                                int(cs.device_params["Pc_fan"]), int(cs.device_params["Ic_fan"]), int(cs.device_params["Dc_fan"])))
         run_fan(fan_feedback)
 
     if cs.feature_toggles["water"] == "1":
         if cs.feature_toggles["water_pid"] == "1":
-            water_feedback = str(water_pid(soil_moisture, int(cs.grow_params["target_soil_moisture"]),
+            water_feedback = str(water_pid(soil_moisture, int(cs.device_params["target_soil_moisture"]),
                                 last_soil_moisture, last_target_soil_moisture,
-                                int(cs.grow_params["P_water"]), int(cs.grow_params["I_water"]), int(cs.grow_params["D_water"])))
+                                int(cs.device_params["P_water"]), int(cs.device_params["I_water"]), int(cs.device_params["D_water"])))
         run_water(water_feedback)
 
     if cs.feature_toggles["light"] == "1":

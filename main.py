@@ -43,11 +43,11 @@ from utils import concurrent_state as cs
 #declare process management variables
 listener = None
 ser_out = None #object for writing to the microcontroller via serial
-grow_ctrl_process = None #variable to launch & manage the grow controller
+core_process = None #variable to launch & manage the grow controller
 water_relay = None #holds GPIO object for running the watering aparatus
 
 #declare UI variables
-start_stop_button = None #holds GPIO object for starting and stopping grow_ctrl process
+start_stop_button = None #holds GPIO object for starting and stopping core process
 connect_internet_button = None #holds GPIO object for connecting device to internet
 run_water_button = None #holds GPIO object for triggering the watering aparatus
 
@@ -148,7 +148,7 @@ def check_new_device(): #depends on: ;modifies:
         #assemble data to initialize firebase
         setup_dict = {}
         setup_dict.update(cs.device_state)
-        setup_dict.update(cs.grow_params)
+        setup_dict.update(cs.device_params)
         setup_dict.update(cs.feature_toggles)
         setup_dict_named = {cs.access_config["device_name"] : setup_dict}
         my_data = json.dumps(setup_dict_named)
@@ -311,16 +311,16 @@ def check_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); M
                     enable_WiFi()
                     time.sleep(1)
 
-#check if grow_ctrl is supposed to be running, launch it if so. Do nothing if not
-def setup_growctrl_process(): #Depends on: cs.load_state(), cs.write_state(), 'subprocess'; Modifies: grow_ctrl_process, state_variables, device_state.json
-    global grow_ctrl_process
+#check if core is supposed to be running, launch it if so. Do nothing if not
+def setup_core_process(): #Depends on: cs.load_state(), cs.write_state(), 'subprocess'; Modifies: core_process, state_variables, device_state.json
+    global core_process
     cs.load_state()
 
     #if the device is supposed to be running
     if cs.device_state["running"] == "1":
 
-        #launch grow_ctrl main
-        grow_ctrl_process = Popen(["python3", "/home/pi/oasis-grow/core/grow_ctrl.py", "main"])
+        #launch core main
+        core_process = Popen(["python3", "/home/pi/oasis-grow/core/core.py", "main"])
 
         if cs.device_state["connected"] == "1": #if connected
             #LEDmode = "connected_running"
@@ -333,7 +333,7 @@ def setup_growctrl_process(): #Depends on: cs.load_state(), cs.write_state(), 's
     else:
 
         #launch sensing-feedback subprocess in daemon mode
-        grow_ctrl_process = Popen(["python3", "/home/pi/oasis-grow/core/grow_ctrl.py", "daemon"])
+        core_process = Popen(["python3", "/home/pi/oasis-grow/core/core.py", "daemon"])
 
         if cs.device_state["connected"] == "1": #if connected
             #LEDmode = "connected_idle"
@@ -355,18 +355,18 @@ def cmd_line_args():
     except Exception as e:
         print("Defaulting to last saved mode...")
 
-#checks if growctrl should be running, starts it if so, kills it otherwise
-def check_growctrl_running(): #Depends on: cs.load_state(), cs.write_state(), 'subprocess'; Modifies: grow_ctrl_process, state variables, device_state.json
-    global grow_ctrl_process
+#checks if core should be running, starts it if so, kills it otherwise
+def check_core_running(): #Depends on: cs.load_state(), cs.write_state(), 'subprocess'; Modifies: core_process, state variables, device_state.json
+    global core_process
     cs.load_state()
 
     #if the device is supposed to be running
     if cs.device_state["running"] == "1":
 
-        poll_grow_ctrl = grow_ctrl_process.poll() #check if grow_ctrl process is running
-        if poll_grow_ctrl is not None: #if it is not running
+        poll_core = core_process.poll() #check if core process is running
+        if poll_core is not None: #if it is not running
             #launch it
-            grow_ctrl_process = Popen(["python3", "/home/pi/oasis-grow/core/grow_ctrl.py", "main"])
+            core_process = Popen(["python3", "/home/pi/oasis-grow/core/core.py", "main"])
             print("launched grow-ctrl")
 
             if cs.device_state["connected"] == "1": #if connected
@@ -378,12 +378,12 @@ def check_growctrl_running(): #Depends on: cs.load_state(), cs.write_state(), 's
 
     else:
 
-        poll_grow_ctrl = grow_ctrl_process.poll() #check if grow_ctrl process is running
-        if poll_grow_ctrl is None: #if it is running
+        poll_core = core_process.poll() #check if core process is running
+        if poll_core is None: #if it is running
             try: #try to kill it
-                grow_ctrl_process.terminate()
-                grow_ctrl_process.wait()
-                print("grow_ctrl_process deactivated")
+                core_process.terminate()
+                core_process.wait()
+                print("core_process deactivated")
             except:
                 pass
 
@@ -394,8 +394,8 @@ def check_growctrl_running(): #Depends on: cs.load_state(), cs.write_state(), 's
                 #send LEDmode = "offline_idle"
                 cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","offline_idle")
 
-#checks if growctrl is running, kills it if so, starts it otherwise
-def switch_growctrl_running(): #Depends on: cs.load_state(), cs.write_state(), cs.patch_firebase(), 'subprocess'; Modifies: device_state.json, state_variables
+#checks if core is running, kills it if so, starts it otherwise
+def switch_core_running(): #Depends on: cs.load_state(), cs.write_state(), cs.patch_firebase(), 'subprocess'; Modifies: device_state.json, state_variables
     cs.load_state()
 
     #if the device is set to running
@@ -440,17 +440,17 @@ def update_LED(): #Depends on: cs.load_state(), 'datetime'; Modifies: ser_out
     HoD = now.hour
 
     if ser_out is not None:
-        if int(cs.grow_params["time_start_led"]) < int(cs.grow_params["time_stop_led"]):
-            if HoD >= int(cs.grow_params["time_start_led"]) and HoD < int(cs.grow_params["time_stop_led"]):
+        if int(cs.device_params["time_start_led"]) < int(cs.device_params["time_stop_led"]):
+            if HoD >= int(cs.device_params["time_start_led"]) and HoD < int(cs.device_params["time_stop_led"]):
                 ser_out.write(bytes(str(cs.device_state["led_status"]+"\n"), 'utf-8')) #write status
-            if HoD < int(cs.grow_params["time_start_led"]) or HoD >= int(cs.grow_params["time_stop_led"]):
+            if HoD < int(cs.device_params["time_start_led"]) or HoD >= int(cs.device_params["time_stop_led"]):
                 ser_out.write(bytes(str("off"+"\n"), 'utf-8')) #write off
-        if int(cs.grow_params["time_start_led"]) > int(cs.grow_params["time_stop_led"]):
-            if HoD >=  int(cs.grow_params["time_start_led"]) or HoD < int(cs.grow_params["time_stop_led"]):
+        if int(cs.device_params["time_start_led"]) > int(cs.device_params["time_stop_led"]):
+            if HoD >=  int(cs.device_params["time_start_led"]) or HoD < int(cs.device_params["time_stop_led"]):
                 ser_out.write(bytes(str(cs.device_state["led_status"]+"\n"), 'utf-8')) #write status
-            if HoD < int(cs.grow_params["time_start_led"]) and  HoD >= int(cs.grow_params["time_stop_led"]):
+            if HoD < int(cs.device_params["time_start_led"]) and  HoD >= int(cs.device_params["time_stop_led"]):
                 ser_out.write(bytes(str("off"+"\n"), 'utf-8')) #write off
-        if int(cs.grow_params["time_start_led"]) == int(cs.grow_params["time_stop_led"]):
+        if int(cs.device_params["time_start_led"]) == int(cs.device_params["time_stop_led"]):
                 ser_out.write(bytes(str(cs.device_state["led_status"]+"\n"), 'utf-8')) #write status
     else:
         #print("no serial connection, cannot update LED view")
@@ -477,7 +477,7 @@ if __name__ == '__main__':
     cmd_line_args()
 
     #launch core process
-    setup_growctrl_process()
+    setup_core_process()
 
     #Setup on-device interface
     setup_button_interface()
@@ -491,7 +491,7 @@ if __name__ == '__main__':
         while True:
             cs.load_state() #refresh the state variables
 
-            check_growctrl_running() #check if growctrl is supposed to be running
+            check_core_running() #check if core is supposed to be running
 
             if cs.device_state["connected"] == "1":
                check_updates() #check if the machine needs to be update
@@ -503,7 +503,7 @@ if __name__ == '__main__':
             sbutton_state = get_button_state(start_stop_button) #Start Button
             if sbutton_state == 0:
                 print("User pressed the start/stop button")
-                switch_growctrl_running() #turn growctrl on/off
+                switch_core_running() #turn core on/off
                 time.sleep(1)
 
             cbutton_state = get_button_state(connect_internet_button) #Connect Button

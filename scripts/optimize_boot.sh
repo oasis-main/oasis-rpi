@@ -8,6 +8,7 @@ echo "Removed apt-daily, apt-daily-upgrade, & man-db"
 sudo systemctl disable dphys-swapfile.service
 sudo systemctl disable avahi-daemon.service
 sudo systemctl disable triggerhappy.service
+echo "Removed dphys-swapfile, avahi-daemon, & triggerhappy"
 
 #while getopts ":no_bt:no_wifi" opt; do
 #    case $opt in

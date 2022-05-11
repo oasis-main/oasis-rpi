@@ -23,7 +23,7 @@ sys.path.append('/usr/local/lib/python3.7/dist-packages')
 sys.path.append('/usr/lib/python3/dist-packages')
 
 import main
-import grow_ctrl
+import core
 import detect_db_events, oasis_setup
 import camera_element
 import update, reset_model, send_image_test
@@ -34,9 +34,9 @@ def test_state_handlers():
     main.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"))
     main.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"))
 
-    grow_ctrl.cs.load_state()
-    grow_ctrl.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"))
-    grow_ctrl.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"))
+    core.cs.load_state()
+    core.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"))
+    core.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"))
 
     detect_db_events.cs.load_state()
     detect_db_events.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"))
@@ -58,7 +58,7 @@ def test_state_handlers():
 
 def test_reset_model():
     reset_model.reset_device_state()
-    reset_model.reset_grow_params()
+    reset_model.reset_device_params()
     reset_model.reset_locks()
     reset_model.reset_data_out()
     reset_model.reset_image_feed()
@@ -69,45 +69,45 @@ def test_serial_connections():
     main.start_serial()
     print("Main serial is working")
 
-    grow_ctrl.start_serial()
+    core.start_serial()
     print("Core serial is working")
 
 def test_listen():
-    grow_ctrl.listen()
+    core.listen()
     print("Listening for data from Arduino")
-    print(str(grow_ctrl.temperature))
-    print(str(grow_ctrl.humidity))
+    print(str(core.temperature))
+    print(str(core.humidity))
 
 def test_camera():
-    grow_ctrl.run_camera(0)
+    core.run_camera(0)
     print("Is camera working?")
 
 def test_heater():
-    grow_ctrl.run_heat(20)
+    core.run_heat(20)
     print("Is heater working?")
 
 def test_humidifier():
-    grow_ctrl.run_hum(50)
+    core.run_hum(50)
     print("Is humidifier working?")   
     
 def test_dehumidifier():
-    grow_ctrl.run_dehum(50)
+    core.run_dehum(50)
     print("Is dehumidifier working?")
 
 def test_fan():
-    grow_ctrl.run_fan(50)
+    core.run_fan(50)
     print("Is fan working?")
     
 def test_light():
-    grow_ctrl.run_light(0,0,10)
+    core.run_light(0,0,10)
     print("Is light working?")
 
 def test_water():
-    grow_ctrl.run_water(15,0)
+    core.run_water(15,0)
     print("Is water working?")
 
 def test_air():
-    grow_ctrl.run_air(0,0,10)
+    core.run_air(0,0,10)
     print("Is air working?")
     
 def test_save_csv():
@@ -115,7 +115,7 @@ def test_save_csv():
     temperature = str(70)
     humidity = str(50)
     water_low = str(0)
-    grow_ctrl.write_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv', {"time": tod, "temperature": temperature, "humidity": humidity, "water_low": water_low})
+    core.write_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv', {"time": tod, "temperature": temperature, "humidity": humidity, "water_low": water_low})
     print("wrote data to csv")
 
 def test_cloud_connection():
@@ -139,8 +139,8 @@ def test_AP_down():
 def test_all_components():
     test_state_handlers()
     test_reset_model()
-    #test_serial_connections()
-    #test_listen()
+    test_serial_connections()
+    test_listen()
     test_camera()
     test_heater()
     test_humidifier()
@@ -150,9 +150,9 @@ def test_all_components():
     test_water()
     test_air()
     test_save_csv()
-    #test_cloud_connection()
-    #test_send_image()
-    #test_update()
+    test_cloud_connection()
+    test_send_image()
+    test_update()
     
 
 if __name__ == "__main__":

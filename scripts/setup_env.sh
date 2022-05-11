@@ -24,8 +24,10 @@ echo "export PATH=/home/pi/.local/bin:$PATH/" | sudo tee -a /home/pi/.bashrc
 echo "Installing pip3 & Python 3.7 modules..."
 sudo apt install python3-pip -y
 sudo apt-get install python3-venv -y
-. /home/pi/oasis-grow/oasis_venv/bin/activate
-/usr/bin/env python3 -m pip install --upgrade pip
+python3 -m venv /home/pi/oasis-grow/oasis_venv_pi #uncomment to build env from source
+. /home/pi/oasis-grow/oasis_venv_pi/bin/activate
+/usr/bin/env python3 -m pip install --upgrade pip #uncomment to build env from source
+/usr/bin/env python3 -m pip install -r /home/pi/oasis-grow/defaults/requirements.txt #uncomment to build env from source
 
 echo "Installing python 3.7 RPi.GPIO for OS..."
 sudo apt-get -y install python3-rpi.gpio
