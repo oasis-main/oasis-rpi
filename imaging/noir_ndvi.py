@@ -44,7 +44,7 @@ def calc_ndvi(image):
     ndvi = (r.astype(float) - b) / bottom # THIS IS THE CHANGED LINE
     return ndvi
 
-def take_pictiure():
+def take_picture():
     #create and configure camera object 
     cam = PiCamera()
     cam.rotation = 180
