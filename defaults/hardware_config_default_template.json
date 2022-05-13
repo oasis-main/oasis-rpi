@@ -11,6 +11,6 @@
 "button_gpio_map": {
                  "start_stop_button": 17,
                  "connect_internet_button": 27,
-                 "run_water_button": 22
+                 "action_button": 22
                  }
 }

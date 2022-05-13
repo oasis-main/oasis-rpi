@@ -94,7 +94,7 @@ def load_state(loop_limit=100000): #Depends on: 'json'; Modifies: device_state,h
     #load sensor_info
     for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
         try:
-            with open("/home/pi/oasis-grow/configs/sensor_info.json") as s:
+            with open("/home/pi/oasis-grow/data_out/sensor_info.json") as s:
                 sensor_info = json.load(s) #get device state
 
             for k,v in sensor_info.items(): 
@@ -364,7 +364,7 @@ def write_state(path, field, value, loop_limit=100000, offline_only = False): #D
                     else:
                         pass
                     
-                if path == "/home/pi/oasis-grow/configs/sensor_info.json": #are we working in device_state?
+                if path == "/home/pi/oasis-grow/data_out/sensor_info.json": #are we working in device_state?
                     if locks["sensor_info_write_available"] == "1": #check is the file is available to be written
                         lock("sensor_info")
 

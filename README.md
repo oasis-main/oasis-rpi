@@ -3,10 +3,10 @@
 Oasis-Grow, developed by Oasis-X, is an open-source toolkit for controlled environment agriculture (CEA). It is a configurable nervous system for your high-tech farm, providing sensing, data collection, environmental control, automation, and remote monitoring functionality. This codebase is maintained with the goal to offer these capabilities to everyone. Users are encouraged to contribute data, projects, and technical expertise. See [Contributing](#contributing) for details.
 
 This repository contains:
-1. Python scripts for monitoring the growing environment and interfacing with peripherals sensors and devices
+1. Python setup_scripts for monitoring the growing environment and interfacing with peripherals sensors and devices
 2. Configuration files for grow parameters, peripheral hardware, access control, and device_state.
 3. Arduino/microcontroller "minion" files for use with sensors and LEDs
-4. Shell scripts for installing and configuring necessary packages
+4. Shell setup_scripts for installing and configuring necessary packages
 
 All functions can be deployed with a RaspberryPi (networking, scheduling, task management, & control) + an Arduino (precision sensors, LED management, other real-time applications). The resulting system is controllable via command line or web interface at https://dashboard.oasis-x.io
 
@@ -96,7 +96,7 @@ Launches the the button interface and networking setup, but not the core environ
 
 If you wish to run the program automatically at startup, please execute the setup_rclocal.sh script located in oasis-grow/scripts.
 ```
-cd /home/pi/oasis-grow/scripts
+cd /home/pi/oasis-grow/setup_scripts
 chmod +x setup_rclocal.sh
  . setup_rclocal.sh
  sudo reboot

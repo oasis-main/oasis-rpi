@@ -77,12 +77,13 @@ water_low = 0
 vpd = 0
 lux = 0
 ph = 0
+tds = 0 
 
 #actuator output variables
 temp_feedback = 0
 hum_feedback = 0
 dehum_feedback = 0
-fan_feedback  = 0
+fan_feedback = 0
 water_feedback = 0
 
 #timekeeping variables
@@ -123,11 +124,11 @@ def start_serial(): #Depends on:'serial'
 
 #gets data from serial, will parse a simple string or accept a dictionary
 def listen(): #Depends on 'serial', start_serial()
-    global ser_in, temperature,  humidity,  co2,  soil_moisture, vpd, water_low, lux, ph  
+    global ser_in, temperature,  humidity,  co2,  soil_moisture, vpd, water_low, lux, ph, tds  
     global last_temperature, last_humidity, last_co2, last_soil_moisture #past readings for derivative calculations
 
     if ser_in == None:
-        return
+        return 
 
     try: #legacy sensor app: parse space-separated string of floats
         #listen for data from aurdino, split it by space
@@ -179,6 +180,9 @@ def listen(): #Depends on 'serial', start_serial()
         
         if cs.feature_toggles["ph_sensor"] == "1":
             ph = float(sensor_info["ph"])
+
+        if cs.feature_toggles["tds_sensor"] == "1":
+            tds = float(sensor_info["tds"])
     
     except Exception as e:
         #print(e)
@@ -534,7 +538,7 @@ def update_derivative_banks():
     #save last temperature and humidity targets to calculate delta for PD controllers
     last_target_temperature = float(cs.device_params["target_temperature"]) 
     last_target_humidity = float(cs.device_params["target_humidity"])
-    last_target_co2 = float(cs.device_params["target_soil_co2"])
+    last_target_co2 = float(cs.device_params["target_co2"])
     last_target_soil_moisture = float(cs.device_params["target_soil_moisture"])
 
 def smart_listener():
@@ -581,12 +585,16 @@ def console_log_data():
         print("Light Intensity (Lux -> Lumen/M^2): "+str(lux))
     
     if cs.feature_toggles["ph_sensor"] == "1":
-        print(ph)
+        print("pH (0-14): " + ph)
 
-    #Actuators
+    if cs.feature_toggles["tds_sensor"] == "1":
+        print("Total Disolved Solids (ppm): " + tds)
+
+    #Actuators (I'm not going to print the pid alternate timers here. It's too much work. Just take a look at the device_params.json config)
     if cs.feature_toggles["heater"] == "1":
         print("Target Temperature: %.1f F | Current: %.1f F | Temp_PID: %s %%"%(str(cs.device_params["target_temperature"]),temperature, temp_feedback))
-    
+
+
     if cs.feature_toggles["humidifier"] == "1":
         print("Target Humidity: %.1f %% | Current: %.1f %% | Hum_PID: %s %%"%(str(cs.device_params["target_humidity"]), humidity, hum_feedback))
 
@@ -686,26 +694,28 @@ def data_out():
                              "humidity": [str(humidity)], 
                              "water_low": [str(water_low)]})
 
-            #write data to disk and exchange with coud if connected
+            #write data to disk and exchange with cloud if connected
 
             cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "last_heartbeat", str(datetime.datetime.now()))
             
             if cs.feature_toggles["temperature_sensor"] == "1":
-                cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "temperature", str(temperature))
+                cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "temperature", str(temperature))
             if cs.feature_toggles["humidity_sensor"] == "1":
-                cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "humidity", str(humidity))
+                cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "humidity", str(humidity))
             if cs.feature_toggles["vpd_calculation"] == "1":
-                cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "vpd", str(vpd))
+                cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "vpd", str(vpd))
             if cs.feature_toggles["water_level_sensor"] == "1":
-                cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "water_low", str(water_low))
+                cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "water_low", str(water_low))
             if cs.feature_toggles["co2_sensor"] == "1":
-                cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "co2", str(co2))
+                cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "co2", str(co2))
             if cs.feature_toggles["lux_sensor"] == "1":
-                cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "lux", str(lux))
+                cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "lux", str(lux))
             if cs.feature_toggles["ph_sensor"] == "1":
-                cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "ph", str(ph))
+                cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "ph", str(ph))
             if cs.feature_toggles["soil_moisture_sensor"] == "1":
-                cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "soil_moisture", str(soil_moisture))
+                cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "soil_moisture", str(soil_moisture))
+            if cs.feature_toggles["tds_sensor"] == "1":
+                cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "tds", str(tds))
 
 
             data_timer = time.time()

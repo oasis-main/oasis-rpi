@@ -21,7 +21,7 @@ def reset_device_params():
     reset_p.wait()
     
 def reset_sensor_info():
-    reset_s = Popen(["cp", "/home/pi/oasis-grow/defaults/sensor_info_default_template.json", "/home/pi/oasis-grow/configs/sensor_info.json"])
+    reset_s = Popen(["cp", "/home/pi/oasis-grow/defaults/sensor_info_default_template.json", "/home/pi/oasis-grow/data_out/sensor_info.json"])
     reset_s.wait()
 
 def reset_access_config():

@@ -77,6 +77,7 @@ def test_listen():
     print("Listening for data from Arduino")
     print(str(core.temperature))
     print(str(core.humidity))
+    print(str(core.sensor_info))
 
 def test_camera():
     core.run_camera(0)

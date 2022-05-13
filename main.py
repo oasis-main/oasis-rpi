@@ -40,16 +40,17 @@ import datetime
 from utils import reset_model
 from utils import concurrent_state as cs
 
+from imaging import camera_element
+
 #declare process management variables
 listener = None
 ser_out = None #object for writing to the microcontroller via serial
 core_process = None #variable to launch & manage the grow controller
-water_relay = None #holds GPIO object for running the watering aparatus
 
 #declare UI variables
 start_stop_button = None #holds GPIO object for starting and stopping core process
 connect_internet_button = None #holds GPIO object for connecting device to internet
-run_water_button = None #holds GPIO object for triggering the watering aparatus
+action_button = None #holds GPIO object for triggering the desired action
 
 #attempts connection to microcontroller
 def start_serial(): #Depends on:'serial'; Modifies: ser_out
@@ -140,7 +141,7 @@ def connect_firebase(): #depends on: cs.load_state(), cs.write_state(), cs.patch
         print("Could not connect to Oasis Network")
 
 #check if the device is waiting to be added to firebase, if it is then add it, otherwise skip
-def check_new_device(): #depends on: ;modifies:
+def check_new_device(): #depends on: modifies:
     cs.load_state()
 
     if cs.device_state["new_device"] == "1":
@@ -211,8 +212,8 @@ def check_deleted():
         systemctl_reboot = Popen(["sudo", "systemctl", "reboot"])
 
 #setup buttons for the main program interface
-def setup_button_interface(): #depends on: cs.load_state(), 'RPi.GPIO'; modifies: start_stop_button, connect_internet_button, run_water_button, state variables
-    global start_stop_button, connect_internet_button, run_water_button
+def setup_button_interface(): #depends on: cs.load_state(), 'RPi.GPIO'; modifies: start_stop_button, connect_internet_button, run_action_button, state variables
+    global start_stop_button, connect_internet_button, action_button
     #specify gpio pin number mode
     GPIO.setmode(GPIO.BCM)
 
@@ -222,12 +223,12 @@ def setup_button_interface(): #depends on: cs.load_state(), 'RPi.GPIO'; modifies
     #set button pins
     start_stop_button = cs.hardware_config["button_gpio_map"]["start_stop_button"]
     connect_internet_button = cs.hardware_config["button_gpio_map"]["connect_internet_button"]
-    run_water_button = cs.hardware_config["button_gpio_map"]["run_water_button"]
+    action_button = cs.hardware_config["button_gpio_map"]["action_button"]
 
     #Setup buttons
     GPIO.setup(start_stop_button, GPIO.IN,pull_up_down=GPIO.PUD_UP)
     GPIO.setup(connect_internet_button,GPIO.IN,pull_up_down=GPIO.PUD_UP)
-    GPIO.setup(run_water_button,GPIO.IN,pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(action_button,GPIO.IN,pull_up_down=GPIO.PUD_UP)
 
 #setup restart button for Access Point Button
 def setup_button_AP(): #Depends on: cs.load_state(), 'RPi.GPIO'; Modifies: connect_internet_button, state variables
@@ -481,7 +482,10 @@ if __name__ == '__main__':
 
     #Setup on-device interface
     setup_button_interface()
-    setup_water()
+    
+    if cs.feature_toggles["action_button"] == "1":
+        if cs.feature_toggles["action_water"] == "1":
+            setup_water()
 
     #start the clock for timing credential refresh &  data exchanges with LED
     led_timer = time.time()
@@ -512,10 +516,13 @@ if __name__ == '__main__':
                 enable_AP() #launch access point and reboot
                 time.sleep(1)
 
-            wbutton_state = get_button_state(run_water_button) #Water Button
-            if wbutton_state == 0:
-                run_water(60) #run the water for 60 seconds
-                time.sleep(1)
+            abutton_state = get_button_state(action_button) #Water Button
+            if abutton_state == 0:
+                if cs.feature_toggles["action_button"] == "1":
+                    if cs.feature_toggles["action_water"] == "1":
+                        run_water(60)
+                if cs.feature_toggles["action_camera"] == "1":
+                        camera_element.actuate(60)
 
             if time.time() - led_timer > 5: #send data to LED every 5s
                 update_LED()
