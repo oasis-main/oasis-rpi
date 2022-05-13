@@ -14,6 +14,7 @@ sys.path.append('/usr/local/lib/python3.7/dist-packages')
 sys.path.append('/usr/lib/python3/dist-packages')
 
 import concurrent_state as cs
+import main
 import reset_model as r
 
 def start_core():
@@ -26,6 +27,11 @@ def stop_core():
     cs.load_state()
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","0")
     print("Stopped system core.")
+    return
+
+def connect_device():
+    cs.load_state()
+    main.enable_AP()
     return
 
 def set_temperature_target(value):
