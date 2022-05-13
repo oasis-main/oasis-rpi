@@ -556,62 +556,6 @@ def smart_listener():
             print(e)
             print("Serial Port Failure")
 
-def console_log_data():
-    
-    #Sensors
-
-    if cs.feature_toggles["temperature_sensor"] == "1":
-        print("Temperature Reading (*F): "+str(temperature))
-    
-    if cs.feature_toggles["humidity_sensor"] == "1":
-        print("Relative Humidity (%): "+str(humidity))
-    
-    if cs.feature_toggles["co2_sensor"] == "1":
-        print ("Atmospheric Co2 Parts Per Million (ppm): " + str(co2))
-
-    if cs.feature_toggles["soil_moisture_sensor"] == "1":
-        print ("Soil Moisture Saturation (%): " + str(soil_moisture))
-
-    if cs.feature_toggles["vpd_calculation"] == "1":
-        print ("Vapure Pressure Deficit (kPa): " + str(vpd))
-    
-    if cs.feature_toggles["water_level_sensor"] == "1":
-        if water_low == 1:
-            print("Tank level is below sensor. Please fill!")
-        else:
-            print("Tank level is above sensor.")
-
-    if cs.feature_toggles["lux_sensor"] == "1":
-        print("Light Intensity (Lux -> Lumen/M^2): "+str(lux))
-    
-    if cs.feature_toggles["ph_sensor"] == "1":
-        print("pH (0-14): " + ph)
-
-    if cs.feature_toggles["tds_sensor"] == "1":
-        print("Total Disolved Solids (ppm): " + tds)
-
-    #Actuators (I'm not going to print the pid alternate timers here. It's too much work. Just take a look at the device_params.json config)
-    if cs.feature_toggles["heater"] == "1":
-        print("Target Temperature: %.1f F | Current: %.1f F | Temp_PID: %s %%"%(str(cs.device_params["target_temperature"]),temperature, temp_feedback))
-
-
-    if cs.feature_toggles["humidifier"] == "1":
-        print("Target Humidity: %.1f %% | Current: %.1f %% | Hum_PID: %s %%"%(str(cs.device_params["target_humidity"]), humidity, hum_feedback))
-
-    if cs.feature_toggles["fan"] == "1":
-        print("Fan PD: %s %%"%(fan_feedback))
-
-    if cs.feature_toggles["water"] == "1":
-        print("Watering for: %i second(s) every: %i hour(s)"%(str(cs.device_params["watering_duration"]), str(cs.device_params["watering_interval"])))
-
-    if cs.feature_toggles["light"] == "1":
-        print("Light Turns on at: %i :00 Local Time  | Turns off at: %i :00 Local Time"%(str(cs.device_params["time_start_light"]), str(cs.device_params["time_stop_light"])))
-
-    #Imaging
-
-    if cs.feature_toggles["camera"] == "1":
-        print("Image every %i minute(s)"%(str(cs.device_params["camera_interval"])))
-
 def run_active_actuators():
     
     global temp_feedback, hum_feedback, dehum_feedback, fan_feedback, water_feedback
@@ -749,8 +693,6 @@ def main_loop():
             cs.load_state() 
 
             smart_listener()
-
-            console_log_data()
 
             run_active_actuators()
 
