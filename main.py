@@ -10,6 +10,7 @@ import sys
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
+sys.path.append('/home/pi/oasis-grow/core')
 sys.path.append('/home/pi/oasis-grow/utils')
 sys.path.append('/usr/lib/python37.zip')
 sys.path.append('/usr/lib/python3.7')

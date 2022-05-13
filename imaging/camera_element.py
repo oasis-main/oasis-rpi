@@ -8,6 +8,7 @@ import sys
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
 sys.path.append('/home/pi/oasis-grow/utils')
+sys.path.append('/home/pi/oasis-grow/imaging')
 sys.path.append('/usr/lib/python37.zip')
 sys.path.append('/usr/lib/python3.7')
 sys.path.append('/usr/lib/python3.7/lib-dynload')
@@ -24,7 +25,7 @@ from subprocess import Popen
 import requests
 import json
 import pyrebase
-from imaging import noir_ndvi
+import noir_ndvi
 from utils import concurrent_state as cs
 
 def initialize_user(refresh_token):
