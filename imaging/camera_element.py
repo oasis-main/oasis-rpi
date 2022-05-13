@@ -24,7 +24,7 @@ from subprocess import Popen
 import requests
 import json
 import pyrebase
-import noir_ndvi
+from imaging import noir_ndvi
 from utils import concurrent_state as cs
 
 def initialize_user(refresh_token):
