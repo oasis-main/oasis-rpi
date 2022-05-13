@@ -2,7 +2,6 @@
 import cv2
 import numpy as np
 from imaging import fastiecm
-from fastiecm import fastiecm
 from picamera import PiCamera
 import picamera.array
 
@@ -37,9 +36,6 @@ def contrast_stretch(im):
 
     return out
 
-contrasted = contrast_stretch(original)
-display(contrasted, 'Contrasted original')
-
 #calculate NDVI
 def calc_ndvi(image):
     b, g, r = cv2.split(image)
@@ -67,7 +63,7 @@ def take_pictiure():
     #display(ndvi_contrasted, 'NDVI Contrasted')
     cv2.imwrite('/home/pi/oasis-grow/data_out/ndvi_contrasted.png', ndvi_contrasted)
     color_mapped_prep = ndvi_contrasted.astype(np.uint8)
-    color_mapped_image = cv2.applyColorMap(color_mapped_prep, fastiecm)
+    color_mapped_image = cv2.applyColorMap(color_mapped_prep, fastiecm.fastiecm)
     #display(color_mapped_image, 'Color mapped')
     cv2.imwrite('/home/pi/oasis-grow/data_out/color_mapped_image.png', color_mapped_image)
 
@@ -100,7 +96,7 @@ if __name__ == "main":
     
     #convert ndvi into a color-mapped version 
     color_mapped_prep = ndvi_contrasted.astype(np.uint8)
-    color_mapped_image = cv2.applyColorMap(color_mapped_prep, fastiecm)
+    color_mapped_image = cv2.applyColorMap(color_mapped_prep, fastiecm.fastiecm)
     display(color_mapped_image, 'Color mapped')
     cv2.imwrite('/home/pi/oasis-grow/data_out/color_mapped_image.png', color_mapped_image)
 
