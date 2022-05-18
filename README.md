@@ -10,6 +10,8 @@ This repository contains:
 
 All functions can be deployed with a RaspberryPi (networking, scheduling, task management, & control) + an Arduino (precision sensors, LED management, other real-time applications). The resulting system is controllable via command line or web interface at https://dashboard.oasis-x.io
 
+System is not 1.0 yet. Expect breaking changes to be merged into master.
+
 ## Table of Contents
 
   - [Introduction](#introduction)
