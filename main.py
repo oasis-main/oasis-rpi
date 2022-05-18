@@ -158,7 +158,7 @@ def check_new_device(): #depends on: modifies:
         #print(type(my_data))
 
         #add box data to firebase
-        url = "https://oasis-1757f.firebaseio.com/"+cs.access_config["local_id"]+".json?auth="+cs.access_config["id_token"]
+        url = "https://oasis-state-af548-default-rtdb.firebaseio.com/"+cs.access_config["local_id"]+".json?auth="+cs.access_config["id_token"]
         post_request = requests.patch(url,my_data)
         #print(post_request.ok)
         if post_request.ok:

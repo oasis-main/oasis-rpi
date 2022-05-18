@@ -45,10 +45,10 @@ def initialize_user(RefreshToken):
 
     #app configuration information
     config = {
-    "apiKey": "AIzaSyD-szNCnHbvC176y5K6haapY1J7or8XtKc",
-    "authDomain": "oasis-1757f.firebaseapp.com",
-    "databaseURL": "https://oasis-1757f.firebaseio.com/",
-    "storageBucket": "gs://oasis-1757f.appspot.com"
+    "apiKey": "AIzaSyBPuJwU--0ZlvsbDV9LmKJdYIljwNwzmVk",
+    "authDomain": "oasis-state-af548.firebaseapp.com",
+    "databaseURL": "https://oasis-state-af548-default-rtdb.firebaseio.com/",
+    "storageBucket": "gs://oasis-state-af548.appspot.com"
     }
 
     firebase = pyrebase.initialize_app(config)

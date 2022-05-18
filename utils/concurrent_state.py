@@ -195,7 +195,7 @@ def load_state(loop_limit=100000): #Depends on: 'json'; Modifies: device_state,h
 def patch_firebase(field,value): #Depends on: load_state(),'requests','json'; Modifies: database['field'], state variables
     load_state()
     data = json.dumps({field: value})
-    url = "https://oasis-1757f.firebaseio.com/"+str(access_config["local_id"])+"/"+str(access_config["device_name"])+".json?auth="+str(access_config["id_token"])
+    url = "https://oasis-state-af548-default-rtdb.firebaseio.com/"+str(access_config["local_id"])+"/"+str(access_config["device_name"])+".json?auth="+str(access_config["id_token"])
     result = requests.patch(url,data)
 
 #gets the mutex

@@ -54,7 +54,7 @@ def modWiFiConfig(SSID, password):
 def modAccessConfig(name, e, p):
     cs.access_config = {}
     cs.access_config["device_name"] = str(name)
-    cs.access_config["wak"] = "AIzaSyD-szNCnHbvC176y5K6haapY1J7or8XtKc"
+    cs.access_config["wak"] = "AIzaSyBPuJwU--0ZlvsbDV9LmKJdYIljwNwzmVk"
     cs.access_config["e"] = str(e)
     cs.access_config["p"] = str(p)
     cs.access_config["refresh_token"] = " "
@@ -71,8 +71,8 @@ def modAccessConfig(name, e, p):
 def enable_WiFi(): #Depends on: 'subprocess'; Modifies: None
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "access_point", "0", offline_only=True)
 
-    config_wifi_dchpcd = Popen(["sudo", "cp", "/etc/dhcpcd_WiFi.conf", "/etc/dhcpcd.conf"])
-    config_wifi_dchpcd.wait()
+    config_wifi_dhcpcd = Popen(["sudo", "cp", "/etc/dhcpcd_WiFi.conf", "/etc/dhcpcd.conf"])
+    config_wifi_dhcpcd.wait()
     config_wifi_dns = Popen(["sudo", "cp", "/etc/dnsmasq_WiFi.conf", "/etc/dnsmasq.conf"])
     config_wifi_dns.wait()
     disable_hostapd = Popen(["sudo", "systemctl", "disable", "hostapd"])
