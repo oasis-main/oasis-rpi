@@ -10,6 +10,7 @@ sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
 sys.path.append('/usr/local/lib/python3.7/dist-packages')
 sys.path.append('/usr/lib/python3/dist-packages')
 
+import concurrent_state as cs
 
 def full_stack():
     exc = sys.exc_info()[0]
@@ -28,12 +29,15 @@ def Error_Handler(func):
     def Inner_Function(*args, **kwargs):
         try:
             func(*args, **kwargs)
-        except TypeError:
+        except KeyboardInterrupt as k:
+            print("Keyboard Interrupt")
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "device_error", str(k))
+        except TypeError as t:
             print(f"{func.__name__} wrong data types.")
             full_stack()
-        except KeyboardInterrupt:
-            print("Keyboard Interrupt")
-        except Exception:
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "device_error", str(t))
+        except Exception as e:
             full_stack()
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "device_error", str(e))
     return Inner_Function
 

@@ -1,10 +1,88 @@
+## Quick Start
+
+1. Setup Rasppberry Pi
+
+Download 32-bit Raspberry Pi OS Lite and double click to uncompress: 
+https://downloads.raspberrypi.org/raspios_lite_armhf/images/raspios_lite_armhf-2022-04-07/2022-04-04-raspios-bullseye-armhf-lite.img.xz
+
+Use Disk Utility or an equivalent tool to format a micro SD card to MS-DOS(FAT), download the Raspberry Pi Imager (https://www.raspberrypi.com/software/), open the application, and follow onscreen instructions to flash the OS image obtained in step 1. 
+
+Connect to the Raspberry Pi via HDMI monitor & keyboard (or your preferred setup), plug it in, and log in with the default password ('pi', 'raspberry') on RPiOS Buster or set your own password (default in RPiOS Bullseye). Enter:
+
+```
+sudo raspi-config
+```
+- setup your internet: System Options -> Wireless LAN -> follow prompt
+- setup your camera: Interface Options -> Legacy Camera  -> Yes
+- (optional, recommende ) security: System Options -> Password  -> follow prompt
+- (optional, for devs) remote access: Interface Options -> SSH  -> Yes
+- (optional, for devs) remote acess: Interface Options -> Remote GPIO  -> Enable
+- (opional, for devs) on-device peripherals: Interface Options -> I2C  -> Yes  
+- (opional, for devs) on-device peripherals: Interface Options -> SPI  -> Yes  
+
+2. Install Oasis-X Platform
+
+Open a terminal and run, in order:
+
+```
+sudo apt-get update -y
+sudo apt-get install git -y
+git clone https://github.com/oasis-main/oasis-grow.git 
+cd oasis-grow
+. install.sh
+```
+
+To validate everything went smoothly, start the virtual env and test the main process with:
+
+```
+cd oasis-grow
+. start.sh
+```
+
+If successful, the above should run a ~15-30 second setup flow that ends with a statement that the core process is deactivated.
+
+Now than the main file can run, let's create an background process to run when the Pi boots up
+
+```
+. setup_scripts/optimize_boot.sh
+. setup_scripts/setup_systemd.sh
+sudo reboot
+```
+
+alternatively, use these commands
+
+```
+. setup_scripts/optimize_boot.sh
+. setup_scripts/setup_rclocal.sh
+sudo reboot
+```
+
+3. 
+
+4. Use with Local API & Button Interface (internet not required)
+
+5. Use with Oasis-Network & Dashboard 
+
+Open up a python3 shell in the oasis-grow directory. Run:
+
+```
+import api
+api.connect_device()
+```
+
+- The device will reboot as an access point, at which point you may connect to the 'oasis-x' local wifi network. The password is 'community' and can be changed by running /setup_scripts/change_local_wpa.sh
+- Once connected, open up a new tab and navigate to http://192.168.4.1/ Enter your oasis email, oasis password, local wifi name, local wifi password, and hit the launch button. You'll get a success message and the wifi network should dissapear within a minute
+- Rejoin your normal internet and go to https://dashboard.oasis-x.io/ to view and control your device!
+
+
+
 ## Introduction
 
 Oasis-Grow, developed by Oasis-X, is an open-source toolkit for controlled environment agriculture (CEA). It is a configurable nervous system for your high-tech farm, providing sensing, data collection, environmental control, automation, and remote monitoring functionality. This codebase is maintained with the goal to offer these capabilities to everyone. Users are encouraged to contribute data, projects, and technical expertise. See [Contributing](#contributing) for details.
 
 This repository contains:
-1. Python setup_scripts for monitoring the growing environment and interfacing with peripherals sensors and devices
-2. Configuration files for grow parameters, peripheral hardware, access control, and device_state.
+1. Python setup_scripts for collecting environmental data, manage feedback and timer regimes, and dispatching information to the relative sources.
+2. Configuration files for grow parameters, peripheral hardware, access control, and device_state
 3. Arduino/microcontroller "minion" files for use with sensors and LEDs
 4. Shell setup_scripts for installing and configuring necessary packages
 

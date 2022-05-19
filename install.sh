@@ -6,6 +6,7 @@ sudo chmod +x /home/pi/oasis-grow/setup_scripts
 . /home/pi/oasis-grow/setup_scripts/setup_config.sh
 . /home/pi/oasis-grow/setup_scripts/setup_network.sh
 
+#Broken code
 #while getopts ":r:d:" opt; do
 #    case $opt in
 #        r)

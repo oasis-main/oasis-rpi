@@ -75,8 +75,6 @@ def test_serial_connections():
 def test_listen():
     core.listen()
     print("Listening for data from Arduino")
-    print(str(core.temperature))
-    print(str(core.humidity))
     print(str(core.sensor_info))
 
 def test_camera():
