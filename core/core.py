@@ -157,38 +157,49 @@ def listen(): #Depends on 'serial', start_serial()
 
         if cs.feature_toggles["temperature_sensor"] == "1":
             last_temperature = temperature
-            temperature = float(sensor_info["temperature"])
-        
+            temperature = float(sensor_info["temperature"])      
         if cs.feature_toggles["humidity_sensor"] == "1":
             last_humidity = humidity
             humidity = float(sensor_info["humidity"])
-        
         if cs.feature_toggles["co2_sensor"] == "1":
             last_co2 = co2
             co2 = float(sensor_info["co2"])
-
         if cs.feature_toggles["soil_moisture_sensor"] == "1":
             last_soil_moisture = soil_moisture
             soil_moisture = float(sensor_info["soil_moisture"])
-
         if cs.feature_toggles["vpd_calculation"] == "1":
             es = 0.6108 * math.exp(17.27 * temperature / (temperature + 237.3))
             ea = humidity / 100 * es 
             vpd = ea-es
-        
         if cs.feature_toggles["water_level_sensor"] == "1":
             water_low = int(sensor_info["water_low"])
-        
         if cs.feature_toggles["lux_sensor"] == "1":
             lux = float(sensor_info["lux"])
-        
         if cs.feature_toggles["ph_sensor"] == "1":
             ph = float(sensor_info["ph"])
-
         if cs.feature_toggles["tds_sensor"] == "1":
             tds = float(sensor_info["tds"])
     
     
+        if cs.feature_toggles["temperature_sensor"] == "1":
+            cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "temperature", str(temperature))
+        if cs.feature_toggles["humidity_sensor"] == "1":
+            cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "humidity", str(humidity))
+        if cs.feature_toggles["vpd_calculation"] == "1":
+            cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "vpd", str(vpd))
+        if cs.feature_toggles["water_level_sensor"] == "1":
+            cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "water_low", str(water_low))
+        if cs.feature_toggles["co2_sensor"] == "1":
+            cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "co2", str(co2))
+        if cs.feature_toggles["lux_sensor"] == "1":
+            cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "lux", str(lux))
+        if cs.feature_toggles["ph_sensor"] == "1":
+            cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "ph", str(ph))
+        if cs.feature_toggles["soil_moisture_sensor"] == "1":
+            cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "soil_moisture", str(soil_moisture))
+        if cs.feature_toggles["tds_sensor"] == "1":
+            cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "tds", str(tds))
+
     except Exception as e:
         err.full_stack()
         return
@@ -646,25 +657,6 @@ def data_out():
             #write data to disk and exchange with cloud if connected
 
             cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "last_heartbeat", str(datetime.datetime.now()))
-            
-            if cs.feature_toggles["temperature_sensor"] == "1":
-                cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "temperature", str(temperature))
-            if cs.feature_toggles["humidity_sensor"] == "1":
-                cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "humidity", str(humidity))
-            if cs.feature_toggles["vpd_calculation"] == "1":
-                cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "vpd", str(vpd))
-            if cs.feature_toggles["water_level_sensor"] == "1":
-                cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "water_low", str(water_low))
-            if cs.feature_toggles["co2_sensor"] == "1":
-                cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "co2", str(co2))
-            if cs.feature_toggles["lux_sensor"] == "1":
-                cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "lux", str(lux))
-            if cs.feature_toggles["ph_sensor"] == "1":
-                cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "ph", str(ph))
-            if cs.feature_toggles["soil_moisture_sensor"] == "1":
-                cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "soil_moisture", str(soil_moisture))
-            if cs.feature_toggles["tds_sensor"] == "1":
-                cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "tds", str(tds))
 
 
             data_timer = time.time()

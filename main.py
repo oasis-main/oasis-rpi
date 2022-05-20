@@ -138,9 +138,8 @@ def connect_firebase(): #depends on: cs.load_state(), cs.write_state(), cs.patch
             check_updates()
             check_deleted()
 
-            #start listener to bring in db changes
-            if cs.device_state["connected"] == "0":
-                launch_listener()
+            #start listener to bring in db changes, make a status flag for the mqqt process
+            #TODO
 
             #update the device state to "connected"
             cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"connected","1")
