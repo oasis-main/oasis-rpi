@@ -36,7 +36,8 @@ import signal
 import pyrebase
 from multiprocessing import Process, Queue
 import json
-import concurrent_state as cs
+from utils import concurrent_state as cs
+from utils import error_handler as err
 
 #declare listener list
 listener_list = []
@@ -83,6 +84,7 @@ def stream_handler(m):
         print('something wierd...', m['event'])
         input()
 
+@err.Error_Handler
 def detect_field_event(user, db, field):
     my_stream = db.child(user['userId']+'/'+cs.access_config["device_name"]+"/"+field).stream(stream_handler, user['idToken'], stream_id=field)
 
@@ -114,7 +116,6 @@ def stop_condition(field,value): #Depends on: os, Process,cs.load_state(); Modif
                 for listener in listener_list:
                     listener.terminate()
                 os._exit(0)
-                stop_condition.terminate()
 
     stop_condition = Process(target = check_exit, args = (field,value))
     stop_condition.start()
@@ -162,6 +163,6 @@ if __name__ == "__main__":
     fields = device_state_fields + device_params_fields
     
     detect_multiple_field_events(user, db, fields)
-
     stop_condition("deleted","1")
+    stop_condition("connected", "0")
 

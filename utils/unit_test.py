@@ -5,8 +5,10 @@ import sys
 import subprocess
 from subprocess import Popen
 import json
+from tracemalloc import start
 import requests
 import time
+from api import start_core
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
@@ -23,6 +25,7 @@ sys.path.append('/usr/local/lib/python3.7/dist-packages')
 sys.path.append('/usr/lib/python3/dist-packages')
 
 import main
+import api
 import core
 import detect_db_events, oasis_setup
 import camera_element
@@ -135,6 +138,11 @@ def test_WiFi_setup():
 def test_AP_down():
     main.enable_WiFi()
 
+def test_core(interval):
+    api.start_core()
+    time.sleep(int(interval))
+    api.stop_core()
+
 def test_all_components():
     test_state_handlers()
     test_reset_model()
@@ -153,7 +161,6 @@ def test_all_components():
     test_send_image()
     test_update()
     
-
 if __name__ == "__main__":
    test_all_components()
 

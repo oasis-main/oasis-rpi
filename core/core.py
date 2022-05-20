@@ -40,6 +40,7 @@ import datetime
 #import other oasis packages
 from utils import reset_model
 from utils import concurrent_state as cs
+from utils import error_handler as err
 
 #declare process management variables
 ser_in = None
@@ -128,8 +129,10 @@ def listen(): #Depends on 'serial', start_serial()
     global last_temperature, last_humidity, last_co2, last_soil_moisture #past readings for derivative calculations
 
     if ser_in == None:
+        print("ser_in is none")
         return 
 
+    
     try: #legacy sensor app: parse space-separated string of floats
         #listen for data from aurdino, split it by space
         sensor_info = ser_in.readline().decode('UTF-8').strip().split(' ')
@@ -145,11 +148,12 @@ def listen(): #Depends on 'serial', start_serial()
         if cs.feature_toggles["water_level_sensor"] == "1":
             water_low = int(sensor_info[2])
     
-    except (SyntaxError, ValueError) as e: #v1.5 parse disct from json string
+    except (SyntaxError, ValueError) as e: #v1.5 parse disct from json string  
+        
         sensor_info = json.loads(str(ser_in.readline().decode('UTF-8').strip()))
         
-        #print(type(sensor_info))
-        #print(e)
+        print(type(sensor_info))
+        err.full_stack()
 
         if cs.feature_toggles["temperature_sensor"] == "1":
             last_temperature = temperature
@@ -184,10 +188,11 @@ def listen(): #Depends on 'serial', start_serial()
         if cs.feature_toggles["tds_sensor"] == "1":
             tds = float(sensor_info["tds"])
     
+    
     except Exception as e:
-        #print(e)
+        err.full_stack()
         return
-
+    
 #PID controller to modulate heater feedback
 def heat_pid(temperature, target_temperature, last_temperature, last_target_temperature,
              P_heat, I_heat, D_heat):    
@@ -679,6 +684,7 @@ def check_exit():
     #give the program some time to breathe
     time.sleep(1)
 
+@err.Error_Handler
 def main_loop():
     global data_timer
 
@@ -702,7 +708,7 @@ def main_loop():
         terminate_program()
 
     except Exception as e:
-        traceback.print_exc()
+        err.full_stack()
         if cs.device_state["running"] == "1": #if there is an error, but device should stay running
             clean_up_processes()
         if cs.device_state["running"] == "0":

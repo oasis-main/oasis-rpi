@@ -1,4 +1,8 @@
 import os
 import sys
 
-#Write mqqt messages to the MongoDB document server
+#Write mqqt messages to the firebase document server
+
+
+#mqtt
+

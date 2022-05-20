@@ -128,13 +128,21 @@ def connect_firebase(): #depends on: cs.load_state(), cs.write_state(), cs.patch
         #fetch a new id_token & local_id
         get_local_credentials(refresh_token)
 
-        #let firebase know the connection was successful
-        cs.patch_firebase("connected","1")
+        #launch checks at network startup
+        check_new_device()
+        check_updates()
+        check_deleted()
+
+        #start listener to bring in db changes
+        if cs.device_state["connected"] == "0":
+            launch_listener()
 
         #update the device state to "connected"
         cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"connected","1")
-        print("Device connected over HTTPS to the Oasis Network")
+        print("Device is connected over HTTPS to the Oasis Network")
 
+        cs.load_state()
+        
     except Exception as e:
         print(e) #display error
         #write state as not connected
@@ -458,7 +466,7 @@ def update_LED(): #Depends on: cs.load_state(), 'datetime'; Modifies: ser_out
         #print("no serial connection, cannot update LED view")
         pass
 
-if __name__ == '__main__':
+def main_setup():
 
     #Initialize Oasis:
     print("Initializing...")
@@ -467,13 +475,6 @@ if __name__ == '__main__':
     start_serial()
     check_AP()
     connect_firebase()
-
-    cs.load_state()
-    if cs.device_state["connected"] == "1":
-        check_new_device()
-        check_updates()
-        check_deleted()
-        launch_listener()
 
     #Check if command line set to run
     cmd_line_args()
@@ -491,19 +492,20 @@ if __name__ == '__main__':
     #start the clock for timing credential refresh &  data exchanges with LED
     led_timer = time.time()
     token_timer = time.time()
+    connect_timer = time.time()
 
+    return led_timer, token_timer, connect_timer
+
+def main_loop(led_timer, token_timer, connect_timer):
+    
     try:
         while True:
             cs.load_state() #refresh the state variables
 
-            check_core_running() #check if core is supposed to be running
+            if time.time() - connect_timer > 900:
+                connect_firebase
 
-            if cs.device_state["connected"] == "1":
-               check_updates() #check if the machine needs to be update
-               check_deleted() #check if the user is trying to delete this device
-               if time.time() - token_timer > 600: #refresh the local credentials every 10 min (600s)
-                    token_timer = time.time()
-                    get_local_credentials(cs.access_config["refresh_token"])
+            check_core_running() #check if core is supposed to be running
 
             sbutton_state = get_button_state(start_stop_button) #Start Button
             if sbutton_state == 0:
@@ -531,3 +533,8 @@ if __name__ == '__main__':
 
     except(KeyboardInterrupt):
         GPIO.cleanup()
+
+if __name__ == '__main__':
+    led_timer, token_timer, connect_timer = main_setup()
+    main_loop(led_timer, token_timer, connect_timer)
+    
