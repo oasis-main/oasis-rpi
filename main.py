@@ -133,13 +133,13 @@ def connect_firebase(): #depends on: cs.load_state(), cs.write_state(), cs.patch
 
         #update the device state to "connected"
         cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"connected","1")
-        print("Device is connected to the Oasis Network")
+        print("Device connected over HTTPS to the Oasis Network")
 
     except Exception as e:
         print(e) #display error
         #write state as not connected
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0")
-        print("Could not connect to Oasis Network")
+        print("Could not establish an HTTPS connection to Oasis Network")
 
 #check if the device is waiting to be added to firebase, if it is then add it, otherwise skip
 def check_new_device(): #depends on: modifies:
