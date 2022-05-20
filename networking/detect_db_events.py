@@ -49,7 +49,7 @@ def initialize_user(RefreshToken):
     "apiKey": "AIzaSyBPuJwU--0ZlvsbDV9LmKJdYIljwNwzmVk",
     "authDomain": "oasis-state-af548.firebaseapp.com",
     "databaseURL": "https://oasis-state-af548-default-rtdb.firebaseio.com/",
-    "storageBucket": "gs://oasis-state-af548.appspot.com"
+    "storageBucket": "oasis-state-af548.appspot.com"
     }
 
     firebase = pyrebase.initialize_app(config)
