@@ -542,6 +542,6 @@ def main_loop(led_timer, connect_timer):
         GPIO.cleanup()
 
 if __name__ == '__main__':
-    led_timer, token_timer, connect_timer = main_setup()
-    main_loop(led_timer, token_timer, connect_timer)
+    led_timer, connect_timer = main_setup()
+    main_loop(led_timer, connect_timer)
     
