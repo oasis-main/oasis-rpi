@@ -86,7 +86,7 @@ def stream_handler(m):
 
 @err.Error_Handler
 def detect_field_event(user, db, field):
-    my_stream = db.child(user['userId']+'/'+cs.access_config["device_name"]+"/"+field).stream(stream_handler, user['idToken'], stream_id=field)
+    my_stream = db.child(user['userId']+'/'+cs.access_config["device_name"]+"/"+field).stream(stream_handler, user['idToken'])
 
 #https://stackoverflow.com/questions/2046603/is-it-possible-to-run-function-in-a-subprocess-without-threading-or-writing-a-se
 #https://stackoverflow.com/questions/200469/what-is-the-difference-between-a-process-and-a-thread#:~:text=A%20process%20is%20an%20execution,sometimes%20called%20a%20lightweight%20process.
