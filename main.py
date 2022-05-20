@@ -24,6 +24,7 @@ import RPi.GPIO as GPIO
 import serial
 import subprocess
 from subprocess import Popen, PIPE, STDOUT
+import multiprocessing
 import signal
 
 #communicating with firebase
@@ -40,8 +41,9 @@ import datetime
 #import other oasis packages
 from utils import reset_model
 from utils import concurrent_state as cs
-
 from imaging import camera_element
+
+
 
 #declare process management variables
 listener = None
@@ -103,51 +105,58 @@ def get_local_credentials(refresh_token): #Depends on: cs.load_state(), cs.write
 
 #connects system to firebase
 def connect_firebase(): #depends on: cs.load_state(), cs.write_state(), cs.patch_firebase(), 'requests'; Modifies: access_config.json, device_state.json
-    #load state so we can use access credentials
-    cs.load_state()
-    wak = cs.access_config["wak"]
-    email = cs.access_config["e"]
-    password = cs.access_config["p"]
-
-    print("Checking for connection...")
-
-    try:
-        print("FireBase verification...")
-
-        #fetch refresh token
-        refresh_token = get_refresh_token(wak, email, password)
-
-        #fetch refresh token and save to access_config
-        cs.write_state("/home/pi/oasis-grow/configs/access_config.json","refresh_token", refresh_token)
-
-        #bring in the refresh token for use further down
+    
+    def try_connect():
+   
+        #load state so we can use access credentials
         cs.load_state()
-        refresh_token = cs.access_config["refresh_token"]
-        print("Obtained refresh token")
+        wak = cs.access_config["wak"]
+        email = cs.access_config["e"]
+        password = cs.access_config["p"]
 
-        #fetch a new id_token & local_id
-        get_local_credentials(refresh_token)
+        print("Checking for connection...")
 
-        #launch checks at network startup
-        check_new_device()
-        check_updates()
-        check_deleted()
+        try:
+            print("FireBase verification...")
 
-        #start listener to bring in db changes
-        if cs.device_state["connected"] == "0":
-            launch_listener()
+            #fetch refresh token
+            refresh_token = get_refresh_token(wak, email, password)
 
-        #update the device state to "connected"
-        cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"connected","1")
-        print("Device is connected over HTTPS to the Oasis Network")
+            #fetch refresh token and save to access_config
+            cs.write_state("/home/pi/oasis-grow/configs/access_config.json","refresh_token", refresh_token)
 
-        cs.load_state()
-        
-    except Exception as e:
-        print(e) #display error
-        #write state as not connected
-        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0")
-        print("Could not establish an HTTPS connection to Oasis Network")
+            #bring in the refresh token for use further down
+            cs.load_state()
+            refresh_token = cs.access_config["refresh_token"]
+            print("Obtained refresh token")
+
+            #fetch a new id_token & local_id
+            get_local_credentials(refresh_token)
+
+            #launch checks at network startup
+            check_new_device()
+            check_updates()
+            check_deleted()
+
+            #start listener to bring in db changes
+            if cs.device_state["connected"] == "0":
+                launch_listener()
+
+            #update the device state to "connected"
+            cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"connected","1")
+            print("Device is connected over HTTPS to the Oasis Network")
+
+            cs.load_state()
+            
+        except Exception as e:
+            print(e) #display error
+            #write state as not connected
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0")
+            print("Could not establish an HTTPS connection to Oasis Network")
+
+    time.sleep(15)
+    connection_attempt = multiprocessing.Process(target = try_connect)
+    connection_attempt.start()
 
 #check if the device is waiting to be added to firebase, if it is then add it, otherwise skip
 def check_new_device(): #depends on: modifies:
@@ -470,7 +479,6 @@ def main_setup():
 
     #Initialize Oasis:
     print("Initializing...")
-    time.sleep(10)
     cs.load_state()
     start_serial()
     check_AP()
@@ -491,12 +499,11 @@ def main_setup():
 
     #start the clock for timing credential refresh &  data exchanges with LED
     led_timer = time.time()
-    token_timer = time.time()
     connect_timer = time.time()
 
-    return led_timer, token_timer, connect_timer
+    return led_timer, connect_timer
 
-def main_loop(led_timer, token_timer, connect_timer):
+def main_loop(led_timer, connect_timer):
     
     try:
         while True:
@@ -525,7 +532,7 @@ def main_loop(led_timer, token_timer, connect_timer):
                     if cs.feature_toggles["action_water"] == "1":
                         run_water(60)
                 if cs.feature_toggles["action_camera"] == "1":
-                        camera_element.actuate(60)
+                        camera_element.actuate(0)
 
             if time.time() - led_timer > 5: #send data to LED every 5s
                 update_LED()
