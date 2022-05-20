@@ -6,7 +6,7 @@ from picamera import PiCamera
 import picamera.array
 
 #create and capture stream object
-def capture_stream():
+def capture_stream(cam):
     stream = picamera.array.PiRGBArray(cam)
     cam.capture(stream, format='bgr', use_video_port=True)
     original = stream.array
@@ -51,7 +51,7 @@ def take_picture():
     cam.resolution = (1920, 1080) # Uncomment if using a Pi Noir camera
     #cam.resolution = (2592, 1952) # Comment this line if using a Pi Noir camera
 
-    original = capture_stream()#create and capture stream object
+    original = capture_stream(cam)#create and capture stream object
     #display(original, 'Original')
     contrasted = contrast_stretch(original)
     #display(contrasted, 'Contrasted original')
