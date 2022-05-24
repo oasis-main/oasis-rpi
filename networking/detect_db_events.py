@@ -6,7 +6,6 @@
 #this may be helpful if i cant figure something else out for updating values
 #https://pypi.org/project/FirebaseData/
 
-
 #This may be the thing to do
 #https://github.com/thisbejim/Pyrebase/issues/341
 
@@ -38,36 +37,10 @@ from multiprocessing import Process, Queue
 import json
 from utils import concurrent_state as cs
 from utils import error_handler as err
+from networking import db_tools as dbt
 
 #declare listener list
 listener_list = []
-
-def initialize_user(RefreshToken):
-
-    #app configuration information
-    config = {
-    "apiKey": "AIzaSyBPuJwU--0ZlvsbDV9LmKJdYIljwNwzmVk",
-    "authDomain": "oasis-state-af548.firebaseapp.com",
-    "databaseURL": "https://oasis-state-af548-default-rtdb.firebaseio.com/",
-    "storageBucket": "oasis-state-af548.appspot.com"
-    }
-
-    firebase = pyrebase.initialize_app(config)
-
-    # Get a reference to the auth service
-    auth = firebase.auth()
-
-    # Get a reference to the database service
-    db = firebase.database()
-
-    #WILL NEED TO GET THIS FROM USER
-    user = auth.refresh(RefreshToken)
-
-    return user, db
-
-#get all user data
-def get_user_data(user, db):
-    return  db.child(user['userId']).get(user['idToken']).val()
 
 def stream_handler(m):
     #ok some kind of update
@@ -148,14 +121,14 @@ if __name__ == "__main__":
     print("Starting listener...")
     cs.load_state()
     try:
-        user, db = initialize_user(cs.access_config["refresh_token"])
+        user, db = dbt.dbt.initialize_user(cs.access_config["refresh_token"])
         print("Database monitoring: active")
     except Exception as e:
         print("Listener could not connect")
         print("Database monitoring: inactive")
         sys.exit()
     
-    print(get_user_data(user, db))
+    print(dbt.get_user_data(user, db))
     
     #actual section that launches the listener
     device_state_fields = list(cs.device_state.keys())

@@ -14,7 +14,7 @@ import camera_element as cam
 
 def send_image_test():
     cam.cs.load_state()
-    user, db, storage = cam.initialize_user(cam.cs.access_config["refresh_token"])
+    user, db, storage = cam.dbt.initialize_user(cam.cs.access_config["refresh_token"])
     cam.send_image(user, storage, "/home/pi/image.jpg")
     return
 

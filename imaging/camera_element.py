@@ -27,31 +27,7 @@ import json
 import pyrebase
 import noir_ndvi
 from utils import concurrent_state as cs
-
-def initialize_user(refresh_token):
-#app configuration information
-    config = {"apiKey": "AIzaSyBPuJwU--0ZlvsbDV9LmKJdYIljwNwzmVk",
-              "authDomain": "oasis-state-af548.firebaseapp.com",
-              "databaseURL": "https://oasis-state-af548-default-rtdb.firebaseio.com/",
-              "storageBucket": "oasis-state-af548.appspot.com"
-             }
-
-    firebase = pyrebase.initialize_app(config)
-    auth = firebase.auth()
-    db = firebase.database()
-    user = auth.refresh(refresh_token)
-    storage = firebase.storage()
-
-    return user, db, storage
-
-def send_image(user, storage, path):
-    #send new image to firebase
-    storage.child(user['userId'] + "/" + cs.access_config["device_name"] + "/image.jpg").put(path, user['idToken'])
-    print("sent image")
-
-    #tell firebase that there is a new image
-    cs.patch_firebase("new_image","1")
-    print("firebase has an image in waiting")
+from networking import db_tools as dbt
 
 def take_picture(image_path):
     #take picture and save to standard location
@@ -85,11 +61,11 @@ def actuate(interval): #amount of time between shots in minutes
     if cs.device_state["connected"] == "1":
 
         #get user info
-        user, db, storage = initialize_user(cs.access_config["refresh_token"])
+        user, db, storage = dbt.initialize_user(cs.access_config["refresh_token"])
         print("got credentials")
 
         #send new image to firebase
-        send_image(user, storage, '/home/pi/oasis-grow/data_out/image.jpg')
+        dbt.send_image(user, storage, '/home/pi/oasis-grow/data_out/image.jpg')
 
     time.sleep(float(interval)*60)
 

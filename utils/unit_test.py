@@ -27,8 +27,8 @@ sys.path.append('/usr/lib/python3/dist-packages')
 import main
 import api
 import core
-import detect_db_events, oasis_setup
-import camera_element
+from networking import detect_db_events, oasis_setup
+from imaging import camera_element
 import update, reset_model, send_image_test
 
 def test_state_handlers():

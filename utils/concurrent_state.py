@@ -11,10 +11,10 @@
 #import modules
 import os
 import os.path
-from re import S
 import sys
 import json
 import requests
+import multiprocessing
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
@@ -70,7 +70,7 @@ def load_state(loop_limit=100000): #Depends on: 'json'; Modifies: device_state,h
     for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
         try:
             with open("/home/pi/oasis-grow/configs/device_params.json") as p:
-                device_params = json.load(p) #get device state
+                device_params = json.load(p) #get device params
 
             for k,v in device_params.items(): 
                 if device_params[k] is None:
@@ -95,7 +95,7 @@ def load_state(loop_limit=100000): #Depends on: 'json'; Modifies: device_state,h
     for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
         try:
             with open("/home/pi/oasis-grow/data_out/sensor_info.json") as s:
-                sensor_info = json.load(s) #get device state
+                sensor_info = json.load(s) #get sensor info
 
             for k,v in sensor_info.items(): 
                 if sensor_info[k] is None:
@@ -120,7 +120,7 @@ def load_state(loop_limit=100000): #Depends on: 'json'; Modifies: device_state,h
     for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
         try:
             with open("/home/pi/oasis-grow/configs/access_config.json") as a:
-                access_config = json.load(a) #get device state
+                access_config = json.load(a) #get access_config
 
             for k,v in access_config.items(): 
                 if access_config[k] is None:
@@ -145,7 +145,7 @@ def load_state(loop_limit=100000): #Depends on: 'json'; Modifies: device_state,h
     for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
         try:
             with open("/home/pi/oasis-grow/configs/feature_toggles.json") as f:
-                feature_toggles = json.load(f) #get device state
+                feature_toggles = json.load(f) #get feature_toggles
 
             for k,v in feature_toggles.items(): 
                 if feature_toggles[k] is None:
@@ -170,7 +170,7 @@ def load_state(loop_limit=100000): #Depends on: 'json'; Modifies: device_state,h
     for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
         try:
             with open("/home/pi/oasis-grow/configs/hardware_config.json") as h:
-                hardware_config = json.load(h) #get device state
+                hardware_config = json.load(h) #get hardware config
 
             for k,v in hardware_config.items(): 
                 if hardware_config[k] is None:
@@ -191,12 +191,25 @@ def load_state(loop_limit=100000): #Depends on: 'json'; Modifies: device_state,h
                 print("Main.py tried to read while hardware_config was being written. If this continues, file is corrupted.")
                 pass
             
-#modifies a firebase variable
+#modifies a firebase variable, now asynchroous
 def patch_firebase(field,value): #Depends on: load_state(),'requests','json'; Modifies: database['field'], state variables
-    load_state()
-    data = json.dumps({field: value})
-    url = "https://oasis-state-af548-default-rtdb.firebaseio.com/"+str(access_config["local_id"])+"/"+str(access_config["device_name"])+".json?auth="+str(access_config["id_token"])
-    result = requests.patch(url,data)
+    def send_data(field, value):
+        data = json.dumps({field: value})
+        url = "https://oasis-state-af548-default-rtdb.firebaseio.com/"+str(access_config["local_id"])+"/"+str(access_config["device_name"])+".json?auth="+str(access_config["id_token"])
+        result = requests.patch(url,data)
+
+    patch_request = multiprocessing.Process(target = send_data, args = [field, value])
+    patch_request.start()
+
+#modifies a firebase variable, now asynchroous
+def patch_fb_dict(data): #Depends on: load_state(),'requests','json'; Modifies: database['field'], state variables
+    def send_data(data):
+        data = json.dumps(data)
+        url = "https://oasis-state-af548-default-rtdb.firebaseio.com/"+str(access_config["local_id"])+"/"+str(access_config["device_name"])+".json?auth="+str(access_config["id_token"])
+        result = requests.patch(url,data)
+
+    patch_request = multiprocessing.Process(target = send_data, args = [data])
+    patch_request.start()
 
 #gets the mutex
 def load_locks(loop_limit = 10000):
@@ -420,6 +433,140 @@ def write_state(path, field, value, loop_limit=100000, offline_only = False): #D
                         lock("hardware_config")
 
                         data[field] = value #write the desired value
+                        x.seek(0)
+                        json.dump(data, x)
+                        x.truncate()
+
+                        unlock("hardware_config")
+                        
+                        load_state()
+                        break #break the loop when the write has been successful
+
+                    else:
+                        pass
+
+        except Exception as e: #If any of the above fails:
+            if i >= int(loop_limit):
+                print("Tried to write state multiple times. File is corrupted. Resetting locks...")
+                reset_model.reset_locks()
+                reset_model.reset_device_state()
+                reset_model.reset_device_params()
+                break
+            else:
+                print(e)
+                print("Resource was locked. Trying write again. If this persists, the lock file is corrupted...")
+                pass #continue the loop until write is successful or ceiling is hit
+
+#save key values to .json
+def write_dict(path, dict, loop_limit=100000, offline_only = False): #Depends on: load_state(), patch_firebase, 'json'; Modifies: path
+    
+    if offline_only == False:
+        #these will be loaded in by the listener, so best to make sure we represent the change in firebase too
+        if device_state["connected"] == "1": #write state to cloud
+            try:
+                patch_fb_dict(dict)
+            except Exception as e:
+                print(e)
+                pass
+
+    for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke if so, 
+        
+        load_locks()
+        
+        try:
+            with open(path, "r+") as x: # open the file.
+                data = json.load(x) # can we load a valid json?
+
+                if path == "/home/pi/oasis-grow/configs/device_state.json": #are we working in device_state?
+                    if locks["device_state_write_available"] == "1": #check is the file is available to be written
+                        lock("device_state")
+
+                        data.update(dict) #write the desired values
+                        x.seek(0)
+                        json.dump(data, x)
+                        x.truncate()
+
+                        unlock("device_state")
+                        
+                        load_state()
+                        break #break the loop when the write has been successful
+
+                    else:
+                        pass
+                    
+                if path == "/home/pi/oasis-grow/configs/device_params.json": #are we working in device_state?
+                    if locks["device_params_write_available"] == "1": #check is the file is available to be written
+                        lock("device_params")
+
+                        data.update(dict) #write the desired values
+                        x.seek(0)
+                        json.dump(data, x)
+                        x.truncate()
+            
+                        unlock("device_params")
+                        
+                        load_state()
+                        break #break the loop when the write has been successful
+
+                    else:
+                        pass
+                    
+                if path == "/home/pi/oasis-grow/data_out/sensor_info.json": #are we working in device_state?
+                    if locks["sensor_info_write_available"] == "1": #check is the file is available to be written
+                        lock("sensor_info")
+
+                        data.update(dict) #write the desired values
+                        x.seek(0)
+                        json.dump(data, x)
+                        x.truncate()
+            
+                        unlock("sensor_info")
+                        
+                        load_state()
+                        break #break the loop when the write has been successful
+
+                    else:
+                        pass
+
+                if path == "/home/pi/oasis-grow/configs/access_config.json": #are we working in device_state?
+                    if locks["access_config_write_available"] == "1": #check is the file is available to be written
+                        lock("access_config")
+
+                        data.update(dict) #write the desired values
+                        x.seek(0)
+                        json.dump(data, x)
+                        x.truncate()
+
+                        unlock("access_config")
+                        
+                        load_state()
+                        break #break the loop when the write has been successful
+
+                    else:
+                        pass
+                    
+                if path == "/home/pi/oasis-grow/configs/feature_toggles.json": #are we working in device_state?
+                    if locks["feature_toggles_write_available"] == "1": #check is the file is available to be written
+                        lock("feature_toggles")
+
+                        data.update(dict) #write the desired values
+                        x.seek(0)
+                        json.dump(data, x)
+                        x.truncate()
+
+                        unlock("feature_toggles")
+                        
+                        load_state()
+                        break #break the loop when the write has been successful
+
+                    else:
+                        pass
+                    
+                if path == "/home/pi/oasis-grow/configs/hardware_config.json": #are we working in device_state?
+                    if locks["hardware_config_write_available"] == "1": #check is the file is available to be written
+                        lock("hardware_config")
+
+                        data.update(dict) #write the desired values
                         x.seek(0)
                         json.dump(data, x)
                         x.truncate()

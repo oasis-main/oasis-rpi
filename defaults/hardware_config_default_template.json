@@ -1,5 +1,4 @@
-{
-"actuator_gpio_map": {
+{"actuator_gpio_map": {
                    "heat_relay": 14,
                    "humidifier_relay": 15,
                    "fan_relay": 18,

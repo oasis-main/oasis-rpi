@@ -26,5 +26,3 @@ urllib3==1.26.8
 zipp==3.8.0
 paho-mqtt
 opencv-python
-
-
