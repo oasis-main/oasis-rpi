@@ -149,11 +149,11 @@ def listen(): #Depends on 'serial', start_serial()
             water_low = int(sensor_info[2])
     
     except (SyntaxError, ValueError) as e: #v1.5 parse disct from json string  
+        err.full_stack()
         
         sensor_info = json.loads(str(ser_in.readline().decode('UTF-8').strip()))
         
         print(type(sensor_info))
-        err.full_stack()
 
         if cs.feature_toggles["temperature_sensor"] == "1":
             last_temperature = temperature

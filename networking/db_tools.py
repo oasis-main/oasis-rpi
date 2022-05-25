@@ -69,8 +69,6 @@ def get_local_credentials(refresh_token): #Depends on: cs.load_state(), cs.write
     #load state so we can use access credentials
     cs.load_state()
     wak = cs.access_config["wak"]
-    email = cs.access_config["e"]
-    password = cs.access_config["p"]
 
     #get local credentials
     refresh_url = "https://securetoken.googleapis.com/v1/token?key=" + wak

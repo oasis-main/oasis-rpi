@@ -1,5 +1,5 @@
 from subprocess import Popen
-from utils import cs
+from utils import concurrent_state as cs
 
 #reconfigures network interface, tells system to boot with Access Point, restarts
 def enable_AP(): #Depends on: cs.write_state(), 'subprocess'; Modifies: device_state.json, configuration files
