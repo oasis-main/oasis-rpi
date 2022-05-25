@@ -27,9 +27,6 @@ from subprocess import Popen, PIPE, STDOUT
 import multiprocessing
 import signal
 
-#communicating with firebase
-import requests
-
 #json management
 import json
 

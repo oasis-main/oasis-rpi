@@ -674,14 +674,19 @@ def main_loop():
         while True:
             
             update_derivative_banks() #this occurs in near-realtime, as opposed to storage and exchange every 5 min
+            print("1")
 
             cs.load_state() 
+            print("2")
 
             smart_listener()
+            print("3")
 
             run_active_actuators()
-
+            print("4")
+            
             check_exit()
+            print("5")
 
     except (KeyboardInterrupt):
         terminate_program()
