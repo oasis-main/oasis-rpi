@@ -171,7 +171,8 @@ def listen(): #Depends on 'serial', start_serial()
             soil_moisture = sensor_info["soil_moisture"]
             cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "soil_moisture", str(soil_moisture), offline_only=True)
         if cs.feature_toggles["vpd_calculation"] == "1":
-            es = 0.6108 * math.exp(17.27 * temperature / (temperature + 237.3))
+            temperature_c = temperature - 32 * (5/9)
+            es = 0.6108 * math.exp(17.27 * temperature_c / (temperature_c + 237.3))
             ea = humidity / 100 * es 
             vpd = ea-es
             cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "vpd", str(vpd), offline_only=True)
