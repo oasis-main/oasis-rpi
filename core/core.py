@@ -128,15 +128,19 @@ def listen(): #Depends on 'serial', start_serial()
     global ser_in, temperature,  humidity,  co2,  soil_moisture, vpd, water_low, lux, ph, tds  
     global last_temperature, last_humidity, last_co2, last_soil_moisture #past readings for derivative calculations
 
+    print("Hey")
+
     if ser_in == None:
         print("ser_in is none")
         return 
 
+    print("I just met you")
     
     try: #legacy sensor app: parse space-separated string of floats
         #listen for data from aurdino, split it by space
+        print("and this is crazy")
         sensor_info = ser_in.readline().decode('UTF-8').strip().split(' ')
-        
+        print("but here's my number")
         if cs.feature_toggles["humidity_sensor"] == "1":
             last_humidity = humidity
             humidity =float(sensor_info[0]) #should fail if trying to read json string
@@ -147,7 +151,8 @@ def listen(): #Depends on 'serial', start_serial()
 
         if cs.feature_toggles["water_level_sensor"] == "1":
             water_low = int(sensor_info[2])
-    
+        
+        print("so call me maybe")
     except (SyntaxError, ValueError) as e: #v1.5 parse disct from json string  
         err.full_stack()
         
@@ -531,7 +536,8 @@ def main_setup():
                             or (cs.feature_toggles["lux_sensor"] == "1") \
                                 or (cs.feature_toggles["ph_sensor"] == "1") \
                                     or (cs.feature_toggles["tds_sensor"] == "1") \
-                                        or (cs.feature_toggles["soil_moisture_sensor"] == "1")):
+                                        or (cs.feature_toggles["soil_moisture_sensor"] == "1") \
+                                            or (cs.feature_toggles["onboard_led"] == "0")):
         start_serial()
 
     #start the clock for timimg .csv writes and data exchanges with server
@@ -556,6 +562,7 @@ def smart_listener():
                                     or (cs.feature_toggles["tds_sensor"] == "1") \
                                         or (cs.feature_toggles["soil_moisture_sensor"] == "1")):
         try: #attempt to read data from sensor, raise exception if there is a problem
+            print("Smart listener is attempting to collect data from arduino")
             listen() #this will be changed to run many sensor functions as opposed to one serial listener
         except Exception as e:
             print(e)
@@ -626,6 +633,27 @@ def run_active_actuators():
     if cs.feature_toggles["camera"] == "1":
         run_camera()
 
+#unfinished
+def console_log():
+    
+    print("Sensor Readings = ")
+    
+    print(cs.sensor_info)
+            
+    print("PID Feedback = ")
+    
+    feedback = {}
+    
+    {"Heater Feedback": temp_feedback}
+    {"Humidifier Feedback": hum_feedback}
+    {"Dehumidifier Feedback": dehum_feedback}
+    {"Fan Feedback": fan_feedback}
+    {"Irrigation Intensity": water_feedback}
+
+    print(feedback)
+
+    timers = {}
+
 def data_out():
     global data_timer
     
@@ -668,25 +696,20 @@ def main_loop():
 
     #launch main program loop
     try:
-        print("Starting Main Loop")
+        print("Begin collection and feedback")
         print("------------------------------------------------------------")
 
         while True:
             
             update_derivative_banks() #this occurs in near-realtime, as opposed to storage and exchange every 5 min
-            print("1")
 
             cs.load_state() 
-            print("2")
 
             smart_listener()
-            print("3")
 
             run_active_actuators()
-            print("4")
             
             check_exit()
-            print("5")
 
     except (KeyboardInterrupt):
         terminate_program()
