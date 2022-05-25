@@ -34,10 +34,10 @@ def Error_Handler(func):
             cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "device_error", str(k))
         except TypeError as t:
             print(f"{func.__name__} wrong data types.")
-            full_stack()
+            print(full_stack())
             cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "device_error", str(t))
         except Exception as e:
-            full_stack()
+            print(full_stack())
             cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "device_error", str(e))
     return Inner_Function
 

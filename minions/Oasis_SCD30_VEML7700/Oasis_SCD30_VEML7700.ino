@@ -74,19 +74,19 @@ void loop() {
 
     Serial.print("{"); //start the json
 
-    Serial.print("temperature: ");
+    Serial.print("\"temperature\":");
     Serial.print((double(scd30.temperature)*double(1.8))+double(32));
     Serial.print(", ");
     
-    Serial.print("humidity: ");
+    Serial.print("\"humidity\": ");
     Serial.print(scd30.relative_humidity);
     Serial.print(", ");
     
-    Serial.print("co2: ");
+    Serial.print("\"co2\": ");
     Serial.print(scd30.CO2, 2);
     Serial.print(", ");
 
-    Serial.print("lux: ");
+    Serial.print("\"lux\": ");
     Serial.print(veml.readLux());
     //Serial.print(", "); //no trailing comma, this is the last json field
     

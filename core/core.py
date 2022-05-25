@@ -155,8 +155,7 @@ def listen(): #Depends on 'serial', start_serial()
         print("so call me maybe")
     
     except (SyntaxError, ValueError) as e: #v1.5 parse disct from json string  
-        print(e)
-        err.full_stack()
+        print(err.full_stack())
         
         sensor_info = json.loads(str(ser_in.readline().decode('UTF-8').strip()))
         
@@ -164,7 +163,7 @@ def listen(): #Depends on 'serial', start_serial()
 
         if cs.feature_toggles["temperature_sensor"] == "1":
             last_temperature = temperature
-            temperature = float(sensor_info["temperature"])
+            temperature = float(sensor_info['temperature'])
             cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "temperature", str(temperature), offline_only=True)      
         if cs.feature_toggles["humidity_sensor"] == "1":
             last_humidity = humidity
@@ -199,8 +198,7 @@ def listen(): #Depends on 'serial', start_serial()
         print(sensor_info)
 
     except Exception as e:
-        print(e)
-        err.full_stack()
+        print(err.full_stack())
         return
 
 
@@ -771,7 +769,7 @@ def main_loop():
         terminate_program()
 
     except Exception as e:
-        err.full_stack()
+        print(err.full_stack())
         if cs.device_state["running"] == "1": #if there is an error, but device should stay running
             clean_up_processes()
         if cs.device_state["running"] == "0":
