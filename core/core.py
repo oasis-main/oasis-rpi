@@ -212,9 +212,10 @@ def listen(): #Depends on 'serial', start_serial()
     if ser_in == None:
         print("ser_in is none")
         return 
-        
-    sensor_info = json.loads(str(ser_in.readline().decode('UTF-8').strip()))
-    
+
+    print("yo")   
+    sensor_info = json.loads(str(ser_in.readline().decode('UTF-8')))
+    print("why is this not working")
     print(type(sensor_info))
 
     if cs.feature_toggles["temperature_sensor"] == "1":
