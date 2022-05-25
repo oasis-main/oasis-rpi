@@ -123,7 +123,6 @@ def start_serial(): #Depends on:'serial'
         ser_in = None
         print("Serial connection not found")
 
-'''
 #gets data from serial, will parse a simple string or accept a dictionary
 def listen(): #Depends on 'serial', start_serial()
     global ser_in, temperature,  humidity,  co2,  soil_moisture, vpd, water_low, lux, ph, tds  
@@ -203,8 +202,9 @@ def listen(): #Depends on 'serial', start_serial()
         print(e)
         err.full_stack()
         return
-'''
 
+
+'''
 def listen(): #Depends on 'serial', start_serial()
     global ser_in, temperature,  humidity,  co2,  soil_moisture, vpd, water_low, lux, ph, tds  
     global last_temperature, last_humidity, last_co2, last_soil_moisture #past readings for derivative calculations
@@ -253,7 +253,7 @@ def listen(): #Depends on 'serial', start_serial()
         cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "tds", str(tds), offline_only=True)         
 
     print(sensor_info)
-
+'''
 #PID controller to modulate heater feedback
 def heat_pid(temperature, target_temperature, last_temperature, last_target_temperature,
              P_heat, I_heat, D_heat):    
