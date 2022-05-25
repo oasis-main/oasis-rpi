@@ -155,6 +155,7 @@ def listen(): #Depends on 'serial', start_serial()
         print("so call me maybe")
     
     except (SyntaxError, ValueError) as e: #v1.5 parse disct from json string  
+        print(e)
         err.full_stack()
         
         sensor_info = json.loads(str(ser_in.readline().decode('UTF-8').strip()))
@@ -198,6 +199,7 @@ def listen(): #Depends on 'serial', start_serial()
         print(sensor_info)
 
     except Exception as e:
+        print(e)
         err.full_stack()
         return
 
