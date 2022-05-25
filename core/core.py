@@ -138,7 +138,7 @@ def listen(): #Depends on 'serial', start_serial()
     
     try: #legacy sensor app: parse space-separated string of floats
         #listen for data from aurdino, split it by space
-        print("and this is crazy")
+        prnt("and this is crazy")
         sensor_info = ser_in.readline().decode('UTF-8').strip().split(' ')
         print("but here's my number")
         if cs.feature_toggles["humidity_sensor"] == "1":
@@ -153,6 +153,7 @@ def listen(): #Depends on 'serial', start_serial()
             water_low = int(sensor_info[2])
         
         print("so call me maybe")
+    
     except (SyntaxError, ValueError) as e: #v1.5 parse disct from json string  
         err.full_stack()
         
@@ -193,6 +194,8 @@ def listen(): #Depends on 'serial', start_serial()
         if cs.feature_toggles["tds_sensor"] == "1":
             tds = float(sensor_info["tds"])
             cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "tds", str(tds), offline_only=True)         
+
+        print(sensor_info)
 
     except Exception as e:
         err.full_stack()
