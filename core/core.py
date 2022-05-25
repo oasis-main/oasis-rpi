@@ -214,7 +214,7 @@ def listen(): #Depends on 'serial', start_serial()
         return 
 
     print("yo")   
-    sensor_info = json.loads(str(ser_in.readline().decode('UTF-8')))
+    sensor_info = ser_in.readline().decode('UTF-8')
     print("why is this not working")
     print(type(sensor_info))
 
