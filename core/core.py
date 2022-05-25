@@ -128,19 +128,16 @@ def listen(): #Depends on 'serial', start_serial()
     global ser_in, temperature,  humidity,  co2,  soil_moisture, vpd, water_low, lux, ph, tds  
     global last_temperature, last_humidity, last_co2, last_soil_moisture #past readings for derivative calculations
 
-    print("Hey")
-
     if ser_in == None:
         print("ser_in is none")
         return 
-
-    print("I just met you")
+    
     
     try: #legacy sensor app: parse space-separated string of floats
         #listen for data from aurdino, split it by space
-        print("and this is crazy")
+
         sensor_info = ser_in.readline().decode('UTF-8').strip().split(' ')
-        print("but here's my number")
+
         if cs.feature_toggles["humidity_sensor"] == "1":
             last_humidity = humidity
             humidity =float(sensor_info[0]) #should fail if trying to read json string
@@ -151,31 +148,27 @@ def listen(): #Depends on 'serial', start_serial()
 
         if cs.feature_toggles["water_level_sensor"] == "1":
             water_low = int(sensor_info[2])
-        
-        print("so call me maybe")
     
     except (SyntaxError, ValueError) as e: #v1.5 parse disct from json string  
-        print(err.full_stack())
+        #print(err.full_stack())
         
         sensor_info = json.loads(str(ser_in.readline().decode('UTF-8').strip()))
-        
-        print(type(sensor_info))
 
         if cs.feature_toggles["temperature_sensor"] == "1":
             last_temperature = temperature
-            temperature = float(sensor_info['temperature'])
+            temperature = sensor_info["temperature"]
             cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "temperature", str(temperature), offline_only=True)      
         if cs.feature_toggles["humidity_sensor"] == "1":
             last_humidity = humidity
-            humidity = float(sensor_info["humidity"])
+            humidity = sensor_info["humidity"]
             cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "humidity", str(humidity), offline_only=True)
         if cs.feature_toggles["co2_sensor"] == "1":
             last_co2 = co2
-            co2 = float(sensor_info["co2"])
+            co2 = sensor_info["co2"]
             cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "co2", str(co2), offline_only=True)
         if cs.feature_toggles["soil_moisture_sensor"] == "1":
             last_soil_moisture = soil_moisture
-            soil_moisture = float(sensor_info["soil_moisture"])
+            soil_moisture = sensor_info["soil_moisture"]
             cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "soil_moisture", str(soil_moisture), offline_only=True)
         if cs.feature_toggles["vpd_calculation"] == "1":
             es = 0.6108 * math.exp(17.27 * temperature / (temperature + 237.3))
@@ -186,72 +179,19 @@ def listen(): #Depends on 'serial', start_serial()
             water_low = int(sensor_info["water_low"])
             cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "water_low", str(water_low), offline_only=True)
         if cs.feature_toggles["lux_sensor"] == "1":
-            lux = float(sensor_info["lux"])
+            lux = sensor_info["lux"]
             cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "lux", str(lux), offline_only=True)
         if cs.feature_toggles["ph_sensor"] == "1":
-            ph = float(sensor_info["ph"])
+            ph = sensor_info["ph"]
             cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "ph", str(ph), offline_only=True)
         if cs.feature_toggles["tds_sensor"] == "1":
-            tds = float(sensor_info["tds"])
+            tds = sensor_info["tds"]
             cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "tds", str(tds), offline_only=True)         
-
-        print(sensor_info)
 
     except Exception as e:
         print(err.full_stack())
         return
 
-
-'''
-def listen(): #Depends on 'serial', start_serial()
-    global ser_in, temperature,  humidity,  co2,  soil_moisture, vpd, water_low, lux, ph, tds  
-    global last_temperature, last_humidity, last_co2, last_soil_moisture #past readings for derivative calculations
-
-    if ser_in == None:
-        print("ser_in is none")
-        return 
-
-    print("yo")   
-    sensor_info = str(ser_in.read())
-    print("why is this not working")
-    print(type(sensor_info))
-
-    if cs.feature_toggles["temperature_sensor"] == "1":
-        last_temperature = temperature
-        temperature = float(sensor_info["temperature"])
-        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "temperature", str(temperature), offline_only=True)      
-    if cs.feature_toggles["humidity_sensor"] == "1":
-        last_humidity = humidity
-        humidity = float(sensor_info["humidity"])
-        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "humidity", str(humidity), offline_only=True)
-    if cs.feature_toggles["co2_sensor"] == "1":
-        last_co2 = co2
-        co2 = float(sensor_info["co2"])
-        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "co2", str(co2), offline_only=True)
-    if cs.feature_toggles["soil_moisture_sensor"] == "1":
-        last_soil_moisture = soil_moisture
-        soil_moisture = float(sensor_info["soil_moisture"])
-        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "soil_moisture", str(soil_moisture), offline_only=True)
-    if cs.feature_toggles["vpd_calculation"] == "1":
-        es = 0.6108 * math.exp(17.27 * temperature / (temperature + 237.3))
-        ea = humidity / 100 * es 
-        vpd = ea-es
-        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "vpd", str(vpd), offline_only=True)
-    if cs.feature_toggles["water_level_sensor"] == "1":
-        water_low = int(sensor_info["water_low"])
-        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "water_low", str(water_low), offline_only=True)
-    if cs.feature_toggles["lux_sensor"] == "1":
-        lux = float(sensor_info["lux"])
-        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "lux", str(lux), offline_only=True)
-    if cs.feature_toggles["ph_sensor"] == "1":
-        ph = float(sensor_info["ph"])
-        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "ph", str(ph), offline_only=True)
-    if cs.feature_toggles["tds_sensor"] == "1":
-        tds = float(sensor_info["tds"])
-        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "tds", str(tds), offline_only=True)         
-
-    print(sensor_info)
-'''
 #PID controller to modulate heater feedback
 def heat_pid(temperature, target_temperature, last_temperature, last_target_temperature,
              P_heat, I_heat, D_heat):    
