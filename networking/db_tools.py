@@ -193,10 +193,12 @@ def connect_firebase(): #depends on: cs.load_state(), cs.write_state(), cs.patch
 
             #start listener to bring in db changes on startup
             if cs.device_state["connected"] == "0":
+                cs.patch_firebase("connected","1")
+                cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"connected","1", offline_only=True)
                 launch_listener()
 
+            cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"connected","1", offline_only= True)
             #update the device state to "connected"
-            cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"connected","1")
             print("Device is connected over HTTPS to the Oasis Network")
 
             cs.load_state()
