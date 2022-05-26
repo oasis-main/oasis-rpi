@@ -45,9 +45,12 @@ listener_list = []
 def stream_handler(m):
     #ok some kind of update
     #might be from start up or might be user changed it
-    if m['event']=='put':
-        #act_on_event(m['stream_id'],m['data'])
+    if m['event']=='put' or m['event']=='patch':
         print(m)
+        print(m['path'])
+        field = str(m['path']).replace("/","")
+        print(field)
+        #act_on_event(m['stream_id'],m['data'])
 
     #something else
     else:
@@ -66,7 +69,7 @@ def detect_field_event(user, db):
 #run multiprocesser to handle database listener
 #could use threads in future? would it be better?
 def detect_multiple_field_events(user, db, fields):
-    global listner_list
+    global listener_list
 
     p = Process(target=detect_field_event, args=(user, db))
     p.start()
@@ -134,7 +137,7 @@ if __name__ == "__main__":
         print("Database monitoring: inactive")
         sys.exit()
     
-    print(dbt.get_user_data(user, db))
+    #print(dbt.get_user_data(user, db))
     
     #actual section that launches the listener
     device_state_fields = list(cs.device_state.keys())
@@ -144,4 +147,3 @@ if __name__ == "__main__":
     detect_multiple_field_events(user, db, fields)
     stop_condition("deleted","1")
     stop_condition("connected", "0")
-
