@@ -215,7 +215,7 @@ def fetch_device_data():
     cs.load_state()
     url = "https://oasis-state-af548-default-rtdb.firebaseio.com/"+str(cs.access_config["local_id"])+"/"+str(cs.access_config["device_name"])+".json?auth="+str(cs.access_config["id_token"])
     result = requests.get(url)
-    print(result)
+    print(result.content)
 
 if __name__ == "main":
     cs.load_state()
