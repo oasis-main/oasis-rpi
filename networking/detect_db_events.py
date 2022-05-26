@@ -88,7 +88,7 @@ def detect_field_event(user, db):
 #https://stackoverflow.com/questions/2046603/is-it-possible-to-run-function-in-a-subprocess-without-threading-or-writing-a-se
 #https://stackoverflow.com/questions/200469/what-is-the-difference-between-a-process-and-a-thread#:~:text=A%20process%20is%20an%20execution,sometimes%20called%20a%20lightweight%20process.
 #run multiprocesser to handle database listener
-def detect_multiple_field_events(user, db, fields):
+def detect_multiple_field_events(user, db):
     global listener_list
 
     p = Process(target=detect_field_event, args=(user, db))
