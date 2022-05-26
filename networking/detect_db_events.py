@@ -2,7 +2,6 @@
 #https://github.com/thisbejim/Pyrebase
 #https://stackoverflow.com/questions/45154853/how-to-detect-changes-in-firebase-child-with-python
 
-
 #this may be helpful if i cant figure something else out for updating values
 #https://pypi.org/project/FirebaseData/
 

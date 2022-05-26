@@ -222,13 +222,14 @@ def fetch_device_data():
 
     for key_value_pair in list(cloud_data.items()):
         if key_value_pair[0] in list(cs.device_state.keys()):
-            print("Updating device_state")
+            #print("Updating device_state")
             cs.write_state("/home/pi/oasis-grow/configs/device_state.json", key_value_pair[0], key_value_pair[1], offline_only=True)
         elif key_value_pair[0] in list(cs.device_params.keys()):
-            print("Updating device_params")
+            #print("Updating device_params")
             cs.write_state("/home/pi/oasis-grow/configs/device_params.json", key_value_pair[0], key_value_pair[1], offline_only=True)    
         else:
-            print("Not working")
+            pass
+            #print("Not working")
 
 if __name__ == "main":
     cs.load_state()
