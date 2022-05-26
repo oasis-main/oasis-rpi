@@ -46,7 +46,7 @@ def stream_handler(m):
     #ok some kind of update
     #might be from start up or might be user changed it
     if m['event']=='put':
-        act_on_event(m['stream_id'],m['data'])
+        #act_on_event(m['stream_id'],m['data'])
         print(m)
 
     #something else
@@ -58,8 +58,8 @@ def stream_handler(m):
         input()
 
 @err.Error_Handler
-def detect_field_event(user, db, field):
-    my_stream = db.child(user['userId']+'/'+cs.access_config["device_name"]+"/"+field).stream(stream_handler, user['idToken'])
+def detect_field_event(user, db):
+    my_stream = db.child(user['userId']+'/'+cs.access_config["device_name"]+"/").stream(stream_handler, user['idToken'])
 
 #https://stackoverflow.com/questions/2046603/is-it-possible-to-run-function-in-a-subprocess-without-threading-or-writing-a-se
 #https://stackoverflow.com/questions/200469/what-is-the-difference-between-a-process-and-a-thread#:~:text=A%20process%20is%20an%20execution,sometimes%20called%20a%20lightweight%20process.
@@ -121,7 +121,7 @@ if __name__ == "__main__":
     print("Starting listener...")
     cs.load_state()
     try:
-        user, db = dbt.dbt.initialize_user(cs.access_config["refresh_token"])
+        user, db = dbt.initialize_user(cs.access_config["refresh_token"])
         print("Database monitoring: active")
     except Exception as e:
         print("Listener could not connect")

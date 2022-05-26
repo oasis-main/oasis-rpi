@@ -295,25 +295,24 @@ def main_setup():
 
     #Initialize Oasis:
     print("Initializing...")
-    cs.load_state()
-    start_serial()
-    check_AP()
-    dbt.connect_firebase()
+    cs.load_state() #get the device data
+    start_serial() #start outbound serial command interface
+    check_AP() #check to see if the device should be in access point mode
+    
+    cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0") #set to 0 so listener launches
+    dbt.connect_firebase() #listener will not be re-called unless a connection fails at some point
 
-    #Check if command line set to run
-    cmd_line_args()
+    cmd_line_args() #Check command line flags for special instructions
 
-    #launch core process
-    setup_core_process()
+    setup_core_process() #launch sensor, data collection, & feedback management
 
-    #Setup on-device interface
-    setup_button_interface()
+    setup_button_interface() #Setup on-device interface for interacting with device using buttons
     
     if cs.feature_toggles["action_button"] == "1":
         if cs.feature_toggles["action_water"] == "1":
             setup_water()
 
-    #start the clock for timing credential refresh &  data exchanges with LED
+    #start the clock for  refresh
     led_timer = time.time()
     connect_timer = time.time()
 
@@ -325,7 +324,7 @@ def main_loop(led_timer, connect_timer):
         while True:
             cs.load_state() #refresh the state variables
 
-            if time.time() - connect_timer > 1800:
+            if time.time() - connect_timer > 600: #check connection every 10 min (600s)
                 dbt.connect_firebase
 
             check_core_running() #check if core is supposed to be running

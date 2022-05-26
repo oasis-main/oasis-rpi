@@ -81,59 +81,27 @@ def get_local_credentials(refresh_token): #Depends on: cs.load_state(), cs.write
 
     print("Obtained local credentials")
 
-#connects system to firebase
-def connect_firebase(): #depends on: cs.load_state(), cs.write_state(), cs.patch_firebase(), 'requests'; Modifies: access_config.json, device_state.json
-    
-    def try_connect():
-   
-        #load state so we can use access credentials
-        cs.load_state()
-        wak = cs.access_config["wak"]
-        email = cs.access_config["e"]
-        password = cs.access_config["p"]
+#launches a script to detect changes in the database
+def launch_listener(): #depends on 'subprocess', modifies: state variables
+    global listener
+    listener = Popen(["python3", "/home/pi/oasis-grow/networking/detect_db_events.py"])
 
-        print("Checking for connection...")
-
-        try:
-            print("FireBase verification...")
-
-            #fetch refresh token
-            refresh_token = get_refresh_token(wak, email, password)
-
-            #fetch refresh token and save to access_config
-            cs.write_state("/home/pi/oasis-grow/configs/access_config.json","refresh_token", refresh_token)
-
-            #bring in the refresh token for use further down
-            cs.load_state()
-            refresh_token = cs.access_config["refresh_token"]
-            print("Obtained refresh token")
-
-            #fetch a new id_token & local_id
-            get_local_credentials(refresh_token)
-
-            #launch checks at network startup
-            check_new_device()
-            check_updates()
-            check_deleted()
-
-            #start listener to bring in db changes, make a status flag for the mqqt process
-            #TODO
-
-            #update the device state to "connected"
-            cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"connected","1")
-            print("Device is connected over HTTPS to the Oasis Network")
-
-            cs.load_state()
-            
-        except Exception as e:
-            print(e) #display error
-            #write state as not connected
-            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0")
-            print("Could not establish an HTTPS connection to Oasis Network")
-
-    time.sleep(15)
-    connection_attempt = multiprocessing.Process(target = try_connect)
-    connection_attempt.start()
+#deletes a box if the cloud is indicating that it should do so
+def check_deleted():
+    global listener
+    cs.load_state()
+    if cs.device_state["deleted"] == "1" and listener is not None:
+        
+        print("Removing device from Oasis Network...")
+        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0") #make sure it doesn't write anything to the cloud
+        listener = None #kill the listener
+        
+        print("Database monitoring deactivated")
+        reset_model.reset_nonhw_configs()
+        
+        print("Device has been reset to default configuration")
+        systemctl_reboot = Popen(["sudo", "systemctl", "reboot"])
+        systemctl_reboot.wait()
 
 #check if the device is waiting to be added to firebase, if it is then add it, otherwise skip
 def check_new_device(): #depends on: modifies:
@@ -188,24 +156,61 @@ def check_updates(): #depends on: cs.load_state(),'subproceess', update.py; modi
         output, error = update_process.communicate()
         if update_process.returncode != 0:
             print("Failure " + str(update_process.returncode)+ " " +str(output)+str(error))
-            
-#launches a script to detect changes in the database
-def launch_listener(): #depends on 'subprocess', modifies: state variables
-    global listener
-    listener = Popen(["python3", "/home/pi/oasis-grow/networking/db_listener.py"])
 
-#deletes a box if the cloud is indicating that it should do so
-def check_deleted():
-    global listener
-    cs.load_state()
-    if cs.device_state["deleted"] == "1" and listener is not None:
-        print("Removing device from Oasis Network...")
-        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0") #make sure it doesn't write anything to the cloud, kill the listener
-        listener = None
-        print("Database monitoring deactivated")
-        reset_model.reset_nonhw_configs()
-        print("Device has been reset to default configuration")
-        systemctl_reboot = Popen(["sudo", "systemctl", "reboot"])
+#connects system to firebase
+def connect_firebase(): #depends on: cs.load_state(), cs.write_state(), cs.patch_firebase(), 'requests'; Modifies: access_config.json, device_state.json
+    
+    def try_connect():
+   
+        #load state so we can use access credentials
+        cs.load_state()
+        wak = cs.access_config["wak"]
+        email = cs.access_config["e"]
+        password = cs.access_config["p"]
+
+        print("Checking for connection...")
+
+        try:
+            print("FireBase verification...")
+
+            #fetch refresh token
+            refresh_token = get_refresh_token(wak, email, password)
+
+            #fetch refresh token and save to access_config
+            cs.write_state("/home/pi/oasis-grow/configs/access_config.json","refresh_token", refresh_token)
+
+            #bring in the refresh token for use further down
+            cs.load_state()
+            refresh_token = cs.access_config["refresh_token"]
+            print("Obtained refresh token")
+
+            #fetch a new id_token & local_id
+            get_local_credentials(refresh_token)
+
+            #launch checks at network startup
+            check_new_device()
+            check_updates()
+            check_deleted()
+
+            #start listener to bring in db changes on startup
+            if cs.device_state["connected"] == "0":
+                launch_listener()
+
+            #update the device state to "connected"
+            cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"connected","1")
+            print("Device is connected over HTTPS to the Oasis Network")
+
+            cs.load_state()
+            
+        except Exception as e:
+            print(e) #display error
+            #write state as not connected
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0")
+            print("Could not establish an HTTPS connection to Oasis Network")
+
+    time.sleep(15)
+    connection_attempt = multiprocessing.Process(target = try_connect)
+    connection_attempt.start()
 
 if __name__ == "main":
     cs.load_state()
