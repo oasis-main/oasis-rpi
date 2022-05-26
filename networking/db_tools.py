@@ -215,7 +215,20 @@ def fetch_device_data():
     cs.load_state()
     url = "https://oasis-state-af548-default-rtdb.firebaseio.com/"+str(cs.access_config["local_id"])+"/"+str(cs.access_config["device_name"])+".json?auth="+str(cs.access_config["id_token"])
     result = requests.get(url)
-    print(result.content)
+    byte_str = result.content
+    escaped_byte_str = "b" + byte_str
+
+    cloud_data = json.loads(escaped_byte_str)
+
+    for k,v in cloud_data.items(): 
+                if cloud_data[k] in cs.device_state.keys():
+                    print("Updating device_state")
+                    cs.write_state("/home/pi/oasis-grow/configs/device_state.json",k,v)
+                elif cloud_data[k] in cs.device_params.keys():
+                    print("Updating device_state")
+                    cs.write_state("/home/pi/oasis-grow/configs/device_params.json",k,v)    
+                else: 
+                    pass
 
 if __name__ == "main":
     cs.load_state()
