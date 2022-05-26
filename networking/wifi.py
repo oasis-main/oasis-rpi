@@ -14,6 +14,7 @@ def enable_AP(): #Depends on: cs.write_state(), 'subprocess'; Modifies: device_s
     enable_hostapd = Popen(["sudo", "systemctl", "enable", "hostapd"])
     enable_hostapd.wait()
     systemctl_reboot = Popen(["sudo", "systemctl", "reboot"])
+    systemctl_reboot.wait()
 
 #reconfigures network interface, tells system to boot with WiF, restarts
 def enable_WiFi(): #Depends on: cs.write_state(), 'subprocess'; Modifies: device_state.json, configuration files
@@ -28,3 +29,4 @@ def enable_WiFi(): #Depends on: cs.write_state(), 'subprocess'; Modifies: device
     disable_hostapd = Popen(["sudo", "systemctl", "disable", "hostapd"])
     disable_hostapd.wait()
     systemctl_reboot = Popen(["sudo", "systemctl", "reboot"])
+    systemctl_reboot.wait()

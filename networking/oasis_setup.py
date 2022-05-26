@@ -6,7 +6,7 @@ from subprocess import Popen
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
-sys.path.append('/home/pi/oasis-grow/utils')
+
 sys.path.append('/usr/lib/python37.zip')
 sys.path.append('/usr/lib/python3.7')
 sys.path.append('/usr/lib/python3.7/lib-dynload')
@@ -20,9 +20,9 @@ import json
 import pickle5 as pickle
 
 #import custom modules
-import reset_model
-import concurrent_state as cs
-import wifi
+from utils import reset_model
+from utils import concurrent_state as cs
+from networking import wifi
 
 #create a password-protected lan interface for accepting credentials
 import streamlit as st
@@ -69,7 +69,7 @@ def modAccessConfig(name, e, p):
 
     print("Access configs added")
 
-def save_creds_exit(email, password, wifi_name, wifi_pass, device_name):
+def save_creds_exit(email, password, wifi_name, wifi_pass, device_name, cmd = False):
     global st
     
     #place credentials in proper locations
@@ -86,9 +86,10 @@ def save_creds_exit(email, password, wifi_name, wifi_pass, device_name):
     #set new_device to "0" before rebooting
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "new_device", "1", offline_only=True)
 
-    #stand up wifi and reboot
-    wifi.enable_WiFi()
-
+    if cmd == False: #pass this argument as true to save creds without rebooting
+        #stand up wifi and reboot
+        wifi.enable_WiFi()
+s
 
 if __name__ == '__main__':
 
