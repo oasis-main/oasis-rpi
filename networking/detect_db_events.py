@@ -68,10 +68,16 @@ def detect_field_event(user, db):
 def detect_multiple_field_events(user, db, fields):
     global listner_list
 
+    p = Process(target=detect_field_event, args=(user, db))
+    p.start()
+    listener_list.append(p)
+
+    '''
     for field in fields:
-        p = Process(target=detect_field_event, args=(user, db, field))
+        p = Process(target=detect_field_event, args=(user, db))
         p.start()
         listener_list.append(p)
+    '''
 
 #This function launches a thread that checks whether the device has been deleted and kills this script if so
 def stop_condition(field,value): #Depends on: os, Process,cs.load_state(); Modifies: listener_list, stops this whole script
