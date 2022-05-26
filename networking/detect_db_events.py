@@ -19,88 +19,24 @@
 import os
 import os.path
 import sys
-import time
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
 sys.path.append('/home/pi/oasis-grow/utils')
-sys.path.append('/usr/lib/python37.zip')
-sys.path.append('/usr/lib/python3.7')
-sys.path.append('/usr/lib/python3.7/lib-dynload')
-sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
-sys.path.append('/usr/local/lib/python3.7/dist-packages')
-sys.path.append('/usr/lib/python3/dist-packages')
+#sys.path.append('/usr/lib/python37.zip')
+#sys.path.append('/usr/lib/python3.7')
+#sys.path.append('/usr/lib/python3.7/lib-dynload')
+#sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
+#sys.path.append('/usr/local/lib/python3.7/dist-packages')
+#sys.path.append('/usr/lib/python3/dist-packages')
 
-import signal
-import pyrebase
-from multiprocessing import Process, Queue
-import json
+from multiprocessing import Process
 from utils import concurrent_state as cs
 from utils import error_handler as err
 from networking import db_tools as dbt
 
 #declare listener list
 listener_list = []
-
-def stream_handler(m):
-    #ok some kind of update
-    #might be from start up or might be user changed it
-    if m['event']=='put' or m['event']=='patch':
-        print(m)
-        print(m['path'])
-        field = str(m['path']).replace("/","")
-        print(field)
-        #act_on_event(m['stream_id'],m['data'])
-
-    #something else
-    else:
-        pass
-        #if this happens... theres a problem...
-        #should be handled for
-        print('something wierd...', m['event'])
-        input()
-
-@err.Error_Handler
-def detect_field_event(user, db):
-    my_stream = db.child(user['userId']+'/'+cs.access_config["device_name"]+"/").stream(stream_handler, user['idToken'])
-
-#https://stackoverflow.com/questions/2046603/is-it-possible-to-run-function-in-a-subprocess-without-threading-or-writing-a-se
-#https://stackoverflow.com/questions/200469/what-is-the-difference-between-a-process-and-a-thread#:~:text=A%20process%20is%20an%20execution,sometimes%20called%20a%20lightweight%20process.
-#run multiprocesser to handle database listener
-#could use threads in future? would it be better?
-def detect_multiple_field_events(user, db, fields):
-    global listener_list
-
-    p = Process(target=detect_field_event, args=(user, db))
-    p.start()
-    listener_list.append(p)
-
-    '''
-    for field in fields:
-        p = Process(target=detect_field_event, args=(user, db))
-        p.start()
-        listener_list.append(p)
-    '''
-
-#This function launches a thread that checks whether the device has been deleted and kills this script if so
-def stop_condition(field,value): #Depends on: os, Process,cs.load_state(); Modifies: listener_list, stops this whole script
-    global listener_list
-
-    def check_exit(f,v): #This should be launched in its own thread, otherwise will hang the script
-        while True:
-            try:
-                cs.load_state()
-            except:
-                pass
-
-            if cs.device_state[f] == v:
-                print("Exiting database listener...")
-                for listener in listener_list:
-                    listener.terminate()
-                os._exit(0)
-
-    stop_condition = Process(target = check_exit, args = (field,value))
-    stop_condition.start()
 
 #make change to config file
 def act_on_event(field, new_data):
@@ -126,24 +62,79 @@ def act_on_event(field, new_data):
     #print(path)
     cs.write_state(path, field, new_data, offline_only = True)
 
+def stream_handler(m):
+    #ok some kind of update
+    #might be from start up or might be user changed it
+    if m['event']=='put' or m['event']=='patch':
+        print(m)
+        #print(m['path'])
+        
+        field = str(m['path']).replace("/","")
+        #print(field)
+        
+        act_on_event(field, m['data'])
+
+    #something else
+    else:
+        #if this happens... theres a problem...
+        #should be handled for
+        print('something wierd...', m['event'])
+        pass
+
+@err.Error_Handler
+def detect_field_event(user, db):
+    my_stream = db.child(user['userId']+'/'+cs.access_config["device_name"]+"/").stream(stream_handler, user['idToken'])
+
+#https://stackoverflow.com/questions/2046603/is-it-possible-to-run-function-in-a-subprocess-without-threading-or-writing-a-se
+#https://stackoverflow.com/questions/200469/what-is-the-difference-between-a-process-and-a-thread#:~:text=A%20process%20is%20an%20execution,sometimes%20called%20a%20lightweight%20process.
+#run multiprocesser to handle database listener
+#could use threads in future? would it be better?
+def detect_multiple_field_events(user, db, fields):
+    global listener_list
+
+    p = Process(target=detect_field_event, args=(user, db))
+    p.start()
+    listener_list.append(p)
+
+#This function launches a thread that checks whether the device has been deleted and kills this script if so
+def stop_condition(field,value): #Depends on: os, Process,cs.load_state(); Modifies: listener_list, stops this whole script
+    global listener_list
+
+    def check_exit(f,v): #This should be launched in its own thread, otherwise will hang the script
+        while True:
+            try:
+                cs.load_state()
+            except:
+                pass
+
+            if cs.device_state[f] == v:
+                print("Exiting database listener...")
+                for listener in listener_list: #there is only one firebase listener, for now
+                    listener.terminate()
+                os._exit(0)
+
+    stop_condition = Process(target = check_exit, args = (field,value))
+    stop_condition.start()
+
 if __name__ == "__main__":
     print("Starting listener...")
     cs.load_state()
     try:
         user, db = dbt.initialize_user(cs.access_config["refresh_token"])
         print("Database monitoring: active")
-    except Exception as e:
+    except Exception:
         print("Listener could not connect")
         print("Database monitoring: inactive")
         sys.exit()
     
-    #print(dbt.get_user_data(user, db))
+    #fetch all the most recent data from the database
+    dbt.fetch_device_data()
     
     #actual section that launches the listener
     device_state_fields = list(cs.device_state.keys())
     device_params_fields = list(cs.device_params.keys())
     fields = device_state_fields + device_params_fields
     
-    detect_multiple_field_events(user, db, fields)
+    detect_multiple_field_events(user, db)
     stop_condition("deleted","1")
     stop_condition("connected", "0")

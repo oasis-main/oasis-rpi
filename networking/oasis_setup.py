@@ -1,5 +1,4 @@
 #import shell modules
-import os
 import os.path
 import sys
 from subprocess import Popen
@@ -14,10 +13,8 @@ sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
 sys.path.append('/usr/local/lib/python3.7/dist-packages')
 sys.path.append('/usr/lib/python3/dist-packages')
 
-import socket, select
 from _thread import *
 import json
-import pickle5 as pickle
 
 #import custom modules
 from utils import reset_model

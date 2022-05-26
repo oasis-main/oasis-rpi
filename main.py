@@ -4,7 +4,6 @@
 # Use the -b when installing with 'source ./master_setup.sh" to setup the bootloader ie. 'source ./master_setup.sh -b'
 
 #import shell modules
-import os
 import os.path
 import sys
 
@@ -12,23 +11,12 @@ import sys
 sys.path.append('/home/pi/oasis-grow')
 sys.path.append('/home/pi/oasis-grow/core')
 sys.path.append('/home/pi/oasis-grow/utils')
-#sys.path.append('/usr/lib/python37.zip')
-#sys.path.append('/usr/lib/python3.7')
-#sys.path.append('/usr/lib/python3.7/lib-dynload')
-#sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
-#sys.path.append('/usr/local/lib/python3.7/dist-packages')
-#sys.path.append('/usr/lib/python3/dist-packages')
+
 
 #import package modules
 import RPi.GPIO as GPIO
 import serial
-import subprocess
 from subprocess import Popen, PIPE, STDOUT
-import multiprocessing
-import signal
-
-#json management
-import json
 
 #dealing with specific time
 import time
@@ -36,7 +24,6 @@ from time import sleep
 import datetime
 
 #import other oasis packages
-from utils import reset_model
 from utils import concurrent_state as cs
 from imaging import camera_element
 from networking import db_tools as dbt

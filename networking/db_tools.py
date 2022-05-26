@@ -1,7 +1,6 @@
 #File for all database functions
 #Import and call from another location
 
-from asyncio import subprocess
 import os
 import sys
 
@@ -211,6 +210,12 @@ def connect_firebase(): #depends on: cs.load_state(), cs.write_state(), cs.patch
     time.sleep(15)
     connection_attempt = multiprocessing.Process(target = try_connect)
     connection_attempt.start()
+
+def fetch_device_data():
+    cs.load_state()
+    url = "https://oasis-state-af548-default-rtdb.firebaseio.com/"+str(cs.access_config["local_id"])+"/"+str(cs.access_config["device_name"])+".json?auth="+str(cs.access_config["id_token"])
+    result = requests.get(url)
+    print(result)
 
 if __name__ == "main":
     cs.load_state()
