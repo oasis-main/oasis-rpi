@@ -220,7 +220,8 @@ def fetch_device_data():
     cloud_data = json.loads(decoded_result)
     print(cloud_data)
 
-    for k,v in cloud_data.items(): 
+    for k,v in cloud_data: 
+                print("Hi")
                 if cloud_data[k] in list(cs.device_state.keys()):
                     print("Updating device_state")
                     cs.write_state("/home/pi/oasis-grow/configs/device_state.json",k,v, offline_only=True)
