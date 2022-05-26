@@ -216,7 +216,7 @@ def fetch_device_data():
     url = "https://oasis-state-af548-default-rtdb.firebaseio.com/"+str(cs.access_config["local_id"])+"/"+str(cs.access_config["device_name"])+".json?auth="+str(cs.access_config["id_token"])
     result = requests.get(url)
     byte_str = result.content
-    escaped_byte_str = "b" + byte_str
+    escaped_byte_str = "r" + byte_str.decode()
 
     cloud_data = json.loads(escaped_byte_str)
 
