@@ -218,14 +218,15 @@ def fetch_device_data():
     decoded_result = result.content.decode()
 
     cloud_data = json.loads(decoded_result)
+    print(cloud_data)
 
     for k,v in cloud_data.items(): 
-                if cloud_data[k] in cs.device_state.keys():
+                if cloud_data[k] in list(cs.device_state.keys()):
                     print("Updating device_state")
-                    cs.write_state("/home/pi/oasis-grow/configs/device_state.json",k,v)
-                elif cloud_data[k] in cs.device_params.keys():
+                    cs.write_state("/home/pi/oasis-grow/configs/device_state.json",k,v, offline_only=True)
+                elif cloud_data[k] in list(cs.device_params.keys()):
                     print("Updating device_state")
-                    cs.write_state("/home/pi/oasis-grow/configs/device_params.json",k,v)    
+                    cs.write_state("/home/pi/oasis-grow/configs/device_params.json",k,v, offline_only=True)    
                 else: 
                     pass
 
