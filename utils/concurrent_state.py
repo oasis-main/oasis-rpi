@@ -3,9 +3,8 @@
 ##main.py
 ##core.py
 ##update.py
-##camera_element.py
-
-##oasis_setup(offline only)
+##camera.py
+##connect_oasis(offline only)
 ##detect_db_events(offline only)
 
 #import modules
@@ -19,14 +18,9 @@ import multiprocessing
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
 sys.path.append('/home/pi/oasis-grow/utils')
-#sys.path.append('/usr/lib/python37.zip')
-#sys.path.append('/usr/lib/python3.7')
-#sys.path.append('/usr/lib/python3.7/lib-dynload')
-#sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
-#sys.path.append('/usr/local/lib/python3.7/dist-packages')
-#sys.path.append('/usr/lib/python3/dist-packages')
 
-import reset_model
+from networking import db_tools as dbt
+from utils import reset_model
 
 #declare state variables
 device_state = None #describes the current state of the system
@@ -190,26 +184,6 @@ def load_state(loop_limit=100000): #Depends on: 'json'; Modifies: device_state,h
             else:
                 print("Main.py tried to read while hardware_config was being written. If this continues, file is corrupted.")
                 pass
-            
-#modifies a firebase variable, now asynchroous
-def patch_firebase(field,value): #Depends on: load_state(),'requests','json'; Modifies: database['field'], state variables
-    def send_data(field, value):
-        data = json.dumps({field: value})
-        url = "https://oasis-state-af548-default-rtdb.firebaseio.com/"+str(access_config["local_id"])+"/"+str(access_config["device_name"])+".json?auth="+str(access_config["id_token"])
-        result = requests.patch(url,data)
-
-    patch_request = multiprocessing.Process(target = send_data, args = [field, value])
-    patch_request.start()
-
-#modifies a firebase variable, now asynchroous
-def patch_fb_dict(data): #Depends on: load_state(),'requests','json'; Modifies: database['field'], state variables
-    def send_data(data):
-        data = json.dumps(data)
-        url = "https://oasis-state-af548-default-rtdb.firebaseio.com/"+str(access_config["local_id"])+"/"+str(access_config["device_name"])+".json?auth="+str(access_config["id_token"])
-        result = requests.patch(url,data)
-
-    patch_request = multiprocessing.Process(target = send_data, args = [data])
-    patch_request.start()
 
 #gets the mutex
 def load_locks(loop_limit = 10000):
@@ -324,13 +298,13 @@ def unlock(file):
             l.truncate()
             
 #save key values to .json
-def write_state(path, field, value, loop_limit=100000, offline_only = False): #Depends on: load_state(), patch_firebase, 'json'; Modifies: path
+def write_state(path, field, value, loop_limit=100000, offline_only = False): #Depends on: load_state(), dbt.patch_firebase, 'json'; Modifies: path
     
     if offline_only == False:
         #these will be loaded in by the listener, so best to make sure we represent the change in firebase too
         if device_state["connected"] == "1": #write state to cloud
             try:
-                patch_firebase(field,value)
+                dbt.patch_firebase(access_config,field,value)
             except Exception as e:
                 print(e)
                 pass
@@ -458,13 +432,13 @@ def write_state(path, field, value, loop_limit=100000, offline_only = False): #D
                 pass #continue the loop until write is successful or ceiling is hit
 
 #save key values to .json
-def write_dict(path, dict, loop_limit=100000, offline_only = False): #Depends on: load_state(), patch_firebase, 'json'; Modifies: path
+def write_dict(path, dict, loop_limit=100000, offline_only = False): #Depends on: load_state(), dbt.patch_firebase, 'json'; Modifies: path
     
     if offline_only == False:
         #these will be loaded in by the listener, so best to make sure we represent the change in firebase too
         if device_state["connected"] == "1": #write state to cloud
             try:
-                patch_fb_dict(dict)
+                dbt.patch_firebase_dict(access_config,dict)
             except Exception as e:
                 print(e)
                 pass
@@ -590,3 +564,30 @@ def write_dict(path, dict, loop_limit=100000, offline_only = False): #Depends on
                 print(e)
                 print("Resource was locked. Trying write again. If this persists, the lock file is corrupted...")
                 pass #continue the loop until write is successful or ceiling is hit
+
+#Higher-order device_state checker
+def check(state, function, alt_function = None):
+    load_state()
+    if device_state[state] == "1":
+        function()
+    else:
+        if alt_function is not None:
+            alt_function()
+        else:
+            pass
+
+#sync local configuration with 
+def sync_state():
+    
+    cloud_data = dbt.fetch_device_data
+    
+    for key_value_pair in list(cloud_data.items()):
+        if key_value_pair[0] in list(device_state.keys()):
+            #print("Updating device_state")
+            write_state("/home/pi/oasis-grow/configs/device_state.json", key_value_pair[0], key_value_pair[1], offline_only=True)
+        elif key_value_pair[0] in list(device_params.keys()):
+            #print("Updating device_params")
+            write_state("/home/pi/oasis-grow/configs/device_params.json", key_value_pair[0], key_value_pair[1], offline_only=True)    
+        else:
+            #print("Not working")
+            pass

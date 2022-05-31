@@ -43,6 +43,7 @@ def reset_locks():
 def reset_nonhw_configs():
     reset_device_state()
     reset_device_params()
+    reset_sensor_info()
     reset_access_config()
 
 def reset_data_out():
@@ -76,6 +77,7 @@ def reset_all():
     reset_hardware_config()
     reset_feature_toggles()
     reset_data_out()
+    reset_image_feed()
 
 if __name__ == "__main__":
     reset_all()

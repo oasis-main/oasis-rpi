@@ -10,23 +10,10 @@ import sys
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
 sys.path.append('/home/pi/oasis-grow/utils')
-sys.path.append('/usr/lib/python37.zip')
-sys.path.append('/usr/lib/python3.7')
-sys.path.append('/usr/lib/python3.7/lib-dynload')
-sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
-sys.path.append('/usr/local/lib/python3.7/dist-packages')
-sys.path.append('/usr/lib/python3/dist-packages')
 
 #Process management
-import serial
-import subprocess
 from subprocess import Popen, PIPE, STDOUT
-import signal
 import gc
-import traceback
-
-#communicating with firebase
-import requests
 
 #data handling
 import json
@@ -38,12 +25,12 @@ import time
 import datetime
 
 #import other oasis packages
-from utils import reset_model
 from utils import concurrent_state as cs
 from utils import error_handler as err
+from networking import db_tools as dbt
+from minions import microcontroller_manager as minion
 
 #declare process management variables
-ser_in = None
 heat_process = None
 humidity_process = None
 dehumidify_process= None
@@ -95,7 +82,27 @@ def write_csv(filename, dict): #Depends on: "os" "csv"
     file_exists = os.path.isfile(filename)
 
     with open (filename, 'a') as csvfile:
-        headers = ["time", "temperature", "humidity", "water_low"]
+        headers = ["time"]
+        
+        if cs.feature_toggles["temperature_sensor"] == "1":
+            headers.append("temperature")      
+        if cs.feature_toggles["humidity_sensor"] == "1":
+            headers.append("humidity")
+        if cs.feature_toggles["co2_sensor"] == "1":
+            headers.append("co2")
+        if cs.feature_toggles["soil_moisture_sensor"] == "1":
+            headers.append("soil_moisture")
+        if cs.feature_toggles["vpd_calculation"] == "1":
+            headers.append("vpd")
+        if cs.feature_toggles["water_level_sensor"] == "1":
+            headers.append("water_low")
+        if cs.feature_toggles["lux_sensor"] == "1":
+            headers.append("lux")
+        if cs.feature_toggles["ph_sensor"] == "1":
+            headers.append("ph")
+        if cs.feature_toggles["tds_sensor"] == "1":
+            headers.append("tds")
+
         writer = csv.DictWriter(csvfile, delimiter=',', lineterminator='\n',fieldnames=headers)
 
         if not file_exists:
@@ -105,38 +112,19 @@ def write_csv(filename, dict): #Depends on: "os" "csv"
     
     return 
 
-#attempts connection to microcontroller
-def start_serial(): #Depends on:'serial'
-    global ser_in
-
-    try:
-        
-        try:
-            ser_in = serial.Serial("/dev/ttyUSB0", 9600)
-            print("Started serial communication with Arduino Nano.")
-        
-        except:
-            ser_in = serial.Serial("/dev/ttyACM0", 9600)
-            print("Started serial communication with Arduino Uno.")
-    
-    except Exception as e:
-        ser_in = None
-        print("Serial connection not found")
-
 #gets data from serial, will parse a simple string or accept a dictionary
 def listen(): #Depends on 'serial', start_serial()
-    global ser_in, temperature,  humidity,  co2,  soil_moisture, vpd, water_low, lux, ph, tds  
+    global minion, temperature,  humidity,  co2,  soil_moisture, vpd, water_low, lux, ph, tds  
     global last_temperature, last_humidity, last_co2, last_soil_moisture #past readings for derivative calculations
 
-    if ser_in == None:
+    if minion.ser_in == None:
         print("ser_in is none")
         return 
-    
     
     try: #legacy sensor app: parse space-separated string of floats
         #listen for data from aurdino, split it by space
 
-        sensor_info = ser_in.readline().decode('UTF-8').strip().split(' ')
+        sensor_info = minion.ser_in.readline().decode('UTF-8').strip().split(' ')
 
         if cs.feature_toggles["humidity_sensor"] == "1":
             last_humidity = humidity
@@ -152,7 +140,7 @@ def listen(): #Depends on 'serial', start_serial()
     except (SyntaxError, ValueError) as e: #v1.5 parse disct from json string  
         #print(err.full_stack())
         
-        sensor_info = json.loads(str(ser_in.readline().decode('UTF-8').strip()))
+        sensor_info = json.loads(str(minion.ser_in.readline().decode('UTF-8').strip()))
 
         if cs.feature_toggles["temperature_sensor"] == "1":
             last_temperature = temperature
@@ -331,7 +319,7 @@ def water_pid(soil_moisture, target_soil_moisture,
 
     return water_level
 
-#poll heat subprocess if applicable and relaunch/update actuators
+#poll heat subprocess if applicable and relaunch/update equipment
 def run_heat(intensity): #Depends on: 'subprocess'; Modifies: heat_process
     global heat_process
 
@@ -339,17 +327,17 @@ def run_heat(intensity): #Depends on: 'subprocess'; Modifies: heat_process
         poll_heat = heat_process.poll() #heat
         if poll_heat is not None: #active processes return None, exited processes return 0
             if cs.feature_toggles["heat_pid"] == "1":
-                heat_process = Popen(['python3', '/home/pi/oasis-grow/actuators/heating_element.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
+                heat_process = Popen(['python3', '/home/pi/oasis-grow/equipment/heater.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
             else:
-                heat_process = Popen(['python3', '/home/pi/oasis-grow/actuators/heating_element.py', cs.device_params["heater_duration"], cs.device_params["heater_interval"]])
+                heat_process = Popen(['python3', '/home/pi/oasis-grow/equipment/heater.py', cs.device_params["heater_duration"], cs.device_params["heater_interval"]])
                 
     except: #launches heat process on program startup, when heat_process itself is none
         if cs.feature_toggles["heat_pid"] == "1":
-            heat_process = Popen(['python3', '/home/pi/oasis-grow/actuators/heating_element.py', str(intensity)]) #If no process, then starts
+            heat_process = Popen(['python3', '/home/pi/oasis-grow/equipment/heater.py', str(intensity)]) #If no process, then starts
         else:
-            heat_process = Popen(['python3', '/home/pi/oasis-grow/actuators/heating_element.py', cs.device_params["heater_duration"], cs.device_params["heater_interval"]])
+            heat_process = Popen(['python3', '/home/pi/oasis-grow/equipment/heater.py', cs.device_params["heater_duration"], cs.device_params["heater_interval"]])
 
-#poll humidityf subprocess if applicable and relaunch/update actuators
+#poll humidityf subprocess if applicable and relaunch/update equipment
 def run_hum(intensity): #Depends on: 'subprocess'; Modifies: hum_process
     global humidity_process
 
@@ -357,16 +345,16 @@ def run_hum(intensity): #Depends on: 'subprocess'; Modifies: hum_process
         poll_humidity = humidity_process.poll() #humidity
         if poll_humidity is not None:  #active processes return None, exited processes return 0
             if cs.feature_toggles["hum_pid"] == "1":
-                humidity_process = Popen(['python3', '/home/pi/oasis-grow/actuators/humidity_element.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
+                humidity_process = Popen(['python3', '/home/pi/oasis-grow/equipment/humidifier.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
             else:
-                humidity_process = Popen(['python3', '/home/pi/oasis-grow/actuators/humidity_element.py', cs.device_params["humidifier_duration"], cs.device_params["humidifier_interval"]])
+                humidity_process = Popen(['python3', '/home/pi/oasis-grow/equipment/humidifier.py', cs.device_params["humidifier_duration"], cs.device_params["humidifier_interval"]])
     except:  #launches heat process on program startup, when heat_process itself is none
         if cs.feature_toggles["hum_pid"] == "1":
-            humidity_process = Popen(['python3', '/home/pi/oasis-grow/actuators/humidity_element.py', str(intensity)])
+            humidity_process = Popen(['python3', '/home/pi/oasis-grow/equipment/humidifier.py', str(intensity)])
         else:
-            humidity_process = Popen(['python3', '/home/pi/oasis-grow/actuators/humidity_element.py', cs.device_params["humidifier_duration"], cs.device_params["humidifier_interval"]])
+            humidity_process = Popen(['python3', '/home/pi/oasis-grow/equipment/humidifier.py', cs.device_params["humidifier_duration"], cs.device_params["humidifier_interval"]])
 
-#poll dehumidify subprocess if applicable and relaunch/update actuators
+#poll dehumidify subprocess if applicable and relaunch/update equipment
 def run_dehum(intensity): #Depends on: 'subprocess'; Modifies: hum_process
     global dehumidify_process
 
@@ -374,16 +362,16 @@ def run_dehum(intensity): #Depends on: 'subprocess'; Modifies: hum_process
         poll_dehumidify = dehumidify_process.poll() #dehumidify
         if poll_dehumidify is not None:
             if cs.feature_toggles["hum_pid"] == "1":
-                dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/actuators/dehumidify_element.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
+                dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/equipment/dehumidifier.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
             else:
-                dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/actuators/dehumidify_element.py', cs.device_params["dehumidifier_duration"], cs.device_params["dehumidifier_interval"]])
+                dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/equipment/dehumidifier.py', cs.device_params["dehumidifier_duration"], cs.device_params["dehumidifier_interval"]])
     except:
         if cs.feature_toggles["hum_pid"] == "1":
-            dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/actuators/dehumidify_element.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
+            dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/equipment/dehumidifier.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
         else:
-            dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/actuators/dehumidify_element.py', cs.device_params["dehumidifier_duration"], cs.device_params["dehumidifier_interval"]])
+            dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/equipment/dehumidifier.py', cs.device_params["dehumidifier_duration"], cs.device_params["dehumidifier_interval"]])
 
-#poll fan subprocess if applicable and relaunch/update actuators
+#poll fan subprocess if applicable and relaunch/update equipment
 def run_fan(intensity): #Depends on: 'subprocess'; Modifies: humidity_process
     global fan_process
 
@@ -391,16 +379,16 @@ def run_fan(intensity): #Depends on: 'subprocess'; Modifies: humidity_process
         poll_fan = fan_process.poll() #fan
         if poll_fan is not None: #If running, then skips. If idle then restarts, If no process, then fails
             if cs.feature_toggles["hum_pid"] == "1":
-                fan_process = Popen(['python3', '/home/pi/oasis-grow/actuators/fan_element.py', str(intensity)]) 
+                fan_process = Popen(['python3', '/home/pi/oasis-grow/equipment/fan.py', str(intensity)]) 
             else:
-                fan_process = Popen(['python3', '/home/pi/oasis-grow/actuators/fan_element.py', cs.device_params["fan_duration"], cs.device_params["fan_interval"]])
+                fan_process = Popen(['python3', '/home/pi/oasis-grow/equipment/fan.py', cs.device_params["fan_duration"], cs.device_params["fan_interval"]])
     except: #If no process, then starts
         if cs.feature_toggles["hum_pid"] == "1":
-            fan_process = Popen(['python3', '/home/pi/oasis-grow/actuators/fan_element.py', str(intensity)]) 
+            fan_process = Popen(['python3', '/home/pi/oasis-grow/equipment/fan.py', str(intensity)]) 
         else:
-            fan_process = Popen(['python3', '/home/pi/oasis-grow/actuators/fan_element.py', cs.device_params["fan_duration"], cs.device_params["fan_interval"]])
+            fan_process = Popen(['python3', '/home/pi/oasis-grow/equipment/fan.py', cs.device_params["fan_duration"], cs.device_params["fan_interval"]])
 
-#poll water subprocess if applicable and relaunch/update actuators
+#poll water subprocess if applicable and relaunch/update equipment
 def run_water(intensity): #Depends on: 'subprocess'; Modifies: water_process
     global water_process
 
@@ -408,47 +396,47 @@ def run_water(intensity): #Depends on: 'subprocess'; Modifies: water_process
         poll_water = water_process.poll() #water
         if poll_water is not None:
             if cs.feature_toggles["water_pid"] == "1":
-                water_process = Popen(['python3', '/home/pi/oasis-grow/actuators/watering_element.py', str(intensity)])
+                water_process = Popen(['python3', '/home/pi/oasis-grow/equipment/water_pump.py', str(intensity)])
             else:
-                water_process = Popen(['python3', '/home/pi/oasis-grow/actuators/watering_element.py', str(cs.device_params["watering_duration"]), str(cs.device_params["watering_frequency"])]) #If running, then skips. If idle then restarts, If no process, then fails
+                water_process = Popen(['python3', '/home/pi/oasis-grow/equipment/water_pump.py', str(cs.device_params["watering_duration"]), str(cs.device_params["watering_frequency"])]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
         if cs.feature_toggles["water_pid"] == "1":
-            water_process = Popen(['python3', '/home/pi/oasis-grow/actuators/watering_element.py', str(intensity)])
+            water_process = Popen(['python3', '/home/pi/oasis-grow/equipment/water_pump.py', str(intensity)])
         else:
-            water_process = Popen(['python3', '/home/pi/oasis-grow/actuators/watering_element.py', str(cs.device_params["watering_duration"]), str(cs.device_params["watering_frequency"])]) #If running, then skips. If idle then restarts, If no process, then fails        
+            water_process = Popen(['python3', '/home/pi/oasis-grow/equipment/water_pump.py', str(cs.device_params["watering_duration"]), str(cs.device_params["watering_frequency"])]) #If running, then skips. If idle then restarts, If no process, then fails        
 
-#poll light subprocess if applicable and relaunch/update actuators
+#poll light subprocess if applicable and relaunch/update equipment
 def run_light():
     global light_process #Depends on: 'subprocess'; Modifies: light_process
 
     try:
         poll_light = light_process.poll() #light
         if poll_light is not None:
-            light_process = Popen(['python3', '/home/pi/oasis-grow/actuators/lighting_element.py', cs.device_params["time_start_light"], cs.device_params["time_stop_light"], cs.device_params["lighting_interval"]]) #If running, then skips. If idle then restarts, If no process, then fails
+            light_process = Popen(['python3', '/home/pi/oasis-grow/equipment/lights.py', cs.device_params["time_start_light"], cs.device_params["time_stop_light"], cs.device_params["lighting_interval"]]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
-        light_process = Popen(['python3', '/home/pi/oasis-grow/actuators/lighting_element.py', cs.device_params["time_start_light"], cs.device_params["time_stop_light"], cs.device_params["lighting_interval"]]) #If running, then skips. If idle then restarts, If no process, then fails
+        light_process = Popen(['python3', '/home/pi/oasis-grow/equipment/lights.py', cs.device_params["time_start_light"], cs.device_params["time_stop_light"], cs.device_params["lighting_interval"]]) #If running, then skips. If idle then restarts, If no process, then fails
 
-#poll air subprocess if applicable and relaunch/update actuators
+#poll air subprocess if applicable and relaunch/update equipment
 def run_air():
     global air_process #Depends on: 'subprocess'; Modifies: light_process
 
     try:
         poll_air = air_process.poll() #light
         if poll_air is not None:
-            air_process = Popen(['python3', '/home/pi/oasis-grow/actuators/air_element.py', cs.device_params["time_start_air"], cs.device_params["time_stop_air"], cs.device_params["air_interval"]]) #If running, then skips. If idle then restarts, If no process
+            air_process = Popen(['python3', '/home/pi/oasis-grow/equipment/air_pump.py', cs.device_params["time_start_air"], cs.device_params["time_stop_air"], cs.device_params["air_interval"]]) #If running, then skips. If idle then restarts, If no process
     except Exception as e:
-        air_process = Popen(['python3', '/home/pi/oasis-grow/actuators/air_element.py', cs.device_params["time_start_air"], cs.device_params["time_stop_air"], cs.device_params["air_interval"]]) #If no process, then starts
+        air_process = Popen(['python3', '/home/pi/oasis-grow/equipment/air_pump.py', cs.device_params["time_start_air"], cs.device_params["time_stop_air"], cs.device_params["air_interval"]]) #If no process, then starts
 
-#poll camera subprocess if applicable and relaunch/update actuators
+#poll camera subprocess if applicable and relaunch/update equipment
 def run_camera(): #Depends on: 'subprocess'; Modifies: camera_process
     global camera_process
 
     try:
         poll_camera = camera_process.poll() #camera
         if poll_camera is not None:
-            camera_process = Popen(['python3', '/home/pi/oasis-grow/imaging/camera_element.py', cs.device_params["camera_interval"]]) #If running, then skips. If idle then restarts, If no process, then fails
+            camera_process = Popen(['python3', '/home/pi/oasis-grow/imaging/camera.py', cs.device_params["camera_interval"]]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
-        camera_process = Popen(['python3', '/home/pi/oasis-grow/imaging/camera_element.py', cs.device_params["camera_interval"]]) #If no process, then starts
+        camera_process = Popen(['python3', '/home/pi/oasis-grow/imaging/camera.py', cs.device_params["camera_interval"]]) #If no process, then starts
 
 def clean_up_processes():
     global heat_process, humidity_process, dehumidify_process, fan_process, light_process, camera_process, water_process, air_process        
@@ -490,6 +478,17 @@ def clean_up_processes():
 
     gc.collect()
 
+def send_csv(path):
+    #send new image to firebase
+    cs.load_state()
+    user, db, storage = dbt.initialize_user(cs.access_config["refresh_token"])
+    dbt.store_file(user, storage, path, cs.access_config["device_name"], "sensor_data.csv")
+    print("Sent csv timeseries")
+
+    #tell firebase that there is a new time series
+    dbt.patch_firebase(cs.access_config, "csv_sent", "1")
+    print("Firebase has a time-series in waiting")
+
 #terminates the program and all running subprocesses
 def terminate_program(): #Depends on: cs.load_state(), 'sys', 'subprocess' #Modifies: heat_process, humidity_process, fan_process, light_process, camera_process, water_process
 
@@ -500,43 +499,6 @@ def terminate_program(): #Depends on: cs.load_state(), 'sys', 'subprocess' #Modi
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "0")
 
     sys.exit()
-
-def main_setup():
-    global data_timer
-
-    #Load state variables to start the main program
-    cs.load_state()
-
-    #Exit early if opening subprocess daemon
-    if str(sys.argv[1]) == "daemon":
-        print("core daemon started")
-        #kill the program
-        sys.exit()
-    if str(sys.argv[1]) == "main":
-        print("core main started")
-        #log main start
-        #flip "running" to 1 to make usable from command line
-        cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "1")
-        #continue with program execution
-        pass
-    else:
-        print("please offer valid run parameters")
-        sys.exit()
-
-    #attempt to make serial connection but only if there is a sensor active
-    if ((cs.feature_toggles["temperature_sensor"] == "1") \
-                or (cs.feature_toggles["humidity_sensor"] == "1") \
-                    or (cs.feature_toggles["water_level_sensor"] == "1") \
-                        or (cs.feature_toggles["co2_sensor"] == "1") \
-                            or (cs.feature_toggles["lux_sensor"] == "1") \
-                                or (cs.feature_toggles["ph_sensor"] == "1") \
-                                    or (cs.feature_toggles["tds_sensor"] == "1") \
-                                        or (cs.feature_toggles["soil_moisture_sensor"] == "1") \
-                                            or (cs.feature_toggles["onboard_led"] == "0")):
-        start_serial()
-
-    #start the clock for timimg .csv writes and data exchanges with server
-    data_timer = time.time()
 
 def update_derivative_banks():
     global last_target_temperature, last_target_humidity, last_target_co2, last_target_soil_moisture
@@ -557,17 +519,17 @@ def smart_listener():
                                     or (cs.feature_toggles["tds_sensor"] == "1") \
                                         or (cs.feature_toggles["soil_moisture_sensor"] == "1")):
         try: #attempt to read data from sensor, raise exception if there is a problem
-            print("Smart listener is attempting to collect data from arduino")
+            #print("Smart listener is attempting to collect data from arduino")
             listen() #this will be changed to run many sensor functions as opposed to one serial listener
         except Exception as e:
             print(e)
             print("Serial Port Failure")
 
-def run_active_actuators():
+def run_active_equipment():
     
     global temp_feedback, hum_feedback, dehum_feedback, fan_feedback, water_feedback
 
-    # calculat feedback level and update actuators in use
+    # calculat feedback level and update equipment in use
     if cs.feature_toggles["heater"] == "1":
         if cs.feature_toggles["heat_pid"] == "1":
             temp_feedback = str(heat_pid(temperature,
@@ -639,15 +601,19 @@ def console_log():
     
     feedback = {}
     
-    {"Heater Feedback": temp_feedback}
-    {"Humidifier Feedback": hum_feedback}
-    {"Dehumidifier Feedback": dehum_feedback}
-    {"Fan Feedback": fan_feedback}
+    {"Heater Intensity": temp_feedback}
+    {"Humidifier Intensity": hum_feedback}
+    {"Dehumidifier Intensity": dehum_feedback}
+    {"Fan Intensity": fan_feedback}
     {"Irrigation Intensity": water_feedback}
 
     print(feedback)
 
+    print("Timer Settings = ")
+
     timers = {}
+
+    print(timers)
 
 def data_out():
     global data_timer
@@ -666,8 +632,17 @@ def data_out():
                 print("Writing to csv")
                 write_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv', payload)
 
-            #write data to disk and exchange with cloud if connected
-            cs.patch_fb_dict(payload)
+            if cs.device_state["connected"] == "1":
+                #write data to disk and exchange with cloud if connected
+                dbt.patch_firebase_dict(cs.access_config,payload)
+                
+                #send time-series .csv file to firebase storage
+                #authenticate with firebase
+                user, db, storage = dbt.initialize_user(cs.access_config["refresh_token"])
+
+                #send new time-series to firebase
+                dbt.send_csv(user, storage, '/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv')
+
             data_timer = time.time()
 
         except Exception as e:
@@ -686,6 +661,44 @@ def check_exit():
     time.sleep(1)
 
 @err.Error_Handler
+def main_setup():
+    global data_timer, minion 
+
+    #Load state variables to start the main program
+    cs.load_state()
+
+    #Exit early if opening subprocess daemon
+    if str(sys.argv[1]) == "daemon":
+        print("core daemon started")
+        #kill the program
+        sys.exit()
+    if str(sys.argv[1]) == "main":
+        print("core main started")
+        #log main start
+        #flip "running" to 1 to make usable from command line
+        cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "1")
+        #continue with program execution
+        pass
+    else:
+        print("please offer valid run parameters")
+        sys.exit()
+
+    #attempt to make serial connection but only if there is a sensor active
+    if ((cs.feature_toggles["temperature_sensor"] == "1") \
+                or (cs.feature_toggles["humidity_sensor"] == "1") \
+                    or (cs.feature_toggles["water_level_sensor"] == "1") \
+                        or (cs.feature_toggles["co2_sensor"] == "1") \
+                            or (cs.feature_toggles["lux_sensor"] == "1") \
+                                or (cs.feature_toggles["ph_sensor"] == "1") \
+                                    or (cs.feature_toggles["tds_sensor"] == "1") \
+                                        or (cs.feature_toggles["soil_moisture_sensor"] == "1") \
+                                            or (cs.feature_toggles["onboard_led"] == "0")):
+        minion.start_serial_in()
+
+    #start the clock for timimg .csv writes and data exchanges with server
+    data_timer = time.time()
+
+@err.Error_Handler
 def main_loop():
     global data_timer
 
@@ -702,7 +715,7 @@ def main_loop():
 
             smart_listener()
 
-            run_active_actuators()
+            run_active_equipment()
             
             check_exit()
 
@@ -719,4 +732,3 @@ def main_loop():
 if __name__ == '__main__':
     main_setup()
     main_loop()
-

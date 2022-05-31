@@ -4,7 +4,6 @@
 #Incorporate data export script
 
 #imports
-import cv2
 import os
 import os.path
 import sys
@@ -12,26 +11,19 @@ import sys
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
 sys.path.append('/home/pi/oasis-grow/utils')
-sys.path.append('/usr/lib/python37.zip')
-sys.path.append('/usr/lib/python3.7')
-sys.path.append('/usr/lib/python3.7/lib-dynload')
-sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
-sys.path.append('/usr/local/lib/python3.7/dist-packages')
-sys.path.append('/usr/lib/python3/dist-packages')
 
-#dealing with specific times of the day
-import time
-import datetime
-from utils import reset_model
+#main dependency
+import cv2
+
+#sending to cloud
+from networking import db_tools as dbt
+from utils import concurrent_state as cs
 
 def tl_make(image_folder):
 
-	#timestamp the current timelapse job with a human readable datetime
-	readable = datetime.datetime.fromtimestamp(time.time()).isoformat()
-
 	#name of output timelapse
 	#.avi = audio visual imput, not being conceited this time ;)
-	video_name = '/home/pi/oasis-grow/data_out/'+ str(readable) + '_timelapse.avi'
+	video_name = "/home/pi/oasis-grow/data_out/timelapse.avi"
 
 	#loops throught the directory to get file names
 	images = [img for img in os.listdir(image_folder) if img.endswith(".jpg")]
@@ -74,7 +66,18 @@ def tl_make(image_folder):
 	#closes everything out correctly
 	cv2.destroyAllWindows()
 	video.release()
-	reset_model.reset_image_feed()
+	#reset_model.reset_image_feed()
+
+def send_timelapse(path):
+    #send new image to firebase
+    cs.load_state()
+    user, db, storage = dbt.initialize_user(cs.access_config["refresh_token"])
+    dbt.store_file(user, storage, path, cs.access_config["device_name"], "timelapse.avi")
+    print("Sent timelapse")
+
+    #tell firebase that there is a new timelapse
+    dbt.patch_firebase(cs.access_config, "timelapse_sent","1")
+    print("Firebase has a timelapse in waiting")
 
 if __name__ == "main":
 	
@@ -83,3 +86,6 @@ if __name__ == "main":
 
 	#make timelapses
 	tl_make(image_folder)
+
+	#send new timelapse to firebase
+	send_timelapse("/home/pi/oasis-grow/data_out/timelapse.avi")

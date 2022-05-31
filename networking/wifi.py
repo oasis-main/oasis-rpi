@@ -1,3 +1,10 @@
+import os
+import sys
+
+#set proper path for modules
+sys.path.append('/home/pi/oasis-grow')
+sys.path.append('/home/pi/oasis-grow/utils')
+
 from subprocess import Popen
 from utils import concurrent_state as cs
 

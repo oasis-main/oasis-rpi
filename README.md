@@ -144,7 +144,7 @@ Finally, edit "feature_toggles.json" in 'configs' to tell the system what capabi
 "action_camera": "0"}
 '''
 
-Now test with
+Now run your configuration of the core program with
 
 '''
 cd oasis-grow
@@ -181,7 +181,7 @@ api.start_core()
 api.stop_core()
 ```
 
-You can use this api to change device settings, fetch data, and connect to the Oasis Network. To view all available features, take a look at api.py or run:
+You can use this api to change device settings, fetch data, and connect to the Oasis Network. To view all available features, take a look at api.py or open a python terminal and run:
 '''
 import api
 dir(api)
@@ -189,7 +189,7 @@ dir(api)
 
 **5. Use with Oasis-Network for Dashboard, Remote Monitoring, & AI (internet required)**
 
-Press the 'connect' button on your system. Alternatively, you may open up a python3 shell in the oasis-grow directory and run:
+Press the 'connect_internet' button on your system. Alternatively, you may open up a python3 shell in the oasis-grow directory and run:
 
 ```
 import api
