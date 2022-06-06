@@ -395,7 +395,7 @@ def main_loop(led_timer, connect_timer):
                 dbt.connect_firebase
             
             cs.check("awaiting_update", get_updates)
-            cs.check("awaiting_delete", delete_device)
+            cs.check("awaiting_deletion", delete_device)
             cs.check("awaiting_clear_data_out", reset_model.reset_data_out)
             cs.check("awaiting_timelapse", export_timelapse)
 
