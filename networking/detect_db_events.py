@@ -128,5 +128,5 @@ if __name__ == "__main__":
     fields = device_state_fields + device_params_fields
     
     detect_multiple_field_events(user, db)
-    stop_condition("deleted","1")
+    stop_condition("awaiting_deletion","1")
     stop_condition("connected", "0")

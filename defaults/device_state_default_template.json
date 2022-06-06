@@ -9,5 +9,5 @@
  "new_device": "0",
  "awaiting_clear_data_out": "0",
  "awaiting_timelapse": "0",
- "deleted": "0",
+ "awaiting_deletion": "0",
  "device_error": "None"}
