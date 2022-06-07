@@ -84,7 +84,7 @@ You can configure all of this yourself, or follow these instructions and use one
 The Oasis-Grow software is configured to use GPIO Pins for interfacing with relays and push buttons. The pin mapping is given in hardware_config.json:
 
 '''
-{"actuator_gpio_map": {
+{"equipment_gpio_map": {
                    "heat_relay": 14,
                    "humidifier_relay": 15,
                    "fan_relay": 18,

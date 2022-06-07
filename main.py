@@ -26,10 +26,12 @@ import datetime
 #other oasis packages
 from utils import concurrent_state as cs
 from utils import reset_model
+from utils import error_handler as err
 from imaging import camera
 from networking import db_tools as dbt
 from networking import wifi
 from minions import microcontroller_manager as minion
+from peripherals import neopixel_leds as leds
 
 #declare process management variables
 core_process = None #variable to launch & manage the grow controller
@@ -323,7 +325,7 @@ def run_water(interval): #Depends on: 'RPi.GPIO'; Modifies: water_relay
     cs.load_state()
 
     #set watering GPIO
-    water_relay = cs.hardware_config["actuator_gpio_map"]["water_relay"] #watering aparatus
+    water_relay = cs.hardware_config["equipment_gpio_map"]["water_relay"] #watering aparatus
     GPIO.setwarnings(False)
     GPIO.setup(water_relay, GPIO.OUT) #GPIO setup
     
@@ -367,6 +369,7 @@ def main_setup():
     #Initialize Oasis-Grow:
     print("Initializing...")
     cs.load_state() #get the device data
+    
     minion.start_serial_out() #start outbound serial command interface
     cs.check("access_point", launch_AP) #check to see if the device should be in access point mode
     
@@ -390,6 +393,9 @@ def main_loop(led_timer, connect_timer):
     try:
         while True:
             cs.load_state() #refresh the state variables
+
+            if cs.feature_toggles["onboard_led"] == "1":
+                leds.run()
 
             if time.time() - connect_timer > 600: #check connection every 10 min (600s)
                 dbt.connect_firebase
@@ -428,6 +434,10 @@ def main_loop(led_timer, connect_timer):
     except(KeyboardInterrupt):
         GPIO.cleanup()
 
+    except Exception as e:
+        cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "error")
+        print(err.full_stack())
+        
 if __name__ == '__main__':
     led_timer, connect_timer = main_setup()
     main_loop(led_timer, connect_timer)

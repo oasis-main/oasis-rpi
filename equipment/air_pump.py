@@ -28,7 +28,7 @@ cs.load_state()
 
 #setup GPIO
 GPIO.setmode(GPIO.BCM) #GPIO Numbers instead of board numbers
-Air_GPIO = cs.hardware_config["actuator_gpio_map"]["air_relay"] #heater pin pulls from config file
+Air_GPIO = cs.hardware_config["equipment_gpio_map"]["air_relay"] #heater pin pulls from config file
 GPIO.setup(Air_GPIO, GPIO.OUT) #GPIO setup relay open = GPIO.HIGH, closed = GPIO.LOW
 GPIO.output(Air_GPIO, GPIO.LOW) #relay open = GPIO.HIGH, closed = GPIO.LOW
 

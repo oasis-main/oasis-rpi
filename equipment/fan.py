@@ -3,22 +3,13 @@
 #---------------------------------------------------------------------------------------
 
 #import shell modules
-import os
-import os.path
 import sys
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
-sys.path.append('/usr/lib/python37.zip')
-sys.path.append('/usr/lib/python3.7')
-sys.path.append('/usr/lib/python3.7/lib-dynload')
-sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
-sys.path.append('/usr/local/lib/python3.7/dist-packages')
-sys.path.append('/usr/lib/python3/dist-packages')
 
 import RPi.GPIO as GPIO
 import time
-import json
 from utils import concurrent_state as cs
 
 #get hardware config
@@ -26,7 +17,7 @@ cs.load_state()
 
 #setup GPIO
 GPIO.setmode(GPIO.BCM) #GPIO Numbers instead of board numbers
-Fan_GPIO = cs.hardware_config["actuator_gpio_map"]["fan_relay"] #heater pin pulls from config file
+Fan_GPIO = cs.hardware_config["equipment_gpio_map"]["fan_relay"] #heater pin pulls from config file
 GPIO.setup(Fan_GPIO, GPIO.OUT) #GPIO setup
 GPIO.output(Fan_GPIO, GPIO.LOW)
 

@@ -1,4 +1,4 @@
-import os, traceback, sys
+import traceback, sys
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
@@ -36,8 +36,10 @@ def Error_Handler(func):
             print(f"{func.__name__} wrong data types.")
             print(full_stack())
             cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "device_error", str(t))
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "error")
         except Exception as e:
             print(full_stack())
             cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "device_error", str(e))
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "error")
     return Inner_Function
 

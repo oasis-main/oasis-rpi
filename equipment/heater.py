@@ -26,7 +26,7 @@ cs.load_state()
 
 #setup GPIO
 GPIO.setmode(GPIO.BCM) #GPIO Numbers instead of board numbers
-Heat_GPIO = cs.hardware_config["actuator_gpio_map"]["heat_relay"] #heater pin pulls from config file
+Heat_GPIO = cs.hardware_config["equipment_gpio_map"]["heat_relay"] #heater pin pulls from config file
 GPIO.setup(Heat_GPIO, GPIO.OUT) #GPIO setup
 GPIO.output(Heat_GPIO, GPIO.LOW)
 

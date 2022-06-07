@@ -21,7 +21,7 @@ echo "Configuring PATH variable..."
 echo "export PATH=/home/pi/.local/bin:$PATH/" | sudo tee -a /home/pi/.bashrc
 . /home/pi/.bashrc
 
-echo "Installing pip3 & Python 3.7 modules..."
+echo "Installing pip3 & Python 3.7 Env modules..."
 sudo apt install python3-pip -y
 sudo apt-get install python3-venv -y
 python3 -m venv /home/pi/oasis-grow/oasis_venv_pi #uncomment to build env from source
@@ -29,10 +29,11 @@ python3 -m venv /home/pi/oasis-grow/oasis_venv_pi #uncomment to build env from s
 /usr/bin/env python3 -m pip install --upgrade pip #uncomment to build env from source
 /usr/bin/env python3 -m pip install -r /home/pi/oasis-grow/defaults/requirements.txt #uncomment to build env from source
 
-echo "Installing python 3.7 RPi.GPIO for OS..."
-sudo apt-get -y install python3-rpi.gpio
 
-echo "Installing python 3.7 OpenCV for OS..."
+echo "Installing python root dependencies for OS..."
+sudo apt-get -y install python3-rpi.gpio
 sudo apt install python3-opencv -y
 sudo pip3 install click==8.0.4
 sudo pip3 install streamlit==0.62.0 pickle5
+sudo pip3 install rpi_ws281x adafruit-circuitpython-neopixel
+sudo python3 -m pip install --force-reinstall adafruit-blinka
