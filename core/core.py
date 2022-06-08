@@ -5,6 +5,7 @@
 #system
 import os
 import os.path
+from re import A
 import sys
 
 #set proper path for modules
@@ -141,12 +142,22 @@ def listen(): #Depends on 'serial', start_serial()
         last_soil_moisture = soil_moisture
         soil_moisture = sensor_info["soil_moisture"]
         cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "soil_moisture", str(soil_moisture), offline_only=True)
+    '''
     if cs.feature_toggles["vpd_calculation"] == "1":
-        temperature_c = temperature - 32 * (5/9)
-        es = 0.6108 * math.exp(17.27 * temperature_c / (temperature_c + 237.3))
-        ea = humidity / 100 * es 
-        vpd = ea-es
+        #https://en.wikipedia.org/wiki/Vapour-pressure_deficit#Computing_VPD_for_plants_in_a_greenhouse
+        t = temperature + 459.67
+        a = 
+        b =
+        c =
+        d =
+        e =
+        f =
+        vp_sat = 0
+
+        
+
         cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "vpd", str(vpd), offline_only=True)
+    '''
     if cs.feature_toggles["water_level_sensor"] == "1":
         water_low = int(sensor_info["water_low"])
         cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "water_low", str(water_low), offline_only=True)
