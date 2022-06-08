@@ -96,7 +96,7 @@ def actuate_pid(fan_ctrl):
         GPIO.output(Fan_GPIO,GPIO.HIGH)
         time.sleep(10) #on for 10
 
-def actuate_interval(duration = 1, interval = 59): #amount of time between humidifier runs (minutes, minutes)
+def actuate_interval(duration = 1, interval = 59): #amount of time between fan runs (minutes, minutes)
     GPIO.output(Fan_GPIO, GPIO.HIGH)
     time.sleep(float(duration)*60)
     GPIO.output(Fan_GPIO, GPIO.LOW)
@@ -107,7 +107,7 @@ try:
         actuate_pid(float(sys.argv[1])) #trigger appropriate response
         GPIO.cleanup()
     else:
-        actuate_interval(str(sys.argv[1]), str(sys.argv[2]))
+        actuate_interval(float(sys.argv[1]), float(sys.argv[2]))
         GPIO.cleanup() #this uses the timer instead
 except:
     print("Interrupted")

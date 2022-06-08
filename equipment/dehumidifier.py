@@ -2,22 +2,13 @@
 #Manages Hardware for Dehumidifier
 #---------------------------------------------------------------------------------------
 #import shell modules
-import os
-import os.path
 import sys
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
-sys.path.append('/usr/lib/python37.zip')
-sys.path.append('/usr/lib/python3.7')
-sys.path.append('/usr/lib/python3.7/lib-dynload')
-sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
-sys.path.append('/usr/local/lib/python3.7/dist-packages')
-sys.path.append('/usr/lib/python3/dist-packages')
 
 import RPi.GPIO as GPIO
 import time
-import json
 
 from utils import concurrent_state as cs
 
@@ -119,7 +110,7 @@ try:
         actuate_pid(float(sys.argv[1])) #trigger appropriate response
         GPIO.cleanup()
     else:
-        actuate_interval(str(sys.argv[1]),str(sys.argv[2]))
+        actuate_interval(float(sys.argv[1]),float(sys.argv[2]))
         GPIO.cleanup() #this uses the timer instead
 except:
     print("Interrupted")

@@ -31,7 +31,7 @@ from imaging import camera
 from networking import db_tools as dbt
 from networking import wifi
 from minions import microcontroller_manager as minion
-from peripherals import neopixel_leds as leds
+from peripherals import neopixel_leds as onboard_leds
 
 #declare process management variables
 core_process = None #variable to launch & manage the grow controller
@@ -337,7 +337,7 @@ def run_water(interval): #Depends on: 'RPi.GPIO'; Modifies: water_relay
     GPIO.output(water_relay, GPIO.LOW)
 
 #updates the state of the LED, serial must be set up,
-def update_LED(): #Depends on: cs.load_state(), 'datetime'; Modifies: ser_out
+def update_minion_led(): #Depends on: cs.load_state(), 'datetime'; Modifies: ser_out
     global minion
     cs.load_state()
 
@@ -364,6 +364,9 @@ def update_LED(): #Depends on: cs.load_state(), 'datetime'; Modifies: ser_out
 
 def export_timelapse():
     export_tl = Popen(["python3", "/home/pi/oasis-grow/imaging/make_timelapse.py"])
+
+def update_onboard_led():
+    export_tl = Popen(["sudo", "python3", "/home/pi/oasis-grow/peripherals/neopixel_leds.py"])
 
 def main_setup():
     #Initialize Oasis-Grow:
@@ -392,10 +395,7 @@ def main_loop(led_timer, connect_timer):
     
     try:
         while True:
-            cs.load_state() #refresh the state variables
-
-            if cs.feature_toggles["onboard_led"] == "1":
-                leds.run()
+            cs.check("onboard_led", update_onboard_led, update_minion_led)
 
             if time.time() - connect_timer > 600: #check connection every 10 min (600s)
                 dbt.connect_firebase
@@ -428,7 +428,7 @@ def main_loop(led_timer, connect_timer):
                         camera.actuate(0)
 
             if time.time() - led_timer > 5: #send data to LED every 5s
-                update_LED()
+                update_minion_led()
                 led_timer = time.time()
 
     except(KeyboardInterrupt):

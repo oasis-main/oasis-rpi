@@ -1,30 +1,18 @@
 #---------------------------------------------------------------------------------------
 #Manages Hardware for Lighting
-#TODO:
-# - generalize IP, pass in as argumen from main file and take as input function to
-# - functionalize image capture and posting capability
-# - adjust light timing to allow for and type of window
 #---------------------------------------------------------------------------------------
 
 #import shell modules
-import os
-import os.path
 import sys
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
-sys.path.append('/usr/lib/python37.zip')
-sys.path.append('/usr/lib/python3.7')
-sys.path.append('/usr/lib/python3.7/lib-dynload')
-sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
-sys.path.append('/usr/local/lib/python3.7/dist-packages')
-sys.path.append('/usr/lib/python3/dist-packages')
+
 
 #import libraries
 import RPi.GPIO as GPIO
 import time
 import datetime
-import json
 
 from utils import concurrent_state as cs
 

@@ -18,6 +18,7 @@ from core import core
 from networking import connect_oasis, detect_db_events
 from imaging import camera
 from utils import update, reset_model
+from utils import concurrent_state as cs
 
 import time
 
@@ -117,6 +118,26 @@ def test_air():
     print("Testing air...")
     core.run_air(0,0,10)
     print("Is air working?")
+
+def test_led():
+    print("Testing LED Array")
+    
+    print("connected_running")
+    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "connected_running")
+    cs.check("onboard_led", main.update_onboard_led, main.update_minion_led)
+    time.sleep(5)
+
+    print("error")
+    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "error")
+    cs.check("onboard_led", main.update_onboard_led, main.update_minion_led)
+    time.sleep(5)
+    
+    print("offline_idle")
+    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "offline_idle")
+    cs.check("onboard_led", main.update_onboard_led, main.update_minion_led)
+    time.sleep(5)
+
+    print("Are the leds behaving as expected?")
 
 def test_core(interval):
     print("Testing core...")

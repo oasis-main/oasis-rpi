@@ -19,6 +19,7 @@ import gc
 import json
 import csv
 import math
+import pprint
 
 #dealing with specific times of the day
 import time
@@ -320,7 +321,7 @@ def water_pid(soil_moisture, target_soil_moisture,
     return water_level
 
 #poll heat subprocess if applicable and relaunch/update equipment
-def run_heat(intensity): #Depends on: 'subprocess'; Modifies: heat_process
+def run_heat(intensity = 0): #Depends on: 'subprocess'; Modifies: heat_process
     global heat_process
 
     try: #actuates heat process
@@ -338,7 +339,7 @@ def run_heat(intensity): #Depends on: 'subprocess'; Modifies: heat_process
             heat_process = Popen(['python3', '/home/pi/oasis-grow/equipment/heater.py', cs.device_params["heater_duration"], cs.device_params["heater_interval"]])
 
 #poll humidityf subprocess if applicable and relaunch/update equipment
-def run_hum(intensity): #Depends on: 'subprocess'; Modifies: hum_process
+def run_hum(intensity = 0): #Depends on: 'subprocess'; Modifies: hum_process
     global humidity_process
 
     try:  #launches heat process on program startup, when heat_process itself is none
@@ -355,7 +356,7 @@ def run_hum(intensity): #Depends on: 'subprocess'; Modifies: hum_process
             humidity_process = Popen(['python3', '/home/pi/oasis-grow/equipment/humidifier.py', cs.device_params["humidifier_duration"], cs.device_params["humidifier_interval"]])
 
 #poll dehumidify subprocess if applicable and relaunch/update equipment
-def run_dehum(intensity): #Depends on: 'subprocess'; Modifies: hum_process
+def run_dehum(intensity = 0): #Depends on: 'subprocess'; Modifies: hum_process
     global dehumidify_process
 
     try:
@@ -372,7 +373,7 @@ def run_dehum(intensity): #Depends on: 'subprocess'; Modifies: hum_process
             dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/equipment/dehumidifier.py', cs.device_params["dehumidifier_duration"], cs.device_params["dehumidifier_interval"]])
 
 #poll fan subprocess if applicable and relaunch/update equipment
-def run_fan(intensity): #Depends on: 'subprocess'; Modifies: humidity_process
+def run_fan(intensity = 0): #Depends on: 'subprocess'; Modifies: humidity_process
     global fan_process
 
     try:
@@ -389,7 +390,7 @@ def run_fan(intensity): #Depends on: 'subprocess'; Modifies: humidity_process
             fan_process = Popen(['python3', '/home/pi/oasis-grow/equipment/fan.py', cs.device_params["fan_duration"], cs.device_params["fan_interval"]])
 
 #poll water subprocess if applicable and relaunch/update equipment
-def run_water(intensity): #Depends on: 'subprocess'; Modifies: water_process
+def run_water(intensity = 0): #Depends on: 'subprocess'; Modifies: water_process
     global water_process
 
     try:
@@ -529,9 +530,9 @@ def run_active_equipment():
     
     global temp_feedback, hum_feedback, dehum_feedback, fan_feedback, water_feedback
 
-    # calculat feedback level and update equipment in use
+    # calculate feedback levels and update equipment in use
     if cs.feature_toggles["heater"] == "1":
-        if cs.feature_toggles["heat_pid"] == "1":
+        if cs.feature_toggles["heat_pid"] == "1": #computes a feedback value if PID is on
             temp_feedback = str(heat_pid(temperature,
                                         int(cs.device_params["target_temperature"]),
                                         last_temperature,
@@ -539,7 +540,12 @@ def run_active_equipment():
                                         int(cs.device_params["P_temp"]),
                                         int(cs.device_params["I_temp"]),
                                         int(cs.device_params["D_temp"])))
-        run_heat(temp_feedback)
+        run_heat(temp_feedback) #this function always takes a feedback value
+                                #but it runs differently when pid is off in feature toggles
+                                #the way it runs is dependent on the external configuration
+                                #if PID is off, it runs using timer values in device_params
+                                #all PID enables functions work the same, so they can be used
+                                #without actuators
     
     if cs.feature_toggles["humidifier"] == "1":
         if cs.feature_toggles["hum_pid"] == "1":
@@ -593,27 +599,100 @@ def run_active_equipment():
 #unfinished
 def console_log():
     
-    print("Sensor Readings = ")
+    sensors = {}
     
-    print(cs.sensor_info)
-            
-    print("PID Feedback = ")
+    if cs.feature_toggles["temperature_sensor"] == "1":
+        sensors.update({"Temperature (F): ": cs.sensor_info["temperature"]})
     
+    if cs.feature_toggles["humidity_sensor"] == "1":
+        sensors.update({"Relative Humidity (%): ": cs.sensor_info["humidity"]})
+    
+    if cs.feature_toggles["co2_sensor"] == "1":
+        sensors.update({"Carbon Dioxide (ppm): ": cs.sensor_info["co2"]})
+    
+    if cs.feature_toggles["soil_moisture_sensor"] == "1":
+        sensors.update({"Soil Moisture (%): ": cs.sensor_info["soil_moisture"]})
+    
+    if cs.feature_toggles["vpd_calculation"] == "1":
+        sensors.update({"Vapor Pressure Deficit (kPa): ": cs.sensor_info["vpd"]})
+    
+    if cs.feature_toggles["water_level_sensor"] == "1":
+        sensors.update({"Tank Below Level Sensor? (yes/no): ": cs.sensor_info["water_low"]})
+    
+    if cs.feature_toggles["lux_sensor"] == "1":
+        sensors.update({"Light Intensity (lux): ": cs.sensor_info["temperature"]})
+    
+    if cs.feature_toggles["ph_sensor"] == "1":
+        sensors.update({"Acidity/Alkalinity (ph 0-14): ": cs.sensor_info["temperature"]})
+    
+    if cs.feature_toggles["tds_sensor"] == "1":
+        sensors.update({"Total Disolved Solids: ": cs.sensor_info["tds"]})
+
     feedback = {}
-    
-    {"Heater Intensity": temp_feedback}
-    {"Humidifier Intensity": hum_feedback}
-    {"Dehumidifier Intensity": dehum_feedback}
-    {"Fan Intensity": fan_feedback}
-    {"Irrigation Intensity": water_feedback}
-
-    print(feedback)
-
-    print("Timer Settings = ")
-
     timers = {}
 
-    print(timers)
+    if cs.feature_toggles["heater"] == "1":
+        if cs.feature_toggles["heat_pid"] == "1":
+            feedback.update({"Heater Intensity: ": temp_feedback})
+        else:
+            timers.update({"Heater Duration (seconds run for): ": cs.device_params["heater_duration"]})
+            timers.update({"Heater Interval (seconds between runs): ": cs.device_params["heater_interval"]})
+    
+    if cs.feature_toggles["humidifier"] == "1":
+        if cs.feature_toggles["heat_pid"] == "1":
+            feedback.update({"Humidifier Intensity: ": hum_feedback})
+        else:
+            timers.update({"Humidifier Duration (seconds run for): ": cs.device_params["humidifier_duration"]})
+            timers.update({"Humidifier Interval (seconds between runs): ": cs.device_params["humidifier_interval"]})
+    
+    if cs.feature_toggles["dehumidifier"] == "1":
+        if cs.feature_toggles["heat_pid"] == "1":
+            feedback.update({"Dehumidifier Intensity: ": dehum_feedback})
+        else:
+            timers.update({"Dehumidifier Duration (seconds run for): ": cs.device_params["dehumidifier_duration"]})
+            timers.update({"Dehumidifier Interval (seconds between runs): ": cs.device_params["dehumidifier_interval"]})
+    
+    if cs.feature_toggles["fan"] == "1":
+        if cs.feature_toggles["fan_pid"] == "1":
+            feedback.update({"Fan Intensity: ": fan_feedback})
+        else:
+            timers.update({"Fan Duration (minutes run for): ": cs.device_params["fan_duration"]})
+            timers.update({"Fan Interval (minutes between runs): ": cs.device_params["fan_interval"]})
+
+    if cs.feature_toggles["water"] == "1":
+        if cs.feature_toggles["water_pid"] == "1":
+            feedback.update({"Irrigation Intensity: ": water_feedback})
+        else:
+            timers.update({"Irrigation Duration (seconds run for): ": cs.device_params["water_duration"]})
+            timers.update({"Irrigation Interval (hours between runs): ": cs.device_params["water_interval"]})
+    
+    if cs.feature_toggles["air"] == "1":
+        timers.update({"Air Pump Turns On at (Hourly Time 0-23): ": cs.device_params["time_start_air"]})
+        timers.update({"Air Pump Turns Off at (Hourly Time 0-23): ": cs.device_params["time_stop_air"]})
+        timers.update({"Air Pump Interval (seconds between runs): ": cs.device_params["air_interval"]})
+
+    if cs.feature_toggles["light"] == "1":
+        timers.update({"Light Turns On at (Hourly Time 0-23): ": cs.device_params["time_start_light"]})
+        timers.update({"Light Turns Off at (Hourly Time 0-23): ": cs.device_params["time_stop_light"]})
+        timers.update({"Light Interval (seconds between runs): ": cs.device_params["air_interval"]})
+
+    if cs.feature_toggles["camera"] == "1":
+        timers.update({" Duration (seconds run for): ": cs.device_params["heater_duration"]})
+        if cs.feature_toggles["ndvi"] == "1":
+            timers.update({"Capture Mode": "NDVI"})
+        else:
+            timers.update({"Capture Mode": "Raw AWB Imaging"})
+        timers.update({"Camera Interval (seconds between image capture): ": cs.device_params["camera_interval"]})
+
+    if sensors:
+        print("Sensor Readings = ")
+        pprint.pprint(sensors)
+    if feedback:
+        print("Feedback Settings = ")
+        pprint.pprint(feedback)
+    if timers:
+        print("Timer Settings = ")
+        pprint.pprint(timers)
 
 def data_out():
     global data_timer

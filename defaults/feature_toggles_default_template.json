@@ -26,7 +26,7 @@
 "audio": "0",
 "save_images": "1",
 "save_data": "1",
-"onboard_led": "0",
+"onboard_led": "1",
 "action_button": "1",
-"action_water": "1",
+"action_water": "0",
 "action_camera": "0"}
