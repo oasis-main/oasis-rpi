@@ -139,7 +139,7 @@ def listen(): #Depends on 'serial', start_serial()
             water_low = int(sensor_info[2])
     
     except (SyntaxError, ValueError) as e: #v1.5 parse disct from json string  
-        #print(err.full_stack())
+        print(err.full_stack())
         
         sensor_info = json.loads(str(minion.ser_in.readline().decode('UTF-8').strip()))
 
