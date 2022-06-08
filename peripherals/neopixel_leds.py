@@ -79,7 +79,6 @@ def check_led_status():
 def run():
     while True:
         check_led_status()
-        time.sleep(0.04)
 
 if __name__ == "__main__":
     run()

@@ -138,7 +138,7 @@ def listen(): #Depends on 'serial', start_serial()
         if cs.feature_toggles["water_level_sensor"] == "1":
             water_low = int(sensor_info[2])
     
-    except (SyntaxError, ValueError) as e: #v1.5 parse disct from json string  
+    except Exception as e: #v1.5 parse disct from json string  
         print(err.full_stack())
         
         sensor_info = json.loads(str(minion.ser_in.readline().decode('UTF-8').strip()))
@@ -176,11 +176,7 @@ def listen(): #Depends on 'serial', start_serial()
             cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "ph", str(ph), offline_only=True)
         if cs.feature_toggles["tds_sensor"] == "1":
             tds = sensor_info["tds"]
-            cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "tds", str(tds), offline_only=True)         
-
-    except Exception as e:
-        print(err.full_stack())
-        return
+            cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "tds", str(tds), offline_only=True)
 
 #PID controller to modulate heater feedback
 def heat_pid(temperature, target_temperature, last_temperature, last_target_temperature,
