@@ -82,4 +82,4 @@ def run():
         time.sleep(0.04)
 
 if __name__ == "__main__":
-    run
+    run()
