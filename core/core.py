@@ -117,13 +117,14 @@ def write_csv(filename, dict): #Depends on: "os" "csv"
 def listen(): #Depends on 'serial', start_serial()
     global minion, temperature,  humidity,  co2,  soil_moisture, vpd, water_low, lux, ph, tds  
     global last_temperature, last_humidity, last_co2, last_soil_moisture #past readings for derivative calculations
-
+    print("hey I just met you")
     if minion.ser_in == None:
         print("ser_in is none")
         return 
         
+    print("and this is crazy")
     sensor_info = json.loads(str(minion.ser_in.readline().decode('UTF-8').strip()))
-
+    print("but here's my number")
     if cs.feature_toggles["temperature_sensor"] == "1":
         last_temperature = temperature
         temperature = sensor_info["temperature"]
@@ -158,6 +159,7 @@ def listen(): #Depends on 'serial', start_serial()
     if cs.feature_toggles["tds_sensor"] == "1":
         tds = sensor_info["tds"]
         cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "tds", str(tds), offline_only=True)
+    print("so call me maybe")
 
 #PID controller to modulate heater feedback
 def heat_pid(temperature, target_temperature, last_temperature, last_target_temperature,
@@ -501,7 +503,7 @@ def smart_listener():
             listen() #this will be changed to run many sensor functions as opposed to one serial listener
         except Exception as e:
             print(err.full_stack())
-            print("Serial Port Failure")
+            print("Listener Failure")
 
 def run_active_equipment():
     
@@ -773,6 +775,8 @@ def main_loop():
 
             run_active_equipment()
             
+            console_log()
+
             check_exit()
 
     except (KeyboardInterrupt):
