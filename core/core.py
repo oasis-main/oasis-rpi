@@ -500,7 +500,7 @@ def smart_listener():
             #print("Smart listener is attempting to collect data from arduino")
             listen() #this will be changed to run many sensor functions as opposed to one serial listener
         except Exception as e:
-            print(e)
+            print(err.full_stack())
             print("Serial Port Failure")
 
 def run_active_equipment():
