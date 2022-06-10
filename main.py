@@ -2,7 +2,6 @@
 
 #import shell modules
 import sys
-import os
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
@@ -179,7 +178,7 @@ def stop_core():
             cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","offline_idle")
 
 #checks if core is running, kills it if so, starts it otherwise
-def switch_core_running(): #Depends on: cs.load_state(), cs.write_state(), dbt.patch_firebase(), 'subprocess'; Modifies: device_state.json, state_variables
+def switch_core_running(): #Depends on: cs.load_state(), cs.write_state(), cs.patch_firebase(), 'subprocess'; Modifies: device_state.json, state_variables
     cs.load_state()
 
     #if the device is set to running
@@ -250,7 +249,7 @@ def add_new_device(): #depends on: modifies:
     #print(type(my_data))
 
     #add box data to firebase (replace with send_dict)
-    patch_request = dbt.patch_firebase_dict(cs.access_config,my_data)
+    patch_request = cs.patch_firebase_dict(cs.access_config,my_data)
     
     if patch_request.ok:
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","new_device","0")
@@ -259,7 +258,7 @@ def add_new_device(): #depends on: modifies:
         print("Failed to add new device")
 
 #connects system to firebase
-def connect_firebase(): #depends on: cs.load_state(), cs.write_state(), dbt.patch_firebase(), 'requests'; Modifies: access_config.json, device_state.json
+def connect_firebase(): #depends on: cs.load_state(), cs.write_state(), cs.patch_firebase(), 'requests'; Modifies: access_config.json, device_state.json
     
     def try_connect():
    
@@ -298,7 +297,7 @@ def connect_firebase(): #depends on: cs.load_state(), cs.write_state(), dbt.patc
 
             #start listener to bring in db changes on startup
             if cs.device_state["connected"] == "0":
-                dbt.patch_firebase(cs.access_config, "connected", "1")
+                cs.patch_firebase(cs.access_config, "connected", "1")
                 cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"connected","1", offline_only=True)
                 dbt.launch_listener()
             else:

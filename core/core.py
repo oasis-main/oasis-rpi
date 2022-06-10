@@ -5,12 +5,10 @@
 #system
 import os
 import os.path
-from re import A
 import sys
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
-sys.path.append('/home/pi/oasis-grow/utils')
 
 #Process management
 from subprocess import Popen, PIPE, STDOUT
@@ -142,22 +140,22 @@ def listen(): #Depends on 'serial', start_serial()
         last_soil_moisture = soil_moisture
         soil_moisture = sensor_info["soil_moisture"]
         cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "soil_moisture", str(soil_moisture), offline_only=True)
-    '''
+    
     if cs.feature_toggles["vpd_calculation"] == "1":
         #https://en.wikipedia.org/wiki/Vapour-pressure_deficit#Computing_VPD_for_plants_in_a_greenhouse
-        t = temperature + 459.67
-        a = 
-        b =
-        c =
-        d =
-        e =
-        f =
-        vp_sat = 0
-
-        
+        t = temperature + 459.67 #rankine temperature
+        a = -1.0440397 * 10^4
+        b = -11.29465
+        c = -2.7022355 * 10^(0-2)
+        d = 1.289036 * 10^(0-5)
+        e = -2.4780681 * 10^(0-9)
+        f = 6.5459673
+        vp_sat = math.exp((a/t)+(b)+(c*t)+(d*t^2)+(e*t^3)+(f*math.log(t)))
+        vp_air = vp_sat * humidity/100
+        vpd = vp_sat - vp_air
 
         cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "vpd", str(vpd), offline_only=True)
-    '''
+    
     if cs.feature_toggles["water_level_sensor"] == "1":
         water_low = int(sensor_info["water_low"])
         cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "water_low", str(water_low), offline_only=True)
@@ -477,7 +475,7 @@ def send_csv(path):
     print("Sent csv timeseries")
 
     #tell firebase that there is a new time series
-    dbt.patch_firebase(cs.access_config, "csv_sent", "1")
+    cs.patch_firebase(cs.access_config, "csv_sent", "1")
     print("Firebase has a time-series in waiting")
 
 #terminates the program and all running subprocesses
@@ -703,7 +701,7 @@ def data_out():
 
             if cs.device_state["connected"] == "1":
                 #write data to disk and exchange with cloud if connected
-                dbt.patch_firebase_dict(cs.access_config,payload)
+                cs.patch_firebase_dict(cs.access_config,payload)
                 
                 #send time-series .csv file to firebase storage
                 #authenticate with firebase

@@ -9,7 +9,6 @@ import board
 import neopixel
 import time
 from utils import concurrent_state as cs
-from utils import error_handler as err
 
 #get hardware config
 cs.load_state()

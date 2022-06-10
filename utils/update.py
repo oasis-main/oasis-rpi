@@ -1,23 +1,13 @@
 #import modules
-import os
-import os.path
 import sys
 import json
-import requests
 from subprocess import Popen
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
-sys.path.append('/usr/lib/python37.zip')
-sys.path.append('/home/pi/oasis-grow/utils')
-sys.path.append('/usr/lib/python3.7')
-sys.path.append('/usr/lib/python3.7/lib-dynload')
-sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
-sys.path.append('/usr/local/lib/python3.7/dist-packages')
-sys.path.append('/usr/lib/python3/dist-packages')
 
-import reset_model
-import concurrent_state as cs
+from utils import reset_model
+from utils import concurrent_state as cs
 
 #get latest code from designated repository
 def git_pull():

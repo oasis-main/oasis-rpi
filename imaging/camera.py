@@ -1,31 +1,15 @@
 #---------------------------------------------------------------------------------------
 #Manages Camera Timing & Image transmission
 #---------------------------------------------------------------------------------------
-import os
-import os.path
 import sys
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
-sys.path.append('/home/pi/oasis-grow/utils')
-sys.path.append('/home/pi/oasis-grow/imaging')
-sys.path.append('/usr/lib/python37.zip')
-sys.path.append('/usr/lib/python3.7')
-sys.path.append('/usr/lib/python3.7/lib-dynload')
-sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
-sys.path.append('/usr/local/lib/python3.7/dist-packages')
-sys.path.append('/usr/lib/python3/dist-packages')
 
 #import libraries
 import time
-import base64
-import PIL
-from PIL import Image
 from subprocess import Popen
-import requests
-import json
-import pyrebase
-import noir_ndvi
+from imaging import noir_ndvi
 from utils import concurrent_state as cs
 from networking import db_tools as dbt
 
@@ -54,7 +38,7 @@ def send_image(path):
     print("Sent image")
 
     #tell firebase that there is a new image
-    dbt.patch_firebase(cs.access_config,"image_sent","1")
+    cs.patch_firebase(cs.access_config,"image_sent","1")
     print("Firebase has an image in waiting")
 
 #define a function to actuate element

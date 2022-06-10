@@ -8,15 +8,14 @@
 ##detect_db_events(offline only)
 
 #import modules
-import os.path
 import sys
 import json
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
-sys.path.append('/home/pi/oasis-grow/utils')
 
-from networking import db_tools as dbt
+import requests
+import multiprocessing
 from utils import reset_model
 
 #declare state variables
@@ -29,6 +28,28 @@ feature_toggles = None #tells the system which features are in use
 
 #declare state locking varibles
 locks = None
+
+#modifies a firebase variable, now asynchroous
+def patch_firebase(access_config,field,value): #Depends on: load_state(),'requests','json'; Modifies: database['field'], state variables
+    def send_data(field, value):
+        data = json.dumps({field: value})
+        url = "https://oasis-state-af548-default-rtdb.firebaseio.com/"+str(access_config["local_id"])+"/"+str(access_config["device_name"])+".json?auth="+str(access_config["id_token"])
+        result = requests.patch(url,data)
+        return result
+    
+    patch_request = multiprocessing.Process(target = send_data, args = [field, value])
+    patch_request.start()
+
+#modifies a firebase variable, now asynchroous
+def patch_firebase_dict(access_config, data): #Depends on: load_state(),'requests','json'; Modifies: database['field'], state variables
+    def send_data(data):
+        data = json.dumps(data)
+        url = "https://oasis-state-af548-default-rtdb.firebaseio.com/"+str(access_config["local_id"])+"/"+str(access_config["device_name"])+".json?auth="+str(access_config["id_token"])
+        result = requests.patch(url,data)
+        return result
+    
+    patch_request = multiprocessing.Process(target = send_data, args = [data])
+    patch_request.start()
 
 def load_state(loop_limit=100000): #Depends on: 'json'; Modifies: device_state,hardware_config ,access_config
     global device_state, device_params, sensor_info, access_config, feature_toggles, hardware_config
@@ -295,13 +316,13 @@ def unlock(file):
             l.truncate()
             
 #save key values to .json
-def write_state(path, field, value, loop_limit=100000, offline_only = False): #Depends on: load_state(), dbt.patch_firebase, 'json'; Modifies: path
+def write_state(path, field, value, loop_limit=100000, offline_only = False): #Depends on: load_state(), cs.patch_firebase, 'json'; Modifies: path
     
     if offline_only == False:
         #these will be loaded in by the listener, so best to make sure we represent the change in firebase too
         if device_state["connected"] == "1": #write state to cloud
             try:
-                dbt.patch_firebase(access_config,field,value)
+                patch_firebase(access_config,field,value)
             except Exception as e:
                 print(e)
                 pass
@@ -429,13 +450,13 @@ def write_state(path, field, value, loop_limit=100000, offline_only = False): #D
                 pass #continue the loop until write is successful or ceiling is hit
 
 #save key values to .json
-def write_dict(path, dict, loop_limit=100000, offline_only = False): #Depends on: load_state(), dbt.patch_firebase, 'json'; Modifies: path
+def write_dict(path, dict, loop_limit=100000, offline_only = False): #Depends on: load_state(), cs.patch_firebase, 'json'; Modifies: path
     
     if offline_only == False:
         #these will be loaded in by the listener, so best to make sure we represent the change in firebase too
         if device_state["connected"] == "1": #write state to cloud
             try:
-                dbt.patch_firebase_dict(access_config,dict)
+                patch_firebase_dict(access_config,dict)
             except Exception as e:
                 print(e)
                 pass
@@ -571,20 +592,4 @@ def check(state, function, alt_function = None):
         if alt_function is not None:
             alt_function()
         else:
-            pass
-
-#sync local configuration with 
-def sync_state():
-    
-    cloud_data = dbt.fetch_device_data
-    
-    for key_value_pair in list(cloud_data.items()):
-        if key_value_pair[0] in list(device_state.keys()):
-            #print("Updating device_state")
-            write_state("/home/pi/oasis-grow/configs/device_state.json", key_value_pair[0], key_value_pair[1], offline_only=True)
-        elif key_value_pair[0] in list(device_params.keys()):
-            #print("Updating device_params")
-            write_state("/home/pi/oasis-grow/configs/device_params.json", key_value_pair[0], key_value_pair[1], offline_only=True)    
-        else:
-            #print("Not working")
             pass

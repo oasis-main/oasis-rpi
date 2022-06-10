@@ -76,7 +76,7 @@ def send_timelapse(path):
     print("Sent timelapse")
 
     #tell firebase that there is a new timelapse
-    dbt.patch_firebase(cs.access_config, "timelapse_sent","1")
+    cs.patch_firebase(cs.access_config, "timelapse_sent","1")
     print("Firebase has a timelapse in waiting")
 
 if __name__ == "main":
