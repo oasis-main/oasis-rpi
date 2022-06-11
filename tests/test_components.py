@@ -1,8 +1,6 @@
 
 import sys
 
-from tests import test_cloud_connection
-
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
 sys.path.append('/home/pi/oasis-grow/core')
@@ -15,7 +13,8 @@ sys.path.append('/home/pi/oasis-grow/equipment')
 import main
 import api
 from core import core
-from networking import connect_oasis, detect_db_events
+from networking import connect_oasis
+from networking import db_tools as dbt
 from imaging import camera
 from utils import update, reset_model
 from utils import concurrent_state as cs
@@ -25,28 +24,24 @@ import time
 def test_state_handlers():
     print("Testing state handlers...")
     main.cs.load_state()
-    main.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"))
-    main.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"))
+    main.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"), dbt.patch_firebase)
+    main.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"), dbt.patch_firebase)
 
     core.cs.load_state()
-    core.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"))
-    core.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"))
-
-    detect_db_events.cs.load_state()
-    detect_db_events.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"))
-    detect_db_events.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"))
+    core.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"), dbt.patch_firebase)
+    core.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"), dbt.patch_firebase)
 
     connect_oasis.cs.load_state()
-    connect_oasis.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"))
-    connect_oasis.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"))
+    connect_oasis.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"), dbt.patch_firebase)
+    connect_oasis.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"), dbt.patch_firebase)
 
     camera.cs.load_state()
-    camera.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"))
-    camera.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"))
+    camera.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"), dbt.patch_firebase)
+    camera.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"), dbt.patch_firebase)
 
     update.cs.load_state()
-    update.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"))
-    update.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"))
+    update.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"), dbt.patch_firebase)
+    update.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"), dbt.patch_firebase)
 
     print("All state handlers working.")
 
@@ -123,17 +118,17 @@ def test_led():
     print("Testing LED Array")
     
     print("connected_running")
-    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "connected_running")
+    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "connected_running", dbt.patch_firebase)
     cs.check("onboard_led", main.update_onboard_led, main.update_minion_led)
     time.sleep(5)
 
     print("error")
-    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "error")
+    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "error", dbt.patch_firebase)
     cs.check("onboard_led", main.update_onboard_led, main.update_minion_led)
     time.sleep(5)
     
     print("offline_idle")
-    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "offline_idle")
+    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "offline_idle", dbt.patch_firebase)
     cs.check("onboard_led", main.update_onboard_led, main.update_minion_led)
     time.sleep(5)
 

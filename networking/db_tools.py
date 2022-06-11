@@ -43,12 +43,35 @@ def initialize_user(RefreshToken):
 def get_user_data(user, db):
     return  db.child(user['userId']).get(user['idToken']).val()
 
+#modifies a firebase variable, now asynchroous
+def patch_firebase(access_config,field,value): #Depends on: load_state(),'requests','json'; Modifies: database['field'], state variables
+    def send_data(field, value):
+        data = json.dumps({field: value})
+        url = "https://oasis-state-af548-default-rtdb.firebaseio.com/"+str(access_config["local_id"])+"/"+str(access_config["device_name"])+".json?auth="+str(access_config["id_token"])
+        result = requests.patch(url,data)
+        return result
+    
+    patch_request = multiprocessing.Process(target = send_data, args = [field, value])
+    patch_request.start()
+
+#modifies a firebase variable, now asynchroous
+def patch_firebase_dict(access_config, data): #Depends on: load_state(),'requests','json'; Modifies: database['field'], state variables
+    def send_data(data):
+        data = json.dumps(data)
+        url = "https://oasis-state-af548-default-rtdb.firebaseio.com/"+str(access_config["local_id"])+"/"+str(access_config["device_name"])+".json?auth="+str(access_config["id_token"])
+        result = requests.patch(url,data)
+        return result
+    
+    patch_request = multiprocessing.Process(target = send_data, args = [data])
+    patch_request.start()
+
+
 #stores a file in firebase storage
 def store_file(user, storage, path, device_name, filename):
     storage.child(user['userId'] + "/" + device_name + "/" + filename).put(path, user['idToken'])
 
 #gets new refresh token from firebase
-def get_refresh_token(web_api_key,email,password): #Depends on: 'requests', 'json', cs.write_state; Modifies: None
+def get_refresh_token(web_api_key,email,password): #Depends on: 'requests', 'json'; Modifies: None
     sign_in_url = "https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key=" + web_api_key
     sign_in_payload = json.dumps({"email": email, "password": password, "returnSecureToken": "true"})
     r = requests.post(sign_in_url, sign_in_payload)
@@ -56,7 +79,7 @@ def get_refresh_token(web_api_key,email,password): #Depends on: 'requests', 'jso
     return data["refreshToken"]
 
 #get local_id and id_token from firebase
-def get_local_credentials(wak,refresh_token): #Depends on: cs.load_state(), cs.write_state(), 'requests'; Modifies: state variables,  cs.access_config.json
+def get_local_credentials(wak,refresh_token): #Depends on: cs.load_state(), 'requests'; Modifies: state variables,  cs.access_config.json
     #get local credentials
     refresh_url = "https://securetoken.googleapis.com/v1/token?key=" + wak
     refresh_payload = '{"grant_type": "refresh_token", "refresh_token": "%s"}' % refresh_token
@@ -74,16 +97,14 @@ def fetch_device_data(access_config):
 
 #sync local configuration with 
 def sync_state():
-    
-    cloud_data = fetch_device_data
-    
+    cloud_data = fetch_device_data()
     for key_value_pair in list(cloud_data.items()):
         if key_value_pair[0] in list(cs.device_state.keys()):
             #print("Updating device_state")
-            cs.write_state("/home/pi/oasis-grow/configs/device_state.json", key_value_pair[0], key_value_pair[1], offline_only=True)
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json", key_value_pair[0], key_value_pair[1], db_writer = None)
         elif key_value_pair[0] in list(cs.device_params.keys()):
             #print("Updating device_params")
-            cs.write_state("/home/pi/oasis-grow/configs/device_params.json", key_value_pair[0], key_value_pair[1], offline_only=True)    
+            cs.write_state("/home/pi/oasis-grow/configs/device_params.json", key_value_pair[0], key_value_pair[1], db_writer = None)    
         else:
             #print("Not working")
             pass
@@ -110,7 +131,7 @@ def act_on_event(field, new_data):
     #open data config file
     #edit appropriate spot
     #print(path)
-    cs.write_state(path, field, new_data, offline_only = True)
+    cs.write_state(path, field, new_data, db_writer = None)
 
 def stream_handler(m):
     #some kind of update

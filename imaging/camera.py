@@ -38,7 +38,7 @@ def send_image(path):
     print("Sent image")
 
     #tell firebase that there is a new image
-    cs.patch_firebase(cs.access_config,"image_sent","1")
+    dbt.patch_firebase(cs.access_config,"image_sent","1")
     print("Firebase has an image in waiting")
 
 #define a function to actuate element

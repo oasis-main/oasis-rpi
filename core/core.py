@@ -127,19 +127,19 @@ def listen(): #Depends on 'serial', start_serial()
     if cs.feature_toggles["temperature_sensor"] == "1":
         last_temperature = temperature
         temperature = sensor_info["temperature"]
-        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "temperature", str(temperature), offline_only=True)      
+        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "temperature", str(temperature), db_writer = None)      
     if cs.feature_toggles["humidity_sensor"] == "1":
         last_humidity = humidity
         humidity = sensor_info["humidity"]
-        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "humidity", str(humidity), offline_only=True)
+        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "humidity", str(humidity), db_writer = None)
     if cs.feature_toggles["co2_sensor"] == "1":
         last_co2 = co2
         co2 = sensor_info["co2"]
-        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "co2", str(co2), offline_only=True)
+        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "co2", str(co2), db_writer = None)
     if cs.feature_toggles["soil_moisture_sensor"] == "1":
         last_soil_moisture = soil_moisture
         soil_moisture = sensor_info["soil_moisture"]
-        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "soil_moisture", str(soil_moisture), offline_only=True)
+        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "soil_moisture", str(soil_moisture), db_writer = None)
     
     if cs.feature_toggles["vpd_calculation"] == "1":
         #https://en.wikipedia.org/wiki/Vapour-pressure_deficit#Computing_VPD_for_plants_in_a_greenhouse
@@ -154,20 +154,20 @@ def listen(): #Depends on 'serial', start_serial()
         vp_air = vp_sat * humidity/100
         vpd = vp_sat - vp_air
 
-        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "vpd", str(vpd), offline_only=True)
+        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "vpd", str(vpd), db_writer = None)
     
     if cs.feature_toggles["water_level_sensor"] == "1":
         water_low = int(sensor_info["water_low"])
-        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "water_low", str(water_low), offline_only=True)
+        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "water_low", str(water_low), db_writer = None)
     if cs.feature_toggles["lux_sensor"] == "1":
         lux = sensor_info["lux"]
-        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "lux", str(lux), offline_only=True)
+        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "lux", str(lux), db_writer = None)
     if cs.feature_toggles["ph_sensor"] == "1":
         ph = sensor_info["ph"]
-        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "ph", str(ph), offline_only=True)
+        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "ph", str(ph), db_writer = None)
     if cs.feature_toggles["tds_sensor"] == "1":
         tds = sensor_info["tds"]
-        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "tds", str(tds), offline_only=True)
+        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "tds", str(tds), db_writer = None)
     print("so call me maybe")
 
 #PID controller to modulate heater feedback
@@ -475,7 +475,7 @@ def send_csv(path):
     print("Sent csv timeseries")
 
     #tell firebase that there is a new time series
-    cs.patch_firebase(cs.access_config, "csv_sent", "1")
+    dbt.patch_firebase(cs.access_config, "csv_sent", "1")
     print("Firebase has a time-series in waiting")
 
 #terminates the program and all running subprocesses
@@ -485,7 +485,7 @@ def terminate_program(): #Depends on: cs.load_state(), 'sys', 'subprocess' #Modi
     clean_up_processes()
 
     #flip "running" to 0
-    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "0")
+    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "0", db_writer = dbt.patch_firebase)
 
     sys.exit()
 
@@ -701,7 +701,7 @@ def data_out():
 
             if cs.device_state["connected"] == "1":
                 #write data to disk and exchange with cloud if connected
-                cs.patch_firebase_dict(cs.access_config,payload)
+                dbt.patch_firebase_dict(cs.access_config,payload)
                 
                 #send time-series .csv file to firebase storage
                 #authenticate with firebase
@@ -743,7 +743,7 @@ def main_setup():
         print("core main started")
         #log main start
         #flip "running" to 1 to make usable from command line
-        cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "1")
+        cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "1", db_writer = dbt.patch_firebase)
         #continue with program execution
         pass
     else:

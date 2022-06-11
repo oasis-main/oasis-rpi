@@ -19,10 +19,10 @@ def test_connect():
 def test_rtdb_patch():
     print("Testing realtime database...")
     cs.load_state()
-    cs.patch_firebase(cs.access_config, "device_error", "Test Field,Value Patch: Success")
+    dbt.patch_firebase(cs.access_config, "device_error", "Test Field,Value Patch: Success")
     data = {"device_error": "Test Field,Value Patch: Success"}
-    cs.patch_firebase(cs.access_config, data)
-    cs.patch_firebase(cs.access_config, "device_error", "Test Field,Value Patch: Success")
+    dbt.patch_firebase(cs.access_config, data)
+    dbt.patch_firebase(cs.access_config, "device_error", "Test Field,Value Patch: Success")
 
 def send_image_test():
     print("Testing image transfer...")

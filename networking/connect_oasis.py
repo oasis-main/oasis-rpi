@@ -72,7 +72,7 @@ def save_creds_exit(email, password, wifi_name, wifi_pass, device_name, cmd = Fa
     reset_model.reset_device_state()
 
     #set new_device to "0" before rebooting
-    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "new_device", "1", offline_only=True)
+    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "new_device", "1", db_writer = None)
 
     if cmd == False: #pass this argument as true to save creds without rebooting
         #stand up wifi and reboot

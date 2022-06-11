@@ -14,8 +14,6 @@ import json
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
 
-import requests
-import multiprocessing
 from utils import reset_model
 
 #declare state variables
@@ -28,28 +26,6 @@ feature_toggles = None #tells the system which features are in use
 
 #declare state locking varibles
 locks = None
-
-#modifies a firebase variable, now asynchroous
-def patch_firebase(access_config,field,value): #Depends on: load_state(),'requests','json'; Modifies: database['field'], state variables
-    def send_data(field, value):
-        data = json.dumps({field: value})
-        url = "https://oasis-state-af548-default-rtdb.firebaseio.com/"+str(access_config["local_id"])+"/"+str(access_config["device_name"])+".json?auth="+str(access_config["id_token"])
-        result = requests.patch(url,data)
-        return result
-    
-    patch_request = multiprocessing.Process(target = send_data, args = [field, value])
-    patch_request.start()
-
-#modifies a firebase variable, now asynchroous
-def patch_firebase_dict(access_config, data): #Depends on: load_state(),'requests','json'; Modifies: database['field'], state variables
-    def send_data(data):
-        data = json.dumps(data)
-        url = "https://oasis-state-af548-default-rtdb.firebaseio.com/"+str(access_config["local_id"])+"/"+str(access_config["device_name"])+".json?auth="+str(access_config["id_token"])
-        result = requests.patch(url,data)
-        return result
-    
-    patch_request = multiprocessing.Process(target = send_data, args = [data])
-    patch_request.start()
 
 def load_state(loop_limit=100000): #Depends on: 'json'; Modifies: device_state,hardware_config ,access_config
     global device_state, device_params, sensor_info, access_config, feature_toggles, hardware_config
@@ -316,13 +292,11 @@ def unlock(file):
             l.truncate()
             
 #save key values to .json
-def write_state(path, field, value, loop_limit=100000, offline_only = False): #Depends on: load_state(), cs.patch_firebase, 'json'; Modifies: path
-    
-    if offline_only == False:
-        #these will be loaded in by the listener, so best to make sure we represent the change in firebase too
+def write_state(path, field, value, db_writer, loop_limit=100000): #Depends on: load_state(), 'json'; 
+    if db_writer is not None: #Accepts(path, field, value, custom timeout, db_writer function); Modifies: path
         if device_state["connected"] == "1": #write state to cloud
             try:
-                patch_firebase(access_config,field,value)
+                db_writer(access_config,field,value) #will be loaded in by listener, so is best represent change db first
             except Exception as e:
                 print(e)
                 pass
@@ -450,13 +424,13 @@ def write_state(path, field, value, loop_limit=100000, offline_only = False): #D
                 pass #continue the loop until write is successful or ceiling is hit
 
 #save key values to .json
-def write_dict(path, dict, loop_limit=100000, offline_only = False): #Depends on: load_state(), cs.patch_firebase, 'json'; Modifies: path
+def write_dict(path, dict, db_writer, loop_limit=100000): #Depends on: load_state(), dbt.patch_firebase, 'json'; Modifies: path
     
-    if offline_only == False:
+    if db_writer == False:
         #these will be loaded in by the listener, so best to make sure we represent the change in firebase too
         if device_state["connected"] == "1": #write state to cloud
             try:
-                patch_firebase_dict(access_config,dict)
+                db_writer(access_config,dict)
             except Exception as e:
                 print(e)
                 pass

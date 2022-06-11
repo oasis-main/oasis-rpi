@@ -1,6 +1,5 @@
 import traceback, sys
 
-
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
 
@@ -25,15 +24,15 @@ def Error_Handler(func):
             func(*args, **kwargs)
         except KeyboardInterrupt as k:
             print("Keyboard Interrupt")
-            cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "device_error", str(k))
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "device_error", str(k), db_writer = None)
         except TypeError as t:
             print(f"{func.__name__} wrong data types.")
             print(full_stack())
-            cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "device_error", str(t))
-            cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "error")
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "device_error", str(t), db_writer = None)
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "error", db_writer = None)
         except Exception as e:
             print(full_stack())
-            cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "device_error", str(e))
-            cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "error")
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "device_error", str(e), db_writer = None)
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "error", db_writer = None)
     return Inner_Function
 

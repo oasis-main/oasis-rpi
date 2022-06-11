@@ -9,9 +9,9 @@ from subprocess import Popen
 from utils import concurrent_state as cs
 
 #reconfigures network interface, tells system to boot with Access Point, restarts
-def enable_AP(): #Depends on: cs.write_state(), 'subprocess'; Modifies: device_state.json, configuration files
+def enable_AP(db_writer = None): #Depends on: cs.write_state(), 'subprocess'; Modifies: device_state.json, configuration files
     #tell system that the access point should be launched on next controller startup
-    cs.write_state("/home/pi/oasis-grow/configs/device_state.json","access_point","1")
+    cs.write_state("/home/pi/oasis-grow/configs/device_state.json","access_point","1", db_writer)
 
     #disable WiFi, enable AP, reboot
     config_ap_dhcpcd = Popen(["sudo", "cp", "/etc/dhcpcd_AP.conf", "/etc/dhcpcd.conf"])
@@ -26,7 +26,7 @@ def enable_AP(): #Depends on: cs.write_state(), 'subprocess'; Modifies: device_s
 #reconfigures network interface, tells system to boot with WiF, restarts
 def enable_WiFi(): #Depends on: cs.write_state(), 'subprocess'; Modifies: device_state.json, configuration files
     #tell system that the access point should not be launched on next controller startup
-    cs.write_state("/home/pi/oasis-grow/configs/device_state.json","access_point","0")
+    cs.write_state("/home/pi/oasis-grow/configs/device_state.json","access_point","0", db_writer = None)
 
     #disable WiFi, enable AP, reboot
     config_wifi_dchpcd = Popen(["sudo", "cp", "/etc/dhcpcd_WiFi.conf", "/etc/dhcpcd.conf"])

@@ -8,6 +8,7 @@ sys.path.append('/home/pi/oasis-grow')
 
 from utils import reset_model
 from utils import concurrent_state as cs
+from networking import db_tools as dbt
 
 #get latest code from designated repository
 def git_pull():
@@ -86,7 +87,7 @@ def get_update(test=False):
     cs.load_state()
 
     #change awaiting_update to "O" in firebase and locally
-    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "awaiting_update", "0")
+    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "awaiting_update", "0", db_writer = dbt.patch_firebase)
 
     if not test:
         #reboot

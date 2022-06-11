@@ -26,8 +26,8 @@ import datetime
 from utils import concurrent_state as cs
 from utils import reset_model
 from utils import error_handler as err
-from imaging import camera
 from networking import db_tools as dbt
+from imaging import camera
 from networking import wifi
 from minions import microcontroller_manager as minion
 
@@ -42,6 +42,7 @@ action_button = None #holds GPIO object for triggering the desired action
 #setup buttons for the main program interface
 def setup_button_interface(): #depends on: cs.load_state(), 'RPi.GPIO'; modifies: start_stop_button, connect_internet_button, run_action_button, state variables
     global start_stop_button, connect_internet_button, action_button
+    
     #specify gpio pin number mode
     GPIO.setmode(GPIO.BCM)
 
@@ -75,14 +76,14 @@ def launch_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); 
 
     if minion.ser_out is not None:
         #set led_status = "connectWifi"
-        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","accepting_wifi_connection")
+        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","accepting_wifi_connection", db_writer = dbt.patch_firebase)
         cs.load_state()
         #write LED state to seriaL
         while True: #place the "exit button" here to leave connection mode
             minion.ser_out.write(bytes(str(cs.device_state["led_status"]+"\n"), "utf-8"))
             cbutton_state = get_button_state(connect_internet_button)
             if cbutton_state == 0:
-                cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","offline_idle")
+                cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","offline_idle", db_writer = dbt.patch_firebase)
                 minion.ser_out.write(bytes(str(cs.device_state["led_status"]+"\n"), "utf-8"))
                 server_process.terminate()
                 server_process.wait()
@@ -110,9 +111,9 @@ def setup_core_process(): #Depends on: cs.load_state(), cs.write_state(), 'subpr
 
         if cs.device_state["connected"] == "1": #if connected
             #LEDmode = "connected_running"
-            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","connected_running")
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","connected_running", db_writer = dbt.patch_firebase)
         else: #if not connected
-            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","offline_running")
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","offline_running", db_writer = dbt.patch_firebase)
 
         print("launched core process")
 
@@ -123,9 +124,9 @@ def setup_core_process(): #Depends on: cs.load_state(), cs.write_state(), 'subpr
 
         if cs.device_state["connected"] == "1": #if connected
             #LEDmode = "connected_idle"
-            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","connected_idle")
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","connected_idle", db_writer = dbt.patch_firebase)
         else: #if not connected
-            cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"led_status","offline_idle")
+            cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"led_status","offline_idle", db_writer = dbt.patch_firebase)
 
         print("core process not launched")
 
@@ -133,10 +134,10 @@ def setup_core_process(): #Depends on: cs.load_state(), cs.write_state(), 'subpr
 def cmd_line_args():
     try:
         if sys.argv[1] == "run":
-            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","1")
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","1", db_writer = dbt.patch_firebase)
             print("Command line argument set to run")
         if sys.argv[1] == "idle":
-            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","0")
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","0", db_writer = dbt.patch_firebase)
             print("Command line argument set to idle")
     except Exception as e:
         print("Defaulting to last saved mode...")
@@ -153,10 +154,10 @@ def start_core():
 
         if cs.device_state["connected"] == "1": #if connected
             #send LEDmode = "connected_running"
-            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","connected_running")
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","connected_running", db_writer = dbt.patch_firebase)
         else: #if not connected
             #send LEDmode = "offline_running"
-            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","offline_running")
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","offline_running", db_writer = dbt.patch_firebase)
 
 def stop_core():
     global core_process
@@ -172,24 +173,24 @@ def stop_core():
 
         if cs.device_state["connected"] == "1": #if connected
             #send LEDmode = "connected_idle"
-            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","connected_idle")
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","connected_idle", db_writer = dbt.patch_firebase)
         else: #if not connected
             #send LEDmode = "offline_idle"
-            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","offline_idle")
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","offline_idle", db_writer = dbt.patch_firebase)
 
 #checks if core is running, kills it if so, starts it otherwise
-def switch_core_running(): #Depends on: cs.load_state(), cs.write_state(), cs.patch_firebase(), 'subprocess'; Modifies: device_state.json, state_variables
+def switch_core_running(): #Depends on: cs.load_state(), cs.write_state(), dbt.patch_firebase(), 'subprocess'; Modifies: device_state.json, state_variables
     cs.load_state()
 
     #if the device is set to running
     if cs.device_state["running"] == "1":
         #set running state to off = 0
-        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","0")
+        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","0",db_writer = dbt.patch_firebase)
 
     #if not set to running
     else:
         #set running state to on = 1
-        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","1")
+        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","1", db_writer = dbt.patch_firebase)
 
 #Executes update if connected & idle, waits for completion
 def get_updates(): #depends on: cs.load_state(),'subproceess', update.py; modifies: system code, state variables
@@ -197,7 +198,7 @@ def get_updates(): #depends on: cs.load_state(),'subproceess', update.py; modifi
     
     if cs.device_state["running"] == "0": #replicated in the main loop
         #kill listener
-        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0") #make sure the cloud does not update main code, kill listener
+        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = dbt.patch_firebase) #make sure the cloud does not update main code, kill listener
         dbt.kill_listener()
         #launch update.py and wait to complete
         update_process = Popen(["python3", "/home/pi/oasis-grow/utils/update.py"])
@@ -205,26 +206,26 @@ def get_updates(): #depends on: cs.load_state(),'subproceess', update.py; modifi
         if update_process.returncode != 0:
             print("Failure " + str(update_process.returncode)+ " " +str(output)+str(error))
         
-        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","1")#restore listener
+        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","1", db_writer = dbt.patch_firebase)#restore listener
     
     if cs.device_state["running"] == "1": #replicated in the main loop
         #flip running to 0        
-        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","0")
+        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","0", db_writer = dbt.patch_firebase)
         #kill listener
-        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0") #make sure the cloud does not update main code, kill listener
+        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = dbt.patch_firebase) #make sure the cloud does not update main code, kill listener
         dbt.kill_listener()
         #launch update.py and wait to complete
         update_process = Popen(["python3", "/home/pi/oasis-grow/utils/update.py"])
         output, error = update_process.communicate()
         if update_process.returncode != 0:
             print("Failure " + str(update_process.returncode)+ " " +str(output)+str(error))
-        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","1") #restore running
-        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","1")#restore listener
+        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","1", db_writer = dbt.patch_firebase) #restore running
+        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","1", db_writer = dbt.patch_firebase)#restore listener
 
 #deletes a box if the cloud is indicating that it should do so
 def delete_device():    
     print("Removing device from Oasis Network...")
-    cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0") #make sure it doesn't write anything to the cloud
+    cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = dbt.patch_firebase) #make sure it doesn't write anything to the cloud
 
     print("Database monitoring deactivated")
     reset_model.reset_nonhw_configs()
@@ -249,16 +250,16 @@ def add_new_device(): #depends on: modifies:
     #print(type(my_data))
 
     #add box data to firebase (replace with send_dict)
-    patch_request = cs.patch_firebase_dict(cs.access_config,my_data)
+    patch_request = dbt.patch_firebase_dict(cs.access_config,my_data)
     
     if patch_request.ok:
-        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","new_device","0")
+        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","new_device","0", db_writer = dbt.patch_firebase)
         print("New device added to firebase")
     else:
         print("Failed to add new device")
 
 #connects system to firebase
-def connect_firebase(): #depends on: cs.load_state(), cs.write_state(), cs.patch_firebase(), 'requests'; Modifies: access_config.json, device_state.json
+def connect_firebase(): #depends on: cs.load_state(), cs.write_state(), dbt.patch_firebase(), 'requests'; Modifies: access_config.json, device_state.json
     
     def try_connect():
    
@@ -277,7 +278,7 @@ def connect_firebase(): #depends on: cs.load_state(), cs.write_state(), cs.patch
             refresh_token = dbt.get_refresh_token(wak, email, password)
 
             #fetch refresh token and save to access_config
-            cs.write_state("/home/pi/oasis-grow/configs/access_config.json","refresh_token", refresh_token)
+            cs.write_state("/home/pi/oasis-grow/configs/access_config.json","refresh_token", refresh_token, db_writer = dbt.patch_firebase)
 
             #bring in the refresh token for use further down
             cs.load_state()
@@ -288,8 +289,8 @@ def connect_firebase(): #depends on: cs.load_state(), cs.write_state(), cs.patch
             id_token, user_id = dbt.get_local_credentials(wak, refresh_token)
 
             #write local credentials to access config
-            cs.write_state("/home/pi/oasis-grow/configs/access_config.json","id_token", id_token)
-            cs.write_state("/home/pi/oasis-grow/configs/access_config.json","local_id", user_id)
+            cs.write_state("/home/pi/oasis-grow/configs/access_config.json","id_token", id_token, db_writer = dbt.patch_firebase)
+            cs.write_state("/home/pi/oasis-grow/configs/access_config.json","local_id", user_id, db_writer = dbt.patch_firebase)
             print("Obtained local credentials")
 
             #launch new_device check at network startup
@@ -297,11 +298,11 @@ def connect_firebase(): #depends on: cs.load_state(), cs.write_state(), cs.patch
 
             #start listener to bring in db changes on startup
             if cs.device_state["connected"] == "0":
-                cs.patch_firebase(cs.access_config, "connected", "1")
-                cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"connected","1", offline_only=True)
+                dbt.patch_firebase(cs.access_config, "connected", "1")
+                cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"connected","1", db_writer = None)
                 dbt.launch_listener()
             else:
-                cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"connected","1", offline_only= True)
+                cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"connected","1", db_writer = None)
             
             #update the device state to "connected"
             print("Device is connected over HTTPS to the Oasis Network")
@@ -311,7 +312,7 @@ def connect_firebase(): #depends on: cs.load_state(), cs.write_state(), cs.patch
         except Exception as e:
             print(e) #display error
             #write state as not connected
-            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0")
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = dbt.patch_firebase)
             print("Could not establish an HTTPS connection to Oasis Network")
 
     connection_attempt = multiprocessing.Process(target = try_connect)
@@ -378,7 +379,7 @@ def main_setup():
     
     cs.check("access_point", launch_AP) #check to see if the device should be in access point mode
     
-    cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0") #set to 0 so listener launches
+    cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = dbt.patch_firebase) #set to 0 so listener launches
     connect_firebase() #listener will not be re-called unless a connection fails at some point
 
     cmd_line_args() #Check command line flags for special instructions
@@ -419,7 +420,7 @@ def main_loop(led_timer, connect_timer):
             cbutton_state = get_button_state(connect_internet_button) #Connect Button
             if cbutton_state == 0:
                 print("User pressed the connect button")
-                wifi.enable_AP() #launch access point and reboot
+                wifi.enable_AP(dbt.patch_firebase) #launch access point and reboot
                 time.sleep(1)
 
             if cs.feature_toggles["action_button"] == "1":
@@ -438,7 +439,8 @@ def main_loop(led_timer, connect_timer):
         GPIO.cleanup()
 
     except Exception as e:
-        cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "error")
+        cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "error", db_writer = dbt.patch_firebase)
+        cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "device_error", str(err.full_stack), db_writer = dbt.patch_firebase)
         print(err.full_stack())
         
 if __name__ == '__main__':
