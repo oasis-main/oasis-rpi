@@ -27,7 +27,7 @@ sudo apt-get install python3-venv -y
 python3 -m venv /home/pi/oasis-grow/oasis_venv_pi #uncomment to build env from source
 . /home/pi/oasis-grow/oasis_venv_pi/bin/activate
 /usr/bin/env python3 -m pip install --upgrade pip #uncomment to build env from source
-/usr/bin/env python3 -m pip install -r /home/pi/oasis-grow/defaults/requirements.txt #uncomment to build env from source
+/usr/bin/env python3 -m pip install -r /home/pi/oasis-grow/default_configs/requirements.txt #uncomment to build env from source
 
 echo "Installing python root dependencies for OS..."
 sudo apt-get -y install python3-rpi.gpio
