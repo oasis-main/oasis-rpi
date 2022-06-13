@@ -1,0 +1,3 @@
+[console_scripts]
+streamlit = streamlit.cli:main
+

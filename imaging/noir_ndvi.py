@@ -47,7 +47,7 @@ def calc_ndvi(image):
 def take_picture():
     #create and configure camera object 
     cam = PiCamera()
-    cam.rotation = 180
+    #cam.rotation = 180
     cam.resolution = (1920, 1080) # Uncomment if using a Pi Noir camera
     #cam.resolution = (2592, 1952) # Comment this line if using a Pi Noir camera
 

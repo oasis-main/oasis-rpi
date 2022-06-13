@@ -3,11 +3,6 @@ import sys
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
-sys.path.append('/home/pi/oasis-grow/core')
-sys.path.append('/home/pi/oasis-grow/utils')
-sys.path.append('/home/pi/oasis-grow/imaging')
-sys.path.append('/home/pi/oasis-grow/networking')
-sys.path.append('/home/pi/oasis-grow/equipment')
 
 #import and test everything
 import main

@@ -45,25 +45,17 @@ def get_user_data(user, db):
 
 #modifies a firebase variable, now asynchroous
 def patch_firebase(access_config,field,value): #Depends on: load_state(),'requests','json'; Modifies: database['field'], state variables
-    def send_data(field, value):
-        data = json.dumps({field: value})
-        url = "https://oasis-state-af548-default-rtdb.firebaseio.com/"+str(access_config["local_id"])+"/"+str(access_config["device_name"])+".json?auth="+str(access_config["id_token"])
-        result = requests.patch(url,data)
-        return result
-    
-    patch_request = multiprocessing.Process(target = send_data, args = [field, value])
-    patch_request.start()
+    data = json.dumps({field: value})
+    url = "https://oasis-state-af548-default-rtdb.firebaseio.com/"+str(access_config["local_id"])+"/"+str(access_config["device_name"])+".json?auth="+str(access_config["id_token"])
+    result = requests.patch(url,data)
+    return result
 
 #modifies a firebase variable, now asynchroous
 def patch_firebase_dict(access_config, data): #Depends on: load_state(),'requests','json'; Modifies: database['field'], state variables
-    def send_data(data):
-        data = json.dumps(data)
-        url = "https://oasis-state-af548-default-rtdb.firebaseio.com/"+str(access_config["local_id"])+"/"+str(access_config["device_name"])+".json?auth="+str(access_config["id_token"])
-        result = requests.patch(url,data)
-        return result
-    
-    patch_request = multiprocessing.Process(target = send_data, args = [data])
-    patch_request.start()
+    data = json.dumps(data)
+    url = "https://oasis-state-af548-default-rtdb.firebaseio.com/"+str(access_config["local_id"])+"/"+str(access_config["device_name"])+".json?auth="+str(access_config["id_token"])
+    result = requests.patch(url,data)
+    return result
 
 
 #stores a file in firebase storage

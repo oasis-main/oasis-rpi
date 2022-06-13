@@ -55,7 +55,7 @@ co2 = 0
 last_co2 = 0
 last_target_co2 = 0
 err_cum_co2 = 0
- 
+
 soil_moisture = 0
 last_soil_moisture = 0
 last_target_soil_moisture = 0
@@ -65,7 +65,7 @@ water_low = 0
 vpd = 0
 lux = 0
 ph = 0
-tds = 0 
+tds = 0
 
 #actuator output variables
 temp_feedback = 0
@@ -83,9 +83,9 @@ def write_csv(filename, dict): #Depends on: "os" "csv"
 
     with open (filename, 'a') as csvfile:
         headers = ["time"]
-        
+
         if cs.feature_toggles["temperature_sensor"] == "1":
-            headers.append("temperature")      
+            headers.append("temperature")
         if cs.feature_toggles["humidity_sensor"] == "1":
             headers.append("humidity")
         if cs.feature_toggles["co2_sensor"] == "1":
@@ -109,21 +109,21 @@ def write_csv(filename, dict): #Depends on: "os" "csv"
             writer.writeheader()  # file doesn't exist yet, write a header
 
         writer.writerow(dict)
-    
-    return 
+
+    return
 
 #gets data from serial, will parse a simple string or accept a dictionary
 def listen(): #Depends on 'serial', start_serial()
     global minion, temperature,  humidity,  co2,  soil_moisture, vpd, water_low, lux, ph, tds  
     global last_temperature, last_humidity, last_co2, last_soil_moisture #past readings for derivative calculations
-    print("hey I just met you")
+    #print("hey I just met you")
     if minion.ser_in == None:
         print("ser_in is none")
         return 
         
-    print("and this is crazy")
+    #print("and this is crazy")
     sensor_info = json.loads(str(minion.ser_in.readline().decode('UTF-8').strip()))
-    print("but here's my number")
+    #print("but here's my number")
     if cs.feature_toggles["temperature_sensor"] == "1":
         last_temperature = temperature
         temperature = sensor_info["temperature"]
@@ -143,15 +143,15 @@ def listen(): #Depends on 'serial', start_serial()
     
     if cs.feature_toggles["vpd_calculation"] == "1":
         #https://en.wikipedia.org/wiki/Vapour-pressure_deficit#Computing_VPD_for_plants_in_a_greenhouse
-        t = temperature + 459.67 #rankine temperature
-        a = -1.0440397 * 10^4
+        t = float(temperature) + 459.67 #rankine temperature
+        a = -1.0440397 * float(10) ** float(4)
         b = -11.29465
-        c = -2.7022355 * 10^(0-2)
-        d = 1.289036 * 10^(0-5)
-        e = -2.4780681 * 10^(0-9)
+        c = -2.7022355 * float(10) ** float(-2)
+        d = 1.289036 * float(10) ** float(-5)
+        e = -2.4780681 * float(10) ** float(-9)
         f = 6.5459673
-        vp_sat = math.exp((a/t)+(b)+(c*t)+(d*t^2)+(e*t^3)+(f*math.log(t)))
-        vp_air = vp_sat * humidity/100
+        vp_sat = math.exp((a/t)+(b)+(c*t)+(d*t**2)+(e*t**3)+(f*math.log(t)))
+        vp_air = vp_sat * humidity/float(100)
         vpd = vp_sat - vp_air
 
         cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "vpd", str(vpd), db_writer = None)
@@ -168,7 +168,7 @@ def listen(): #Depends on 'serial', start_serial()
     if cs.feature_toggles["tds_sensor"] == "1":
         tds = sensor_info["tds"]
         cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "tds", str(tds), db_writer = None)
-    print("so call me maybe")
+    #print("so call me maybe")
 
 #PID controller to modulate heater feedback
 def heat_pid(temperature, target_temperature, last_temperature, last_target_temperature,
