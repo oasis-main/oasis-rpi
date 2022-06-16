@@ -20,8 +20,11 @@ def take_picture(image_path):
 
 def take_picture_NDVI(image_path):
     noir_ndvi.take_picture()
-    still = Popen(["cp", "/home/pi/oasis-grow/data_out/color_mapped_image.png", str(image_path)]) #snap: call the camera
+    disp = Popen(["fbi", "-a", "-t", "5", "/home/pi/oasis-grow/data_out/color_mapped_image.png"]) #display the output file
+    still = Popen(["cp", "/home/pi/oasis-grow/data_out/color_mapped_image.png", str(image_path)]) #move the output file
     still.wait()
+    disp.wait()
+
 
 def save_to_feed(image_path):
     #timestamp image

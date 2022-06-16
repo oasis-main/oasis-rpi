@@ -783,8 +783,10 @@ def main_loop():
             smart_listener()
 
             run_active_equipment()
-            
+
             console_log()
+
+            data_out()
 
             check_exit()
 
