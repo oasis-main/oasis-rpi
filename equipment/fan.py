@@ -98,7 +98,7 @@ def actuate_pid(fan_ctrl):
 
 def actuate_interval(duration = 1, interval = 59): #amount of time between fan runs (minutes, minutes)
     GPIO.output(Fan_GPIO, GPIO.HIGH)
-    time.sleep(float(duration)*60)
+    time.sleep(float(duration))
     GPIO.output(Fan_GPIO, GPIO.LOW)
     time.sleep(float(interval)*60)
 

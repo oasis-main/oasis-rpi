@@ -699,16 +699,16 @@ def data_out():
                 print("Writing to csv")
                 write_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv', payload)
 
-            if cs.device_state["connected"] == "1":
-                #write data to disk and exchange with cloud if connected
-                dbt.patch_firebase_dict(cs.access_config,payload)
-                
-                #send time-series .csv file to firebase storage
-                #authenticate with firebase
-                user, db, storage = dbt.initialize_user(cs.access_config["refresh_token"])
+                if cs.device_state["connected"] == "1":
+                    #write data to disk and exchange with cloud if connected
+                    dbt.patch_firebase_dict(cs.access_config,payload)
+                    
+                    #send time-series .csv file to firebase storage
+                    #authenticate with firebase
+                    user, db, storage = dbt.initialize_user(cs.access_config["refresh_token"])
 
-                #send new time-series to firebase
-                dbt.send_csv(user, storage, '/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv')
+                    #send new time-series to firebase
+                    send_csv(user, storage, '/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv')
 
             data_timer = time.time()
 
