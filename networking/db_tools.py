@@ -57,7 +57,6 @@ def patch_firebase_dict(access_config, data): #Depends on: load_state(),'request
     result = requests.patch(url,data)
     return result
 
-
 #stores a file in firebase storage
 def store_file(user, storage, path, device_name, filename):
     storage.child(user['userId'] + "/" + device_name + "/" + filename).put(path, user['idToken'])

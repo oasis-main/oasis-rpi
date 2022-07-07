@@ -364,6 +364,10 @@ def update_minion_led(): #Depends on: cs.load_state(), 'datetime'; Modifies: ser
 def export_timelapse():
     export_tl = Popen(["python3", "/home/pi/oasis-grow/imaging/make_timelapse.py"])
 
+def clear_data():
+    reset_model.reset_data_out()
+    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "awaiting_clear_data_out", "0", db_writer = dbt.patch_firebase)
+
 def launch_onboard_led():
     launch_led = Popen(["sudo", "python3", "/home/pi/oasis-grow/peripherals/neopixel_leds.py"])
 
@@ -401,12 +405,13 @@ def main_loop(led_timer, connect_timer):
             if cs.feature_toggles["onboard_led"] == "0":
                 update_minion_led()
 
-            if time.time() - connect_timer > 600: #check connection every 10 min (600s)
-                dbt.connect_firebase
+            if time.time() - connect_timer > 900: #check connection every 15 min (900s)
+                dbt.connect_firebase()
+                connect_timer = time.time()
             
             cs.check("awaiting_update", get_updates)
             cs.check("awaiting_deletion", delete_device)
-            cs.check("awaiting_clear_data_out", reset_model.reset_data_out)
+            cs.check("awaiting_clear_data_out", clear_data)
             cs.check("awaiting_timelapse", export_timelapse)
 
             cs.check("running", start_core, stop_core) #check if core is supposed to be running
@@ -440,7 +445,7 @@ def main_loop(led_timer, connect_timer):
 
     except Exception as e:
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "error", db_writer = dbt.patch_firebase)
-        cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "device_error", str(err.full_stack), db_writer = dbt.patch_firebase)
+        cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "device_error", str(err.full_stack()), db_writer = dbt.patch_firebase)
         print(err.full_stack())
         
 if __name__ == '__main__':
