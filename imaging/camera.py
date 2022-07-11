@@ -20,8 +20,6 @@ def take_picture(image_path):
 
 def take_picture_NDVI(image_path):
     noir_ndvi.take_picture()
-    disp = Popen(["fbi", "-t", "5", "/home/pi/oasis-grow/data_out/color_mapped_image.png"]) #display the output file
-    disp.wait()
     move = Popen(["cp", "/home/pi/oasis-grow/data_out/color_mapped_image.png", str(image_path)]) #move the output file
     move.wait()
 
