@@ -27,7 +27,6 @@ from utils import concurrent_state as cs
 from utils import reset_model
 from utils import error_handler as err
 from networking import db_tools as dbt
-from imaging import camera
 from networking import wifi
 from minions import microcontroller_manager as minion
 
@@ -434,8 +433,8 @@ def main_loop(led_timer, connect_timer):
                     if cs.feature_toggles["action_water"] == "1":
                         run_water(60)
                     if cs.feature_toggles["action_camera"] == "1":
-                        camera.actuate(0)
-
+                        say_cheese = Popen(['python3', '/home/pi/oasis-grow/imaging/camera.py', "0"])
+                        say_cheese.wait()
             if time.time() - led_timer > 5: #send data to LED every 5s
                 update_minion_led()
                 led_timer = time.time()
