@@ -26,9 +26,9 @@ def calc_ndvi(image):
     return ndvi
 
 #take the raw file from 
-def convert_picture():
+def convert_picture(in_path, out_path):
     #create and configure camera object 
-    original = cv2.imread('') # load image
+    original = cv2.imread(in_path) # load image
     image = np.array(original, dtype=float)/float(255) #convert to an array
 
     contrasted = contrast_stretch(image) #apply contrast to the image
@@ -41,7 +41,8 @@ def convert_picture():
     color_mapped_image = cv2.applyColorMap(color_mapped_prep, fastiecm.fastiecm) #apply colour mapping
     #display(color_mapped_image, "NDVI Preview")
 
-    cv2.imwrite('/home/pi/oasis-grow/data_out/color_mapped_image.png', color_mapped_image) #save cm'd image
+    cv2.imwrite(out_path, color_mapped_image) #save cm'd image
+
 
 if __name__ == "main":
     print("No main program here. Sorry! Look at the file to see importable functions.")
