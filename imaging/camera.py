@@ -19,7 +19,8 @@ def take_picture(image_path):
     still.wait()
 
 def take_picture_NDVI(image_path):
-    noir_ndvi.take_picture()
+    take_picture(image_path)
+    noir_ndvi.convert_picture()
     move = Popen(["cp", "/home/pi/oasis-grow/data_out/color_mapped_image.png", str(image_path)]) #move the output file
     move.wait()
 
