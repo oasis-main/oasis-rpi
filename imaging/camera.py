@@ -15,7 +15,7 @@ from networking import db_tools as dbt
 
 def take_picture(image_path):
     #take picture and save to standard location: libcamera-still -e png -o test.png
-    still = Popen(["libcamera-still", "-e", "png", "-o", str(image_path)]) #snap: call the camera
+    still = Popen(["raspistill", "-e", "png", "-w", "1920", "-h", "1080", "-o", str(image_path)]) #snap: call the camera
     still.wait()
 
 def take_picture_NDVI(image_path): #use when viewing plants without an IR filter
