@@ -20,7 +20,7 @@ def take_picture(image_path):
 
 def take_picture_NDVI(image_path): #use when viewing plants without an IR filter
     take_picture(image_path)
-    noir_ndvi.convert_picture(in_file = image_path, out_file = image_path)
+    noir_ndvi.convert_picture(in_path = image_path, out_path = image_path)
 
 def save_to_feed(image_path):
     #timestamp image
