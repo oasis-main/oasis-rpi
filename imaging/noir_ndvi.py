@@ -37,7 +37,7 @@ def convert_picture(in_path, out_path):
     ndvi = calc_ndvi(contrasted) #calculate image ndvi
     #cv2.imwrite('/home/pi/oasis-grow/data_out/ndvi.png', ndvi) #save ndvi image
     
-    color_mapped_prep = ndvi.astype(np.uint8) #prep colour mapping
+    color_mapped_prep = ndvi.astype(np.float) #prep colour mapping
     color_mapped_image = cv2.applyColorMap(color_mapped_prep, fastiecm.fastiecm) #apply colour mapping
     #display(color_mapped_image, "NDVI Preview")
 
