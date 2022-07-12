@@ -19,7 +19,8 @@ def take_picture(image_path):
     still.wait()
 
 def take_picture_NDVI(image_path): #use when viewing plants without an IR filter
-    take_picture(image_path)
+    still = Popen(["raspistill", "-e", "png", "-w", "1920", "-h", "1080", "-awbg" , "0.88,0.8", "-o", str(image_path)]) #snap: call the camera
+    still.wait()
     noir_ndvi.convert_picture(in_path = image_path, out_path = image_path)
 
 def save_to_feed(image_path):
