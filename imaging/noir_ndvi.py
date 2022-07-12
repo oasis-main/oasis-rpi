@@ -56,13 +56,15 @@ def take_picture():
     raw = capture_stream(cam) #capture photo with no IR filter
     cam.close() #close camera object and return resources
 
-    contrasted = contrast_stretch(raw) #apply contrast to the image
+    #contrasted = contrast_stretch(raw) #apply contrast to the image
     #cv2.imwrite('/home/pi/oasis-grow/data_out/contrasted.png', contrasted) #save contrasted image
     
-    ndvi = calc_ndvi(contrasted) #calculate image ndvi
+    ndvi = calc_ndvi(raw) #calculate image ndvi
     #cv2.imwrite('/home/pi/oasis-grow/data_out/ndvi.png', ndvi) #save ndvi image
     
-    color_mapped_prep = ndvi.astype(np.uint8) #prep colour mapping
+    ndvi_contrasted = contrast_stretch(ndvi)
+
+    color_mapped_prep = ndvi_contrasted.astype(np.uint8) #prep colour mapping
     color_mapped_image = cv2.applyColorMap(color_mapped_prep, fastiecm.fastiecm) #apply colour mapping
     #display(color_mapped_image, "NDVI Preview")
 
