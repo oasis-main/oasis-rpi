@@ -93,6 +93,7 @@ void loop() {
     Serial.print("}"); //close the json and issue new line
     Serial.println();
   } else {
+    continue;
     //Serial.println("No data");
   }
 
