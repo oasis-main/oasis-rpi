@@ -11,7 +11,7 @@ def capture_stream():
     
     cam = PiCamera()
     #cam.rotation = 180
-    cam.resolution = (1920, 1080) # Uncomment if using a Pi Noir camera
+    #cam.resolution = (1920, 1080) # Uncomment if using a Pi Noir camera
     #cam.resolution = (2592, 1952) # Comment this line if using a Pi Noir camera
     stream = picamera.array.PiRGBArray(cam)
     cam.capture(stream, format='bgr')
@@ -59,8 +59,10 @@ def take_picture(image_path):
     ndvi = calc_ndvi(contrasted) #calculate image ndvi
     cv2.imwrite('/home/pi/oasis-grow/data_out/ndvi.jpg', ndvi) #save ndvi image
     
+    ndvi_contrasted = contrast_stretch(ndvi) #apply stretch the contrast a second time
+
     print("Applying color map...")
-    color_mapped_prep = ndvi.astype(np.uint8) #prep colour mapping
+    color_mapped_prep = ndvi_contrasted.astype(np.uint8) #prep colour mapping
     color_mapped_image = cv2.applyColorMap(color_mapped_prep, fastiecm.fastiecm) #apply colour mapping
     cv2.imwrite(image_path, color_mapped_image) #save cm'd image
 
