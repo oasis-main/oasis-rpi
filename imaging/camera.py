@@ -44,7 +44,7 @@ def actuate(interval): #amount of time between shots in minutes
     cs.load_state()
     
     if cs.feature_toggles["ndvi"] == "1":
-        take_picture_NDVI('/home/pi/oasis-grow/data_out/raw_image.jpg', '/home/pi/oasis-grow/data_out/image.jpg')
+        take_picture_NDVI('/home/pi/oasis-grow/data_out/image.jpg')
     else:
         take_picture('/home/pi/oasis-grow/data_out/image.jpg')
 
