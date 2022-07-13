@@ -15,11 +15,11 @@ from networking import db_tools as dbt
 
 def take_picture(image_path):
     #take picture and save to standard location: libcamera-still -e png -o test.png
-    still = Popen(["raspistill", "-e", "jpg", "-w", "1920", "-h", "1080", "-o", str(image_path)]) #snap: call the camera
+    still = Popen(["raspistill", "-e", "jpg",  "-o", str(image_path)]) #snap: call the camera. "-w", "1920", "-h", "1080",
     still.wait()
 
 def take_picture_NDVI(image_path,out_path): #use when viewing plants without an IR filter
-    still = Popen(["raspistill", "-e", "jpg", "-awbg" , "1.5,0.9", "-w", "1920", "-h", "1080", "-o", str(image_path)]) #snap: call the camera
+    still = Popen(["raspistill", "-e", "jpg", "-awbg" , "1.5,0.8", "-o", str(image_path)])
     still.wait()
     noir_ndvi.convert_picture(in_path = image_path, out_path = out_path)
 
