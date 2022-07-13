@@ -3,7 +3,7 @@
 echo "Creating systemd unit file..."
 printf "
 [Unit]
-Description: Oasis-Grow Firmware
+Description= Oasis-Grow Firmware
 
 [Service]
 ExecStart= /bin/sh /home/pi/oasis-grow/start.sh  #in this line specify the path to the script.
