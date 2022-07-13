@@ -22,7 +22,7 @@ def take_picture(image_path):
 
 def take_picture_NDVI(image_path): #use when viewing plants without an IR filter
     noir_ndvi.take_picture(image_path)
-    view = Popen(["fbi", "/home/pi/oasis-grow/data_out/image.jpg"], stdin=PIPE, text=True)
+    view = Popen(["fbi","/home/pi/oasis-grow/data_out/image.jpg"], stdin=PIPE)
     time.sleep(5)
     view.communicate('q')
 

@@ -57,9 +57,8 @@ def take_picture(image_path):
     cv2.imwrite('/home/pi/oasis-grow/data_out/contrasted.jpg', contrasted) #save contrasted image
     
     ndvi = calc_ndvi(contrasted) #calculate image ndvi
-    cv2.imwrite('/home/pi/oasis-grow/data_out/ndvi.jpg', ndvi) #save ndvi image
-    
     ndvi_contrasted = contrast_stretch(ndvi) #apply stretch the contrast a second time
+    cv2.imwrite('/home/pi/oasis-grow/data_out/ndvi.jpg', ndvi_contrasted) #save ndvi image
 
     print("Applying color map...")
     color_mapped_prep = ndvi_contrasted.astype(np.uint8) #prep colour mapping
