@@ -40,5 +40,7 @@
 "time_stop_air": "20", 
 "air_interval": "600",  
 "camera_interval": "60",
+"camera_wb_blue": "0",
+"camera_wb_red": "0",
 "time_start_led": "0",
 "time_stop_led": "0"}
