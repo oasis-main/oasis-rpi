@@ -405,7 +405,7 @@ def main_loop(led_timer, connect_timer):
                 update_minion_led()
 
             if time.time() - connect_timer > 900: #check connection every 15 min (900s)
-                dbt.connect_firebase()
+                connect_firebase()
                 connect_timer = time.time()
             
             cs.check("awaiting_update", get_updates)
