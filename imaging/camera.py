@@ -1,6 +1,8 @@
 #---------------------------------------------------------------------------------------
 #Manages Camera Timing & Image transmission
 #---------------------------------------------------------------------------------------
+from asyncio import subprocess
+from multiprocessing import Pipe
 import sys
 
 #set proper path for modules
@@ -8,7 +10,7 @@ sys.path.append('/home/pi/oasis-grow')
 
 #import libraries
 import time
-from subprocess import Popen
+from subprocess import PIPE, Popen
 from imaging import noir_ndvi
 from utils import concurrent_state as cs
 from networking import db_tools as dbt
@@ -20,6 +22,9 @@ def take_picture(image_path):
 
 def take_picture_NDVI(image_path): #use when viewing plants without an IR filter
     noir_ndvi.take_picture(image_path)
+    view = Popen(["fbi", "/home/pi/oasis-grow/data_out/image.jpg"], stdin=PIPE, text=True)
+    time.sleep(5)
+    view.communicate('q')
 
 def save_to_feed(image_path):
     #timestamp image
