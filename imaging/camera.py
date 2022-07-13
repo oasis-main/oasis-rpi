@@ -3,6 +3,7 @@
 #---------------------------------------------------------------------------------------
 from asyncio import subprocess
 from multiprocessing import Pipe
+from pickle import TRUE
 import sys
 
 #set proper path for modules
@@ -22,7 +23,7 @@ def take_picture(image_path):
 
 def take_picture_NDVI(image_path): #use when viewing plants without an IR filter
     noir_ndvi.take_picture(image_path)
-    view = Popen(["fbi","/home/pi/oasis-grow/data_out/image.jpg"])
+    view = Popen(["fbi","/home/pi/oasis-grow/data_out/image.jpg"], stdin=PIPE ,text=True, shell=True)
     time.sleep(5)
     view.communicate('q')
 
