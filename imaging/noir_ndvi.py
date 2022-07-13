@@ -31,10 +31,10 @@ def convert_picture(in_path, out_path):
     original = cv2.imread(in_path) # load image
    
     contrasted = contrast_stretch(original) #apply contrast to the image
-    cv2.imwrite('/home/pi/oasis-grow/data_out/contrasted.png', contrasted) #save contrasted image
+    cv2.imwrite('/home/pi/oasis-grow/data_out/contrasted.jpg', contrasted) #save contrasted image
     
     ndvi = calc_ndvi(contrasted) #calculate image ndvi
-    cv2.imwrite('/home/pi/oasis-grow/data_out/ndvi.png', ndvi) #save ndvi image
+    cv2.imwrite('/home/pi/oasis-grow/data_out/ndvi.jpg', ndvi) #save ndvi image
     
     color_mapped_prep = ndvi.astype(np.uint8) #prep colour mapping
     color_mapped_image = cv2.applyColorMap(color_mapped_prep, fastiecm.fastiecm) #apply colour mapping

@@ -18,10 +18,10 @@ def take_picture(image_path):
     still = Popen(["raspistill", "-e", "jpg", "-w", "1920", "-h", "1080", "-o", str(image_path)]) #snap: call the camera
     still.wait()
 
-def take_picture_NDVI(image_path): #use when viewing plants without an IR filter
-    still = Popen(["raspistill", "-e", "jpg", "-awbg" , "1.5,0.9", "-w", "1920", "-h", "1080", "-o", str(image_path)]) #snap: call the camera, "-awbg" , "0.88,0.8",
+def take_picture_NDVI(image_path,out_path): #use when viewing plants without an IR filter
+    still = Popen(["raspistill", "-e", "jpg", "-awbg" , "1.5,0.9", "-w", "1920", "-h", "1080", "-o", str(image_path)]) #snap: call the camera
     still.wait()
-    noir_ndvi.convert_picture(in_path = image_path, out_path = image_path)
+    noir_ndvi.convert_picture(in_path = image_path, out_path = out_path)
 
 def save_to_feed(image_path):
     #timestamp image
@@ -46,7 +46,7 @@ def actuate(interval): #amount of time between shots in minutes
     cs.load_state()
     
     if cs.feature_toggles["ndvi"] == "1":
-        take_picture_NDVI('/home/pi/oasis-grow/data_out/image.jpg')
+        take_picture_NDVI('/home/pi/oasis-grow/data_out/raw_image.jpg', '/home/pi/oasis-grow/data_out/image.jpg')
     else:
         take_picture('/home/pi/oasis-grow/data_out/image.jpg')
 
