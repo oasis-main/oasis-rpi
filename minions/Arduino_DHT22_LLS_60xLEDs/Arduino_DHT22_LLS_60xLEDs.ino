@@ -48,8 +48,8 @@ void setup() {
 void loop() {
   //Serial Data Out
 
-  humidity = dht.readHumidity();
   temperature = dht.readTemperature();
+  humidity = dht.readHumidity();
 
   if (digitalRead(water_level_pin) == HIGH)
   {
