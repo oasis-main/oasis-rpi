@@ -50,6 +50,12 @@ def patch_firebase(access_config,field,value): #Depends on: load_state(),'reques
     result = requests.patch(url,data)
     return result
 
+def firebase_add_device(access_config,data): #Depends on: load_state(),'requests','json'; Modifies: database['field'], state variables
+    data = json.dumps(data)
+    url = "https://oasis-state-af548-default-rtdb.firebaseio.com/"+str(access_config["local_id"])+".json?auth="+str(access_config["id_token"])
+    result = requests.patch(url,data)
+    return result
+
 #modifies a firebase variable, now asynchroous
 def patch_firebase_dict(access_config, data): #Depends on: load_state(),'requests','json'; Modifies: database['field'], state variables
     data = json.dumps(data)
