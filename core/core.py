@@ -282,7 +282,7 @@ def fan_pid(temperature, humidity, co2,
 #PID controller to modulate heater feedback
 def water_pid(soil_moisture, target_soil_moisture, 
               last_soil_moisture, last_target_soil_moisture,
-              P_water, I_water, D_water):    
+              P_moisture, I_moisture, D_moisture):    
     
     global err_cum_soil_moisture
 
@@ -300,9 +300,9 @@ def water_pid(soil_moisture, target_soil_moisture,
 
     err_dot_soil_moisture = target_soil_moisture_dot-soil_moisture_dot    #When positive, boosts heat signal
                                                                     #When negative, dampens heat signal
-    water_level  = P_water * err_soil_moisture \
-                   + I_water * err_cum_soil_moisture \
-                   + D_water * err_dot_soil_moisture
+    water_level  = P_moisture * err_soil_moisture \
+                   + I_moisture * err_cum_soil_moisture \
+                   + D_moisture * err_dot_soil_moisture
     
     water_level  = max(min(int(water_level), 100), 0)
 
@@ -572,7 +572,7 @@ def run_active_equipment():
         if cs.feature_toggles["water_pid"] == "1":
             water_feedback = str(water_pid(soil_moisture, int(cs.device_params["target_soil_moisture"]),
                                 last_soil_moisture, last_target_soil_moisture,
-                                int(cs.device_params["P_water"]), int(cs.device_params["I_water"]), int(cs.device_params["D_water"])))
+                                int(cs.device_params["P_moisture"]), int(cs.device_params["I_moisture"]), int(cs.device_params["D_moisture"])))
         run_water(water_feedback)
 
     if cs.feature_toggles["light"] == "1":

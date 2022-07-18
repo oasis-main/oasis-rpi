@@ -1,10 +1,6 @@
 #---------------------------------------------------------------------------------------
 #Manages Camera Timing & Image transmission
 #---------------------------------------------------------------------------------------
-from asyncio import subprocess
-from cmath import pi
-from multiprocessing import Pipe
-from pickle import TRUE
 import sys
 
 #set proper path for modules

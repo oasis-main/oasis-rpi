@@ -277,7 +277,7 @@ def connect_firebase(): #depends on: cs.load_state(), cs.write_state(), dbt.patc
             refresh_token = dbt.get_refresh_token(wak, email, password)
 
             #fetch refresh token and save to access_config
-            cs.write_state("/home/pi/oasis-grow/configs/access_config.json","refresh_token", refresh_token, db_writer = dbt.patch_firebase)
+            cs.write_state("/home/pi/oasis-grow/configs/access_config.json","refresh_token", refresh_token, db_writer = None)
 
             #bring in the refresh token for use further down
             cs.load_state()
@@ -288,20 +288,20 @@ def connect_firebase(): #depends on: cs.load_state(), cs.write_state(), dbt.patc
             id_token, user_id = dbt.get_local_credentials(wak, refresh_token)
 
             #write local credentials to access config
-            cs.write_state("/home/pi/oasis-grow/configs/access_config.json","id_token", id_token, db_writer = dbt.patch_firebase)
-            cs.write_state("/home/pi/oasis-grow/configs/access_config.json","local_id", user_id, db_writer = dbt.patch_firebase)
+            cs.write_state("/home/pi/oasis-grow/configs/access_config.json","id_token", id_token, db_writer = None)
+            cs.write_state("/home/pi/oasis-grow/configs/access_config.json","local_id", user_id, db_writer = None)
             print("Obtained local credentials")
 
             #launch new_device check at network startup
             cs.check("new_device", add_new_device)
 
             #start listener to bring in db changes on startup
-            if cs.device_state["connected"] == "0":
-                dbt.patch_firebase(cs.access_config, "connected", "1")
-                cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"connected","1", db_writer = None)
-                dbt.launch_listener()
+            if cs.device_state["connected"] == "0": #Main setup always sets local var to "0"
+                cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"connected","1", db_writer = dbt.patch_firebase)
+                dbt.launch_listener() #Flip local + cloud connected to 1 and start listener
             else:
-                cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"connected","1", db_writer = None)
+                cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"connected","1", db_writer = dbt.patch_firebase)
+                #Just flip the local + cloud connected to 1, does not re-launch listener when checking connection
             
             #update the device state to "connected"
             print("Device is connected over HTTPS to the Oasis Network")
@@ -382,7 +382,7 @@ def main_setup():
     
     cs.check("access_point", launch_AP) #check to see if the device should be in access point mode
     
-    cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = dbt.patch_firebase) #set to 0 so listener launches
+    cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = None) #set to 0 so listener launches
     connect_firebase() #listener will not be re-called unless a connection fails at some point
 
     cmd_line_args() #Check command line flags for special instructions

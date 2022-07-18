@@ -181,19 +181,20 @@ def run():
     cs.load_state()
     try:
         user, db = initialize_user(cs.access_config["refresh_token"])
+        
+        #fetch all the most recent data from the database
+        fetch_device_data()
+        
+        #actual section that launches the listener
+        detect_multiple_field_events(user, db)
+        stop_condition("awaiting_deletion","1")
+        stop_condition("connected", "0")
+        
         print("Database monitoring: active")
     except Exception:
+        print(err.full_stack())
         print("Listener could not connect")
         print("Database monitoring: inactive")
-        sys.exit()
-    
-    #fetch all the most recent data from the database
-    fetch_device_data()
-    
-    #actual section that launches the listener
-    detect_multiple_field_events(user, db)
-    stop_condition("awaiting_deletion","1")
-    stop_condition("connected", "0")
 
 #launches a script to detect changes in the database
 def launch_listener(): #depends on 'subprocess', modifies: state variables
