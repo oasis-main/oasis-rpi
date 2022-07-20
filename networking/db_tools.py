@@ -115,7 +115,7 @@ def act_on_event(field, new_data):
     device_state_fields = list(cs.device_state.keys())
     device_params_fields = list(cs.device_params.keys())
 
-    path = None
+    path = " "
 
     if field in device_state_fields:
         path = "/home/pi/oasis-grow/configs/device_state.json"
