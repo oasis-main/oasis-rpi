@@ -115,15 +115,15 @@ def act_on_event(field, new_data):
     device_state_fields = list(cs.device_state.keys())
     device_params_fields = list(cs.device_params.keys())
 
+    path = None
+
     if field in device_state_fields:
         path = "/home/pi/oasis-grow/configs/device_state.json"
     if field in device_params_fields:
         path = "/home/pi/oasis-grow/configs/device_params.json"
 
     if os.path.exists(path) == False:
-        f = open(path, "w")
-        f.write("{}")
-        f.close()
+        pass
 
     #open data config file
     #edit appropriate spot
@@ -157,15 +157,13 @@ def detect_field_event(user, db):
 #https://stackoverflow.com/questions/200469/what-is-the-difference-between-a-process-and-a-thread#:~:text=A%20process%20is%20an%20execution,sometimes%20called%20a%20lightweight%20process.
 #run multiprocesser to handle database listener
 def detect_multiple_field_events(user, db):
-    global listener_list
+    global listener
 
-    p = multiprocessing.Process(target=detect_field_event, args=(user, db))
-    p.start()
-    listener_list.append(p)
+    listener = multiprocessing.Process(target=detect_field_event, args=(user, db))
+    listener.start()
 
 #This function launches a thread that checks whether the device has been deleted and kills this script if so
 def stop_condition(field,value): #Depends on: os, Process,cs.load_state(); Modifies: listener_list, stops this whole script
-    global listener
 
     def check_exit(f,v): #This should be launched in its own thread, otherwise will hang the script
         while True:
@@ -176,8 +174,7 @@ def stop_condition(field,value): #Depends on: os, Process,cs.load_state(); Modif
 
             if cs.device_state[f] == v:
                 print("Exiting database listener...")
-                listener.terminate()
-                os._exit(0)
+                kill_listener()
 
     stop_condition = multiprocessing.Process(target = check_exit, args = (field,value))
     stop_condition.start()
