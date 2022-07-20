@@ -119,11 +119,11 @@ def act_on_event(field, new_data):
 
     if field in device_state_fields:
         path = "/home/pi/oasis-grow/configs/device_state.json"
-    if field in device_params_fields:
+    elif field in device_params_fields:
         path = "/home/pi/oasis-grow/configs/device_params.json"
 
     if os.path.exists(path) == False:
-        pass
+        return
 
     #open data config file
     #edit appropriate spot
