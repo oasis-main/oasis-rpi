@@ -163,7 +163,7 @@ def listen(): #Depends on 'serial', start_serial()
         lux = sensor_info["lux"]
         cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "lux", str(lux), db_writer = None)
     if cs.feature_toggles["ph_sensor"] == "1":
-        ph = sensor_info["ph"]
+        ph = sensor_info["pH"]
         cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "ph", str(ph), db_writer = None)
     if cs.feature_toggles["tds_sensor"] == "1":
         tds = sensor_info["tds"]

@@ -140,7 +140,7 @@ void loop() {
     }
   }
 
-  //water_low read sensor into buffer
+  //water_low read sensor 11into buffer
   if (digitalRead(water_level_pin) == HIGH)
   {
     waterSig0 = waterSig1;
