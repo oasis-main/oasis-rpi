@@ -109,7 +109,7 @@ void loop() {
  //ph calculate from average voltage
  //make sure to calibrate sensor
  float pHVol=float(avgValue)*5.0/1024/6; 
- float pHValue = -5.70 * pHVol + 21.34; 
+ float pHValue = -5.45 * pHVol + 29.69; 
 
  //tds read voltages into buffer
  static unsigned long analogSampleTimepoint = millis();
@@ -174,7 +174,7 @@ void loop() {
  float lux = lumen_per_sqm;
  float pH = pHValue;
  float tds = tdsValue;
- float water_low = water_low;
+ int water_low = water_low;
 
  //print data to serial
  Serial.print("{"); //start the json
@@ -205,6 +205,8 @@ void loop() {
     
     Serial.print("}"); //close the json and issue new line
     Serial.println();
+
+    //Serial.println(pHVol); //calibration of pH
  
  delay(1000);
 }

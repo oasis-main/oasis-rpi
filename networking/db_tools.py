@@ -186,7 +186,7 @@ def run():
     print("Starting listener...")
     cs.load_state()
     try:
-        user, db = initialize_user(cs.access_config["refresh_token"])
+        user, db, storage = initialize_user(cs.access_config["refresh_token"])
         
         #fetch all the most recent data from the database
         fetch_device_data()
