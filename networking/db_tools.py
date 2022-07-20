@@ -189,7 +189,7 @@ def run():
         user, db, storage = initialize_user(cs.access_config["refresh_token"])
         
         #fetch all the most recent data from the database
-        fetch_device_data()
+        fetch_device_data(cs.access_config)
         
         #actual section that launches the listener
         detect_multiple_field_events(user, db)
