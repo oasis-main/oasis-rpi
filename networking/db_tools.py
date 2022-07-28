@@ -135,9 +135,10 @@ def stream_handler(m):
     #might be from start up or might be user changed it
     if m['event']=='put' or m['event']=='patch':
         print(m)
-
-        #for key, value in change.items():
-        #    act_on_event(key, value)
+        path = m['path']
+        key = path[1:len(path)]
+        value = m['data']
+        act_on_event(key, value)
 
     #something else
     else:
