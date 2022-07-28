@@ -191,6 +191,7 @@ def run():
         stop_condition("awaiting_deletion","1")
         stop_condition("connected", "0")
         
+        print("Listener established a connection")
         print("Database monitoring: active")
     except Exception:
         print(err.full_stack())
@@ -200,10 +201,17 @@ def run():
 #launches a script to detect changes in the database
 def launch_listener(): #depends on 'subprocess', modifies: state variables
     global listener
-    listener =  multiprocessing.Process(target = run)
-    listener.start()
+    if listener is None:
+        listener =  multiprocessing.Process(target = run)
+        listener.start()
+    else:
+        print("Listener already exists")
 
 def kill_listener():
     global listener
-    listener.terminate()
-    listener = None
+    if listener is not None:
+        listener.terminate()
+        listener = None
+    else:
+        print("Listener does not exist")
+        
