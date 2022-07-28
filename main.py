@@ -141,7 +141,6 @@ def cmd_line_args():
     except Exception as e:
         print("Defaulting to last saved mode...")
 
-
 def start_core():
     global core_process
     cs.load_state()
@@ -260,16 +259,15 @@ def add_new_device(): #depends on: modifies:
 #connects system to firebase
 def connect_firebase(): #depends on: cs.load_state(), cs.write_state(), dbt.patch_firebase(), 'requests'; Modifies: access_config.json, device_state.json
     
+    #load state so we can use access credentials
+    cs.load_state()
+    wak = cs.access_config["wak"]
+    email = cs.access_config["e"]
+    password = cs.access_config["p"]
+
+    print("Checking for connection...")
+
     def try_connect():
-   
-        #load state so we can use access credentials
-        cs.load_state()
-        wak = cs.access_config["wak"]
-        email = cs.access_config["e"]
-        password = cs.access_config["p"]
-
-        print("Checking for connection...")
-
         try:
             print("FireBase verification...")
 
@@ -373,6 +371,7 @@ def launch_onboard_led():
 def main_setup():
     #Initialize Oasis-Grow:
     print("Initializing...")
+    reset_model.reset_locks()
     cs.load_state() #get the device data
     
     if cs.feature_toggles["onboard_led"] == "1":
@@ -401,6 +400,8 @@ def main_loop(led_timer, connect_timer):
     
     try:
         while True:
+            cs.load_state()
+
             if cs.feature_toggles["onboard_led"] == "0":
                 update_minion_led()
 

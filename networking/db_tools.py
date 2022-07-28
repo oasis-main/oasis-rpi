@@ -135,10 +135,10 @@ def stream_handler(m):
     #might be from start up or might be user changed it
     if m['event']=='put' or m['event']=='patch':
         print(m)
-        #print(m['path'])
+        print(m['path'])
         
         field = str(m['path']).replace("/","")
-        #print(field)
+        print(field)
         
         act_on_event(field, m['data'])
 

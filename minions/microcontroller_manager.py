@@ -9,8 +9,6 @@ sys.path.append('/home/pi/oasis-grow/utils')
 
 import serial
 
-from utils import concurrent_state as cs
-
 ser_in = None  #object for reading from the microcontroller via serial
 ser_out = None #object for writing to the microcontroller via serial
 
@@ -31,19 +29,16 @@ def start_serial_in(): #Depends on:'serial'
 #attempts connection to microcontroller
 def start_serial_out(): #Depends on:'serial'; Modifies: ser_out
     global ser_out
-    if cs.feature_toggles["onboard_led"] == "1":
-        pass
-    else:
+    try:
         try:
-            try:
-                ser_out = serial.Serial("/dev/ttyUSB0", 9600, timeout=1)
-                ser_out.flush()
-                print("Started serial communication with Arduino Nano.")
-            except:
-                ser_out = serial.Serial("/dev/ttyACM0", 9600, timeout=1)
-                ser_out.flush()
-                print("Started serial communication with Arduino Uno.")
-        except Exception as e:
-            #print(str(e))
-            ser_out = None
-            print("Serial connection not found")
+            ser_out = serial.Serial("/dev/ttyUSB0", 9600, timeout=1)
+            ser_out.flush()
+            print("Started serial communication with Arduino Nano.")
+        except:
+            ser_out = serial.Serial("/dev/ttyACM0", 9600, timeout=1)
+            ser_out.flush()
+            print("Started serial communication with Arduino Uno.")
+    except Exception as e:
+        #print(str(e))
+        ser_out = None
+        print("Serial connection not found")
