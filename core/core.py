@@ -142,17 +142,20 @@ def listen(): #Depends on 'serial', start_serial()
         cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "soil_moisture", str(soil_moisture), db_writer = None)
     
     if cs.feature_toggles["vpd_calculation"] == "1":
-        #https://en.wikipedia.org/wiki/Vapour-pressure_deficit#Computing_VPD_for_plants_in_a_greenhouse
-        t = float(temperature) + 459.67 #rankine temperature
-        a = -1.0440397 * float(10) ** float(4)
-        b = -11.29465
-        c = -2.7022355 * float(10) ** float(-2)
-        d = 1.289036 * float(10) ** float(-5)
-        e = -2.4780681 * float(10) ** float(-9)
-        f = 6.5459673
-        vp_sat = math.exp((a/t)+(b)+(c*t)+(d*t**2)+(e*t**3)+(f*math.log(t)))
-        vp_air = vp_sat * humidity/float(100)
-        vpd = vp_sat - vp_air
+        f = float(temperature) #temperature farenheit
+        t =	(5/9)*(f + 459.67) #temperature kelvin
+        rh =  float(humidity) #relative humidity
+        
+        #https://www.cs.helsinki.fi/u/ssmoland/physics/envphys/lecture_2.pdf
+        a = 77.34 #empirically
+        b = -7235 #fitted
+        c = -8.2 #exponental
+        d = 0.005711 #constants
+        svp = math.e ** (a+(b/t)+(c*math.log(t))+d*t) #saturation vapor pressure
+        
+        #https://agradehydroponics.com/blogs/a-grade-news/how-to-calculate-vapour-pressure-deficit-vpd-via-room-temperature
+        vpd_pa = (1 - (rh/100)) * svp #vapor pressure deficit in pascals
+        vpd = vpd_pa / 1000 #convert vpd to kilopascals
 
         cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "vpd", str(vpd), db_writer = None)
     
