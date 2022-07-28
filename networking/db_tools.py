@@ -134,10 +134,9 @@ def stream_handler(m):
     #some kind of update
     #might be from start up or might be user changed it
     if m['event']=='put' or m['event']=='patch':
-        print(m)
-        #print(m['path'])
+        event = json.loads(m['data'])
         
-        for key, value in m['data'].items():
+        for key, value in event.items():
             act_on_event(key, value)
 
     #something else
