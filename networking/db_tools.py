@@ -134,7 +134,7 @@ def stream_handler(m):
     #some kind of update
     #might be from start up or might be user changed it
     if m['event']=='put' or m['event']=='patch':
-        event = json.loads(m['data'])
+        event = json.loads(str(m['data']))
         
         for key, value in event.items():
             act_on_event(key, value)

@@ -442,6 +442,8 @@ def main_loop(led_timer, connect_timer):
 
     except(KeyboardInterrupt):
         GPIO.cleanup()
+        time.sleep(5)
+        reset_model.reset_device_state()
 
     except Exception as e:
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "error", db_writer = dbt.patch_firebase)
