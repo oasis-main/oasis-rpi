@@ -17,7 +17,7 @@ All processes can also be controlled via command line and importable python API
 Breaking changes may be merged into master until the official 1.0.0 release
 Users who deploy and connect oasis-grow can get "over-the-air" updates through dashboard
 
-##Raspberry Pi Quick-Start
+## Raspberry Pi Quick-Start
 
 ```
 sudo raspi-config
