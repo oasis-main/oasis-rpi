@@ -11,8 +11,8 @@ This repository contains:
 3. Arduino/microcontroller "minion" files for use with sensors and LEDs
 4. Shell setup_scripts for installing and configuring necessary packages
 
-The system is controllable via web interface at https://dashboard.oasis-x.io, where we offer additional cloud tools.
-All processes can also be controlled via command line and importable python API
+The active system is controllable via web interface at https://dashboard.oasis-x.io, where we offer additional cloud tools.
+Alternatively, all oasis-grow instances can be managed asynchronously through the importable python API.
 
 Breaking changes may be merged into master until the official 1.0.0 release
 Users who deploy and connect oasis-grow can get "over-the-air" updates through dashboard
@@ -46,7 +46,6 @@ cd oasis-grow
 ```
 
 If successful, the above should run a ~15-30 second setup flow that ends with a statement indicating the "core process is deactivated."
-
 
 ## Complete Firmware Guide
 
