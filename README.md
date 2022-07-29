@@ -2,7 +2,8 @@
 
 ## Introduction
 
-Oasis-Grow, developed by Oasis-X, is an open-source toolkit for controlled environment agriculture (CEA). It is a configurable nervous system for your high-tech farm, providing sensing, data collection, environmental control, automation, and remote monitoring functionality. This codebase is maintained with the goal to offer these capabilities to everyone. Users are encouraged to contribute data, projects, and technical expertise. See [Contributing](#contributing) for details.
+Oasis-Grow, developed by Oasis-X, is an open-source toolkit for IoT applications in precision agriculture, climate research, and biology. It is a configurable nervous system that provides sensing, data collection, environmental control, equipment automation, and remote monitoring functionality. This codebase is maintained with the goal to offer these capabilities to everyone. Users are encouraged to contribute data, projects, and technical expertise. See [Contributing](#contributing) for details. Note: this software is currently under active development.
+All functions can be deployed with a RaspberryPi (scheduling, PID control, data & networking management) + an Arduino (real-time analog & digital sensors).
 
 This repository contains:
 1. Python setup_scripts for collecting environmental data, manage feedback and timer regimes, and dispatching information to the relative sources.
@@ -10,9 +11,79 @@ This repository contains:
 3. Arduino/microcontroller "minion" files for use with sensors and LEDs
 4. Shell setup_scripts for installing and configuring necessary packages
 
-All functions can be deployed with a RaspberryPi (networking, scheduling, task management, & control) + an Arduino (precision sensors, LED management, other real-time applications). The resulting system is controllable via command line or web interface at https://dashboard.oasis-x.io
+The system is controllable via web interface at https://dashboard.oasis-x.io, where we offer additional cloud tools.
+All processes can also be controlled via command line and importable python API
 
-## Quick Start
+Breaking changes may be merged into master until the official 1.0.0 release
+Users who deploy and connect oasis-grow can get "over-the-air" updates through dashboard
+
+##Raspberry Pi Quick-Start
+
+```
+sudo raspi-config
+```
+- setup your internet: System Options -> Wireless LAN -> follow prompt
+- setup your camera: Interface Options -> Legacy Camera  -> Yes
+- (optional, recommended) security: System Options -> Password  -> follow prompt
+- (optional) remote access: Interface Options -> SSH  -> Yes
+- (optional) remote acess: Interface Options -> Remote GPIO  -> Enable
+- (opional) on-device peripherals: Interface Options -> I2C  -> Yes  
+- (opional) on-device peripherals: Interface Options -> SPI  -> Yes  
+
+```
+sudo apt-get update -y
+sudo apt-get install git -y
+git clone https://github.com/oasis-main/oasis-grow.git 
+cd oasis-grow
+. install.sh
+```
+
+To validate everything went smoothly, start the virtual env and test the main process with:
+
+```
+cd oasis-grow
+. start.sh
+```
+
+If successful, the above should run a ~15-30 second setup flow that ends with a statement indicating the "core process is deactivated."
+
+
+## Complete Firmware Guide
+
+  - [Introduction](#introduction)
+  - [Raspberry Pi Setup](#raspberry-pi-setup)
+    - [Using pre-built image](#using-pre-built-image)
+    - [Using setup scripts](#using-setup-scripts)
+  - [Hardware Setup](#hardware-setup)
+    - [Arduino Setup](#arduino-setup)
+    - [DIY Wiring](#diy-wiring)
+  - [Usage](#Usage)
+    - [Button Interface](#button-interface)
+  - [Configuration](#configuration)
+  - [Sample Projects](#sample-projects)
+  - [Contributing](#contributing)
+
+## Raspberry Pi Setup
+Users may using the [setup scripts](scripts) to build the repository and its requirements onto a fresh install of Raspbian Buster Lite (Release 05/07/2021). A pre-built image will be released alongside our next generation of devices for easier setup and deployment.
+
+### Using Setup Scripts
+
+Install Raspbian Lite onto your Raspberry Pi:
+1. Download Raspbian Lite from [official download site](https://www.raspberrypi.org/software/operating-systems/). The firmware will not work on newer releases which utilize LibCamera instead of raspi-still.
+2. Download [Balena Etcher](https://www.balena.io/etcher/).
+3. Connect a microSD card to your personal computer.
+4. Format the microSD card in the MS-DOS (FAT) style using your operating system's disk formatting utility.
+5. Open Balena Etcher and follow the on-screen instructions to flash the image to your microSD.
+6. Place the SD card into the front slot of the Raspberry Pi.
+7. Connect a keyboard, monitor, and sufficient power supply to the Pi.
+   
+Wait for the Pi to boot, then enter the following when prompted for a username and password:
+```
+raspberrypi login: pi
+Password: raspberry
+```
+When the prompt appears, enter `sudo raspi-config`. Using the arrow keys to navigate, set `Localisation Options > WLAN Country` according to your locale. Next, select `Interface Options > Camera` and turn the camera on. Finally, select `System Options > Wireless LAN` and enter the name and password for your home WiFi network.
+
 
 **1. Setup Rasppberry Pi**
 
@@ -187,7 +258,7 @@ import api
 dir(api)
 '''
 
-**5. Use with Oasis-Network for Dashboard, Remote Monitoring, & AI (internet required)**
+**5. Use with Oasis Network for Dashboard, Remote Monitoring, & AI (internet required)**
 
 Press the 'connect_internet' button on your system. Alternatively, you may open up a python3 shell in the oasis-grow directory and run:
 
