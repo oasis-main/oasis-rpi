@@ -1,9 +1,5 @@
-/.vscode
-/__pycache__
-/networking/__pycache__
-/imaging/__pycache__
-/core/__pycache__
-/actuators/__pycache__
-/utils/__pycache__
+.vscode/
+__pycache__/
 /configs
 /data_out
+/oasis_venv_pi

@@ -1,0 +1,73 @@
+
+import cv2
+import numpy as np
+from imaging import fastiecm
+from picamera import PiCamera
+import picamera.array
+
+#capture RGB stream from camera
+def capture_stream():
+    print("Capturing RGB array...")
+    
+    cam = PiCamera()
+    #cam.rotation = 180
+    #cam.resolution = (1920, 1080) # Uncomment if using a Pi Noir camera
+    #cam.resolution = (2592, 1952) # Comment this line if using a Pi Noir camera
+    stream = picamera.array.PiRGBArray(cam)
+    cam.capture(stream, format='bgr')
+    original = stream.array
+    stream.close()
+    cam.close()
+
+    return original
+
+#move color intensity 
+def contrast_stretch(im):
+    print("Stretching contrast...")
+    
+    in_min = np.percentile(im, 5)
+    in_max = np.percentile(im, 95)
+
+    out_min = 0.0
+    out_max = 255.0
+
+    out = im - in_min
+    out *= ((out_min - out_max) / (in_min - in_max))
+    out += in_min
+
+    return out
+
+#calculate NDVI
+def calc_ndvi(image):
+    print("Calculating NDVI...")
+    
+    b, g, r = cv2.split(image)
+    bottom = (r.astype(float) + b.astype(float))
+    bottom[bottom==0] = 0.01
+    ndvi = (r.astype(float) - b) / bottom # THIS IS THE CHANGED LINE
+    return ndvi
+
+#take the raw file from 
+def take_picture(image_path):
+    #create and configure camera object 
+    original = capture_stream() # load image
+    cv2.imwrite('/home/pi/oasis-grow/data_out/original.jpg', original) #save contrasted image
+
+    contrasted = contrast_stretch(original) #apply contrast to the image
+    cv2.imwrite('/home/pi/oasis-grow/data_out/contrasted.jpg', contrasted) #save contrasted image
+    
+    ndvi = calc_ndvi(contrasted) #calculate image ndvi
+    ndvi_contrasted = contrast_stretch(ndvi) #apply stretch the contrast a second time
+    cv2.imwrite('/home/pi/oasis-grow/data_out/ndvi.jpg', ndvi_contrasted) #save ndvi image
+
+    print("Applying color map...")
+    color_mapped_prep = ndvi_contrasted.astype(np.uint8) #prep colour mapping
+    color_mapped_image = cv2.applyColorMap(color_mapped_prep, fastiecm.fastiecm) #apply colour mapping
+    cv2.imwrite(image_path, color_mapped_image) #save cm'd image
+
+    print("NDVI & intermediary images saved to disk.")
+
+if __name__ == "main":
+    print("No main program here. Sorry! Look at the file to see importable functions.")
+
+

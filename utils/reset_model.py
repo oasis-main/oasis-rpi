@@ -16,10 +16,14 @@ def reset_device_state():
     reset_d = Popen(["cp", "/home/pi/oasis-grow/defaults/device_state_default_template.json", "/home/pi/oasis-grow/configs/device_state.json"])
     reset_d.wait()
 
-def reset_grow_params():
-    reset_g = Popen(["cp", "/home/pi/oasis-grow/defaults/grow_params_default_template.json", "/home/pi/oasis-grow/configs/grow_params.json"])
-    reset_g.wait()
+def reset_device_params():
+    reset_p = Popen(["cp", "/home/pi/oasis-grow/defaults/device_params_default_template.json", "/home/pi/oasis-grow/configs/device_params.json"])
+    reset_p.wait()
     
+def reset_sensor_info():
+    reset_s = Popen(["cp", "/home/pi/oasis-grow/defaults/sensor_info_default_template.json", "/home/pi/oasis-grow/data_out/sensor_info.json"])
+    reset_s.wait()
+
 def reset_access_config():
     reset_a = Popen([ "cp", "/home/pi/oasis-grow/defaults/access_config_default_template.json", "/home/pi/oasis-grow/configs/access_config.json"])
     reset_a.wait()
@@ -38,7 +42,8 @@ def reset_locks():
 
 def reset_nonhw_configs():
     reset_device_state()
-    reset_grow_params()
+    reset_device_params()
+    reset_sensor_info()
     reset_access_config()
 
 def reset_data_out():
@@ -66,11 +71,13 @@ def reset_image_feed():
 def reset_all():
     reset_device_state()
     reset_feature_toggles()
-    reset_grow_params()
+    reset_device_params()
+    reset_sensor_info()
     reset_access_config()
     reset_hardware_config()
     reset_feature_toggles()
     reset_data_out()
+    reset_image_feed()
 
 if __name__ == "__main__":
     reset_all()
