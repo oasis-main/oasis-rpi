@@ -142,17 +142,20 @@ def listen(): #Depends on 'serial', start_serial()
         cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "soil_moisture", str(soil_moisture), db_writer = None)
     
     if cs.feature_toggles["vpd_calculation"] == "1":
-        #https://en.wikipedia.org/wiki/Vapour-pressure_deficit#Computing_VPD_for_plants_in_a_greenhouse
-        t = float(temperature) + 459.67 #rankine temperature
-        a = -1.0440397 * float(10) ** float(4)
-        b = -11.29465
-        c = -2.7022355 * float(10) ** float(-2)
-        d = 1.289036 * float(10) ** float(-5)
-        e = -2.4780681 * float(10) ** float(-9)
-        f = 6.5459673
-        vp_sat = math.exp((a/t)+(b)+(c*t)+(d*t**2)+(e*t**3)+(f*math.log(t)))
-        vp_air = vp_sat * humidity/float(100)
-        vpd = vp_sat - vp_air
+        f = float(temperature) #temperature farenheit
+        t =	(5/9)*(f + 459.67) #temperature kelvin
+        rh =  float(humidity) #relative humidity
+        
+        #https://www.cs.helsinki.fi/u/ssmoland/physics/envphys/lecture_2.pdf
+        a = 77.34 #empirically
+        b = -7235 #fitted
+        c = -8.2 #exponental
+        d = 0.005711 #constants
+        svp = math.e ** (a+(b/t)+(c*math.log(t))+d*t) #saturation vapor pressure
+        
+        #https://agradehydroponics.com/blogs/a-grade-news/how-to-calculate-vapour-pressure-deficit-vpd-via-room-temperature
+        vpd_pa = (1 - (rh/100)) * svp #vapor pressure deficit in pascals
+        vpd = vpd_pa / 1000 #convert vpd to kilopascals
 
         cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "vpd", str(vpd), db_writer = None)
     
@@ -192,6 +195,7 @@ def heat_pid(temperature, target_temperature, last_temperature, last_target_temp
                                                                     #When negative, dampens heat signal
     heat_level  = P_heat * err_temperature + I_heat * err_cum_temperature + D_heat * err_dot_temperature
     heat_level  = max(min(int(heat_level), 100), 0)
+    print(heat_level)
 
     return heat_level
 
@@ -213,6 +217,7 @@ def hum_pid(humidity, target_humidity, last_humidity, last_target_humidity,
 
     humidity_level  = P_hum*err_humidity + I_hum * err_cum_humidity + D_hum*err_dot_humidity #positive response
     humidity_level  = max(min(int(humidity_level),100),0)
+    print(humidity_level)
 
     return humidity_level
 
@@ -235,6 +240,7 @@ def dehum_pid(humidity, target_humidity, last_humidity, last_target_humidity,
 
     dehumidify_level  = P_dehum*(0-err_humidity)+I_dehum*(0-err_cum_humidity)+D_dehum*(0-err_dot_humidity)
     dehumidify_level  = max(min(int(dehumidify_level), 100), 0)
+    print(dehumidify_level)
 
     return dehumidify_level
 
@@ -276,6 +282,7 @@ def fan_pid(temperature, humidity, co2,
                 +Pc_fan*(0-err_co2)+Ic_fan*(0-err_cum_co2)+Dc_fan*(0-err_dot_co2)    
     
     fan_level  = max(min(int(fan_level),100),0)
+    print(fan_level)
 
     return fan_level
 
@@ -305,6 +312,7 @@ def water_pid(soil_moisture, target_soil_moisture,
                    + D_moisture * err_dot_soil_moisture
     
     water_level  = max(min(int(water_level), 100), 0)
+    print(water_level)
 
     return water_level
 
@@ -521,7 +529,7 @@ def run_active_equipment():
     # calculate feedback levels and update equipment in use
     if cs.feature_toggles["heater"] == "1":
         if cs.feature_toggles["heat_pid"] == "1": #computes a feedback value if PID is on
-            temp_feedback = str(heat_pid(temperature,
+            temp_feedback = int(heat_pid(temperature,
                                         int(cs.device_params["target_temperature"]),
                                         last_temperature,
                                         last_target_temperature,
@@ -537,7 +545,7 @@ def run_active_equipment():
     
     if cs.feature_toggles["humidifier"] == "1":
         if cs.feature_toggles["hum_pid"] == "1":
-            hum_feedback = str(hum_pid(humidity,
+            hum_feedback = int(hum_pid(humidity,
                                         int(cs.device_params["target_humidity"]),
                                         last_humidity,
                                         last_target_humidity,
@@ -548,7 +556,7 @@ def run_active_equipment():
     
     if cs.feature_toggles["dehumidifier"] == "1":
         if cs.feature_toggles["dehum_pid"] == "1":
-            dehum_feedback = str(hum_pid(humidity,
+            dehum_feedback = int(hum_pid(humidity,
                                         int(cs.device_params["target_humidity"]),
                                         last_humidity,
                                         last_target_humidity,
@@ -559,7 +567,7 @@ def run_active_equipment():
 
     if cs.feature_toggles["fan"] == "1":
         if cs.feature_toggles["fan_pid"] == "1":
-            fan_feedback = str(fan_pid(temperature , humidity, co2,
+            fan_feedback = int(fan_pid(temperature , humidity, co2,
                                 int(cs.device_params["target_temperature"]), int(cs.device_params["target_humidity"]), int(cs.device_params["target_co2"]),
                                 last_temperature,last_humidity, last_co2,
                                 last_target_temperature,last_target_humidity, last_target_co2,
@@ -570,7 +578,7 @@ def run_active_equipment():
 
     if cs.feature_toggles["water"] == "1":
         if cs.feature_toggles["water_pid"] == "1":
-            water_feedback = str(water_pid(soil_moisture, int(cs.device_params["target_soil_moisture"]),
+            water_feedback = int(water_pid(soil_moisture, int(cs.device_params["target_soil_moisture"]),
                                 last_soil_moisture, last_target_soil_moisture,
                                 int(cs.device_params["P_moisture"]), int(cs.device_params["I_moisture"]), int(cs.device_params["D_moisture"])))
         run_water(water_feedback)
@@ -608,10 +616,10 @@ def console_log():
         sensors.update({"Tank Below Level Sensor? (yes/no): ": cs.sensor_info["water_low"]})
     
     if cs.feature_toggles["lux_sensor"] == "1":
-        sensors.update({"Light Intensity (lux): ": cs.sensor_info["temperature"]})
+        sensors.update({"Light Intensity (lux): ": cs.sensor_info["lux"]})
     
     if cs.feature_toggles["ph_sensor"] == "1":
-        sensors.update({"Acidity/Alkalinity (ph 0-14): ": cs.sensor_info["temperature"]})
+        sensors.update({"Acidity/Alkalinity (ph 0-14): ": cs.sensor_info["ph"]})
     
     if cs.feature_toggles["tds_sensor"] == "1":
         sensors.update({"Total Disolved Solids: ": cs.sensor_info["tds"]})
@@ -763,15 +771,13 @@ def main_setup():
         minion.start_serial_in()
 
     #start the clock for timimg .csv writes and data exchanges with server
-    data_timer = time.time()
+    data_timer = time.time() - 300
 
 @err.Error_Handler
 def main_loop():
-    global data_timer
-
     #launch main program loop
     try:
-        print("Begin collection and feedback")
+        print("Begin environmental data collection and control")
         print("------------------------------------------------------------")
 
         while True:
