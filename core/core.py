@@ -41,12 +41,12 @@ air_process = None
 camera_process = None
 
 #declare sensor data variables
-temperature = 100
+temperature = 0
 last_temperature = 0
 last_target_temperature = 0
 err_cum_temperature = 0
 
-humidity = 100
+humidity = 0
 last_humidity = 0
 last_target_humidity = 0
 err_cum_humidity = 0

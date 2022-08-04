@@ -170,7 +170,7 @@ def stop_condition(field,value): #Depends on: os, Process,cs.load_state(); Modif
             if cs.device_state[f] == v:
                 print("Exiting database listener...")
                 kill_listener()
-            time.sleep(1)
+                return
 
     stop_condition = multiprocessing.Process(target = check_exit, args = (field,value))
     stop_condition.start()
@@ -211,6 +211,6 @@ def kill_listener():
         listener.terminate()
         listener = None
     else:
-        #print("Listener does not exist")
+        print("Listener does not exist")
         pass
         
