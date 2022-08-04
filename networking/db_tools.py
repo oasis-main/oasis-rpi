@@ -9,6 +9,7 @@ import requests
 import json
 import pyrebase
 import multiprocessing
+import time
 
 from utils import concurrent_state as cs
 from utils import error_handler as err
@@ -165,14 +166,11 @@ def stop_condition(field,value): #Depends on: os, Process,cs.load_state(); Modif
 
     def check_exit(f,v): #This should be launched in its own thread, otherwise will hang the script
         while True:
-            try:
-                cs.load_state()
-            except:
-                pass
-
+            cs.load_state()
             if cs.device_state[f] == v:
                 print("Exiting database listener...")
                 kill_listener()
+            time.sleep(1)
 
     stop_condition = multiprocessing.Process(target = check_exit, args = (field,value))
     stop_condition.start()
@@ -213,5 +211,6 @@ def kill_listener():
         listener.terminate()
         listener = None
     else:
-        print("Listener does not exist")
+        #print("Listener does not exist")
+        pass
         

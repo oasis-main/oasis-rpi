@@ -41,12 +41,12 @@ air_process = None
 camera_process = None
 
 #declare sensor data variables
-temperature = 0
+temperature = 100
 last_temperature = 0
 last_target_temperature = 0
 err_cum_temperature = 0
 
-humidity = 0
+humidity = 100
 last_humidity = 0
 last_target_humidity = 0
 err_cum_humidity = 0
@@ -556,7 +556,7 @@ def run_active_equipment():
     
     if cs.feature_toggles["dehumidifier"] == "1":
         if cs.feature_toggles["dehum_pid"] == "1":
-            dehum_feedback = int(hum_pid(humidity,
+            dehum_feedback = int(dehum_pid(humidity,
                                         int(cs.device_params["target_humidity"]),
                                         last_humidity,
                                         last_target_humidity,
