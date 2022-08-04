@@ -68,8 +68,8 @@ def store_file(user, storage, path, device_name, filename):
     storage.child(user['userId'] + "/" + device_name + "/" + filename).put(path, user['idToken'])
 
 #gets new refresh token from firebase
-def get_refresh_token(web_api_key,email,password): #Depends on: 'requests', 'json'; Modifies: None
-    sign_in_url = "https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key=" + web_api_key
+def get_refresh_token(wak,email,password): #Depends on: 'requests', 'json'; Modifies: None
+    sign_in_url = "https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key=" + wak
     sign_in_payload = json.dumps({"email": email, "password": password, "returnSecureToken": "true"})
     r = requests.post(sign_in_url, sign_in_payload)
     data = json.loads(r.content)
