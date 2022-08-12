@@ -1,5 +1,3 @@
-### Oasis-Grow
-
 ## Introduction
 
 Oasis-Grow, developed by Oasis-X, is an open-source toolkit for IoT applications in precision agriculture, climate research, and biology. It is a configurable nervous system that provides sensing, data collection, environmental control, equipment automation, and remote monitoring functionality. This codebase is maintained with the goal to offer these capabilities to everyone. Users are encouraged to contribute data, projects, and technical expertise. See [Contributing](#contributing) for details. Note: this software is currently under active development.
