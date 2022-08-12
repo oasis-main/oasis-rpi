@@ -89,7 +89,7 @@ def load_state(loop_limit=100000): #Depends on: 'json'; Modifies: device_state,h
                 if sensor_info[k] is None:
                     print("Read NoneType key in sensor_info")
                     print("Resetting sensor_info...")
-                    #reset_model.reset_sensor_info()
+                    reset_model.reset_sensor_info()
                      
                 else: 
                     pass    
@@ -99,7 +99,7 @@ def load_state(loop_limit=100000): #Depends on: 'json'; Modifies: device_state,h
         except Exception as e:
             if i == int(loop_limit):
                 print("Main.py tried to read max # of times. File is corrupted. Resetting device_params...")
-                reset_model.reset_device_params()
+                reset_model.reset_sensor_info()
             else:
                 print("Main.py tried to read while sensor_info was being written. If this continues, file is corrupted.")
                 pass   
@@ -415,8 +415,6 @@ def write_state(path, field, value, db_writer, loop_limit=100000): #Depends on: 
             if i >= int(loop_limit):
                 print("Tried to write state multiple times. File is corrupted. Resetting locks...")
                 reset_model.reset_locks()
-                reset_model.reset_device_state()
-                reset_model.reset_device_params()
                 break
             else:
                 print(e)
@@ -549,8 +547,6 @@ def write_dict(path, dict, db_writer, loop_limit=100000): #Depends on: load_stat
             if i >= int(loop_limit):
                 print("Tried to write state multiple times. File is corrupted. Resetting locks...")
                 reset_model.reset_locks()
-                reset_model.reset_device_state()
-                reset_model.reset_device_params()
                 break
             else:
                 print(e)
