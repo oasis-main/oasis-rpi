@@ -234,10 +234,13 @@ def delete_device():
 
 #check if the device is waiting to be added to firebase, if it is then add it, otherwise skip
 def add_new_device(): #depends on: modifies:
-    cs.load_state()
 
     #assemble data to initialize firebase
     setup_dict = {} #Access & hardware config will be kept private, not shared with cloud 
+    
+    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "time", 
+                    str(datetime.datetime.now()), db_writer = None)
+    
     setup_dict.update(cs.device_state)
     setup_dict.update(cs.device_params)
     setup_dict.update(cs.feature_toggles)
