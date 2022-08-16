@@ -1,5 +1,3 @@
-### Oasis-Grow
-
 ## Introduction
 
 Oasis-Grow, developed by Oasis-X, is an open-source toolkit for IoT applications in precision agriculture, climate research, and biology. It is a configurable nervous system that provides sensing, data collection, environmental control, equipment automation, and remote monitoring functionality. This codebase is maintained with the goal to offer these capabilities to everyone. Users are encouraged to contribute data, projects, and technical expertise. See [Contributing](#contributing) for details. Note: this software is currently under active development.
@@ -173,11 +171,11 @@ The Oasis-Grow software is configured to use GPIO Pins for interfacing with rela
 
 Capable makers can wire this up themselves as described in the [prototype wiring diagram](https://docs.google.com/presentation/d/1E4D3Sl3dR-raVRRaoH5YC-TudYASd4O9N7d49p5N9X8/edit?usp=sharing), or purchase specialty ready-to-go hardware from us directly.
 
-Note: Assemble the AC Relay & Power Management circuit at your own risk. Wiring up alternating current from power mains is extremely dangerous, so much that a single mistake can lead to serious injury or even death! Because of this, we recommend this project for INTERMEDIATE to ADVANCED Makers only. If you or someone on your team does not have experience working with high voltage, please consult a professional electrician before doing so. Oasis-X is not liable if you hurt yourself.
+Note: We focus on integrating a faily standard set of popular AC relays for powering high-power electronic appliances. Assemble the AC Relay & Power Circuit at your own risk. Wiring up alternating current from power mains is extremely dangerous, so much that a single mistake can lead to serious injury or even death! Because of this, we recommend doing the AC part of this project only if you are an INTERMEDIATE to ADVANCED engineer only. If you or someone on your team does not have experience working with high voltage, please consult a professional electrician before doing so. You can also sub out any normally-closed DC relay which will take a digital, or simply deploy the camera and sensor modules separately for data collection without power control. You can choose what you use!
 
-Oasis-Grow comes with imaging capabilities that make us of the Raspberry Pi's built-in camera stack. You can view these utilities in the "imaging" folder.
+Oasis-Grow comes with imaging capabilities that make us of the Raspberry Pi's built-in camera stack. You can view these utilities in the "imaging" folder, and toggle the NDVI in feature_toggles,json(more on this next), which is an image analysis technique that can be used to diagnose plant health in the near-infrared using the Pi Noir Camera. 
 
-Finally, edit "feature_toggles.json" in 'configs' to tell the system what capabilities you are using (and which ones you are not, as they are not set up):
+Finally, edit "feature_toggles.json" in 'configs' to tell the system what capabilities you are using (and which ones you are not, as they are not set up). The ones listed here are currently available. Please see the minions folder for compatible microcontroller programs.
 
 '''
 {"temperature_sensor": "1",
@@ -203,8 +201,6 @@ Finally, edit "feature_toggles.json" in 'configs' to tell the system what capabi
 "air": "1",
 "camera": "1",
 "ndvi": "1",
-"video": "0",
-"audio": "0",
 "save_images": "1",
 "save_data": "1",
 "onboard_led": "0",
@@ -284,5 +280,4 @@ Oasis-grow provides a highly modular interface with countless possible applicati
 - much more!
 
 ## Contributing
-oasis-grow welcomes open-source contributors and is currently accepting pull requests. Contact hello@oasis-x.com with questions or proposals.
-
+Open-source contributors are welcome, we are currently accepting pull requests! Contact hello@oasis-x.com with questions or proposals.
