@@ -7,6 +7,10 @@ mkdir /home/pi/oasis-grow/data_out/image_feed
 mkdir /home/pi/oasis-grow/data_out/sensor_feed
 mkdir /home/pi/oasis-grow/data_out/logs
 
+chmod 777 /home/pi/oasis-grow/data_out/image_feed
+chmod 777 /home/pi/oasis-grow/data_out/sensor_feed
+chmod 777 /home/pi/oasis-grow/data_out/logs
+
 echo "Moving configuration files..."
 cp /home/pi/oasis-grow/defaults/hardware_config_default_template.json /home/pi/oasis-grow/configs/hardware_config.json
 cp /home/pi/oasis-grow/defaults/access_config_default_template.json /home/pi/oasis-grow/configs/access_config.json

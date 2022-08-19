@@ -108,6 +108,10 @@ def write_csv(filename, dict): #Depends on: "os" "csv"
         if not file_exists:
             writer.writeheader()  # file doesn't exist yet, write a header
 
+        for variable in dict.keys():
+            if variable not in headers:
+                dict.pop(variable)
+
         writer.writerow(dict)
 
     return
