@@ -108,11 +108,13 @@ def write_csv(filename, dict): #Depends on: "os" "csv"
         if not file_exists:
             writer.writeheader()  # file doesn't exist yet, write a header
 
-        for variable in dict.keys():
-            if variable not in headers:
-                dict.pop(variable)
+        variables = {}
 
-        writer.writerow(dict)
+        for variable in dict.keys():
+            if variable in headers:
+                variables[variable] = dict[variable]
+
+        writer.writerow(variables)
 
     return
 
@@ -180,6 +182,31 @@ def listen(): #Depends on 'serial', start_serial()
         #print("so call me maybe")
     except:
         pass
+
+def smart_listener():
+    if ((cs.feature_toggles["temperature_sensor"] == "1") \
+                or (cs.feature_toggles["humidity_sensor"] == "1") \
+                    or (cs.feature_toggles["water_level_sensor"] == "1") \
+                        or (cs.feature_toggles["co2_sensor"] == "1") \
+                            or (cs.feature_toggles["lux_sensor"] == "1") \
+                                or (cs.feature_toggles["ph_sensor"] == "1") \
+                                    or (cs.feature_toggles["tds_sensor"] == "1") \
+                                        or (cs.feature_toggles["soil_moisture_sensor"] == "1")):
+        try: #attempt to read data from sensor, raise exception if there is a problem
+            #print("Smart listener is attempting to collect data from arduino")
+            listen() #this will be changed to run many sensor functions as opposed to one serial listener
+        except Exception as e:
+            print(err.full_stack())
+            print("Listener Failure")
+
+def update_derivative_banks():
+    global last_target_temperature, last_target_humidity, last_target_co2, last_target_soil_moisture
+
+    #save last temperature and humidity targets to calculate delta for PD controllers
+    last_target_temperature = float(cs.device_params["target_temperature"]) 
+    last_target_humidity = float(cs.device_params["target_humidity"])
+    last_target_co2 = float(cs.device_params["target_co2"])
+    last_target_soil_moisture = float(cs.device_params["target_soil_moisture"])
 
 #PID controller to modulate heater feedback
 def heat_pid(temperature, target_temperature, last_temperature, last_target_temperature,
@@ -505,31 +532,6 @@ def terminate_program(): #Depends on: cs.load_state(), 'sys', 'subprocess' #Modi
 
     sys.exit()
 
-def update_derivative_banks():
-    global last_target_temperature, last_target_humidity, last_target_co2, last_target_soil_moisture
-
-    #save last temperature and humidity targets to calculate delta for PD controllers
-    last_target_temperature = float(cs.device_params["target_temperature"]) 
-    last_target_humidity = float(cs.device_params["target_humidity"])
-    last_target_co2 = float(cs.device_params["target_co2"])
-    last_target_soil_moisture = float(cs.device_params["target_soil_moisture"])
-
-def smart_listener():
-    if ((cs.feature_toggles["temperature_sensor"] == "1") \
-                or (cs.feature_toggles["humidity_sensor"] == "1") \
-                    or (cs.feature_toggles["water_level_sensor"] == "1") \
-                        or (cs.feature_toggles["co2_sensor"] == "1") \
-                            or (cs.feature_toggles["lux_sensor"] == "1") \
-                                or (cs.feature_toggles["ph_sensor"] == "1") \
-                                    or (cs.feature_toggles["tds_sensor"] == "1") \
-                                        or (cs.feature_toggles["soil_moisture_sensor"] == "1")):
-        try: #attempt to read data from sensor, raise exception if there is a problem
-            #print("Smart listener is attempting to collect data from arduino")
-            listen() #this will be changed to run many sensor functions as opposed to one serial listener
-        except Exception as e:
-            print(err.full_stack())
-            print("Listener Failure")
-
 def run_active_equipment():
     
     global temp_feedback, hum_feedback, dehum_feedback, fan_feedback, water_feedback
@@ -729,7 +731,7 @@ def data_out():
             data_timer = time.time()
 
         except Exception as e:
-            print(e)
+            print(err.full_stack())
             data_timer = time.time()
 
 def check_exit():
