@@ -126,56 +126,60 @@ def listen(): #Depends on 'serial', start_serial()
         return 
         
     #print("and this is crazy")
-    sensor_info = json.loads(str(minion.ser_in.readline().decode('UTF-8').strip()))
-    #print("but here's my number")
-    if cs.feature_toggles["temperature_sensor"] == "1":
-        last_temperature = temperature
-        temperature = sensor_info["temperature"]
-        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "temperature", str(temperature), db_writer = None)      
-    if cs.feature_toggles["humidity_sensor"] == "1":
-        last_humidity = humidity
-        humidity = sensor_info["humidity"]
-        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "humidity", str(humidity), db_writer = None)
-    if cs.feature_toggles["co2_sensor"] == "1":
-        last_co2 = co2
-        co2 = sensor_info["co2"]
-        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "co2", str(co2), db_writer = None)
-    if cs.feature_toggles["soil_moisture_sensor"] == "1":
-        last_soil_moisture = soil_moisture
-        soil_moisture = sensor_info["soil_moisture"]
-        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "soil_moisture", str(soil_moisture), db_writer = None)
     
-    if cs.feature_toggles["vpd_calculation"] == "1":
-        f = float(temperature) #temperature farenheit
-        t =	(5/9)*(f + 459.67) #temperature kelvin
-        rh =  float(humidity) #relative humidity
+    try:
+        sensor_info = json.loads(str(minion.ser_in.readline().decode('UTF-8').strip()))
+        #print("but here's my number")
+        if cs.feature_toggles["temperature_sensor"] == "1":
+            last_temperature = temperature
+            temperature = sensor_info["temperature"]
+            cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "temperature", str(temperature), db_writer = None)      
+        if cs.feature_toggles["humidity_sensor"] == "1":
+            last_humidity = humidity
+            humidity = sensor_info["humidity"]
+            cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "humidity", str(humidity), db_writer = None)
+        if cs.feature_toggles["co2_sensor"] == "1":
+            last_co2 = co2
+            co2 = sensor_info["co2"]
+            cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "co2", str(co2), db_writer = None)
+        if cs.feature_toggles["soil_moisture_sensor"] == "1":
+            last_soil_moisture = soil_moisture
+            soil_moisture = sensor_info["soil_moisture"]
+            cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "soil_moisture", str(soil_moisture), db_writer = None)
         
-        #https://www.cs.helsinki.fi/u/ssmoland/physics/envphys/lecture_2.pdf
-        a = 77.34 #empirically
-        b = -7235 #fitted
-        c = -8.2 #exponental
-        d = 0.005711 #constants
-        svp = math.e ** (a+(b/t)+(c*math.log(t))+d*t) #saturation vapor pressure
-        
-        #https://agradehydroponics.com/blogs/a-grade-news/how-to-calculate-vapour-pressure-deficit-vpd-via-room-temperature
-        vpd_pa = (1 - (rh/100)) * svp #vapor pressure deficit in pascals
-        vpd = vpd_pa / 1000 #convert vpd to kilopascals
+        if cs.feature_toggles["vpd_calculation"] == "1":
+            f = float(temperature) #temperature farenheit
+            t =	(5/9)*(f + 459.67) #temperature kelvin
+            rh =  float(humidity) #relative humidity
+            
+            #https://www.cs.helsinki.fi/u/ssmoland/physics/envphys/lecture_2.pdf
+            a = 77.34 #empirically
+            b = -7235 #fitted
+            c = -8.2 #exponental
+            d = 0.005711 #constants
+            svp = math.e ** (a+(b/t)+(c*math.log(t))+d*t) #saturation vapor pressure
+            
+            #https://agradehydroponics.com/blogs/a-grade-news/how-to-calculate-vapour-pressure-deficit-vpd-via-room-temperature
+            vpd_pa = (1 - (rh/100)) * svp #vapor pressure deficit in pascals
+            vpd = vpd_pa / 1000 #convert vpd to kilopascals
 
-        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "vpd", str(vpd), db_writer = None)
-    
-    if cs.feature_toggles["water_level_sensor"] == "1":
-        water_low = int(sensor_info["water_low"])
-        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "water_low", str(water_low), db_writer = None)
-    if cs.feature_toggles["lux_sensor"] == "1":
-        lux = sensor_info["lux"]
-        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "lux", str(lux), db_writer = None)
-    if cs.feature_toggles["ph_sensor"] == "1":
-        ph = sensor_info["pH"]
-        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "ph", str(ph), db_writer = None)
-    if cs.feature_toggles["tds_sensor"] == "1":
-        tds = sensor_info["tds"]
-        cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "tds", str(tds), db_writer = None)
-    #print("so call me maybe")
+            cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "vpd", str(vpd), db_writer = None)
+        
+        if cs.feature_toggles["water_level_sensor"] == "1":
+            water_low = int(sensor_info["water_low"])
+            cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "water_low", str(water_low), db_writer = None)
+        if cs.feature_toggles["lux_sensor"] == "1":
+            lux = sensor_info["lux"]
+            cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "lux", str(lux), db_writer = None)
+        if cs.feature_toggles["ph_sensor"] == "1":
+            ph = sensor_info["pH"]
+            cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "ph", str(ph), db_writer = None)
+        if cs.feature_toggles["tds_sensor"] == "1":
+            tds = sensor_info["tds"]
+            cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "tds", str(tds), db_writer = None)
+        #print("so call me maybe")
+    except:
+        pass
 
 #PID controller to modulate heater feedback
 def heat_pid(temperature, target_temperature, last_temperature, last_target_temperature,
