@@ -118,6 +118,17 @@ def write_csv(filename, dict): #Depends on: "os" "csv"
 
     return
 
+def send_csv(path):
+    #send new image to firebase
+    cs.load_state()
+    user, db, storage = dbt.initialize_user(cs.access_config["refresh_token"])
+    dbt.store_file(user, storage, path, cs.access_config["device_name"], "sensor_data.csv")
+    print("Sent csv timeseries")
+
+    #tell firebase that there is a new time series
+    dbt.patch_firebase(cs.access_config, "csv_sent", "1")
+    print("Firebase has a time-series in waiting")
+
 #gets data from serial, will parse a simple string or accept a dictionary
 def listen(): #Depends on 'serial', start_serial()
     global minion, temperature,  humidity,  co2,  soil_moisture, vpd, water_low, lux, ph, tds  
@@ -510,17 +521,6 @@ def clean_up_processes():
 
     gc.collect()
 
-def send_csv(path):
-    #send new image to firebase
-    cs.load_state()
-    user, db, storage = dbt.initialize_user(cs.access_config["refresh_token"])
-    dbt.store_file(user, storage, path, cs.access_config["device_name"], "sensor_data.csv")
-    print("Sent csv timeseries")
-
-    #tell firebase that there is a new time series
-    dbt.patch_firebase(cs.access_config, "csv_sent", "1")
-    print("Firebase has a time-series in waiting")
-
 #terminates the program and all running subprocesses
 def terminate_program(): #Depends on: cs.load_state(), 'sys', 'subprocess' #Modifies: heat_process, humidity_process, fan_process, light_process, camera_process, water_process
 
@@ -726,7 +726,7 @@ def data_out():
                     user, db, storage = dbt.initialize_user(cs.access_config["refresh_token"])
 
                     #send new time-series to firebase
-                    send_csv(user, storage, '/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv')
+                    send_csv('/home/pi/oasis-grow/data_out/image.jpg')
 
             data_timer = time.time()
 
