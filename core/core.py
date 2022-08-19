@@ -192,6 +192,7 @@ def listen(): #Depends on 'serial', start_serial()
             cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "tds", str(tds), db_writer = None)
         #print("so call me maybe")
     except:
+        print(err.full_stack())
         pass
 
 def smart_listener():
@@ -707,7 +708,7 @@ def data_out():
     if time.time() - data_timer > 300:
 
         try:
-
+            cs.load_state()
             payload = cs.sensor_info
             timestamp = {"time": str(datetime.datetime.now())}
             payload.update(timestamp)
@@ -720,10 +721,6 @@ def data_out():
                 if cs.device_state["connected"] == "1":
                     #write data to disk and exchange with cloud if connected
                     dbt.patch_firebase_dict(cs.access_config,payload)
-                    
-                    #send time-series .csv file to firebase storage
-                    #authenticate with firebase
-                    user, db, storage = dbt.initialize_user(cs.access_config["refresh_token"])
 
                     #send new time-series to firebase
                     send_csv('/home/pi/oasis-grow/data_out/image.jpg')
