@@ -103,18 +103,20 @@ def write_csv(filename, dict): #Depends on: "os" "csv"
         if cs.feature_toggles["tds_sensor"] == "1":
             headers.append("tds")
 
-        with csv.DictWriter(csvfile, delimiter=',', lineterminator='\n',fieldnames=headers) as writer:
+        writer = csv.DictWriter(csvfile, delimiter=',', lineterminator='\n',fieldnames=headers)
 
-            if not file_exists:
-                writer.writeheader()  # file doesn't exist yet, write a header
+        if not file_exists:
+            writer.writeheader()  # file doesn't exist yet, write a header
 
-            variables = {}
+        variables = {}
 
-            for variable in dict.keys():
-                if variable in headers:
-                    variables[variable] = dict[variable]
+        for variable in dict.keys():
+            if variable in headers:
+                variables[variable] = dict[variable]
 
-            writer.writerow(variables)
+        writer.writerow(variables)
+
+        writer = None
 
     return
 

@@ -5,7 +5,9 @@ import sys
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
 
+#data handling
 import json
+import re
 
 #import custom modules
 from utils import reset_model
@@ -60,6 +62,8 @@ def modAccessConfig(name, e, p):
 def save_creds_exit(email, password, wifi_name, wifi_pass, device_name, cmd = False):
     global st
     
+    device_name = re.sub('[^a-zA-Z0-9\n\.]', ' ', device_name) #sub all non-alphaneumeric characters with spaces
+
     #place credentials in proper locations
     modWiFiConfig(wifi_name, wifi_pass)
     print("Wifi creds added")
