@@ -303,8 +303,6 @@ def connect_firebase(): #depends on: cs.load_state(), cs.write_state(), dbt.patc
             
             #update the device state to "connected"
             print("Device is connected over HTTPS to the Oasis Network")
-
-            cs.load_state()
             
         except Exception as e:
             #print(err.full_stack()) #display error

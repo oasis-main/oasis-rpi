@@ -103,18 +103,18 @@ def write_csv(filename, dict): #Depends on: "os" "csv"
         if cs.feature_toggles["tds_sensor"] == "1":
             headers.append("tds")
 
-        writer = csv.DictWriter(csvfile, delimiter=',', lineterminator='\n',fieldnames=headers)
+        with csv.DictWriter(csvfile, delimiter=',', lineterminator='\n',fieldnames=headers) as writer:
 
-        if not file_exists:
-            writer.writeheader()  # file doesn't exist yet, write a header
+            if not file_exists:
+                writer.writeheader()  # file doesn't exist yet, write a header
 
-        variables = {}
+            variables = {}
 
-        for variable in dict.keys():
-            if variable in headers:
-                variables[variable] = dict[variable]
+            for variable in dict.keys():
+                if variable in headers:
+                    variables[variable] = dict[variable]
 
-        writer.writerow(variables)
+            writer.writerow(variables)
 
     return
 
@@ -192,7 +192,7 @@ def listen(): #Depends on 'serial', start_serial()
             cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "tds", str(tds), db_writer = None)
         #print("so call me maybe")
     except:
-        print(err.full_stack())
+        #print(err.full_stack()) #uncomment to debug listener
         pass
 
 def smart_listener():
@@ -723,7 +723,7 @@ def data_out():
                     dbt.patch_firebase_dict(cs.access_config,payload)
 
                     #send new time-series to firebase
-                    send_csv('/home/pi/oasis-grow/data_out/image.jpg')
+                    send_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv')
 
             data_timer = time.time()
 

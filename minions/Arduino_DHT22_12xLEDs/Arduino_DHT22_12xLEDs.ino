@@ -42,12 +42,19 @@ void loop() {
   humidity = dht.readHumidity();
   temperature = dht.readTemperature();
   
+  //print data to serial
+  Serial.print("{"); //start the json
+
+  Serial.print("\"temperature\":");
+  Serial.print(temperature*float(1.80)+float(32)); //convert c to f
+  Serial.print(", ");
+    
+  Serial.print("\"humidity\": ");
   Serial.print(humidity);
-  Serial.print(" "); 
-  Serial.print(temperature*(1.800)+32); //need to manually adjust the sensor smh
-  Serial.print(" ");
-  Serial.print(water_low);
-  Serial.println(); 
+  //Serial.print(", "); //no trailing comma, this is the last json field
+    
+  Serial.print("}"); //close the json and issue new line
+  Serial.println();
 
   //Mode Management
   if (Serial.available() > 0) {
@@ -135,5 +142,5 @@ void loop() {
 
   //Serial.println(led_mode);  
   
-  delay(1);
+  delay(20);
 }
