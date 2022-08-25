@@ -13,16 +13,15 @@ from imaging import noir_ndvi
 from utils import concurrent_state as cs
 from networking import db_tools as dbt
 
-def take_picture(image_path):
-    #take picture and save to standard location: libcamera-still -e png -o test.png
-    still = Popen(["raspistill", "-e", "jpg",  "-o", str(image_path)]) #snap: call the camera. "-w", "1920", "-h", "1080",
-    still.wait()
-
-def take_picture_NDVI(image_path): #use when viewing plants without an IR filter
-    noir_ndvi.take_picture(image_path)
-    #view = Popen(["fbi", "-a" ,"/home/pi/oasis-grow/data_out/image.jpg"], stdin=PIPE ,text=True, shell=True)
-    #time.sleep(5)
-    #view.communicate('q')
+def take_picture(image_path, device_params):
+    
+    if device_params["awb_mode"] == "on":
+        #take picture and save to standard location: libcamera-still -e png -o test.png
+        still = Popen(["raspistill", "-e", "jpg",  "-o", str(image_path)]) #snap: call the camera. "-w", "1920", "-h", "1080",
+        still.wait()
+    else:
+        still = Popen(["raspistill", "-e", "jpg",  "-o", str(image_path), "-awb", "off", "-awbg", device_params["awb_red"] + "," + device_params["awb_blue"]]) #snap: call the camera. "-w", "1920", "-h", "1080",
+        still.wait()
 
 def save_to_feed(image_path):
     #timestamp image
@@ -46,10 +45,10 @@ def send_image(path):
 def actuate(interval): #amount of time between shots in minutes
     cs.load_state()
     
+    take_picture('/home/pi/oasis-grow/data_out/image.jpg', cs.device_params)
+
     if cs.feature_toggles["ndvi"] == "1":
-        take_picture_NDVI('/home/pi/oasis-grow/data_out/image.jpg')
-    else:
-        take_picture('/home/pi/oasis-grow/data_out/image.jpg')
+        noir_ndvi.convert_image('/home/pi/oasis-grow/data_out/image.jpg')
 
     if cs.feature_toggles["save_images"] == "1":
         save_to_feed('/home/pi/oasis-grow/data_out/image.jpg')
