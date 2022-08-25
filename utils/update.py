@@ -2,6 +2,7 @@
 import sys
 import json
 from subprocess import Popen
+from types import new_class
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
@@ -49,6 +50,7 @@ def transfer_compatible_configs(config_path,temp_config_path):
     old_data_keys = list(config_temp.keys())
     new_format_keys = list(config.keys())
     common_keys = set(old_data_keys) & set(new_format_keys) #common ones between them
+    new_keys = set(new_format_keys) - set(old_data_keys)
 
     #loop through common keys, change values to temp
     for key in common_keys:
@@ -58,6 +60,9 @@ def transfer_compatible_configs(config_path,temp_config_path):
         x.seek(0)
         json.dump(config, x)
         x.truncate()
+
+    for key in new_keys:
+        dbt.patch_firebase(cs.access_config, key, config[key])
 
     remove_temp = Popen(["rm", temp_config_path])
     remove_temp.wait()
