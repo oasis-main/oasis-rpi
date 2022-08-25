@@ -60,7 +60,8 @@ def transfer_compatible_configs(config_path,temp_config_path):
         x.seek(0)
         json.dump(config, x)
         x.truncate()
-
+    
+    cs.load_state()
     for key in new_keys:
         dbt.patch_firebase(cs.access_config, key, config[key])
 
