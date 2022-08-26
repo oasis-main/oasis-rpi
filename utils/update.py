@@ -13,26 +13,26 @@ from networking import db_tools as dbt
 #get latest code from designated repository
 def git_pull():
     gitpull = Popen(["git", "pull"]) #should be whatever branch the code was installed from
-    gitpull.wait()
+    gitpull.communicate()
 
     print("Pulled most recent code changes from repository.")
 
 #save existing data into temps
 def save_old_configs():
     savefeatures = Popen(["cp", "/home/pi/oasis-grow/configs/feature_toggles.json", "/home/pi/oasis-grow/configs/feature_toggles_temp.json"])
-    savefeatures.wait()
+    savefeatures.communicate()
     
     savehardware = Popen(["cp", "/home/pi/oasis-grow/configs/hardware_config.json", "/home/pi/oasis-grow/configs/hardware_config_temp.json"])
-    savehardware.wait()
+    savehardware.communicate()
 
     saveaccess = Popen(["cp", "/home/pi/oasis-grow/configs/access_config.json", "/home/pi/oasis-grow/configs/access_config_temp.json"])
-    saveaccess.wait()
+    saveaccess.communicate()
 
     savestate = Popen(["cp", "/home/pi/oasis-grow/configs/device_state.json", "/home/pi/oasis-grow/configs/device_state_temp.json"])
-    savestate.wait()
+    savestate.communicate()
 
     saveparams = Popen(["cp", "/home/pi/oasis-grow/configs/device_params.json", "/home/pi/oasis-grow/configs/device_params_temp.json"])
-    saveparams.wait()
+    saveparams.communicate()
 
     print("Saved existing configs to temporary files")
 
@@ -66,7 +66,7 @@ def transfer_compatible_configs(config_path,temp_config_path):
         dbt.patch_firebase(cs.access_config, key, config[key])
 
     remove_temp = Popen(["rm", temp_config_path])
-    remove_temp.wait()
+    remove_temp.communicate()
 
 def get_update(test=False):
     #get latest code
@@ -83,10 +83,10 @@ def get_update(test=False):
 
     #run external update commands
     sh_stage = Popen(["sudo", "chmod" ,"+x", "/home/pi/oasis-grow/setup_scripts/update_patch.sh"])
-    output, error = sh_stage.communicate()
+    sh_stage.communicate()
 
     sh_patch = Popen(["sudo", "/home/pi/oasis-grow/setup_scripts/update_patch.sh"])
-    output, error = sh_patch.communicate()
+    sh_patch.communicate()
 
     #load state to get configs & state
     cs.load_state()
