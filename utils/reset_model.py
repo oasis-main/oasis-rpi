@@ -72,11 +72,11 @@ def reset_all():
     reset_device_state()
     reset_feature_toggles()
     reset_device_params()
-    reset_sensor_info()
     reset_access_config()
     reset_hardware_config()
     reset_feature_toggles()
     reset_data_out()
+    reset_sensor_info()
     reset_image_feed()
 
 if __name__ == "__main__":

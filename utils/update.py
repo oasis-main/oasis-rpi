@@ -2,7 +2,6 @@
 import sys
 import json
 from subprocess import Popen
-from types import new_class
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
@@ -62,6 +61,7 @@ def transfer_compatible_configs(config_path,temp_config_path):
         x.truncate()
     
     cs.load_state()
+    
     for key in new_keys:
         dbt.patch_firebase(cs.access_config, key, config[key])
 
@@ -74,7 +74,6 @@ def get_update(test=False):
 
     #back up the configs & state that can survive update
     save_old_configs()
-    reset_model.reset_all()
     transfer_compatible_configs('/home/pi/oasis-grow/configs/feature_toggles.json', '/home/pi/oasis-grow/configs/feature_toggles_temp.json')
     transfer_compatible_configs('/home/pi/oasis-grow/configs/hardware_config.json', '/home/pi/oasis-grow/configs/hardware_config_temp.json')
     transfer_compatible_configs('/home/pi/oasis-grow/configs/access_config.json', '/home/pi/oasis-grow/configs/access_config_temp.json')
@@ -98,7 +97,7 @@ def get_update(test=False):
     if not test:
         #reboot
         print("Rebooting...")
-        reboot = Popen(["sudo","systemctl","reboot"])
+        reboot = Popen(["sudo", "systemctl", "reboot"])
         reboot.wait()
 
 if __name__ == '__main__':
