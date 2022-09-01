@@ -104,11 +104,11 @@ def actuate_interval(duration = 1, interval = 59): #amount of time between fan r
 
 try:
     if cs.feature_toggles["fan_pid"] == "1":
-        actuate_pid(float(sys.argv[1])) #trigger appropriate response
-        GPIO.cleanup()
+        actuate_pid(float(sys.argv[1])) #trigger appropriate feedback response
     else:
-        actuate_interval(float(sys.argv[1]), float(sys.argv[2]))
-        GPIO.cleanup() #this uses the timer instead
-except:
+        actuate_interval(float(sys.argv[1]), float(sys.argv[2])) #this uses the timer instead
+except KeyboardInterrupt:
     print("Interrupted")
+finally:
     GPIO.cleanup()
+    

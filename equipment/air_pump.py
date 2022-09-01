@@ -50,8 +50,9 @@ def actuate(time_on = 0, time_off = 0, interval = 900): #time on must be less th
 
 try:
     actuate(int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]))
-    GPIO.cleanup()
 except KeyboardInterrupt:
     print("Interrupted")
+finally:    
     GPIO.cleanup()
+
 

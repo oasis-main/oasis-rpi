@@ -51,7 +51,7 @@ def calc_ndvi(image):
     return ndvi
 
 #take the raw file from 
-def convert_image(image_path,):
+def convert_image(image_path):
     #create and configure camera object 
     original = cv2.imread('/home/pi/oasis-grow/data_out/original.jpg', original) #save contrasted image
 

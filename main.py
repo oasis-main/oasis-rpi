@@ -294,13 +294,10 @@ def connect_firebase(): #depends on: cs.load_state(), cs.write_state(), dbt.patc
             cs.check("new_device", add_new_device)
 
             #start listener to bring in db changes on startup
-            if cs.device_state["connected"] == "0": #Main setup always sets local var to "0"
-                cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"connected","1", db_writer = dbt.patch_firebase)
-                dbt.launch_listener() #Flip local + cloud connected to 1 and start listener
-            else:
-                cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"connected","1", db_writer = dbt.patch_firebase)
-                #Just flip the local + cloud connected to 1, does not re-launch listener when checking connection
-            
+            #Main setup always sets local var to "0"
+            dbt.launch_listener() #Flip local + cloud connected to 1 and start listener
+            cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"connected","1", db_writer = dbt.patch_firebase)
+        
             #update the device state to "connected"
             print("Device is connected over HTTPS to the Oasis Network")
             

@@ -105,10 +105,9 @@ def actuate_interval(duration = 15, interval = 45): #amount of time between wate
 try:
     if cs.feature_toggles["heat_pid"] == "1":
         actuate_pid(float(sys.argv[1])) #trigger appropriate response
-        GPIO.cleanup()
     else:
-        actuate_interval(float(sys.argv[1]),float(sys.argv[2]))
-        GPIO.cleanup() #this uses the timer instead
-except:
+        actuate_interval(float(sys.argv[1]),float(sys.argv[2])) #this uses the timer instead
+except KeyboardInterrupt:
     print("Interrupted")
+finally:
     GPIO.cleanup()

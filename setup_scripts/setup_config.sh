@@ -19,6 +19,9 @@ cp /home/pi/oasis-grow/defaults/device_state_default_template.json /home/pi/oasi
 cp /home/pi/oasis-grow/defaults/device_params_default_template.json /home/pi/oasis-grow/configs/device_params.json
 cp /home/pi/oasis-grow/defaults/sensor_info_default_template.json /home/pi/oasis-grow/data_out/sensor_info.json
 
+#Rust will create lockfiles and entries automatically when called
+#Should still leave this so Python can access a default set of values. 
+#The default lockfile is good because it'll help keep track of critical sections 
 echo "Creating new lock_file..."
 cp /home/pi/oasis-grow/defaults/locks_default_template.json /home/pi/oasis-grow/configs/locks.json
 

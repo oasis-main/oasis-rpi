@@ -51,8 +51,8 @@ def actuate(time_on = 8, time_off = 20, interval = 15): #arguments = hour of day
 
 try:
     actuate(int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]))
-    GPIO.cleanup()
 except KeyboardInterrupt:
     print("Interrupted")
+finally:
     GPIO.cleanup()
 

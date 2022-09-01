@@ -1,3 +1,4 @@
+import os
 import sys
 import json
 from subprocess import Popen
@@ -35,7 +36,20 @@ def reset_hardware_config():
 def reset_feature_toggles():
     reset_f = Popen(["cp", "/home/pi/oasis-grow/defaults/feature_toggles_default_template.json", "/home/pi/oasis-grow/configs/feature_toggles.json"])
     reset_f.wait()
+
+#new generic function for working on arbitrary structs with defaults
+def reset_config_path(path: str):
+    filename = os.path.basename(path)
+    f_name, f_ext = os.path.splitext(filename)
+    default_path = "/home/pi/oasis-grow/defaults/" + f_name + "_default_template.json"
     
+    if os.path.exists(default_path):
+        reset_path = Popen(["cp", default_path, path])
+        reset_path.wait()
+    else:
+        print("Cannot reset struct because a default config file does not exist.")
+
+#will be deprecated for rust implementation    
 def reset_locks():
     reset_lox = Popen(["cp", "/home/pi/oasis-grow/defaults/locks_default_template.json", "/home/pi/oasis-grow/configs/locks.json"])
     reset_lox.wait()
