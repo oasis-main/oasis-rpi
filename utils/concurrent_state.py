@@ -8,6 +8,7 @@
 ##detect_db_events(offline only)
 
 #import modules
+import os
 import sys
 import json
 from varname import nameof
@@ -17,7 +18,7 @@ sys.path.append('/home/pi/oasis-grow')
 
 #rust pyO3 modules
 import orjson #fast data interchange / and json parsing (must read and write byte file objects)
-import ramport #rust concurrency modules (fast mutual exclusion for arbitrarily named resources) 
+import rusty_locks as safety #rust concurrency modules (fast mutual exclusion for arbitrarily named resources) 
 
 #oasis utilities
 from utils import reset_model
@@ -44,8 +45,9 @@ structs = [device_state, device_params, sensor_info, access_config, hardware_con
 locks = None
 
 def load_state(loop_limit=1000): #Depends on: 'json'; Modifies: device_state,hardware_config ,access_config
-    for struct in structs:
-        global struct
+    global structs
+    
+    for struct in structs:    
 
         #load device state
         for i in list(range(int(loop_limit))): #try to load, pass and try again if fails
@@ -100,7 +102,7 @@ def load_locks(loop_limit = 10000): #leave this alone since it's the python brid
                 if locks[k] is None:
                     print("Read NoneType in locks")
                     print("Resetting lock...")
-                    ramport.reset_lock(k)  
+                    safety.unlock(lock_filepath,k)  
                 else: 
                     pass
              
@@ -109,11 +111,13 @@ def load_locks(loop_limit = 10000): #leave this alone since it's the python brid
         except Exception as e:
             if i == int(loop_limit):
                 print("Tried to load locks max number of times. File is corrupted. Resetting locks...")
-                ramport.reset_locks()
+                safety.reset_locks(lock_filepath)
             else:
                 print("Main.py tried to read while locks were being written. If this continues, file is corrupted.")
                 pass
-            
+
+    return lock_filepath
+
 #save key values to .json
 def write_state(path, field, value, db_writer, loop_limit=1000): #Depends on: load_state(), 'json'; 
     if db_writer is not None: #Accepts(path, field, value, custom timeout, db_writer function); Modifies: path
@@ -128,24 +132,23 @@ def write_state(path, field, value, db_writer, loop_limit=1000): #Depends on: lo
         print(path + " does not exist. Have you run the setup scripts?")
         return
 
-    for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke if so, 
-        
-        load_locks() #get all the mutexes
-        
+    lock_filepath = load_locks() #get all the mutexes
+
+    for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke if so 
         try:
             with open(path, "wb") as x: # open the file.
                 data = orjson.loads(x.read()) # can we load a valid json?
 
-                if locks[path] == "1": #check is the file is available to be written
+                if locks[path] == 0: #check is the file is available to be written
                     
-                    ramport.lock(path)
+                    safety.lock(lock_filepath, path)
 
                     data[field] = value #write the desired value
                     x.seek(0)
                     x.write(orjson.dumps(data))
                     x.truncate()
 
-                    ramport.unlock(path)
+                    safety.unlock(lock_filepath, path)
                     
                     load_state()
                     break #break the loop when the write has been successful
@@ -153,17 +156,17 @@ def write_state(path, field, value, db_writer, loop_limit=1000): #Depends on: lo
                 else:
                     if i >= int(loop_limit):
                         print("Tried to access "+ path + " max # of times. Lock is dead. Resetting...")
-                        ramport.reset_lock(path)
+                        safety.unlock(lock_filepath, path)
                         
                         #Now write safely
-                        ramport.lock(path)
+                        safety.lock(lock_filepath, path)
 
                         data[field] = value #write the desired value
                         x.seek(0)
                         x.write(orjson.dumps(data))
                         x.truncate()
 
-                        ramport.unlock(path)
+                        safety.unlock(lock_filepath, path)
                         
                         load_state()
                         
@@ -172,7 +175,7 @@ def write_state(path, field, value, db_writer, loop_limit=1000): #Depends on: lo
                         print("Waiting...")
                         pass
 
-        except Exception as e: #If any of the above fails:
+        except Exception as e: #If any of the above fails
             if i >= int(loop_limit):
                 print("Tried to write "+ path + " max # of times. File is corrupted. Resetting...")
                 reset_model.reset_config_path(path)
@@ -183,15 +186,15 @@ def write_state(path, field, value, db_writer, loop_limit=1000): #Depends on: lo
                     
                     #only call this once with path or other unique string as argument
                     
-                    if locks[path] == "1": #check is the file is available to be written
-                        ramport.lock(path)
+                    if locks[path] == 0: #check is the file is available to be written
+                        safety.lock(lock_filepath, path)
                         
                         data[field] = value #write the desired value
                         x.seek(0)
                         x.write(orjson.dumps(data))
                         x.truncate()
 
-                        ramport.unlock(path)
+                        safety.unlock(lock_filepath, path)
                         
                         load_state()    
 
@@ -213,25 +216,24 @@ def write_dict(path, dictionary, db_writer, loop_limit=1000): #Depends on: load_
                 print(err.full_stack())
                 pass
 
-    for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke if so, 
-        
-        load_locks()
-        
+    lock_filepath = load_locks()
+
+    for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke if so
         try:
             with open(path, "wb") as x: # open the file.
                 data = orjson.loads(x.read()) # can we load a valid json?
                 
                 #only call this once with path or other unique string as argument
                 
-                if locks[path] == "1": #check is the file is available to be written
-                    ramport.lock(path)
+                if locks[path] == 0: #check is the file is available to be written
+                    safety.lock(lock_filepath, path)
 
                     data.update(dictionary) #write the desired values
                     x.seek(0)
                     x.write(orjson.dumps(data))
                     x.truncate()
 
-                    ramport.unlock(path)
+                    safety.unlock(lock_filepath, path)
                     
                     load_state()
                     break #break the loop when the write has been successful
@@ -239,17 +241,17 @@ def write_dict(path, dictionary, db_writer, loop_limit=1000): #Depends on: load_
                 else:
                     if i >= int(loop_limit):
                         print("Tried to access "+ path + " max # of times. Lock is dead. Resetting...")
-                        ramport.reset_lock(path)
+                        safety.unlock(lock_filepath, path)
                         
                         #Now write safely
-                        ramport.lock(path)
+                        safety.lock(lock_filepath, path)
 
                         data.update(dictionary) #write the desired values
                         x.seek(0)
                         x.write(orjson.dumps(data))
                         x.truncate()
 
-                        ramport.unlock(path)
+                        safety.unlock(lock_filepath, path)
                         
                         load_state()
                         
@@ -269,19 +271,20 @@ def write_dict(path, dictionary, db_writer, loop_limit=1000): #Depends on: load_
                     
                     #only call this once with path or other unique string as argument
                     
-                    if locks[path] == "1": #check is the file is available to be written
-                        ramport.lock(path)
+                    if locks[path] == 0: #check is the file is available to be written
+                        safety.lock(lock_filepath, path)
 
                         data.update(dictionary) #write the desired values
                         x.seek(0)
                         x.write(orjson.dumps(data))
                         x.truncate()
 
-                        ramport.unlock(path)
+                        safety.unlock(lock_filepath, path)
                         
                         load_state()
                 
                 break
+
             else:
                 print(path + " write failed, trying again. If this persists, file is corrupted.")
                 #print(err.fullstack())
