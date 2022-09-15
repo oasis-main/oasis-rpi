@@ -66,6 +66,7 @@ def load_state(loop_limit=1000): #Depends on: 'json'; Modifies: device_state,har
 
                 with open(config_filepath, "rb") as x: #open the config filepath with bytes
                         struct = orjson.loads(x.read()) #try to parse bytes to json -> dict
+                        print(struct)
 
                 for k,v in struct.items(): 
                     if struct[k] is None:
