@@ -1,15 +1,6 @@
 pyserial
-setuptools
-cython
-pycryptodome
 Pyrebase
-python_jwt==2.0.1
-gcloud==0.17.0
-sseclient
-pycairo
 requests>=2.20.0
-requests-toolbelt==0.7.0
-jwt
 pickle5
 Pillow
 RPi.GPIO

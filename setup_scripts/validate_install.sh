@@ -8,7 +8,7 @@ fi
 
 echo "Checking Python 3.7 Venv Packages..."
 for packageName in serial, setuptools, Cython, firebase, pyrebase, python_jwt, gcloud, sseclient, pycairo, requests, requests-toolbelt, pickle5, pyserial, Pillow, RPi.GPIO, opencv-python, streamlit; do
-    if ! [ -d "/home/pi/oasis-grow_venv/lib/python3.7/site-packages/$packageName" ]; then
+    if ! [ -d "/home/pi/oasis-grow/oasis_venv_pi/lib/python3.7/site-packages/$packageName" ]; then
         echo "package '$packageName' not found"
     fi
 done
