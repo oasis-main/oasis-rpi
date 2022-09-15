@@ -66,7 +66,7 @@ def transfer_compatible_configs(config_path,temp_config_path):
     cs.load_state()
     
     for key in new_keys:
-        dbt.patch_firebase(cs.access_config, key, config[key])
+        dbt.patch_firebase(cs.structs["access_config"], key, config[key])
 
     remove_temp = Popen(["rm", temp_config_path])
     remove_temp.communicate()

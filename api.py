@@ -77,17 +77,17 @@ def set_air_timer(time_start_air,time_stop_air, air_interval):
 
 def read_temperature():
     cs.load_state()
-    temperature = cs.device_state["temperature"]
+    temperature = cs.structs["device_state"]["temperature"]
     return temperature
 
 def read_humidity():
     cs.load_state()
-    humidity = cs.device_state["humidity"]
+    humidity = cs.structs["device_state"]["humidity"]
     return humidity
     
 def read_water_level():
     cs.load_state()
-    water_low = cs.device_state["water_low"]
+    water_low = cs.structs["device_state"]["water_low"]
     return water_low
 
 
@@ -141,22 +141,22 @@ def set_fan_damping_temp(value):
 
 def show_state():
     cs.load_state()
-    print(cs.device_state)
+    print(cs.structs["device_state"])
     return
 
 def show_parameters():
     cs.load_state()
-    print(cs.device_params)
+    print(cs.structs["device_params"])
     return
 
 def show_active_features():
     cs.load_state()
-    print(cs.feature_toggles)
+    print(cs.structs["feature_toggles"])
     return
 
 def show_hardware_pins():
     cs.load_state()
-    print(cs.hardware_config)
+    print(cs.structs["hardware_config"])
     return
 
 def reset_state():

@@ -84,23 +84,23 @@ def write_csv(filename, dict): #Depends on: "os" "csv"
     with open (filename, 'a') as csvfile:
         headers = ["time"]
 
-        if cs.feature_toggles["temperature_sensor"] == "1":
+        if cs.structs["feature_toggles"]["temperature_sensor"] == "1":
             headers.append("temperature")
-        if cs.feature_toggles["humidity_sensor"] == "1":
+        if cs.structs["feature_toggles"]["humidity_sensor"] == "1":
             headers.append("humidity")
-        if cs.feature_toggles["co2_sensor"] == "1":
+        if cs.structs["feature_toggles"]["co2_sensor"] == "1":
             headers.append("co2")
-        if cs.feature_toggles["soil_moisture_sensor"] == "1":
+        if cs.structs["feature_toggles"]["soil_moisture_sensor"] == "1":
             headers.append("soil_moisture")
-        if cs.feature_toggles["vpd_calculation"] == "1":
+        if cs.structs["feature_toggles"]["vpd_calculation"] == "1":
             headers.append("vpd")
-        if cs.feature_toggles["water_level_sensor"] == "1":
+        if cs.structs["feature_toggles"]["water_level_sensor"] == "1":
             headers.append("water_low")
-        if cs.feature_toggles["lux_sensor"] == "1":
+        if cs.structs["feature_toggles"]["lux_sensor"] == "1":
             headers.append("lux")
-        if cs.feature_toggles["ph_sensor"] == "1":
+        if cs.structs["feature_toggles"]["ph_sensor"] == "1":
             headers.append("ph")
-        if cs.feature_toggles["tds_sensor"] == "1":
+        if cs.structs["feature_toggles"]["tds_sensor"] == "1":
             headers.append("tds")
 
         writer = csv.DictWriter(csvfile, delimiter=',', lineterminator='\n',fieldnames=headers)
@@ -123,12 +123,12 @@ def write_csv(filename, dict): #Depends on: "os" "csv"
 def send_csv(path):
     #send new image to firebase
     cs.load_state()
-    user, db, storage = dbt.initialize_user(cs.access_config["refresh_token"])
-    dbt.store_file(user, storage, path, cs.access_config["device_name"], "sensor_data.csv")
+    user, db, storage = dbt.initialize_user(cs.structs["access_config"]["refresh_token"])
+    dbt.store_file(user, storage, path, cs.structs["access_config"]["device_name"], "sensor_data.csv")
     print("Sent csv timeseries")
 
     #tell firebase that there is a new time series
-    dbt.patch_firebase(cs.access_config, "csv_sent", "1")
+    dbt.patch_firebase(cs.structs["access_config"], "csv_sent", "1")
     print("Firebase has a time-series in waiting")
 
 #gets data from serial, will parse a simple string or accept a dictionary
@@ -145,24 +145,24 @@ def listen(): #Depends on 'serial', start_serial()
     try:
         sensor_info = json.loads(str(minion.ser_in.readline().decode('UTF-8').strip()))
         #print("but here's my number")
-        if cs.feature_toggles["temperature_sensor"] == "1":
+        if cs.structs["feature_toggles"]["temperature_sensor"] == "1":
             last_temperature = temperature
             temperature = sensor_info["temperature"]
             cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "temperature", str(temperature), db_writer = None)      
-        if cs.feature_toggles["humidity_sensor"] == "1":
+        if cs.structs["feature_toggles"]["humidity_sensor"] == "1":
             last_humidity = humidity
             humidity = sensor_info["humidity"]
             cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "humidity", str(humidity), db_writer = None)
-        if cs.feature_toggles["co2_sensor"] == "1":
+        if cs.structs["feature_toggles"]["co2_sensor"] == "1":
             last_co2 = co2
             co2 = sensor_info["co2"]
             cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "co2", str(co2), db_writer = None)
-        if cs.feature_toggles["soil_moisture_sensor"] == "1":
+        if cs.structs["feature_toggles"]["soil_moisture_sensor"] == "1":
             last_soil_moisture = soil_moisture
             soil_moisture = sensor_info["soil_moisture"]
             cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "soil_moisture", str(soil_moisture), db_writer = None)
         
-        if cs.feature_toggles["vpd_calculation"] == "1":
+        if cs.structs["feature_toggles"]["vpd_calculation"] == "1":
             f = float(temperature) #temperature farenheit
             t =	(5/9)*(f + 459.67) #temperature kelvin
             rh =  float(humidity) #relative humidity
@@ -180,16 +180,16 @@ def listen(): #Depends on 'serial', start_serial()
 
             cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "vpd", str(vpd), db_writer = None)
         
-        if cs.feature_toggles["water_level_sensor"] == "1":
+        if cs.structs["feature_toggles"]["water_level_sensor"] == "1":
             water_low = int(sensor_info["water_low"])
             cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "water_low", str(water_low), db_writer = None)
-        if cs.feature_toggles["lux_sensor"] == "1":
+        if cs.structs["feature_toggles"]["lux_sensor"] == "1":
             lux = sensor_info["lux"]
             cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "lux", str(lux), db_writer = None)
-        if cs.feature_toggles["ph_sensor"] == "1":
+        if cs.structs["feature_toggles"]["ph_sensor"] == "1":
             ph = sensor_info["pH"]
             cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "ph", str(ph), db_writer = None)
-        if cs.feature_toggles["tds_sensor"] == "1":
+        if cs.structs["feature_toggles"]["tds_sensor"] == "1":
             tds = sensor_info["tds"]
             cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "tds", str(tds), db_writer = None)
         #print("so call me maybe")
@@ -198,14 +198,14 @@ def listen(): #Depends on 'serial', start_serial()
         pass
 
 def smart_listener():
-    if ((cs.feature_toggles["temperature_sensor"] == "1") \
-                or (cs.feature_toggles["humidity_sensor"] == "1") \
-                    or (cs.feature_toggles["water_level_sensor"] == "1") \
-                        or (cs.feature_toggles["co2_sensor"] == "1") \
-                            or (cs.feature_toggles["lux_sensor"] == "1") \
-                                or (cs.feature_toggles["ph_sensor"] == "1") \
-                                    or (cs.feature_toggles["tds_sensor"] == "1") \
-                                        or (cs.feature_toggles["soil_moisture_sensor"] == "1")):
+    if ((cs.structs["feature_toggles"]["temperature_sensor"] == "1") \
+                or (cs.structs["feature_toggles"]["humidity_sensor"] == "1") \
+                    or (cs.structs["feature_toggles"]["water_level_sensor"] == "1") \
+                        or (cs.structs["feature_toggles"]["co2_sensor"] == "1") \
+                            or (cs.structs["feature_toggles"]["lux_sensor"] == "1") \
+                                or (cs.structs["feature_toggles"]["ph_sensor"] == "1") \
+                                    or (cs.structs["feature_toggles"]["tds_sensor"] == "1") \
+                                        or (cs.structs["feature_toggles"]["soil_moisture_sensor"] == "1")):
         try: #attempt to read data from sensor, raise exception if there is a problem
             #print("Smart listener is attempting to collect data from arduino")
             listen() #this will be changed to run many sensor functions as opposed to one serial listener
@@ -217,10 +217,10 @@ def update_derivative_banks():
     global last_target_temperature, last_target_humidity, last_target_co2, last_target_soil_moisture
 
     #save last temperature and humidity targets to calculate delta for PD controllers
-    last_target_temperature = float(cs.device_params["target_temperature"]) 
-    last_target_humidity = float(cs.device_params["target_humidity"])
-    last_target_co2 = float(cs.device_params["target_co2"])
-    last_target_soil_moisture = float(cs.device_params["target_soil_moisture"])
+    last_target_temperature = float(cs.structs["device_params"]["target_temperature"]) 
+    last_target_humidity = float(cs.structs["device_params"]["target_humidity"])
+    last_target_co2 = float(cs.structs["device_params"]["target_co2"])
+    last_target_soil_moisture = float(cs.structs["device_params"]["target_soil_moisture"])
 
 #PID controller to modulate heater feedback
 def heat_pid(temperature, target_temperature, last_temperature, last_target_temperature,
@@ -280,7 +280,7 @@ def dehum_pid(humidity, target_humidity, last_humidity, last_target_humidity,
                                                 
     humidity_dot = humidity - last_humidity 
 
-    if cs.feature_toggles["hum_pid"] == "0":
+    if cs.structs["feature_toggles"]["hum_pid"] == "0":
         err_cum_humidity = max(min(err_cum_humidity + err_humidity, 50), -50) 
 
     target_humidity_dot = target_humidity - last_target_humidity
@@ -310,10 +310,10 @@ def fan_pid(temperature, humidity, co2,
     humidity_dot = humidity-last_humidity
     co2_dot = co2 - last_co2
 
-    if cs.feature_toggles["heat_pid"] == "0":
+    if cs.structs["feature_toggles"]["heat_pid"] == "0":
         err_cum_temperature = max(min(err_cum_temperature + err_temperature, 50), -50)
 
-    if (cs.feature_toggles["hum_pid"] == "0") and (cs.feature_toggles["dehum_pid"] == "0"):
+    if (cs.structs["feature_toggles"]["hum_pid"] == "0") and (cs.structs["feature_toggles"]["dehum_pid"] == "0"):
         err_cum_humidity = max(min(err_cum_humidity + err_humidity, 50), -50)
 
     err_cum_co2 = max(min(err_cum_humidity + err_humidity, 50), -50)
@@ -372,16 +372,16 @@ def run_heat(intensity = 0): #Depends on: 'subprocess'; Modifies: heat_process
     try: #actuates heat process
         poll_heat = heat_process.poll() #heat
         if poll_heat is not None: #active processes return None, exited processes return 0
-            if cs.feature_toggles["heat_pid"] == "1":
+            if cs.structs["feature_toggles"]["heat_pid"] == "1":
                 heat_process = Popen(['python3', '/home/pi/oasis-grow/equipment/heater.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
             else:
-                heat_process = Popen(['python3', '/home/pi/oasis-grow/equipment/heater.py', cs.device_params["heater_duration"], cs.device_params["heater_interval"]])
+                heat_process = Popen(['python3', '/home/pi/oasis-grow/equipment/heater.py', cs.structs["device_params"]["heater_duration"], cs.structs["device_params"]["heater_interval"]])
                 
     except: #launches heat process on program startup, when heat_process itself is none
-        if cs.feature_toggles["heat_pid"] == "1":
+        if cs.structs["feature_toggles"]["heat_pid"] == "1":
             heat_process = Popen(['python3', '/home/pi/oasis-grow/equipment/heater.py', str(intensity)]) #If no process, then starts
         else:
-            heat_process = Popen(['python3', '/home/pi/oasis-grow/equipment/heater.py', cs.device_params["heater_duration"], cs.device_params["heater_interval"]])
+            heat_process = Popen(['python3', '/home/pi/oasis-grow/equipment/heater.py', cs.structs["device_params"]["heater_duration"], cs.structs["device_params"]["heater_interval"]])
 
 #poll humidityf subprocess if applicable and relaunch/update equipment
 def run_hum(intensity = 0): #Depends on: 'subprocess'; Modifies: hum_process
@@ -390,15 +390,15 @@ def run_hum(intensity = 0): #Depends on: 'subprocess'; Modifies: hum_process
     try:  #launches heat process on program startup, when heat_process itself is none
         poll_humidity = humidity_process.poll() #humidity
         if poll_humidity is not None:  #active processes return None, exited processes return 0
-            if cs.feature_toggles["hum_pid"] == "1":
+            if cs.structs["feature_toggles"]["hum_pid"] == "1":
                 humidity_process = Popen(['python3', '/home/pi/oasis-grow/equipment/humidifier.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
             else:
-                humidity_process = Popen(['python3', '/home/pi/oasis-grow/equipment/humidifier.py', cs.device_params["humidifier_duration"], cs.device_params["humidifier_interval"]])
+                humidity_process = Popen(['python3', '/home/pi/oasis-grow/equipment/humidifier.py', cs.structs["device_params"]["humidifier_duration"], cs.structs["device_params"]["humidifier_interval"]])
     except:  #launches heat process on program startup, when heat_process itself is none
-        if cs.feature_toggles["hum_pid"] == "1":
+        if cs.structs["feature_toggles"]["hum_pid"] == "1":
             humidity_process = Popen(['python3', '/home/pi/oasis-grow/equipment/humidifier.py', str(intensity)])
         else:
-            humidity_process = Popen(['python3', '/home/pi/oasis-grow/equipment/humidifier.py', cs.device_params["humidifier_duration"], cs.device_params["humidifier_interval"]])
+            humidity_process = Popen(['python3', '/home/pi/oasis-grow/equipment/humidifier.py', cs.structs["device_params"]["humidifier_duration"], cs.structs["device_params"]["humidifier_interval"]])
 
 #poll dehumidify subprocess if applicable and relaunch/update equipment
 def run_dehum(intensity = 0): #Depends on: 'subprocess'; Modifies: hum_process
@@ -407,15 +407,15 @@ def run_dehum(intensity = 0): #Depends on: 'subprocess'; Modifies: hum_process
     try:
         poll_dehumidify = dehumidify_process.poll() #dehumidify
         if poll_dehumidify is not None:
-            if cs.feature_toggles["hum_pid"] == "1":
+            if cs.structs["feature_toggles"]["hum_pid"] == "1":
                 dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/equipment/dehumidifier.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
             else:
-                dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/equipment/dehumidifier.py', cs.device_params["dehumidifier_duration"], cs.device_params["dehumidifier_interval"]])
+                dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/equipment/dehumidifier.py', cs.structs["device_params"]["dehumidifier_duration"], cs.structs["device_params"]["dehumidifier_interval"]])
     except:
-        if cs.feature_toggles["hum_pid"] == "1":
+        if cs.structs["feature_toggles"]["hum_pid"] == "1":
             dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/equipment/dehumidifier.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
         else:
-            dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/equipment/dehumidifier.py', cs.device_params["dehumidifier_duration"], cs.device_params["dehumidifier_interval"]])
+            dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/equipment/dehumidifier.py', cs.structs["device_params"]["dehumidifier_duration"], cs.structs["device_params"]["dehumidifier_interval"]])
 
 #poll fan subprocess if applicable and relaunch/update equipment
 def run_fan(intensity = 0): #Depends on: 'subprocess'; Modifies: humidity_process
@@ -424,15 +424,15 @@ def run_fan(intensity = 0): #Depends on: 'subprocess'; Modifies: humidity_proces
     try:
         poll_fan = fan_process.poll() #fan
         if poll_fan is not None: #If running, then skips. If idle then restarts, If no process, then fails
-            if cs.feature_toggles["hum_pid"] == "1":
+            if cs.structs["feature_toggles"]["hum_pid"] == "1":
                 fan_process = Popen(['python3', '/home/pi/oasis-grow/equipment/fan.py', str(intensity)]) 
             else:
-                fan_process = Popen(['python3', '/home/pi/oasis-grow/equipment/fan.py', cs.device_params["fan_duration"], cs.device_params["fan_interval"]])
+                fan_process = Popen(['python3', '/home/pi/oasis-grow/equipment/fan.py', cs.structs["device_params"]["fan_duration"], cs.structs["device_params"]["fan_interval"]])
     except: #If no process, then starts
-        if cs.feature_toggles["hum_pid"] == "1":
+        if cs.structs["feature_toggles"]["hum_pid"] == "1":
             fan_process = Popen(['python3', '/home/pi/oasis-grow/equipment/fan.py', str(intensity)]) 
         else:
-            fan_process = Popen(['python3', '/home/pi/oasis-grow/equipment/fan.py', cs.device_params["fan_duration"], cs.device_params["fan_interval"]])
+            fan_process = Popen(['python3', '/home/pi/oasis-grow/equipment/fan.py', cs.structs["device_params"]["fan_duration"], cs.structs["device_params"]["fan_interval"]])
 
 #poll water subprocess if applicable and relaunch/update equipment
 def run_water(intensity = 0): #Depends on: 'subprocess'; Modifies: water_process
@@ -441,15 +441,15 @@ def run_water(intensity = 0): #Depends on: 'subprocess'; Modifies: water_process
     try:
         poll_water = water_process.poll() #water
         if poll_water is not None:
-            if cs.feature_toggles["water_pid"] == "1":
+            if cs.structs["feature_toggles"]["water_pid"] == "1":
                 water_process = Popen(['python3', '/home/pi/oasis-grow/equipment/water_pump.py', str(intensity)])
             else:
-                water_process = Popen(['python3', '/home/pi/oasis-grow/equipment/water_pump.py', str(cs.device_params["watering_duration"]), str(cs.device_params["watering_frequency"])]) #If running, then skips. If idle then restarts, If no process, then fails
+                water_process = Popen(['python3', '/home/pi/oasis-grow/equipment/water_pump.py', str(cs.structs["device_params"]["watering_duration"]), str(cs.structs["device_params"]["watering_frequency"])]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
-        if cs.feature_toggles["water_pid"] == "1":
+        if cs.structs["feature_toggles"]["water_pid"] == "1":
             water_process = Popen(['python3', '/home/pi/oasis-grow/equipment/water_pump.py', str(intensity)])
         else:
-            water_process = Popen(['python3', '/home/pi/oasis-grow/equipment/water_pump.py', str(cs.device_params["watering_duration"]), str(cs.device_params["watering_frequency"])]) #If running, then skips. If idle then restarts, If no process, then fails        
+            water_process = Popen(['python3', '/home/pi/oasis-grow/equipment/water_pump.py', str(cs.structs["device_params"]["watering_duration"]), str(cs.structs["device_params"]["watering_frequency"])]) #If running, then skips. If idle then restarts, If no process, then fails        
 
 #poll light subprocess if applicable and relaunch/update equipment
 def run_light():
@@ -458,9 +458,9 @@ def run_light():
     try:
         poll_light = light_process.poll() #light
         if poll_light is not None:
-            light_process = Popen(['python3', '/home/pi/oasis-grow/equipment/lights.py', cs.device_params["time_start_light"], cs.device_params["time_stop_light"], cs.device_params["lighting_interval"]]) #If running, then skips. If idle then restarts, If no process, then fails
+            light_process = Popen(['python3', '/home/pi/oasis-grow/equipment/lights.py', cs.structs["device_params"]["time_start_light"], cs.structs["device_params"]["time_stop_light"], cs.structs["device_params"]["lighting_interval"]]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
-        light_process = Popen(['python3', '/home/pi/oasis-grow/equipment/lights.py', cs.device_params["time_start_light"], cs.device_params["time_stop_light"], cs.device_params["lighting_interval"]]) #If running, then skips. If idle then restarts, If no process, then fails
+        light_process = Popen(['python3', '/home/pi/oasis-grow/equipment/lights.py', cs.structs["device_params"]["time_start_light"], cs.structs["device_params"]["time_stop_light"], cs.structs["device_params"]["lighting_interval"]]) #If running, then skips. If idle then restarts, If no process, then fails
 
 #poll air subprocess if applicable and relaunch/update equipment
 def run_air():
@@ -469,9 +469,9 @@ def run_air():
     try:
         poll_air = air_process.poll() #light
         if poll_air is not None:
-            air_process = Popen(['python3', '/home/pi/oasis-grow/equipment/air_pump.py', cs.device_params["time_start_air"], cs.device_params["time_stop_air"], cs.device_params["air_interval"]]) #If running, then skips. If idle then restarts, If no process
+            air_process = Popen(['python3', '/home/pi/oasis-grow/equipment/air_pump.py', cs.structs["device_params"]["time_start_air"], cs.structs["device_params"]["time_stop_air"], cs.structs["device_params"]["air_interval"]]) #If running, then skips. If idle then restarts, If no process
     except Exception as e:
-        air_process = Popen(['python3', '/home/pi/oasis-grow/equipment/air_pump.py', cs.device_params["time_start_air"], cs.device_params["time_stop_air"], cs.device_params["air_interval"]]) #If no process, then starts
+        air_process = Popen(['python3', '/home/pi/oasis-grow/equipment/air_pump.py', cs.structs["device_params"]["time_start_air"], cs.structs["device_params"]["time_stop_air"], cs.structs["device_params"]["air_interval"]]) #If no process, then starts
 
 #poll camera subprocess if applicable and relaunch/update equipment
 def run_camera(): #Depends on: 'subprocess'; Modifies: camera_process
@@ -480,9 +480,9 @@ def run_camera(): #Depends on: 'subprocess'; Modifies: camera_process
     try:
         poll_camera = camera_process.poll() #camera
         if poll_camera is not None:
-            camera_process = Popen(['python3', '/home/pi/oasis-grow/imaging/camera.py', cs.device_params["camera_interval"]]) #If running, then skips. If idle then restarts, If no process, then fails
+            camera_process = Popen(['python3', '/home/pi/oasis-grow/imaging/camera.py', cs.structs["device_params"]["camera_interval"]]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
-        camera_process = Popen(['python3', '/home/pi/oasis-grow/imaging/camera.py', cs.device_params["camera_interval"]]) #If no process, then starts
+        camera_process = Popen(['python3', '/home/pi/oasis-grow/imaging/camera.py', cs.structs["device_params"]["camera_interval"]]) #If no process, then starts
 
 def clean_up_processes():
     global heat_process, humidity_process, dehumidify_process, fan_process, light_process, camera_process, water_process, air_process        
@@ -490,35 +490,35 @@ def clean_up_processes():
     #clean up all processes
     cs.load_state()
 
-    if (cs.feature_toggles["heater"] == "1") and (heat_process != None): #go through toggles and kill active processes
+    if (cs.structs["feature_toggles"]["heater"] == "1") and (heat_process != None): #go through toggles and kill active processes
         heat_process.terminate()
         heat_process.wait()
 
-    if (cs.feature_toggles["humidifier"] == "1") and (humidity_process != None):
+    if (cs.structs["feature_toggles"]["humidifier"] == "1") and (humidity_process != None):
         humidity_process.terminate()
         humidity_process.wait()
 
-    if (cs.feature_toggles["dehumidifier"] == "1") and (dehumidify_process != None):
+    if (cs.structs["feature_toggles"]["dehumidifier"] == "1") and (dehumidify_process != None):
         dehumidify_process.terminate()
         dehumidify_process.wait()
 
-    if (cs.feature_toggles["fan"] == "1") and (fan_process != None):
+    if (cs.structs["feature_toggles"]["fan"] == "1") and (fan_process != None):
         fan_process.terminate()
         fan_process.wait()
 
-    if (cs.feature_toggles["water"] == "1") and (water_process != None):
+    if (cs.structs["feature_toggles"]["water"] == "1") and (water_process != None):
         water_process.terminate()
         water_process.wait()
 
-    if (cs.feature_toggles["light"] == "1") and (light_process != None):
+    if (cs.structs["feature_toggles"]["light"] == "1") and (light_process != None):
         light_process.terminate()
         light_process.wait()
 
-    if (cs.feature_toggles["air"] == "1") and (air_process != None):
+    if (cs.structs["feature_toggles"]["air"] == "1") and (air_process != None):
         air_process.terminate()
         air_process.wait()
 
-    if (cs.feature_toggles["camera"] == "1") and (camera_process != None):
+    if (cs.structs["feature_toggles"]["camera"] == "1") and (camera_process != None):
         camera_process.terminate()
         camera_process.wait()
 
@@ -540,15 +540,15 @@ def run_active_equipment():
     global temp_feedback, hum_feedback, dehum_feedback, fan_feedback, water_feedback
 
     # calculate feedback levels and update equipment in use
-    if cs.feature_toggles["heater"] == "1":
-        if cs.feature_toggles["heat_pid"] == "1": #computes a feedback value if PID is on
+    if cs.structs["feature_toggles"]["heater"] == "1":
+        if cs.structs["feature_toggles"]["heat_pid"] == "1": #computes a feedback value if PID is on
             temp_feedback = int(heat_pid(temperature,
-                                        int(cs.device_params["target_temperature"]),
+                                        int(cs.structs["device_params"]["target_temperature"]),
                                         last_temperature,
                                         last_target_temperature,
-                                        int(cs.device_params["P_temp"]),
-                                        int(cs.device_params["I_temp"]),
-                                        int(cs.device_params["D_temp"])))
+                                        int(cs.structs["device_params"]["P_temp"]),
+                                        int(cs.structs["device_params"]["I_temp"]),
+                                        int(cs.structs["device_params"]["D_temp"])))
         run_heat(temp_feedback) #this function always takes a feedback value
                                 #but it runs differently when pid is off in feature toggles
                                 #the way it runs is dependent on the external configuration
@@ -556,53 +556,53 @@ def run_active_equipment():
                                 #all PID enables functions work the same, so they can be used
                                 #without actuators
     
-    if cs.feature_toggles["humidifier"] == "1":
-        if cs.feature_toggles["hum_pid"] == "1":
+    if cs.structs["feature_toggles"]["humidifier"] == "1":
+        if cs.structs["feature_toggles"]["hum_pid"] == "1":
             hum_feedback = int(hum_pid(humidity,
-                                        int(cs.device_params["target_humidity"]),
+                                        int(cs.structs["device_params"]["target_humidity"]),
                                         last_humidity,
                                         last_target_humidity,
-                                        int(cs.device_params["P_hum"]),
-                                        int(cs.device_params["I_hum"]),
-                                        int(cs.device_params["D_hum"])))
+                                        int(cs.structs["device_params"]["P_hum"]),
+                                        int(cs.structs["device_params"]["I_hum"]),
+                                        int(cs.structs["device_params"]["D_hum"])))
         run_hum(hum_feedback)
     
-    if cs.feature_toggles["dehumidifier"] == "1":
-        if cs.feature_toggles["dehum_pid"] == "1":
+    if cs.structs["feature_toggles"]["dehumidifier"] == "1":
+        if cs.structs["feature_toggles"]["dehum_pid"] == "1":
             dehum_feedback = int(dehum_pid(humidity,
-                                        int(cs.device_params["target_humidity"]),
+                                        int(cs.structs["device_params"]["target_humidity"]),
                                         last_humidity,
                                         last_target_humidity,
-                                        int(cs.device_params["P_dehum"]),
-                                        int(cs.device_params["I_dehum"]),
-                                        int(cs.device_params["D_dehum"])))
+                                        int(cs.structs["device_params"]["P_dehum"]),
+                                        int(cs.structs["device_params"]["I_dehum"]),
+                                        int(cs.structs["device_params"]["D_dehum"])))
         run_dehum(dehum_feedback)
 
-    if cs.feature_toggles["fan"] == "1":
-        if cs.feature_toggles["fan_pid"] == "1":
+    if cs.structs["feature_toggles"]["fan"] == "1":
+        if cs.structs["feature_toggles"]["fan_pid"] == "1":
             fan_feedback = int(fan_pid(temperature , humidity, co2,
-                                int(cs.device_params["target_temperature"]), int(cs.device_params["target_humidity"]), int(cs.device_params["target_co2"]),
+                                int(cs.structs["device_params"]["target_temperature"]), int(cs.structs["device_params"]["target_humidity"]), int(cs.structs["device_params"]["target_co2"]),
                                 last_temperature,last_humidity, last_co2,
                                 last_target_temperature,last_target_humidity, last_target_co2,
-                                int(cs.device_params["Pt_fan"]), int(cs.device_params["It_fan"]), int(cs.device_params["Dt_fan"]),
-                                int(cs.device_params["Ph_fan"]), int(cs.device_params["Ih_fan"]), int(cs.device_params["Dh_fan"]),
-                                int(cs.device_params["Pc_fan"]), int(cs.device_params["Ic_fan"]), int(cs.device_params["Dc_fan"])))
+                                int(cs.structs["device_params"]["Pt_fan"]), int(cs.structs["device_params"]["It_fan"]), int(cs.structs["device_params"]["Dt_fan"]),
+                                int(cs.structs["device_params"]["Ph_fan"]), int(cs.structs["device_params"]["Ih_fan"]), int(cs.structs["device_params"]["Dh_fan"]),
+                                int(cs.structs["device_params"]["Pc_fan"]), int(cs.structs["device_params"]["Ic_fan"]), int(cs.structs["device_params"]["Dc_fan"])))
         run_fan(fan_feedback)
 
-    if cs.feature_toggles["water"] == "1":
-        if cs.feature_toggles["water_pid"] == "1":
-            water_feedback = int(water_pid(soil_moisture, int(cs.device_params["target_soil_moisture"]),
+    if cs.structs["feature_toggles"]["water"] == "1":
+        if cs.structs["feature_toggles"]["water_pid"] == "1":
+            water_feedback = int(water_pid(soil_moisture, int(cs.structs["device_params"]["target_soil_moisture"]),
                                 last_soil_moisture, last_target_soil_moisture,
-                                int(cs.device_params["P_moisture"]), int(cs.device_params["I_moisture"]), int(cs.device_params["D_moisture"])))
+                                int(cs.structs["device_params"]["P_moisture"]), int(cs.structs["device_params"]["I_moisture"]), int(cs.structs["device_params"]["D_moisture"])))
         run_water(water_feedback)
 
-    if cs.feature_toggles["light"] == "1":
+    if cs.structs["feature_toggles"]["light"] == "1":
         run_light()
 
-    if cs.feature_toggles["air"] == "1":
+    if cs.structs["feature_toggles"]["air"] == "1":
         run_air()
 
-    if cs.feature_toggles["camera"] == "1":
+    if cs.structs["feature_toggles"]["camera"] == "1":
         run_camera()
 
 #unfinished
@@ -610,88 +610,88 @@ def console_log():
     
     sensors = {}
     
-    if cs.feature_toggles["temperature_sensor"] == "1":
-        sensors.update({"Temperature (F): ": cs.sensor_info["temperature"]})
+    if cs.structs["feature_toggles"]["temperature_sensor"] == "1":
+        sensors.update({"Temperature (F): ": cs.structs["sensor_info"]["temperature"]})
     
-    if cs.feature_toggles["humidity_sensor"] == "1":
-        sensors.update({"Relative Humidity (%): ": cs.sensor_info["humidity"]})
+    if cs.structs["feature_toggles"]["humidity_sensor"] == "1":
+        sensors.update({"Relative Humidity (%): ": cs.structs["sensor_info"]["humidity"]})
     
-    if cs.feature_toggles["co2_sensor"] == "1":
-        sensors.update({"Carbon Dioxide (ppm): ": cs.sensor_info["co2"]})
+    if cs.structs["feature_toggles"]["co2_sensor"] == "1":
+        sensors.update({"Carbon Dioxide (ppm): ": cs.structs["sensor_info"]["co2"]})
     
-    if cs.feature_toggles["soil_moisture_sensor"] == "1":
-        sensors.update({"Soil Moisture (%): ": cs.sensor_info["soil_moisture"]})
+    if cs.structs["feature_toggles"]["soil_moisture_sensor"] == "1":
+        sensors.update({"Soil Moisture (%): ": cs.structs["sensor_info"]["soil_moisture"]})
     
-    if cs.feature_toggles["vpd_calculation"] == "1":
-        sensors.update({"Vapor Pressure Deficit (kPa): ": cs.sensor_info["vpd"]})
+    if cs.structs["feature_toggles"]["vpd_calculation"] == "1":
+        sensors.update({"Vapor Pressure Deficit (kPa): ": cs.structs["sensor_info"]["vpd"]})
     
-    if cs.feature_toggles["water_level_sensor"] == "1":
-        sensors.update({"Tank Below Level Sensor? (yes/no): ": cs.sensor_info["water_low"]})
+    if cs.structs["feature_toggles"]["water_level_sensor"] == "1":
+        sensors.update({"Tank Below Level Sensor? (yes/no): ": cs.structs["sensor_info"]["water_low"]})
     
-    if cs.feature_toggles["lux_sensor"] == "1":
-        sensors.update({"Light Intensity (lux): ": cs.sensor_info["lux"]})
+    if cs.structs["feature_toggles"]["lux_sensor"] == "1":
+        sensors.update({"Light Intensity (lux): ": cs.structs["sensor_info"]["lux"]})
     
-    if cs.feature_toggles["ph_sensor"] == "1":
-        sensors.update({"Acidity/Alkalinity (ph 0-14): ": cs.sensor_info["ph"]})
+    if cs.structs["feature_toggles"]["ph_sensor"] == "1":
+        sensors.update({"Acidity/Alkalinity (ph 0-14): ": cs.structs["sensor_info"]["ph"]})
     
-    if cs.feature_toggles["tds_sensor"] == "1":
-        sensors.update({"Total Disolved Solids: ": cs.sensor_info["tds"]})
+    if cs.structs["feature_toggles"]["tds_sensor"] == "1":
+        sensors.update({"Total Disolved Solids: ": cs.structs["sensor_info"]["tds"]})
 
     feedback = {}
     timers = {}
 
-    if cs.feature_toggles["heater"] == "1":
-        if cs.feature_toggles["heat_pid"] == "1":
+    if cs.structs["feature_toggles"]["heater"] == "1":
+        if cs.structs["feature_toggles"]["heat_pid"] == "1":
             feedback.update({"Heater Intensity: ": temp_feedback})
         else:
-            timers.update({"Heater Duration (seconds run for): ": cs.device_params["heater_duration"]})
-            timers.update({"Heater Interval (seconds between runs): ": cs.device_params["heater_interval"]})
+            timers.update({"Heater Duration (seconds run for): ": cs.structs["device_params"]["heater_duration"]})
+            timers.update({"Heater Interval (seconds between runs): ": cs.structs["device_params"]["heater_interval"]})
     
-    if cs.feature_toggles["humidifier"] == "1":
-        if cs.feature_toggles["heat_pid"] == "1":
+    if cs.structs["feature_toggles"]["humidifier"] == "1":
+        if cs.structs["feature_toggles"]["heat_pid"] == "1":
             feedback.update({"Humidifier Intensity: ": hum_feedback})
         else:
-            timers.update({"Humidifier Duration (seconds run for): ": cs.device_params["humidifier_duration"]})
-            timers.update({"Humidifier Interval (seconds between runs): ": cs.device_params["humidifier_interval"]})
+            timers.update({"Humidifier Duration (seconds run for): ": cs.structs["device_params"]["humidifier_duration"]})
+            timers.update({"Humidifier Interval (seconds between runs): ": cs.structs["device_params"]["humidifier_interval"]})
     
-    if cs.feature_toggles["dehumidifier"] == "1":
-        if cs.feature_toggles["heat_pid"] == "1":
+    if cs.structs["feature_toggles"]["dehumidifier"] == "1":
+        if cs.structs["feature_toggles"]["heat_pid"] == "1":
             feedback.update({"Dehumidifier Intensity: ": dehum_feedback})
         else:
-            timers.update({"Dehumidifier Duration (seconds run for): ": cs.device_params["dehumidifier_duration"]})
-            timers.update({"Dehumidifier Interval (seconds between runs): ": cs.device_params["dehumidifier_interval"]})
+            timers.update({"Dehumidifier Duration (seconds run for): ": cs.structs["device_params"]["dehumidifier_duration"]})
+            timers.update({"Dehumidifier Interval (seconds between runs): ": cs.structs["device_params"]["dehumidifier_interval"]})
     
-    if cs.feature_toggles["fan"] == "1":
-        if cs.feature_toggles["fan_pid"] == "1":
+    if cs.structs["feature_toggles"]["fan"] == "1":
+        if cs.structs["feature_toggles"]["fan_pid"] == "1":
             feedback.update({"Fan Intensity: ": fan_feedback})
         else:
-            timers.update({"Fan Duration (minutes run for): ": cs.device_params["fan_duration"]})
-            timers.update({"Fan Interval (minutes between runs): ": cs.device_params["fan_interval"]})
+            timers.update({"Fan Duration (minutes run for): ": cs.structs["device_params"]["fan_duration"]})
+            timers.update({"Fan Interval (minutes between runs): ": cs.structs["device_params"]["fan_interval"]})
 
-    if cs.feature_toggles["water"] == "1":
-        if cs.feature_toggles["water_pid"] == "1":
+    if cs.structs["feature_toggles"]["water"] == "1":
+        if cs.structs["feature_toggles"]["water_pid"] == "1":
             feedback.update({"Irrigation Intensity: ": water_feedback})
         else:
-            timers.update({"Irrigation Duration (seconds run for): ": cs.device_params["water_duration"]})
-            timers.update({"Irrigation Interval (hours between runs): ": cs.device_params["water_interval"]})
+            timers.update({"Irrigation Duration (seconds run for): ": cs.structs["device_params"]["water_duration"]})
+            timers.update({"Irrigation Interval (hours between runs): ": cs.structs["device_params"]["water_interval"]})
     
-    if cs.feature_toggles["air"] == "1":
-        timers.update({"Air Pump Turns On at (Hourly Time 0-23): ": cs.device_params["time_start_air"]})
-        timers.update({"Air Pump Turns Off at (Hourly Time 0-23): ": cs.device_params["time_stop_air"]})
-        timers.update({"Air Pump Interval (seconds between runs): ": cs.device_params["air_interval"]})
+    if cs.structs["feature_toggles"]["air"] == "1":
+        timers.update({"Air Pump Turns On at (Hourly Time 0-23): ": cs.structs["device_params"]["time_start_air"]})
+        timers.update({"Air Pump Turns Off at (Hourly Time 0-23): ": cs.structs["device_params"]["time_stop_air"]})
+        timers.update({"Air Pump Interval (seconds between runs): ": cs.structs["device_params"]["air_interval"]})
 
-    if cs.feature_toggles["light"] == "1":
-        timers.update({"Light Turns On at (Hourly Time 0-23): ": cs.device_params["time_start_light"]})
-        timers.update({"Light Turns Off at (Hourly Time 0-23): ": cs.device_params["time_stop_light"]})
-        timers.update({"Light Interval (seconds between runs): ": cs.device_params["air_interval"]})
+    if cs.structs["feature_toggles"]["light"] == "1":
+        timers.update({"Light Turns On at (Hourly Time 0-23): ": cs.structs["device_params"]["time_start_light"]})
+        timers.update({"Light Turns Off at (Hourly Time 0-23): ": cs.structs["device_params"]["time_stop_light"]})
+        timers.update({"Light Interval (seconds between runs): ": cs.structs["device_params"]["air_interval"]})
 
-    if cs.feature_toggles["camera"] == "1":
-        timers.update({" Duration (seconds run for): ": cs.device_params["heater_duration"]})
-        if cs.feature_toggles["ndvi"] == "1":
+    if cs.structs["feature_toggles"]["camera"] == "1":
+        timers.update({" Duration (seconds run for): ": cs.structs["device_params"]["heater_duration"]})
+        if cs.structs["feature_toggles"]["ndvi"] == "1":
             timers.update({"Capture Mode": "NDVI"})
         else:
             timers.update({"Capture Mode": "Raw AWB Imaging"})
-        timers.update({"Camera Interval (seconds between image capture): ": cs.device_params["camera_interval"]})
+        timers.update({"Camera Interval (seconds between image capture): ": cs.structs["device_params"]["camera_interval"]})
 
     if sensors:
         print("Sensor Readings = ")
@@ -711,18 +711,18 @@ def data_out():
 
         try:
             cs.load_state()
-            payload = cs.sensor_info
+            payload = cs.structs["sensor_info"]
             timestamp = {"time": str(datetime.datetime.now())}
             payload.update(timestamp)
 
-            if cs.feature_toggles["save_data"] == "1":
+            if cs.structs["feature_toggles"]["save_data"] == "1":
                 #save data to .csv
                 print("Writing to csv")
                 write_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv', payload)
 
-                if cs.device_state["connected"] == "1":
+                if cs.structs["device_state"]["connected"] == "1":
                     #write data to disk and exchange with cloud if connected
-                    dbt.patch_firebase_dict(cs.access_config,payload)
+                    dbt.patch_firebase_dict(cs.structs["access_config"],payload)
 
                     #send new time-series to firebase
                     send_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv')
@@ -736,7 +736,7 @@ def data_out():
 def check_exit():
     #set exit condition    
     cs.load_state()
-    if cs.device_state["running"] == "0":
+    if cs.structs["device_state"]["running"] == "0":
         terminate_program()
     else:
         pass
@@ -768,15 +768,15 @@ def main_setup():
         sys.exit()
 
     #attempt to make serial connection but only if there is a sensor active
-    if ((cs.feature_toggles["temperature_sensor"] == "1") \
-                or (cs.feature_toggles["humidity_sensor"] == "1") \
-                    or (cs.feature_toggles["water_level_sensor"] == "1") \
-                        or (cs.feature_toggles["co2_sensor"] == "1") \
-                            or (cs.feature_toggles["lux_sensor"] == "1") \
-                                or (cs.feature_toggles["ph_sensor"] == "1") \
-                                    or (cs.feature_toggles["tds_sensor"] == "1") \
-                                        or (cs.feature_toggles["soil_moisture_sensor"] == "1") \
-                                            or (cs.feature_toggles["onboard_led"] == "0")):
+    if ((cs.structs["feature_toggles"]["temperature_sensor"] == "1") \
+                or (cs.structs["feature_toggles"]["humidity_sensor"] == "1") \
+                    or (cs.structs["feature_toggles"]["water_level_sensor"] == "1") \
+                        or (cs.structs["feature_toggles"]["co2_sensor"] == "1") \
+                            or (cs.structs["feature_toggles"]["lux_sensor"] == "1") \
+                                or (cs.structs["feature_toggles"]["ph_sensor"] == "1") \
+                                    or (cs.structs["feature_toggles"]["tds_sensor"] == "1") \
+                                        or (cs.structs["feature_toggles"]["soil_moisture_sensor"] == "1") \
+                                            or (cs.structs["feature_toggles"]["onboard_led"] == "0")):
         minion.start_serial_in()
 
     #start the clock for timimg .csv writes and data exchanges with server
@@ -810,9 +810,9 @@ def main_loop():
 
     except Exception as e:
         print(err.full_stack())
-        if cs.device_state["running"] == "1": #if there is an error, but device should stay running
+        if cs.structs["device_state"]["running"] == "1": #if there is an error, but device should stay running
             clean_up_processes()
-        if cs.device_state["running"] == "0":
+        if cs.structs["device_state"]["running"] == "0":
             terminate_program()
             
 if __name__ == '__main__':

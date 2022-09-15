@@ -17,7 +17,7 @@ cs.load_state()
 
 #setup GPIO
 GPIO.setmode(GPIO.BCM) #GPIO Numbers instead of board numbers
-Fan_GPIO = cs.hardware_config["equipment_gpio_map"]["fan_relay"] #heater pin pulls from config file
+Fan_GPIO = cs.structs["hardware_config"]["equipment_gpio_map"]["fan_relay"] #heater pin pulls from config file
 GPIO.setup(Fan_GPIO, GPIO.OUT) #GPIO setup
 GPIO.output(Fan_GPIO, GPIO.LOW)
 
@@ -103,7 +103,7 @@ def actuate_interval(duration = 1, interval = 59): #amount of time between fan r
     time.sleep(float(interval)*60)
 
 try:
-    if cs.feature_toggles["fan_pid"] == "1":
+    if cs.structs["feature_toggles"]["fan_pid"] == "1":
         actuate_pid(float(sys.argv[1])) #trigger appropriate feedback response
     else:
         actuate_interval(float(sys.argv[1]), float(sys.argv[2])) #this uses the timer instead

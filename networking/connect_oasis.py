@@ -43,18 +43,18 @@ def modWiFiConfig(SSID, password):
 
 #update access_config.json
 def modAccessConfig(name, e, p):
-    cs.access_config = {}
-    cs.access_config["device_name"] = str(name)
-    cs.access_config["wak"] = "AIzaSyBPuJwU--0ZlvsbDV9LmKJdYIljwNwzmVk"
-    cs.access_config["e"] = str(e)
-    cs.access_config["p"] = str(p)
-    cs.access_config["refresh_token"] = " "
-    cs.access_config["id_token"] = " "
-    cs.access_config["local_id"] = " "
+    cs.structs["access_config"] = {}
+    cs.structs["access_config"]["device_name"] = str(name)
+    cs.structs["access_config"]["wak"] = "AIzaSyBPuJwU--0ZlvsbDV9LmKJdYIljwNwzmVk"
+    cs.structs["access_config"]["e"] = str(e)
+    cs.structs["access_config"]["p"] = str(p)
+    cs.structs["access_config"]["refresh_token"] = " "
+    cs.structs["access_config"]["id_token"] = " "
+    cs.structs["access_config"]["local_id"] = " "
 
     with open("/home/pi/oasis-grow/configs/access_config.json", "r+") as a:
         a.seek(0)
-        json.dump(cs.access_config, a)
+        json.dump(cs.structs["access_config"], a)
         a.truncate()
 
     print("Access configs added")

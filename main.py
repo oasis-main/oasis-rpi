@@ -49,9 +49,9 @@ def setup_button_interface(): #depends on: cs.load_state(), 'RPi.GPIO'; modifies
     cs.load_state()
 
     #set button pins
-    start_stop_button = cs.hardware_config["button_gpio_map"]["start_stop_button"]
-    connect_internet_button = cs.hardware_config["button_gpio_map"]["connect_internet_button"]
-    action_button = cs.hardware_config["button_gpio_map"]["action_button"]
+    start_stop_button = cs.structs["hardware_config"]["button_gpio_map"]["start_stop_button"]
+    connect_internet_button = cs.structs["hardware_config"]["button_gpio_map"]["connect_internet_button"]
+    action_button = cs.structs["hardware_config"]["button_gpio_map"]["action_button"]
 
     #Setup buttons
     GPIO.setup(start_stop_button, GPIO.IN,pull_up_down=GPIO.PUD_UP)
@@ -79,11 +79,11 @@ def launch_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); 
         cs.load_state()
         #write LED state to seriaL
         while True: #place the "exit button" here to leave connection mode
-            minion.ser_out.write(bytes(str(cs.device_state["led_status"]+"\n"), "utf-8"))
+            minion.ser_out.write(bytes(str(cs.structs["device_state"]["led_status"]+"\n"), "utf-8"))
             cbutton_state = get_button_state(connect_internet_button)
             if cbutton_state == 0:
                 cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","offline_idle", db_writer = dbt.patch_firebase)
-                minion.ser_out.write(bytes(str(cs.device_state["led_status"]+"\n"), "utf-8"))
+                minion.ser_out.write(bytes(str(cs.structs["device_state"]["led_status"]+"\n"), "utf-8"))
                 server_process.terminate()
                 server_process.wait()
                 wifi.enable_WiFi()
@@ -103,12 +103,12 @@ def setup_core_process(): #Depends on: cs.load_state(), cs.write_state(), 'subpr
     cs.load_state()
 
     #if the device is supposed to be running
-    if cs.device_state["running"] == "1":
+    if cs.structs["device_state"]["running"] == "1":
 
         #launch core main
         core_process = Popen(["python3", "/home/pi/oasis-grow/core/core.py", "main"])
 
-        if cs.device_state["connected"] == "1": #if connected
+        if cs.structs["device_state"]["connected"] == "1": #if connected
             #LEDmode = "connected_running"
             cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","connected_running", db_writer = dbt.patch_firebase)
         else: #if not connected
@@ -121,7 +121,7 @@ def setup_core_process(): #Depends on: cs.load_state(), cs.write_state(), 'subpr
         #launch sensing-feedback subprocess in daemon mode
         core_process = Popen(["python3", "/home/pi/oasis-grow/core/core.py", "daemon"])
 
-        if cs.device_state["connected"] == "1": #if connected
+        if cs.structs["device_state"]["connected"] == "1": #if connected
             #LEDmode = "connected_idle"
             cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","connected_idle", db_writer = dbt.patch_firebase)
         else: #if not connected
@@ -150,7 +150,7 @@ def start_core():
         core_process = Popen(["python3", "/home/pi/oasis-grow/core/core.py", "main"])
         print("launched core process")
 
-        if cs.device_state["connected"] == "1": #if connected
+        if cs.structs["device_state"]["connected"] == "1": #if connected
             #send LEDmode = "connected_running"
             cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","connected_running", db_writer = dbt.patch_firebase)
         else: #if not connected
@@ -169,7 +169,7 @@ def stop_core():
         except:
             pass
 
-        if cs.device_state["connected"] == "1": #if connected
+        if cs.structs["device_state"]["connected"] == "1": #if connected
             #send LEDmode = "connected_idle"
             cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","connected_idle", db_writer = dbt.patch_firebase)
         else: #if not connected
@@ -181,7 +181,7 @@ def switch_core_running(): #Depends on: cs.load_state(), cs.write_state(), dbt.p
     cs.load_state()
 
     #if the device is set to running
-    if cs.device_state["running"] == "1":
+    if cs.structs["device_state"]["running"] == "1":
         #set running state to off = 0
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","0",db_writer = dbt.patch_firebase)
 
@@ -194,7 +194,7 @@ def switch_core_running(): #Depends on: cs.load_state(), cs.write_state(), dbt.p
 def get_updates(): #depends on: cs.load_state(),'subproceess', update.py; modifies: system code, state variables
     cs.load_state()
     
-    if cs.device_state["running"] == "0": #replicated in the main loop
+    if cs.structs["device_state"]["running"] == "0": #replicated in the main loop
         #kill listener
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = dbt.patch_firebase) #make sure the cloud does not update main code, kill listener
         dbt.kill_listener()
@@ -206,7 +206,7 @@ def get_updates(): #depends on: cs.load_state(),'subproceess', update.py; modifi
         
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","1", db_writer = dbt.patch_firebase)#restore listener
     
-    if cs.device_state["running"] == "1": #replicated in the main loop
+    if cs.structs["device_state"]["running"] == "1": #replicated in the main loop
         #flip running to 0        
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","0", db_writer = dbt.patch_firebase)
         #kill listener
@@ -238,17 +238,17 @@ def add_new_device(): #depends on: modifies:
 
     #assemble data to initialize firebase
     setup_dict = {} #Access & hardware config will be kept private, not shared with cloud 
-    setup_dict.update(cs.device_state)
-    setup_dict.update(cs.device_params)
-    setup_dict.update(cs.feature_toggles)
-    setup_dict.update(cs.sensor_info)
-    setup_dict_named = {cs.access_config["device_name"] : setup_dict}
+    setup_dict.update(cs.structs["device_state"])
+    setup_dict.update(cs.structs["device_params"])
+    setup_dict.update(cs.structs["feature_toggles"])
+    setup_dict.update(cs.structs["sensor_info"])
+    setup_dict_named = {cs.structs["access_config"]["device_name"] : setup_dict}
     my_data = setup_dict_named
     #print(my_data)
     #print(type(my_data))
 
     #add box data to firebase (replace with send_dict)
-    patch_request = dbt.firebase_add_device(cs.access_config,my_data)
+    patch_request = dbt.firebase_add_device(cs.structs["access_config"],my_data)
     
     if patch_request.ok:
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","new_device","0", db_writer = dbt.patch_firebase)
@@ -261,9 +261,9 @@ def connect_firebase(): #depends on: cs.load_state(), cs.write_state(), dbt.patc
     
     #load state so we can use access credentials
     cs.load_state()
-    wak = cs.access_config["wak"]
-    email = cs.access_config["e"]
-    password = cs.access_config["p"]
+    wak = cs.structs["access_config"]["wak"]
+    email = cs.structs["access_config"]["e"]
+    password = cs.structs["access_config"]["p"]
 
     print("Checking for connection...")
 
@@ -279,7 +279,7 @@ def connect_firebase(): #depends on: cs.load_state(), cs.write_state(), dbt.patc
 
             #bring in the refresh token for use further down
             cs.load_state()
-            refresh_token = cs.access_config["refresh_token"]
+            refresh_token = cs.structs["access_config"]["refresh_token"]
             print("Obtained refresh token")
 
             #fetch a new id_token & local_id
@@ -316,7 +316,7 @@ def run_water(interval): #Depends on: 'RPi.GPIO'; Modifies: water_relay
     cs.load_state()
 
     #set watering GPIO
-    water_relay = cs.hardware_config["equipment_gpio_map"]["water_relay"] #watering aparatus
+    water_relay = cs.structs["hardware_config"]["equipment_gpio_map"]["water_relay"] #watering aparatus
     GPIO.setwarnings(False)
     GPIO.setup(water_relay, GPIO.OUT) #GPIO setup
     
@@ -337,18 +337,18 @@ def update_minion_led(): #Depends on: cs.load_state(), 'datetime'; Modifies: ser
     HoD = now.hour
 
     if minion.ser_out is not None:
-        if int(cs.device_params["time_start_led"]) < int(cs.device_params["time_stop_led"]):
-            if HoD >= int(cs.device_params["time_start_led"]) and HoD < int(cs.device_params["time_stop_led"]):
-                minion.ser_out.write(bytes(str(cs.device_state["led_status"]+"\n"), 'utf-8')) #write status
-            if HoD < int(cs.device_params["time_start_led"]) or HoD >= int(cs.device_params["time_stop_led"]):
+        if int(cs.structs["device_params"]["time_start_led"]) < int(cs.structs["device_params"]["time_stop_led"]):
+            if HoD >= int(cs.structs["device_params"]["time_start_led"]) and HoD < int(cs.structs["device_params"]["time_stop_led"]):
+                minion.ser_out.write(bytes(str(cs.structs["device_state"]["led_status"]+"\n"), 'utf-8')) #write status
+            if HoD < int(cs.structs["device_params"]["time_start_led"]) or HoD >= int(cs.structs["device_params"]["time_stop_led"]):
                 minion.ser_out.write(bytes(str("off"+"\n"), 'utf-8')) #write off
-        if int(cs.device_params["time_start_led"]) > int(cs.device_params["time_stop_led"]):
-            if HoD >=  int(cs.device_params["time_start_led"]) or HoD < int(cs.device_params["time_stop_led"]):
-                minion.ser_out.write(bytes(str(cs.device_state["led_status"]+"\n"), 'utf-8')) #write status
-            if HoD < int(cs.device_params["time_start_led"]) and  HoD >= int(cs.device_params["time_stop_led"]):
+        if int(cs.structs["device_params"]["time_start_led"]) > int(cs.structs["device_params"]["time_stop_led"]):
+            if HoD >=  int(cs.structs["device_params"]["time_start_led"]) or HoD < int(cs.structs["device_params"]["time_stop_led"]):
+                minion.ser_out.write(bytes(str(cs.structs["device_state"]["led_status"]+"\n"), 'utf-8')) #write status
+            if HoD < int(cs.structs["device_params"]["time_start_led"]) and  HoD >= int(cs.structs["device_params"]["time_stop_led"]):
                 minion.ser_out.write(bytes(str("off"+"\n"), 'utf-8')) #write off
-        if int(cs.device_params["time_start_led"]) == int(cs.device_params["time_stop_led"]):
-                minion.ser_out.write(bytes(str(cs.device_state["led_status"]+"\n"), 'utf-8')) #write status
+        if int(cs.structs["device_params"]["time_start_led"]) == int(cs.structs["device_params"]["time_stop_led"]):
+                minion.ser_out.write(bytes(str(cs.structs["device_state"]["led_status"]+"\n"), 'utf-8')) #write status
     else:
         #print("no serial connection, cannot update LED view")
         pass
@@ -369,7 +369,7 @@ def main_setup():
     reset_model.reset_locks()
     cs.load_state() #get the device data
     
-    if cs.feature_toggles["onboard_led"] == "1":
+    if cs.structs["feature_toggles"]["onboard_led"] == "1":
         launch_onboard_led()
     else:
         minion.start_serial_out() #start outbound serial command interface
@@ -397,7 +397,7 @@ def main_loop(led_timer, connect_timer):
         while True:
             cs.load_state()
 
-            if cs.feature_toggles["onboard_led"] == "0":
+            if cs.structs["feature_toggles"]["onboard_led"] == "0":
                 update_minion_led()
 
             if time.time() - connect_timer > 900: #check connection every 15 min (900s)
@@ -423,12 +423,12 @@ def main_loop(led_timer, connect_timer):
                 wifi.enable_AP(dbt.patch_firebase) #launch access point and reboot
                 time.sleep(1)
 
-            if cs.feature_toggles["action_button"] == "1":
+            if cs.structs["feature_toggles"]["action_button"] == "1":
                 abutton_state = get_button_state(action_button) #Water Button
                 if abutton_state == 0:
-                    if cs.feature_toggles["action_water"] == "1":
+                    if cs.structs["feature_toggles"]["action_water"] == "1":
                         run_water(60)
-                    if cs.feature_toggles["action_camera"] == "1":
+                    if cs.structs["feature_toggles"]["action_camera"] == "1":
                         say_cheese = Popen(['python3', '/home/pi/oasis-grow/imaging/camera.py', "0"])
                         say_cheese.wait()
             if time.time() - led_timer > 5: #send data to LED every 5s

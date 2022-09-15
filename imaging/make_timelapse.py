@@ -71,12 +71,12 @@ def tl_make(image_folder):
 def send_timelapse(path):
     #send new image to firebase
     cs.load_state()
-    user, db, storage = dbt.initialize_user(cs.access_config["refresh_token"])
-    dbt.store_file(user, storage, path, cs.access_config["device_name"], "timelapse.avi")
+    user, db, storage = dbt.initialize_user(cs.structs["access_config"]["refresh_token"])
+    dbt.store_file(user, storage, path, cs.structs["access_config"]["device_name"], "timelapse.avi")
     print("Sent timelapse")
 
     #tell firebase that there is a new timelapse
-    dbt.patch_firebase(cs.access_config, "timelapse_sent","1")
+    dbt.patch_firebase(cs.structs["access_config"], "timelapse_sent","1")
     print("Firebase has a timelapse in waiting")
 
 if __name__ == "main":

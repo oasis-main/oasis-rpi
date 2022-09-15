@@ -77,7 +77,7 @@ def get_refresh_token(wak,email,password): #Depends on: 'requests', 'json'; Modi
     return data["refreshToken"]
 
 #get local_id and id_token from firebase
-def get_local_credentials(wak,refresh_token): #Depends on: cs.load_state(), 'requests'; Modifies: state variables,  cs.access_config.json
+def get_local_credentials(wak,refresh_token): #Depends on: cs.load_state(), 'requests'; Modifies: state variables,  cs.structs["access_config"].json
     #get local credentials
     refresh_url = "https://securetoken.googleapis.com/v1/token?key=" + wak
     refresh_payload = '{"grant_type": "refresh_token", "refresh_token": "%s"}' % refresh_token
@@ -97,10 +97,10 @@ def fetch_device_data(access_config):
 def sync_state():
     cloud_data = fetch_device_data()
     for key_value_pair in list(cloud_data.items()):
-        if key_value_pair[0] in list(cs.device_state.keys()):
+        if key_value_pair[0] in list(cs.structs["device_state"].keys()):
             #print("Updating device_state")
             cs.write_state("/home/pi/oasis-grow/configs/device_state.json", key_value_pair[0], key_value_pair[1], db_writer = None)
-        elif key_value_pair[0] in list(cs.device_params.keys()):
+        elif key_value_pair[0] in list(cs.structs["device_params"].keys()):
             #print("Updating device_params")
             cs.write_state("/home/pi/oasis-grow/configs/device_params.json", key_value_pair[0], key_value_pair[1], db_writer = None)    
         else:
@@ -113,8 +113,8 @@ def act_on_event(field, new_data):
 
     #checks if file exists and makes a blank one if not
     #the path has to be set for box
-    device_state_fields = list(cs.device_state.keys())
-    device_params_fields = list(cs.device_params.keys())
+    device_state_fields = list(cs.structs["device_state"].keys())
+    device_params_fields = list(cs.structs["device_params"].keys())
 
     path = " "
 
@@ -150,7 +150,7 @@ def stream_handler(m):
 
 @err.Error_Handler
 def detect_field_event(user, db):
-    my_stream = db.child(user['userId']+'/'+cs.access_config["device_name"]+"/").stream(stream_handler, user['idToken'])
+    my_stream = db.child(user['userId']+'/'+cs.structs["access_config"]["device_name"]+"/").stream(stream_handler, user['idToken'])
 
 #https://stackoverflow.com/questions/2046603/is-it-possible-to-run-function-in-a-subprocess-without-threading-or-writing-a-se
 #https://stackoverflow.com/questions/200469/what-is-the-difference-between-a-process-and-a-thread#:~:text=A%20process%20is%20an%20execution,sometimes%20called%20a%20lightweight%20process.
@@ -167,7 +167,7 @@ def stop_condition(field,value): #Depends on: os, Process,cs.load_state(); Modif
     def check_exit(f,v): #This should be launched in its own thread, otherwise will hang the script
         while True:
             cs.load_state()
-            if cs.device_state[f] == v:
+            if cs.structs["device_state"][f] == v:
                 print("Exiting database listener...")
                 kill_listener()
                 return
@@ -179,10 +179,10 @@ def run():
     print("Starting listener...")
     cs.load_state()
     try:
-        user, db, storage = initialize_user(cs.access_config["refresh_token"])
+        user, db, storage = initialize_user(cs.structs["access_config"]["refresh_token"])
         
         #fetch all the most recent data from the database
-        fetch_device_data(cs.access_config)
+        fetch_device_data(cs.structs["access_config"])
         
         #actual section that launches the listener
         detect_multiple_field_events(user, db)

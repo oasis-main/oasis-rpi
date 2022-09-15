@@ -33,27 +33,27 @@ def save_to_feed(image_path):
 def send_image(path):
     #send new image to firebase
     cs.load_state()
-    user, db, storage = dbt.initialize_user(cs.access_config["refresh_token"])
-    dbt.store_file(user, storage, path, cs.access_config["device_name"], "image.jpg")
+    user, db, storage = dbt.initialize_user(cs.structs["access_config"]["refresh_token"])
+    dbt.store_file(user, storage, path, cs.structs["access_config"]["device_name"], "image.jpg")
     print("Sent image")
 
     #tell firebase that there is a new image
-    dbt.patch_firebase(cs.access_config,"image_sent","1")
+    dbt.patch_firebase(cs.structs["access_config"],"image_sent","1")
     print("Firebase has an image in waiting")
 
 #define a function to actuate element
 def actuate(interval): #amount of time between shots in minutes
     cs.load_state()
     
-    take_picture('/home/pi/oasis-grow/data_out/image.jpg', cs.device_params)
+    take_picture('/home/pi/oasis-grow/data_out/image.jpg', cs.structs["device_params"])
 
-    if cs.feature_toggles["ndvi"] == "1":
+    if cs.structs["feature_toggles"]["ndvi"] == "1":
         noir_ndvi.convert_image('/home/pi/oasis-grow/data_out/image.jpg')
 
-    if cs.feature_toggles["save_images"] == "1":
+    if cs.structs["feature_toggles"]["save_images"] == "1":
         save_to_feed('/home/pi/oasis-grow/data_out/image.jpg')
 
-    if cs.device_state["connected"] == "1":
+    if cs.structs["device_state"]["connected"] == "1":
         #send new image to firebase
         send_image('/home/pi/oasis-grow/data_out/image.jpg')
 

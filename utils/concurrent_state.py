@@ -14,7 +14,7 @@ import sys
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
 
-#rust pyO3 modules
+#rust modules
 import orjson #fast data interchange / and json parsing (must read and write byte file objects)
 import rusty_locks as safety #rust concurrency modules (fast mutual exclusion for arbitrarily named resources) 
 
@@ -43,7 +43,6 @@ structs = {"device_state": device_state,
 "access_config" : access_config, 
 "hardware_config": hardware_config, 
 "feature_toggles": feature_toggles}
-
 
 #declare state locking varibles
 locks = None

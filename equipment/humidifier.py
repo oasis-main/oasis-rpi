@@ -19,7 +19,7 @@ cs.load_state()
 
 #setup GPIO
 GPIO.setmode(GPIO.BCM) #GPIO Numbers instead of board numbers
-Hum_GPIO = cs.hardware_config["equipment_gpio_map"]["dehumidifier_relay"] #heater pin pulls from config file
+Hum_GPIO = cs.structs["hardware_config"]["equipment_gpio_map"]["dehumidifier_relay"] #heater pin pulls from config file
 GPIO.setup(Hum_GPIO, GPIO.OUT) #GPIO setup
 GPIO.output(Hum_GPIO, GPIO.LOW) #relay open = GPIO.HIGH, closed = GPIO.LOW
 
@@ -107,7 +107,7 @@ def actuate_interval(duration = 15, interval = 45): #amount of time between humi
     time.sleep(float(interval))
 
 try:
-    if cs.feature_toggles["hum_pid"] == "1":
+    if cs.structs["feature_toggles"]["hum_pid"] == "1":
         actuate_pid(float(sys.argv[1])) #trigger appropriate response
     else:
         actuate_interval(float(sys.argv[1]),float(sys.argv[2]))
