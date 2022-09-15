@@ -9,10 +9,7 @@
 
 #import modules
 import os
-import struct
 import sys
-import json
-from varname import nameof
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
@@ -40,28 +37,29 @@ feature_toggles = None #tells the system which features are in use (data comes i
 access_config = None #contains credentials for connecting to firebase
 hardware_config = None #holds hardware I/O setting & pin
 
-structs = [device_state, device_params, sensor_info, access_config, hardware_config, feature_toggles]
-struct_names = ["device_state","device_params","sensor_info","access_config","hardware_config","feature_toggles"]
+structs = {"device_state": device_state, 
+"device_params": device_params, 
+"sensor_info": sensor_info, 
+"access_config" : access_config, 
+"hardware_config": hardware_config, 
+"feature_toggles": feature_toggles}
+
 
 #declare state locking varibles
 locks = None
 
 def load_state(loop_limit=1000): #Depends on: 'json'; Modifies: device_state,hardware_config ,access_config
-    global structs, struct_names
-    
-    if len(structs) != len(struct_names):
-        print("You messed up. Each struct should have name within list in respective order.")
-        return
+    global structs
 
-    for struct, struct_name in structs, struct_names: #now we're going to load an populat the data    
+    for name,struct in structs.items(): #now we're going to load an populat the data    
 
         #load device state
         for i in list(range(int(loop_limit))): #try to load, pass and try again if fails
             try:
-                if struct_name != 'sensor_info':
-                    config_filepath = "/home/pi/oasis-grow/configs/" + struct_name + ".json"
+                if name != 'sensor_info':
+                    config_filepath = "/home/pi/oasis-grow/configs/" + name + ".json"
                 else:
-                    config_filepath = "/home/pi/oasis-grow/data_out/" + struct_name + ".json"
+                    config_filepath = "/home/pi/oasis-grow/data_out/" + name + ".json"
 
                 if not os.path.exists(config_filepath):
                     print(config_filepath + " does not exist. Have you run the setup scripts?")
@@ -72,8 +70,8 @@ def load_state(loop_limit=1000): #Depends on: 'json'; Modifies: device_state,har
 
                 for k,v in struct.items(): 
                     if struct[k] is None:
-                        print("Read NoneType in " + struct_name + "!")
-                        print("Resetting " + struct_name + "...") 
+                        print("Read NoneType in " + name + "!")
+                        print("Resetting " + name + "...") 
                         reset_model.reset_config_path(config_filepath)
                     
                     else: 
@@ -84,9 +82,9 @@ def load_state(loop_limit=1000): #Depends on: 'json'; Modifies: device_state,har
             except Exception as e:
                 if i >= int(loop_limit):
                     reset_model.reset_device_state()
-                    print("Tried to read " + struct_name + " max # of times. File is corrupted, resetting...")
+                    print("Tried to read " + name + " max # of times. File is corrupted, resetting...")
                 else:
-                    print("Tried to read " + struct_name + "while being written. If this continues, file is corrupt.")
+                    print("Tried to read " + name + "while being written. If this continues, file is corrupt.")
                     pass
 
 #gets the mutex

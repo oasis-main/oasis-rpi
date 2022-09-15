@@ -7,5 +7,4 @@ RPi.GPIO
 opencv-python
 streamlit==0.62.0
 orjson
-varname
 maturin
