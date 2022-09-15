@@ -26,17 +26,19 @@ sudo apt install python3-pip -y
 sudo apt-get install python3-venv -y
 
 echo "Installing Rust Compiler..."
-curl https://sh.rustup.rs -sSf | sh -1
+curl https://sh.rustup.rs -sSf | sh
+. "$HOME/.cargo/env"
 
 echo "Installing Python Modules..."
 python3 -m venv /home/pi/oasis-grow/oasis_venv_pi #uncomment to build env from source
 . /home/pi/oasis-grow/oasis_venv_pi/bin/activate
 /usr/bin/env python3 -m pip install --upgrade pip #uncomment to build env from source
-/usr/bin/env python3 -m pip install -r /home/pi/oasis-grow/defaults/requirements.txt #uncomment to build env from source
+/usr/bin/env python3 -m pip install -r /home/pi/oasis-grow/requirements.txt #uncomment to build env from source
 
 echo "Installing Rust Modules..."
 cd /home/pi/oasis-grow/rusty_locks
 maturin build --release --strip
+cd ..
 
 echo "Installing Python3 Root Dependencies for OS..."
 sudo apt-get -y install python3-rpi.gpio #GPIO Pin Access
