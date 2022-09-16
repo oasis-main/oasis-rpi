@@ -293,7 +293,7 @@ def write_dict(path, dictionary, db_writer, loop_limit=1000): #Depends on: load_
 
             else:
                 print(path + " write failed, trying again. If this persists, file is corrupted.")
-                #print(err.fullstack())
+                print(err.fullstack())
                 pass #continue the loop until write is successful or ceiling is hit
 
 #Higher-order device_state checker
