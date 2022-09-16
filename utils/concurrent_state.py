@@ -68,7 +68,8 @@ def load_state(loop_limit=1000): #Depends on: 'json'; Modifies: device_state,har
                         structs[struct] = orjson.loads(x.read()) #try to parse bytes to json -> dict
                         #print(struct)
 
-                for k,v in struct.items(): 
+                for k in structs[struct]: 
+                    print(k)
                     if struct[k] is None:
                         print("Read NoneType in " + struct + "!")
                         print("Resetting " + struct + "...") 
