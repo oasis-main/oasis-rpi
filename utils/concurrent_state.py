@@ -84,7 +84,8 @@ def load_state(loop_limit=1000): #Depends on: 'json'; Modifies: device_state,har
                     reset_model.reset_device_state()
                     print("Tried to read " + struct + " max # of times. File is corrupted, resetting...")
                 else:
-                    print("Tried to read " + struct + "while being written. If this continues, file is corrupt.")
+                    print(err.full_stack())
+                    #print("Tried to read " + struct + "while being written. If this continues, file is corrupt.")
                     pass
 
 #gets the mutex
