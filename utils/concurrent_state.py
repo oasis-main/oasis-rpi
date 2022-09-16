@@ -70,7 +70,7 @@ def load_state(loop_limit=1000): #Depends on: 'json'; Modifies: device_state,har
 
                 for k, v in structs[struct].items(): 
                     #print(k)
-                    if struct[k] is None:
+                    if structs[struct][k] is None:
                         print("Read NoneType in " + struct + "!")
                         print("Resetting " + struct + "...") 
                         reset_model.reset_config_path(config_filepath)
