@@ -82,7 +82,7 @@ def load_state(loop_limit=1000): #Depends on: 'json'; Modifies: device_state,har
                 
             except Exception as e:
                 if i >= int(loop_limit):
-                    reset_model.reset_device_state()
+                    reset_model.reset_config_path(config_filepath)
                     print("Tried to read " + struct + " max # of times. File is corrupted, resetting...")
                 else:
                     #print(err.full_stack())
