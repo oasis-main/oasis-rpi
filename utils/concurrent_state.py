@@ -26,23 +26,23 @@ from utils import error_handler as err
 #Declare Structs
 
 #...cloud-synced:
-device_state = None #describes the current state of the system
-device_params = None #describes the grow configuration of the system
+#device_state #describes the current state of the system
+#device_params #describes the grow configuration of the system
 
 #...cloud-touching
-sensor_info = None #tells the system which features are in use (data only goes out)
-feature_toggles = None #tells the system which features are in use (data comes in, but in a manually activated flow)
+#sensor_info #tells the system which features are in use (data only goes out)
+#feature_toggles #tells the system which features are in use (data comes in, but in a manually activated flow)
 
 #...locally-kept
-access_config = None #contains credentials for connecting to firebase
-hardware_config = None #holds hardware I/O setting & pin
+#access_config #contains credentials for connecting to firebase
+#hardware_config #holds hardware I/O setting & pin
 
-structs = {"device_state": device_state, 
-"device_params": device_params, 
-"sensor_info": sensor_info, 
-"access_config" : access_config, 
-"hardware_config": hardware_config, 
-"feature_toggles": feature_toggles}
+structs = {"device_state": {}, 
+"device_params": {}, 
+"sensor_info": {}, 
+"access_config" : {}, 
+"hardware_config": {}, 
+"feature_toggles": {}}
 
 #declare state locking varibles
 locks = None
