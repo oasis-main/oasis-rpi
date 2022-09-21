@@ -131,7 +131,7 @@ def write_state(path, field, value, db_writer = None, loop_limit=1000): #Depends
             try:
                 db_writer(structs["access_config"],field,value) #will be loaded in by listener, so is best represent change db first
             except Exception as e:
-                print(err.fullstack())
+                print(err.full_stack())
                 pass
             
     if not os.path.exists(path):
@@ -208,7 +208,7 @@ def write_state(path, field, value, db_writer = None, loop_limit=1000): #Depends
                 break
             else:
                 print(path + " write failed, trying again. If this persists, file is corrupted.")
-                print(err.fullstack())
+                print(err.full_stack())
                 pass #continue the loop until write is successful or ceiling is hit
 
 #save key values to .json
@@ -294,7 +294,7 @@ def write_dict(path, dictionary, db_writer = None, loop_limit=1000): #Depends on
 
             else:
                 print(path + " write failed, trying again. If this persists, file is corrupted.")
-                print(err.fullstack())
+                print(err.full_stack())
                 pass #continue the loop until write is successful or ceiling is hit
 
 #Higher-order device_state checker
