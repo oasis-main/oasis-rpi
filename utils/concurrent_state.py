@@ -125,7 +125,7 @@ def load_locks(loop_limit = 10000): #leave this alone since it's the python brid
     return lock_filepath
 
 #save key values to .json
-def write_state(path, field, value, db_writer, loop_limit=1000): #Depends on: load_state(), 'json'; 
+def write_state(path, field, value, db_writer = None, loop_limit=1000): #Depends on: load_state(), 'json'; 
     if db_writer is not None: #Accepts(path, field, value, custom timeout, db_writer function); Modifies: path
         if structs["device_state"]["connected"] == "1": #write state to cloud
             try:
@@ -183,6 +183,7 @@ def write_state(path, field, value, db_writer, loop_limit=1000): #Depends on: lo
 
         except Exception as e: #If any of the above fails
             if i >= int(loop_limit):
+                print(err.full_stack())
                 print("Tried to write "+ path + " max # of times. File is corrupted. Resetting...")
                 reset_model.reset_config_path(path)
                 
@@ -207,11 +208,11 @@ def write_state(path, field, value, db_writer, loop_limit=1000): #Depends on: lo
                 break
             else:
                 print(path + " write failed, trying again. If this persists, file is corrupted.")
-                #print(err.fullstack())
+                print(err.fullstack())
                 pass #continue the loop until write is successful or ceiling is hit
 
 #save key values to .json
-def write_dict(path, dictionary, db_writer, loop_limit=1000): #Depends on: load_state(), dbt.patch_firebase, 'json'; Modifies: path
+def write_dict(path, dictionary, db_writer = None, loop_limit=1000): #Depends on: load_state(), dbt.patch_firebase, 'json'; Modifies: path
 
     if db_writer is not None:
         #these will be loaded in by the listener, so best to make sure we represent the change in firebase too
@@ -297,12 +298,32 @@ def write_dict(path, dictionary, db_writer, loop_limit=1000): #Depends on: load_
                 pass #continue the loop until write is successful or ceiling is hit
 
 #Higher-order device_state checker
-def check(state, function, alt_function = None):
+def check(state, function, args = None, kwargs = None, alt_function = None, alt_args = None, alt_kwargs = None):
     load_state()
     if structs["device_state"][state] == "1":
-        function()
+        if (args is None) & (kwargs is None):
+            function()
+        if (args is not None) & (kwargs is None):
+            function(*args)
+        if (args is None) & (kwargs is not None):
+            function(**kwargs)
+        if (args is not None) & (kwargs is not None):
+            function(*args,**kwargs)
     else:
-        if alt_function is not None:
+        if (alt_args is None) & (alt_kwargs is None):
             alt_function()
+        if (alt_args is not None) & (alt_kwargs is None):
+            alt_function(*alt_args)
+        if (alt_args is None) & (alt_kwargs is not None):
+            alt_function(**alt_kwargs)
+        if (alt_args is not None) & (alt_kwargs is not None):
+            alt_function(*alt_args,**alt_kwargs)
         else:
             pass
+
+if __name__ == "__main__":
+    print("This is a unit test:")
+    load_state()
+    load_locks()
+    write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "1")
+    write_dict("/home/pi/oasis-grow/configs/device_state.json", {"running": "1"})
