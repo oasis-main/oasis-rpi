@@ -188,7 +188,7 @@ def write_state(path, field, value, db_writer = None, loop_limit=1000): #Depends
                 reset_model.reset_config_path(path)
                 
                 #now write
-                with open(path, "wb") as x: # open the file.
+                with open(path, "rwb") as x: # open the file.
                     data = orjson.loads(x.read()) # can we load a valid json?
                     
                     #only call this once with path or other unique string as argument
@@ -227,7 +227,7 @@ def write_dict(path, dictionary, db_writer = None, loop_limit=1000): #Depends on
 
     for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke if so
         try:
-            with open(path, "wb") as x: # open the file.
+            with open(path, "rwb") as x: # open the file.
                 data = orjson.loads(x.read()) # can we load a valid json?
                 
                 #only call this once with path or other unique string as argument
@@ -273,7 +273,7 @@ def write_dict(path, dictionary, db_writer = None, loop_limit=1000): #Depends on
                 reset_model.reset_config_path(path)
                 
                 #now write
-                with open(path, "wb") as x: # open the file.
+                with open(path, "rwb") as x: # open the file.
                     data = orjson.loads(x.read()) # can we load a valid json?
                     
                     #only call this once with path or other unique string as argument
