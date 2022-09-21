@@ -9,7 +9,6 @@ import requests
 import json
 import pyrebase
 import multiprocessing
-import time
 
 from utils import concurrent_state as cs
 from utils import error_handler as err

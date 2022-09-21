@@ -1,6 +1,5 @@
 import os
 import sys
-import json
 from subprocess import Popen
 
 #set proper path for modules

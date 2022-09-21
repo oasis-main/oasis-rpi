@@ -11,7 +11,7 @@ import re
 
 #import custom modules
 from utils import reset_model
-from utils import concurrent_state as cs
+from utils import slow_concurrent_state as slow_cs
 from networking import wifi
 
 #create a password-protected lan interface for accepting credentials
@@ -43,18 +43,18 @@ def modWiFiConfig(SSID, password):
 
 #update access_config.json
 def modAccessConfig(name, e, p):
-    cs.structs["access_config"] = {}
-    cs.structs["access_config"]["device_name"] = str(name)
-    cs.structs["access_config"]["wak"] = "AIzaSyBPuJwU--0ZlvsbDV9LmKJdYIljwNwzmVk"
-    cs.structs["access_config"]["e"] = str(e)
-    cs.structs["access_config"]["p"] = str(p)
-    cs.structs["access_config"]["refresh_token"] = " "
-    cs.structs["access_config"]["id_token"] = " "
-    cs.structs["access_config"]["local_id"] = " "
+    slow_cs.structs["access_config"] = {}
+    slow_cs.structs["access_config"]["device_name"] = str(name)
+    slow_cs.structs["access_config"]["wak"] = "AIzaSyBPuJwU--0ZlvsbDV9LmKJdYIljwNwzmVk"
+    slow_cs.structs["access_config"]["e"] = str(e)
+    slow_cs.structs["access_config"]["p"] = str(p)
+    slow_cs.structs["access_config"]["refresh_token"] = " "
+    slow_cs.structs["access_config"]["id_token"] = " "
+    slow_cs.structs["access_config"]["local_id"] = " "
 
     with open("/home/pi/oasis-grow/configs/access_config.json", "r+") as a:
         a.seek(0)
-        json.dump(cs.structs["access_config"], a)
+        json.dump(slow_cs.structs["access_config"], a)
         a.truncate()
 
     print("Access configs added")
@@ -76,12 +76,11 @@ def save_creds_exit(email, password, wifi_name, wifi_pass, device_name, cmd = Fa
     reset_model.reset_device_state()
 
     #set new_device to "0" before rebooting
-    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "new_device", "1", db_writer = None)
+    slow_cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "new_device", "1", db_writer = None)
 
     if cmd == False: #pass this argument as true to save creds without rebooting
         #stand up wifi and reboot
         wifi.enable_WiFi()
-
 
 if __name__ == '__main__':
 
