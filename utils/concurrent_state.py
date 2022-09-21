@@ -142,7 +142,7 @@ def write_state(path, field, value, db_writer = None, loop_limit=1000): #Depends
 
     for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke if so 
         try:
-            with open(path, "wb") as x: # open the file.
+            with open(path, "rwb") as x: # open the file.
                 data = orjson.loads(x.read()) # can we load a valid json?
 
                 if locks[path] == 0: #check is the file is available to be written
