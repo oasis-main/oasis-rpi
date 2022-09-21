@@ -125,7 +125,7 @@ def load_locks(loop_limit = 10000): #leave this alone since it's the python brid
     return lock_filepath
 
 #save key values to .json
-def write_state(path, field, value, db_writer = None, loop_limit=1000): #Depends on: load_state(), 'json'; 
+def write_state(path, field, value, db_writer = None, loop_limit=2500): #Depends on: load_state(), 'json'; 
     if db_writer is not None: #Accepts(path, field, value, custom timeout, db_writer function); Modifies: path
         if structs["device_state"]["connected"] == "1": #write state to cloud
             try:
@@ -142,44 +142,46 @@ def write_state(path, field, value, db_writer = None, loop_limit=1000): #Depends
 
     for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke if so 
         try:
-            with open(path, "rwb") as x: # open the file.
+            with open(path, "rb") as x: # open the file.
                 data = orjson.loads(x.read()) # can we load a valid json?
 
-                if locks[path] == 0: #check is the file is available to be written
-                    
-                    safety.lock(lock_filepath, path)
+            if locks[path] == 0: #check is the file is available to be written
+                
+                safety.lock(lock_filepath, path)
 
+                with open(path, "wb") as x:
                     data[field] = value #write the desired value
                     x.seek(0)
                     x.write(orjson.dumps(data))
                     x.truncate()
 
+                safety.unlock(lock_filepath, path)
+                
+                load_state()
+                break #break the loop when the write has been successful
+
+            else:
+                if i >= int(loop_limit):
+                    print("Tried to access "+ path + " max # of times. Lock is dead. Resetting...")
                     safety.unlock(lock_filepath, path)
                     
-                    load_state()
-                    break #break the loop when the write has been successful
+                    #Now write safely
+                    safety.lock(lock_filepath, path)
 
-                else:
-                    if i >= int(loop_limit):
-                        print("Tried to access "+ path + " max # of times. Lock is dead. Resetting...")
-                        safety.unlock(lock_filepath, path)
-                        
-                        #Now write safely
-                        safety.lock(lock_filepath, path)
-
+                    with open(path, "wb") as x:
                         data[field] = value #write the desired value
                         x.seek(0)
                         x.write(orjson.dumps(data))
                         x.truncate()
 
-                        safety.unlock(lock_filepath, path)
-                        
-                        load_state()
-                        
-                        break #break the loop when the write has been successful
-                    else:
-                        print("Waiting...")
-                        pass
+                    safety.unlock(lock_filepath, path)
+                    
+                    load_state()
+                    
+                    break #break the loop when the write has been successful
+                else:
+                    print("Waiting...")
+                    pass
 
         except Exception as e: #If any of the above fails
             if i >= int(loop_limit):
@@ -188,22 +190,23 @@ def write_state(path, field, value, db_writer = None, loop_limit=1000): #Depends
                 reset_model.reset_config_path(path)
                 
                 #now write
-                with open(path, "rwb") as x: # open the file.
+                with open(path, "rb") as x: # open the file.
                     data = orjson.loads(x.read()) # can we load a valid json?
                     
-                    #only call this once with path or other unique string as argument
+                #only call this once with path or other unique string as argument
+                
+                if locks[path] == 0: #check is the file is available to be written
+                    safety.lock(lock_filepath, path)
                     
-                    if locks[path] == 0: #check is the file is available to be written
-                        safety.lock(lock_filepath, path)
-                        
+                    with open(path, "wb") as x:
                         data[field] = value #write the desired value
                         x.seek(0)
                         x.write(orjson.dumps(data))
                         x.truncate()
 
-                        safety.unlock(lock_filepath, path)
-                        
-                        load_state()    
+                    safety.unlock(lock_filepath, path)
+                    
+                    load_state()    
 
                 break
             else:
@@ -212,7 +215,7 @@ def write_state(path, field, value, db_writer = None, loop_limit=1000): #Depends
                 pass #continue the loop until write is successful or ceiling is hit
 
 #save key values to .json
-def write_dict(path, dictionary, db_writer = None, loop_limit=1000): #Depends on: load_state(), dbt.patch_firebase, 'json'; Modifies: path
+def write_dict(path, dictionary, db_writer = None, loop_limit=2500): #Depends on: load_state(), dbt.patch_firebase, 'json'; Modifies: path
 
     if db_writer is not None:
         #these will be loaded in by the listener, so best to make sure we represent the change in firebase too
@@ -227,45 +230,47 @@ def write_dict(path, dictionary, db_writer = None, loop_limit=1000): #Depends on
 
     for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke if so
         try:
-            with open(path, "rwb") as x: # open the file.
+            with open(path, "rb") as x: # open the file.
                 data = orjson.loads(x.read()) # can we load a valid json?
                 
-                #only call this once with path or other unique string as argument
-                
-                if locks[path] == 0: #check is the file is available to be written
-                    safety.lock(lock_filepath, path)
+            #only call this once with path or other unique string as argument
+            
+            if locks[path] == 0: #check is the file is available to be written
+                safety.lock(lock_filepath, path)
 
+                with open(path, "wb") as x:
                     data.update(dictionary) #write the desired values
                     x.seek(0)
                     x.write(orjson.dumps(data))
                     x.truncate()
 
+                safety.unlock(lock_filepath, path)
+                
+                load_state()
+                break #break the loop when the write has been successful
+
+            else:
+                if i >= int(loop_limit):
+                    print("Tried to access "+ path + " max # of times. Lock is dead. Resetting...")
                     safety.unlock(lock_filepath, path)
                     
-                    load_state()
-                    break #break the loop when the write has been successful
+                    #Now write safely
+                    safety.lock(lock_filepath, path)
 
-                else:
-                    if i >= int(loop_limit):
-                        print("Tried to access "+ path + " max # of times. Lock is dead. Resetting...")
-                        safety.unlock(lock_filepath, path)
-                        
-                        #Now write safely
-                        safety.lock(lock_filepath, path)
-
+                    with open(path, "wb") as x:
                         data.update(dictionary) #write the desired values
                         x.seek(0)
                         x.write(orjson.dumps(data))
                         x.truncate()
 
-                        safety.unlock(lock_filepath, path)
-                        
-                        load_state()
-                        
-                        break #break the loop when the write has been successful
-                    else:
-                        print("Waiting...")
-                        pass
+                    safety.unlock(lock_filepath, path)
+                    
+                    load_state()
+                    
+                    break #break the loop when the write has been successful
+                else:
+                    print("Waiting...")
+                    pass
 
         except Exception: #If any of the above fails:
             if i >= int(loop_limit):
@@ -273,7 +278,7 @@ def write_dict(path, dictionary, db_writer = None, loop_limit=1000): #Depends on
                 reset_model.reset_config_path(path)
                 
                 #now write
-                with open(path, "rwb") as x: # open the file.
+                with open(path, "rb") as x: # open the file.
                     data = orjson.loads(x.read()) # can we load a valid json?
                     
                     #only call this once with path or other unique string as argument
@@ -281,10 +286,11 @@ def write_dict(path, dictionary, db_writer = None, loop_limit=1000): #Depends on
                     if locks[path] == 0: #check is the file is available to be written
                         safety.lock(lock_filepath, path)
 
-                        data.update(dictionary) #write the desired values
-                        x.seek(0)
-                        x.write(orjson.dumps(data))
-                        x.truncate()
+                        with open(path, "wb") as x:
+                            data.update(dictionary) #write the desired values
+                            x.seek(0)
+                            x.write(orjson.dumps(data))
+                            x.truncate()
 
                         safety.unlock(lock_filepath, path)
                         
@@ -297,9 +303,10 @@ def write_dict(path, dictionary, db_writer = None, loop_limit=1000): #Depends on
                 print(err.full_stack())
                 pass #continue the loop until write is successful or ceiling is hit
 
-#Higher-order device_state checker
-def check(state, function, args = None, kwargs = None, alt_function = None, alt_args = None, alt_kwargs = None):
+#Higher-order device_state checker with reaction and alternative
+def check(state, function, alt_function = None, args = None, kwargs = None, alt_args = None, alt_kwargs = None):
     load_state()
+    
     if structs["device_state"][state] == "1":
         if (args is None) & (kwargs is None):
             function()
@@ -327,3 +334,4 @@ if __name__ == "__main__":
     load_locks()
     write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "1")
     write_dict("/home/pi/oasis-grow/configs/device_state.json", {"running": "1"})
+    check("running", print, ("Hello World"))
