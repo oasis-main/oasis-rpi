@@ -308,22 +308,22 @@ def check(state, function, alt_function = None, args = None, kwargs = None, alt_
     load_state()
     
     if structs["device_state"][state] == "1":
-        if (args is None) & (kwargs is None):
+        if (args == None) and (kwargs == None):
             function()
-        if (args is not None) & (kwargs is None):
+        if (args != None) and (kwargs is None):
             function(*args)
-        if (args is None) & (kwargs is not None):
+        if (args is None) and (kwargs is not None):
             function(**kwargs)
-        if (args is not None) & (kwargs is not None):
+        if (args is not None) and (kwargs is not None):
             function(*args,**kwargs)
     else:
-        if (alt_args is None) & (alt_kwargs is None):
+        if (alt_args is None) and (alt_kwargs is None):
             alt_function()
-        if (alt_args is not None) & (alt_kwargs is None):
+        if (alt_args is not None) and (alt_kwargs is None):
             alt_function(*alt_args)
-        if (alt_args is None) & (alt_kwargs is not None):
+        if (alt_args is None) and (alt_kwargs is not None):
             alt_function(**alt_kwargs)
-        if (alt_args is not None) & (alt_kwargs is not None):
+        if (alt_args is not None) and (alt_kwargs is not None):
             alt_function(*alt_args,**alt_kwargs)
         else:
             pass
@@ -334,4 +334,8 @@ if __name__ == "__main__":
     load_locks()
     write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "1")
     write_dict("/home/pi/oasis-grow/configs/device_state.json", {"running": "1"})
-    check("running", print, args = ("Hello World"))
+    
+    def test():
+        print("Hello World")
+    
+    check("running", test)
