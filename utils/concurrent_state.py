@@ -304,29 +304,17 @@ def write_dict(path, dictionary, db_writer = None, loop_limit=2500): #Depends on
                 pass #continue the loop until write is successful or ceiling is hit
 
 #Higher-order device_state checker with reaction and alternative
-def check(state, function, alt_function = None, args = None, kwargs = None, alt_args = None, alt_kwargs = None):
+def check(state, function, alt_function = None):# = None, args = None, kwargs = None, alt_args = None, alt_kwargs = None):
     load_state()
     
     if structs["device_state"][state] == "1":
-        if (args == None) and (kwargs == None):
-            function()
-        if (args != None) and (kwargs is None):
-            function(*args)
-        if (args is None) and (kwargs is not None):
-            function(**kwargs)
-        if (args is not None) and (kwargs is not None):
-            function(*args,**kwargs)
+        function()
     else:
-        if (alt_args is None) and (alt_kwargs is None):
+        if alt_function is not None:
             alt_function()
-        if (alt_args is not None) and (alt_kwargs is None):
-            alt_function(*alt_args)
-        if (alt_args is None) and (alt_kwargs is not None):
-            alt_function(**alt_kwargs)
-        if (alt_args is not None) and (alt_kwargs is not None):
-            alt_function(*alt_args,**alt_kwargs)
         else:
             pass
+        
 
 if __name__ == "__main__":
     print("This is a unit test:")

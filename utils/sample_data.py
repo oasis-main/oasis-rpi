@@ -1,5 +1,6 @@
 import os
 import csv
+from scipy.stats import bernoulli, uniform
 
 #write some data to a .csv, takes a dictionary and a path
 def write_csv(filename, dict): #Depends on: "os" "csv"
@@ -44,18 +45,30 @@ def write_csv(filename, dict): #Depends on: "os" "csv"
     return
 
 if __name__ == "__main__":
+    
+        
+    sim_temp = float()
+    sim_hum = float()
+    sim_vpd = float()
+    sim_level = float()
+    sim_co2 = float()
+    sim_lux = float()
+    sim_ph = float()
+    sim_moisture = float()
+    sim_tds = float()
+    
     while True:
         
-        sim_temp = float()
-        sim_hum = float()
-        sim_vpd = float()
-        sim_level = float()
-        sim_co2 = float()
-        sim_lux = float()
-        sim_ph = float()
-        sim_moisture = float()
-        sim_tds = float()
-        
+        sim_temp = float() #normdist mean 70
+        sim_hum = float() #normdist mean 50
+        sim_vpd = float() 
+        sim_level = bernoulli(0.1) #always 0
+        sim_co2 = float() #normdist 400ppm
+        sim_lux = float() #normdist 500lux
+        sim_ph = uniform(6.0,8.0) #uniform 6-8 
+        sim_moisture = float() #normdist mean 50
+        sim_tds = float() #normdist 300ppm
+    
         payload = {"temperature": sim_temp,
                     "humidity": sim_hum,
                     "vpd": sim_vpd,
