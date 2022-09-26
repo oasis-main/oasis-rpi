@@ -1,6 +1,18 @@
-{"device_state_write_available": "1",
-"device_params_write_available": "1",
-"sensor_info_write_available": "1",
-"access_config_write_available": "1",
-"hardware_config_write_available": "1",
-"feature_toggles_write_available": "1"}
+{
+  "/home/pi/oasis-grow/configs/access_config.json": 0,
+  "/home/pi/oasis-grow/configs/device_params.json": 0,
+  "/home/pi/oasis-grow/configs/device_state.json": 0,
+  "/home/pi/oasis-grow/configs/feature_toggles.json": 0,
+  "/home/pi/oasis-grow/configs/hardware_config.json": 0,
+  "/home/pi/oasis-grow/data_out/sensor_info.json": 0,
+  "air_pump": 0,
+  "camera": 0,
+  "core": 0,
+  "dehumidifier": 0,
+  "fan": 0,
+  "heater": 0,
+  "humidifier": 0,
+  "lights": 0,
+  "listener": 0,
+  "water_pump": 0
+}

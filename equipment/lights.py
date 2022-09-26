@@ -21,7 +21,7 @@ cs.load_state()
 
 #setup GPIO
 GPIO.setmode(GPIO.BCM) #GPIO Numbers instead of board numbers
-Light_GPIO = cs.hardware_config["equipment_gpio_map"]["light_relay"] #heater pin pulls from config file
+Light_GPIO = cs.structs["hardware_config"]["equipment_gpio_map"]["light_relay"] #heater pin pulls from config file
 GPIO.setup(Light_GPIO, GPIO.OUT) #GPIO setup relay open = GPIO.HIGH, closed = GPIO.LOW
 GPIO.output(Light_GPIO, GPIO.LOW) #relay open = GPIO.HIGH, closed = GPIO.LOW
 
@@ -51,8 +51,8 @@ def actuate(time_on = 8, time_off = 20, interval = 15): #arguments = hour of day
 
 try:
     actuate(int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]))
-    GPIO.cleanup()
 except KeyboardInterrupt:
     print("Interrupted")
+finally:
     GPIO.cleanup()
 

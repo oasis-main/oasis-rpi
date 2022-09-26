@@ -17,7 +17,7 @@ cs.load_state()
 
 #setup GPIO
 GPIO.setmode(GPIO.BCM) #GPIO Numbers instead of board numbers
-Heat_GPIO = cs.hardware_config["equipment_gpio_map"]["heat_relay"] #heater pin pulls from config file
+Heat_GPIO = cs.structs["hardware_config"]["equipment_gpio_map"]["heat_relay"] #heater pin pulls from config file
 GPIO.setup(Heat_GPIO, GPIO.OUT) #GPIO setup
 GPIO.output(Heat_GPIO, GPIO.LOW)
 
@@ -103,12 +103,11 @@ def actuate_interval(duration = 15, interval = 45): #amount of time between wate
     time.sleep(float(interval))
 
 try:
-    if cs.feature_toggles["heat_pid"] == "1":
+    if cs.structs["feature_toggles"]["heat_pid"] == "1":
         actuate_pid(float(sys.argv[1])) #trigger appropriate response
-        GPIO.cleanup()
     else:
-        actuate_interval(float(sys.argv[1]),float(sys.argv[2]))
-        GPIO.cleanup() #this uses the timer instead
-except:
+        actuate_interval(float(sys.argv[1]),float(sys.argv[2])) #this uses the timer instead
+except KeyboardInterrupt:
     print("Interrupted")
+finally:
     GPIO.cleanup()

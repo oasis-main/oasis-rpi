@@ -17,7 +17,7 @@ cs.load_state()
 
 #setup GPIO
 GPIO.setmode(GPIO.BCM) #GPIO Numbers instead of board numbers
-water_GPIO = cs.hardware_config["equipment_gpio_map"]["water_relay"] #heater pin pulls from config file
+water_GPIO = cs.structs["hardware_config"]["equipment_gpio_map"]["water_relay"] #heater pin pulls from config file
 GPIO.setup(water_GPIO, GPIO.OUT) #GPIO setup
 GPIO.output(water_GPIO, GPIO.LOW) #relay open = GPIO.HIGH, closed = GPIO.LOW
 
@@ -107,13 +107,13 @@ def actuate_interval(duration = 30, interval = 24): #amount of time between wate
     time.sleep(float(interval)*float(3600))
 
 try:
-    if cs.feature_toggles["water_pid"] == "1":
+    if cs.structs["feature_toggles"]["water_pid"] == "1":
         actuate_pid(float(sys.argv[1])) #trigger appropriate response
-        GPIO.cleanup()
     else:
         actuate_interval(float(sys.argv[1]), float(sys.argv[2]))
-        GPIO.cleanup() #this uses the timer instead
-except:
+except KeyboardInterrupt:
     print("Interrupted")
+finally:
     GPIO.cleanup()
+
 

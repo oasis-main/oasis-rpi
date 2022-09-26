@@ -1,4 +1,4 @@
-#For Building the Libcamera OS if using Debian RPi OS Buster or Earlier 
+#[Development] For Building the Libcamera OS if using Debian RPi OS Buster or Earlier 
 
 #Activate the python virtual environment
 . /home/pi/oasis-grow/oasis_venv_pi/bin/activate

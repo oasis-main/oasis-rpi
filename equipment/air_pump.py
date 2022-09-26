@@ -19,7 +19,7 @@ cs.load_state()
 
 #setup GPIO
 GPIO.setmode(GPIO.BCM) #GPIO Numbers instead of board numbers
-Air_GPIO = cs.hardware_config["equipment_gpio_map"]["air_relay"] #heater pin pulls from config file
+Air_GPIO = cs.structs["hardware_config"]["equipment_gpio_map"]["air_relay"] #heater pin pulls from config file
 GPIO.setup(Air_GPIO, GPIO.OUT) #GPIO setup relay open = GPIO.HIGH, closed = GPIO.LOW
 GPIO.output(Air_GPIO, GPIO.LOW) #relay open = GPIO.HIGH, closed = GPIO.LOW
 
@@ -50,8 +50,9 @@ def actuate(time_on = 0, time_off = 0, interval = 900): #time on must be less th
 
 try:
     actuate(int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]))
-    GPIO.cleanup()
 except KeyboardInterrupt:
     print("Interrupted")
+finally:    
     GPIO.cleanup()
+
 
