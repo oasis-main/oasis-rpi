@@ -1,4 +1,5 @@
 pyserial
+python-jwt>=3.3.4
 Pyrebase
 requests>=2.20.0
 pickle5
