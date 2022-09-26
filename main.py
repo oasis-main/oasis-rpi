@@ -233,7 +233,7 @@ def delete_device():
     systemctl_reboot.wait()
 
 #check if the device is waiting to be added to firebase, if it is then add it, otherwise skip
-def add_new_device(): #depends on: modifies:
+def add_new_device():
     cs.load_state()
 
     #assemble data to initialize firebase
