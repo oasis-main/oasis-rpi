@@ -11,7 +11,10 @@ import time
 from subprocess import PIPE, Popen
 from imaging import noir_ndvi
 from utils import concurrent_state as cs
+from utils import error_handler as err
 from networking import db_tools as dbt
+
+resource_name = "camera"
 
 def take_picture(image_path, device_params):
     
@@ -38,13 +41,16 @@ def send_image(path):
     print("Sent image")
 
     #tell firebase that there is a new image
-    dbt.patch_firebase(cs.structs["access_config"],"image_sent","1")
+    dbt.patch_firebase(cs.structs["access_config"], "image_sent", "1")
     print("Firebase has an image in waiting")
 
 #define a function to actuate element
-def actuate(interval): #amount of time between shots in minutes
+def actuate(interval, nosleep = False): #amount of time between shots in minutes
     cs.load_state()
     
+    cs.check_lock(resource_name)
+    cs.safety.lock(cs.lock_filepath, resource_name)
+
     take_picture('/home/pi/oasis-grow/data_out/image.jpg', cs.structs["device_params"])
 
     if cs.structs["feature_toggles"]["ndvi"] == "1":
@@ -57,11 +63,23 @@ def actuate(interval): #amount of time between shots in minutes
         #send new image to firebase
         send_image('/home/pi/oasis-grow/data_out/image.jpg')
 
-    time.sleep(float(interval)*60)
+    cs.safety.unlock(cs.lock_filepath, resource_name)
+
+    if nosleep == True:
+        return
+    else:
+        time.sleep(float(interval)*60) #once the physical resource itself is done being used, we can free it
+                                       #not a big deal if someone actuates again while the main spawn is waiting
+                                       #so long as they aren't doing so with malicious intent (would need DB or root access, make sure to turn off SSH or change your password)
 
 if __name__ == '__main__':
-    try:
+    try:    
         actuate(str(sys.argv[1]))
     except KeyboardInterrupt:
         print("Interrupted")
+        cs.safety.unlock(cs.lock_filepath, resource_name)
+    except:
+        print(err.full_stack())
+        cs.safety.unlock(cs.lock_filepath, resource_name)
+
 

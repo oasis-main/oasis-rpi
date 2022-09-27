@@ -45,7 +45,8 @@ structs = {"device_state": {},
 "feature_toggles": {}}
 
 #declare state locking varibles
-locks = None
+locks = {}
+lock_filepath = "/home/pi/oasis-grow/configs/locks.json"
 
 def load_state(loop_limit=1000): 
     global structs
@@ -92,8 +93,6 @@ def load_state(loop_limit=1000):
 #gets the mutex
 def load_locks(loop_limit = 10000): #leave this alone since it's the python bridge to ramport locks
     global locks
-    
-    lock_filepath = "/home/pi/oasis-grow/configs/locks.json"
             
     if not os.path.exists(lock_filepath):
         print("Lockfile does not exist. Have you run the setup scripts?")
@@ -122,8 +121,6 @@ def load_locks(loop_limit = 10000): #leave this alone since it's the python brid
                 print("Main.py tried to read while locks were being written. If this continues, file is corrupted.")
                 pass
 
-    return lock_filepath
-
 #save key values to .json
 def write_state(path, field, value, db_writer = None, loop_limit=2500): #Depends on: load_state()
     if db_writer is not None: #Accepts(path, field, value, custom timeout, db_writer function); Modifies: path
@@ -138,7 +135,7 @@ def write_state(path, field, value, db_writer = None, loop_limit=2500): #Depends
         print(path + " does not exist. Have you run the setup scripts?")
         return
 
-    lock_filepath = load_locks() #get all the mutexes
+    load_locks() #get all the mutexes
 
     for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke if so 
         try:
@@ -226,7 +223,7 @@ def write_dict(path, dictionary, db_writer = None, loop_limit=2500): #Depends on
                 print(err.full_stack())
                 pass
 
-    lock_filepath = load_locks()
+    load_locks()
 
     for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke if so
         try:
@@ -303,8 +300,8 @@ def write_dict(path, dictionary, db_writer = None, loop_limit=2500): #Depends on
                 print(err.full_stack())
                 pass #continue the loop until write is successful or ceiling is hit
 
-#Higher-order device_state checker with reaction and alternative
-def check(state, function, alt_function = None):# = None, args = None, kwargs = None, alt_args = None, alt_kwargs = None):
+#Higher-order device_state checker with reaction and alternative, no params
+def check_state(state, function, alt_function = None):# = None, args = None, kwargs = None, alt_args = None, alt_kwargs = None):
     load_state()
     
     if structs["device_state"][state] == "1":
@@ -314,7 +311,20 @@ def check(state, function, alt_function = None):# = None, args = None, kwargs = 
             alt_function()
         else:
             pass
-        
+
+def check_lock(resource, function = sys.exit, alt_function = None):
+    load_locks()
+
+    if locks[resource] == 1: #if resource is locked
+        print(resource + " is currently in use by another process.")
+        function() #do something, usually exit (default)
+    else:
+        if alt_function is not None:
+            alt_function() #do something else
+        else:
+            pass #or do nothing (default)
+
+
 
 if __name__ == "__main__":
     print("This is a unit test:")
@@ -326,4 +336,9 @@ if __name__ == "__main__":
     def test():
         print("Hello World")
     
-    check("running", test)
+    check_state("running", test)
+
+    if str(sys.argv[1]) == "online":
+        from networking import db_tools as dbt
+        write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "1", db_writer = dbt.patch_firebase)
+        write_dict("/home/pi/oasis-grow/configs/device_state.json", {"running": "1"}, db_writer = dbt.patch_firebase_dict)

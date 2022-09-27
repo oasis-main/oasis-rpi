@@ -291,7 +291,7 @@ def connect_firebase(): #depends on: cs.load_state(), cs.write_state(), dbt.patc
             print("Obtained local credentials")
 
             #launch new_device check at network startup
-            cs.check("new_device", add_new_device)
+            cs.check_state("new_device", add_new_device)
 
             #start listener to bring in db changes on startup
             #Main setup always sets local var to "0"
@@ -374,7 +374,7 @@ def main_setup():
     else:
         minion.start_serial_out() #start outbound serial command interface
     
-    cs.check("access_point", launch_AP) #check to see if the device should be in access point mode
+    cs.check_state("access_point", launch_AP) #check to see if the device should be in access point mode
     
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = None) #set to 0 so listener launches
     connect_firebase() #listener will not be re-called unless a connection fails at some point
@@ -404,12 +404,12 @@ def main_loop(led_timer, connect_timer):
                 connect_firebase()
                 connect_timer = time.time()
             
-            cs.check("awaiting_update", get_updates)
-            cs.check("awaiting_deletion", delete_device)
-            cs.check("awaiting_clear_data_out", clear_data)
-            cs.check("awaiting_timelapse", export_timelapse)
+            cs.check_state("awaiting_update", get_updates)
+            cs.check_state("awaiting_deletion", delete_device)
+            cs.check_state("awaiting_clear_data_out", clear_data)
+            cs.check_state("awaiting_timelapse", export_timelapse)
 
-            cs.check("running", start_core, stop_core) #check if core is supposed to be running
+            cs.check_state("running", start_core, stop_core) #check if core is supposed to be running
 
             sbutton_state = get_button_state(start_stop_button) #Start Button
             if sbutton_state == 0:

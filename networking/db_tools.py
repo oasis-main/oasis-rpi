@@ -1,3 +1,4 @@
+#replace this with MQTT subscriber to a cloud MQTT publisher that executed with requests to patch the database
 #File for all database functions
 import os
 import sys
@@ -197,10 +198,9 @@ def run():
 
 #launches a script to detect changes in the database
 def launch_listener(): #depends on 'subprocess', modifies: state variables
-    global listener
     if listener is None:
-        listener =  multiprocessing.Process(target = run)
-        listener.start()
+        db_monitor =  multiprocessing.Process(target = run)
+        db_monitor.start()
     else:
         print("Listener already exists")
 
