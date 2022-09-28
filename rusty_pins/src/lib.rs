@@ -1,5 +1,5 @@
 use pyo3::prelude::*;
-use rust_gpiozero::{Button, Debounce};
+use rust_gpiozero::{Button, OutputDevice};
 
 // A wrapper "button" struct
 #[pyclass]
@@ -7,11 +7,17 @@ struct ButtonInput {
     buttn: Button
 }
 
-#[pymethods] //this is like __init__()
-impl ButtonInput {
+// A wrapper "button" struct
+#[pyclass]
+struct RelayOutput {
+    relay: OutputDevice
+}
+
+#[pymethods] 
+impl ButtonInput { 
     #[new]
-    fn new(value: i32) -> Self {
-        Button_Input { buttn: Button::new(value).debounce(Duration::from_millis(100))
+    fn new(pin: i32) -> Self { //this is like __init__()
+        ButtonInput {buttn: Button::new(pin)
          // Adds debouncing so that subsequent presses within 100ms don't trigger a press
         }
     }
