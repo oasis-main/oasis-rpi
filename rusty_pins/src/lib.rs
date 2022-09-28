@@ -4,16 +4,15 @@ use rust_gpiozero::{Button, OutputDevice};
 // A wrapper "button" struct
 #[pyclass]
 struct ButtonInput {
-    buttn: Box<Button>
+    buttn: & mut Button
 }
-
 
 
 #[pymethods] 
 impl ButtonInput { 
     #[new]
     fn new(pin: u8) -> Self { //this is like __init__()
-        ButtonInput {buttn: Box::new(Button::new(pin))
+        ButtonInput {buttn: &mut Button::new(pin)
         }
     }
 
