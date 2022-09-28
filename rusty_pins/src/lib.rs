@@ -30,8 +30,8 @@ impl ButtonInput {
         self.buttn.wait_for_press(None);
     }
 
-    fn close(slf: PyRefMut<'_, Self>){
-        slf.buttn.close();
+    fn close(mut self){
+        self.buttn.close();
     }
 
 }
