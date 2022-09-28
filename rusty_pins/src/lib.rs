@@ -4,7 +4,7 @@ use rust_gpiozero::{Button, OutputDevice};
 // A wrapper "button" struct
 #[pyclass]
 struct ButtonInput {
-    buttn: Button
+    buttn: & mut Button
 }
 
 // A wrapper "button" struct
@@ -17,7 +17,7 @@ struct RelayOutput {
 impl ButtonInput { 
     #[new]
     fn new(pin: u8) -> Self { //this is like __init__()
-        ButtonInput {buttn: Button::new(pin)
+        ButtonInput {buttn: &mut Button::new(pin)
          // Adds debouncing so that subsequent presses within 100ms don't trigger a press
         }
     }
