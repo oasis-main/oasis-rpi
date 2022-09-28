@@ -24,7 +24,7 @@ impl ButtonInput {
         self.buttn.wait_for_press(None);
     }
 
-    fn close(self){
+    fn close(&self){
         self.buttn.close();
     }
 
