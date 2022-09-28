@@ -10,33 +10,11 @@ Relay code in python: example
     GPIO.setup(water_GPIO, GPIO.OUT) #GPIO setup
     GPIO.output(water_GPIO, GPIO.LOW) #NO relay close = GPIO.HIGH, NO relay open = GPIO.LOW
     GPIO.output(water_GPIO, GPIO.HIGH) #NC relay close = GPIO.LOW, NC relay open = GPIO.HIGH
-
  */
-
-
-#[pyclass]
-struct Integer{
-    inner: i32
-}
 
 // A "tuple" struct
 #[pyclass]
 struct Number(i32);
-
-// PyO3 supports custom discriminants in enums
-#[pyclass]
-enum HttpResponse {
-    Ok = 200,
-    NotFound = 404,
-    Teapot = 418,
-    // ...
-}
-
-#[pyclass]
-enum MyEnum {
-    Variant,
-    OtherVariant = 30, // PyO3 supports custom discriminants.
-}
 
 #[pymethods] //this is like __init__()
 impl Number {
@@ -44,4 +22,10 @@ impl Number {
     fn new(value: i32) -> Self {
         Number(value)
     }
+}
+
+#[pymodule]
+fn rusty_pins(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
+    m.add_class::<Number>()?;
+    Ok(())
 }

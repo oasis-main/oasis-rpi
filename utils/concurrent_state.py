@@ -325,7 +325,6 @@ def check_lock(resource, function = sys.exit, alt_function = None):
             pass #or do nothing (default)
 
 
-
 if __name__ == '__main__':
     print("This is a unit test:")
     load_state()

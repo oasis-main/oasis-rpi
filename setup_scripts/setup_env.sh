@@ -39,11 +39,14 @@ echo "Installing Rust Modules..."
 cd /home/pi/oasis-grow/rusty_locks
 maturin build --release
 cd ..
+cd /home/pi/oasis-grow/rusty_pins
+maturin build --release
+cd ..
 
 echo "Installing Python3 Root Dependencies for OS..."
 sudo apt-get -y install python3-rpi.gpio #GPIO Pin Access
 sudo apt install python3-opencv -y #Image Processing with GPU
 sudo pip3 install orjson
 sudo pip3 install click==8.0.4 streamlit==0.62.0 pickle5 pyrebase #Network Setup
-sudo pip3 install rpi_ws281x adafruit-circuitpython-neopixel #Raspi LED Driver 
+sudo pip3 install rpi_ws281x adafruit-circuitpython-neopixel #Raspi LED Driver (replace with WSB) 
 sudo python3 -m pip install --force-reinstall adafruit-blinka #Raspi LED Driver
