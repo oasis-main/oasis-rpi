@@ -9,5 +9,5 @@ name = "rusty_pins"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = { version = "0.16.5", features = ["extension-module"] }
+pyo3 = { version = "0.16.4", features = ["extension-module"] }
 rust_gpiozero = "^0.2"
