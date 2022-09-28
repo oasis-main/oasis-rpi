@@ -7,12 +7,6 @@ struct ButtonInput<'a> {
     buttn: &'a mut Button
 }
 
-// A wrapper "button" struct
-#[pyclass]
-struct RelayOutput {
-    relay: OutputDevice
-}
-
 #[pymethods] 
 impl ButtonInput<'_> { 
     #[new]
@@ -30,7 +24,7 @@ impl ButtonInput<'_> {
         self.buttn.wait_for_press(None);
     }
 
-    fn close(self){
+    fn close(& mut self){
         self.buttn.close();
     }
 
