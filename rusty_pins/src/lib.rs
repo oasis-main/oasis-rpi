@@ -3,15 +3,15 @@ use rust_gpiozero::{Button, OutputDevice};
 
 // A wrapper "button" struct
 #[pyclass]
-struct ButtonInput<'a> {
-    buttn: &'a mut Button
+struct ButtonInput {
+    buttn: Button
 }
 
 #[pymethods] 
 impl ButtonInput { 
     #[new]
     fn new(pin: u8) -> Self { //this is like __init__()
-        ButtonInput {buttn: &mut Button::new(pin)
+        ButtonInput {buttn: Button::new(pin)
          // Adds debouncing so that subsequent presses within 100ms don't trigger a press
         }
     }
@@ -24,7 +24,7 @@ impl ButtonInput {
         self.buttn.wait_for_press(None);
     }
 
-    fn close(& mut self){
+    fn close(&mut self){
         self.buttn.close();
     }
 
