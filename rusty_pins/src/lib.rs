@@ -12,20 +12,37 @@ Relay code in python: example
     GPIO.output(water_GPIO, GPIO.HIGH) #NC relay close = GPIO.LOW, NC relay open = GPIO.HIGH
  */
 
-// A "tuple" struct
+// A "button" struct
 #[pyclass]
-struct Number(i32);
+struct ButtonInput {
+    buttn: Button
+}
 
 #[pymethods] //this is like __init__()
-impl Number {
+impl ButtonInput {
     #[new]
     fn new(value: i32) -> Self {
-        Number(value)
+        Button_Input { buttn: Button::new(value).debounce(Duration::from_millis(100))
+         // Adds debouncing so that subsequent presses within 100ms don't trigger a press
+        }
     }
+
+    fn is_pressed(&self){
+        self.buttn.value()
+    }
+
+    fn await_press(&mut self){
+        self.buttn.wait_for_press(None)
+    }
+
+    fn close(self){
+        self.buttn.close()
+    }
+
 }
 
 #[pymodule]
 fn rusty_pins(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
-    m.add_class::<Number>()?;
+    m.add_class::<ButtonInput>()?;
     Ok(())
 }
