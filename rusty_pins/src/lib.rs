@@ -14,7 +14,7 @@ struct RelayOutput {
 }
 
 #[pymethods] 
-impl ButtonInput { 
+impl ButtonInput<'_> { 
     #[new]
     fn new(pin: u8) -> Self { //this is like __init__()
         ButtonInput {buttn: &mut Button::new(pin)
@@ -30,8 +30,8 @@ impl ButtonInput {
         self.buttn.wait_for_press(None);
     }
 
-    fn close(slf: PyRef<'_, Self>){
-        slf.buttn.close();
+    fn close(self){
+        self.buttn.close();
     }
 
 }
