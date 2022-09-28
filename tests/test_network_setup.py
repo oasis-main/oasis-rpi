@@ -8,7 +8,7 @@ sys.path.append("/home/pi/oasis-grow")
 import main
 from networking import connect_oasis
 
-if __name__ == "main":
+if __name__ == '__main__':
 
     print("Testing local setup server to receive creds...")
     server_test = multiprocessing.Process(target = main.launch_AP)

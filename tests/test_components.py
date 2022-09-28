@@ -135,7 +135,7 @@ def test_core(interval):
     time.sleep(int(interval))
     api.stop_core()
     
-if __name__ == "__main__":
+if __name__ == '__main__':
    test_state_handlers()
    test_reset_model()
    test_serial_connections()

@@ -15,6 +15,8 @@ from utils import concurrent_state as cs
 #get hardware config
 cs.load_state()
 
+resource_name = "heater"
+
 #setup GPIO
 GPIO.setmode(GPIO.BCM) #GPIO Numbers instead of board numbers
 Heat_GPIO = cs.structs["hardware_config"]["equipment_gpio_map"]["heat_relay"] #heater pin pulls from config file
@@ -22,7 +24,7 @@ GPIO.setup(Heat_GPIO, GPIO.OUT) #GPIO setup
 GPIO.output(Heat_GPIO, GPIO.LOW)
 
 #define a function making PID discrete & actuate element accordingly
-def actuate_pid(temp_ctrl = 50):
+def actuate_pid(temp_ctrl):
     if (temp_ctrl >= 0) and (temp_ctrl < 1):
         #print("level 0")
         GPIO.output(Heat_GPIO,GPIO.LOW)
@@ -102,12 +104,14 @@ def actuate_interval(duration = 15, interval = 45): #amount of time between wate
     GPIO.output(Heat_GPIO, GPIO.LOW)
     time.sleep(float(interval))
 
-try:
-    if cs.structs["feature_toggles"]["heat_pid"] == "1":
-        actuate_pid(float(sys.argv[1])) #trigger appropriate response
-    else:
-        actuate_interval(float(sys.argv[1]),float(sys.argv[2])) #this uses the timer instead
-except KeyboardInterrupt:
-    print("Interrupted")
-finally:
-    GPIO.cleanup()
+if __name__ == '__main__':
+    try:
+        if cs.structs["feature_toggles"]["heat_pid"] == "1":
+            actuate_pid(float(sys.argv[1])) #trigger appropriate response
+        else:
+            actuate_interval(float(sys.argv[1]),float(sys.argv[2])) #this uses the timer instead
+    except KeyboardInterrupt:
+        print("Interrupted")
+    finally:
+        GPIO.cleanup()
+        cs.safety.unlock(cs.lock_filepath, resource_name)

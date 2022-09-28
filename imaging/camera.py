@@ -18,20 +18,25 @@ resource_name = "camera"
 
 def take_picture(image_path, device_params):
     
+    cs.check_lock(resource_name)
+    cs.safety.lock(cs.lock_filepath, resource_name)
+
     if device_params["awb_mode"] == "on":
         #take picture and save to standard location: libcamera-still -e png -o test.png
         still = Popen(["raspistill", "-e", "jpg",  "-o", str(image_path)]) #snap: call the camera. "-w", "1920", "-h", "1080",
-        still.wait()
+        still.communicate()
     else:
         still = Popen(["raspistill", "-e", "jpg",  "-o", str(image_path), "-awb", "off", "-awbg", device_params["awb_red"] + "," + device_params["awb_blue"]]) #snap: call the camera. "-w", "1920", "-h", "1080",
-        still.wait()
+        still.communicate()
+
+    cs.safety.unlock(cs.lock_filepath, resource_name)
 
 def save_to_feed(image_path):
     #timestamp image
     timestamp = time.time()
     #move timestamped image into feed
     save_most_recent = Popen(["cp", str(image_path), "/home/pi/oasis-grow/data_out/image_feed/image_at_" + str(timestamp)+'.jpg'])
-    save_most_recent.wait()
+    save_most_recent.communicate()
 
 def send_image(path):
     #send new image to firebase
@@ -47,9 +52,6 @@ def send_image(path):
 #define a function to actuate element
 def actuate(interval, nosleep = False): #amount of time between shots in minutes
     cs.load_state()
-    
-    cs.check_lock(resource_name)
-    cs.safety.lock(cs.lock_filepath, resource_name)
 
     take_picture('/home/pi/oasis-grow/data_out/image.jpg', cs.structs["device_params"])
 
@@ -62,8 +64,6 @@ def actuate(interval, nosleep = False): #amount of time between shots in minutes
     if cs.structs["device_state"]["connected"] == "1":
         #send new image to firebase
         send_image('/home/pi/oasis-grow/data_out/image.jpg')
-
-    cs.safety.unlock(cs.lock_filepath, resource_name)
 
     if nosleep == True:
         return
@@ -81,5 +81,6 @@ if __name__ == '__main__':
     except:
         print(err.full_stack())
         cs.safety.unlock(cs.lock_filepath, resource_name)
+        
 
 

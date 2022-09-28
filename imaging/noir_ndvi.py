@@ -69,7 +69,7 @@ def convert_image(image_path):
 
     print("NDVI & Intermediary images saved to disk.")
 
-if __name__ == "main":
+if __name__ == '__main__':
     print("No main program here. Sorry! Look at the file to see importable functions.")
 
 

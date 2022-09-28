@@ -45,7 +45,7 @@ def write_csv(filename, dict): #Depends on: "os" "csv"
 
     return
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     
         
     sim_temp = float()
