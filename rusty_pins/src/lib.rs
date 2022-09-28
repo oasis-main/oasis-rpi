@@ -30,7 +30,7 @@ impl ButtonInput {
         self.buttn.wait_for_press(None);
     }
 
-    fn close(&mut self){
+    fn close(self){
         self.buttn.close();
     }
 
