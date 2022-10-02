@@ -165,21 +165,12 @@ dependencies = [
 
 [[package]]
 name = "rppal"
-version = "0.12.0"
+version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eb26758c881b4837b2f4aef569e4251f75388e36b37204e1804ef429c220121c"
+checksum = "c88c9c6248de4d337747b619d8f671055ef48a87dc21b97998833f189a0bbd4f"
 dependencies = [
  "lazy_static",
  "libc",
-]
-
-[[package]]
-name = "rust_gpiozero"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ef0e15226913de082030649dc55bb1db057ffc1c7c2b418454912a85b40523f3"
-dependencies = [
- "rppal",
 ]
 
 [[package]]
@@ -187,7 +178,7 @@ name = "rusty_pins"
 version = "0.1.0"
 dependencies = [
  "pyo3",
- "rust_gpiozero",
+ "rppal",
 ]
 
 [[package]]
