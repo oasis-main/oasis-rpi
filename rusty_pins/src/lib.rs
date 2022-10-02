@@ -11,7 +11,7 @@ struct GPIO_Out {out: gpio::OutputPin}
 impl GPIO_Out { 
     #[new]
     fn new(pin: u8) -> Self { //this is like __init__()
-        GPIO_Out(gpio::new().get(pin).into_output())
+        GPIO_Out{out: gpio::Gpio::new().get(pin).into_output()}
     }
     
     fn set_high(&mut self){
@@ -23,7 +23,7 @@ impl GPIO_Out {
     }
 
     fn clean_up(&mut self){
-        self.out.drop();
+        drop(self.out);
     }
 
 }
@@ -38,6 +38,6 @@ impl GPIO_Out {
 
 #[pymodule]
 fn rusty_pins(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
-    m.add_class::<GPIO_out>()?;
+    m.add_class::<GPIO_Out>()?;
     Ok(())
 }
