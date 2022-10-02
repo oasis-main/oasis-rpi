@@ -1,15 +1,17 @@
-use pyo3::prelude::*;
-
+//Standard stuff
 use std::error::Error;
 use std::thread;
 use std::time::Duration;
 
+// Fancy stuff
+use pyo3::prelude::*;
 use rppal::gpio::Gpio;
 
-// A wrapper "button" struct
+// A Python-ready GPIO output class
 #[pyclass]
 struct GPIO_out {input: Gpio}
 
+// Behavior of the GPIO output class
 #[pymethods] 
 impl GPIO_out { 
     #[new]
@@ -21,8 +23,12 @@ impl GPIO_out {
         self.set_high();
     }
 
-    fn await_signal(&mut self){
+    fn set_low(&mut self){
         self.set_low();
+    }
+
+    fn clean_up(&mut self){
+        self.drop();
     }
 
 }
