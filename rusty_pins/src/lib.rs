@@ -12,7 +12,8 @@ struct GpioOut {out: OutputPin}
 impl GpioOut { 
     #[new]
     fn new(pin: u8) -> Self { //this is like __init__()
-        GPIO_Out{out = Gpio::new()?.get(pin)?.into_output()}
+        io_pin = Gpio::new()?.get(pin)?.into_output();
+        GpioOut{out: io_pin}
     }
     
     fn set_high(&mut self){
