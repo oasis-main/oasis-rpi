@@ -25,7 +25,7 @@ impl GpioOut {
         self.out.set_low();
     }
 
-    fn clean_up(self){
+    fn clean_up(slf: PyRefMut<'_, Self>){
         drop(self.out);
     }
 
