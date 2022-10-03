@@ -2,17 +2,17 @@
 use pyo3::prelude::*;
 use rppal::gpio::Gpio;
 use rppal::gpio::OutputPin;
+use rppal::gpio::Error;
 
 // A Python-ready GPIO output class
 #[pyclass]
 struct GpioOut{out: OutputPin}
 
-
 // Behavior of the GPIO output class
 #[pymethods] 
 impl GpioOut { 
     #[new]
-    fn new(pin: u8) -> Result<Self> { //this is like __init__()
+    fn new(pin: u8) -> Result<Self,Error> { //this is like __init__()
         let mut io_pin = Gpio::new()?.get(pin)?.into_output();
         Ok(GpioOut{out: io_pin})
     }
