@@ -5,15 +5,16 @@ use rppal::gpio::OutputPin;
 
 // A Python-ready GPIO output class
 #[pyclass]
-struct GpioOut {out: OutputPin}
+struct GpioOut{out: OutputPin}
+
 
 // Behavior of the GPIO output class
 #[pymethods] 
 impl GpioOut { 
     #[new]
-    fn new(pin: u8) -> Self { //this is like __init__()
+    fn new(pin: u8) -> PyResult<Self> { //this is like __init__()
         let mut io_pin = Gpio::new()?.get(pin)?.into_output();
-        GpioOut{out: io_pin}
+        GpioOut(io_pin)
     }
     
     fn set_high(&mut self){
