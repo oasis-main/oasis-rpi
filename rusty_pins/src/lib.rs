@@ -1,17 +1,17 @@
 //Other people's hard work
 use pyo3::prelude::*;
-use rppal::gpio;
+use rppal::gpio::Gpio;
 
 // A Python-ready GPIO output class
 #[pyclass]
-struct GPIO_Out {out: gpio::OutputPin}
+struct GpioOut {out: gpio::OutputPin}
 
 // Behavior of the GPIO output class
 #[pymethods] 
-impl GPIO_Out { 
+impl GpioOut { 
     #[new]
     fn new(pin: u8) -> Self { //this is like __init__()
-        GPIO_Out{out: gpio::Gpio::new()?.get(pin)?.into_output()}
+        GPIO_Out{out: Gpio::new()?.get(pin)?.into_output()}
     }
     
     fn set_high(&mut self){
@@ -38,6 +38,6 @@ impl GPIO_Out {
 
 #[pymodule]
 fn rusty_pins(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
-    m.add_class::<GPIO_Out>()?;
+    m.add_class::<GpioOut>()?;
     Ok(())
 }
