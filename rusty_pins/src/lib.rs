@@ -14,10 +14,9 @@ struct GpioOut{out: OutputPin}
 #[pymethods]
 impl GpioOut { 
     #[new]
-    fn new(pin: u8) -> PyResult<Self> { //this is like __init__()
-        let mut io_pin = Gpio::new()?.get(pin)?.into_output();
-        let mut output = GpioOut{out: io_pin};
-        Ok(output)
+    fn new(pin: u8) -> Self { //this is like __init__()
+        let mut io_pin = Gpio::new().unwrap().get(pin).unwrap().into_output();
+        GpioOut{out: io_pin}
     }
     
     fn set_high(&mut self){
