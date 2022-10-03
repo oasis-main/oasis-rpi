@@ -3,9 +3,8 @@ use pyo3::prelude::*;
 use rppal::gpio::Gpio;
 use rppal::gpio::OutputPin;
 
-
 // A Python-ready GPIO output class
-#[pyclass]
+#[pyclass(unsendable)]
 struct GpioOut{out: OutputPin}
 
 // Behavior of the GPIO output class
