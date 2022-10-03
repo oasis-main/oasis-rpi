@@ -2,7 +2,7 @@
 use pyo3::prelude::*;
 use rppal::gpio::Gpio;
 use rppal::gpio::OutputPin;
-use rppal::uart::Error;
+use rppal::gpio::Error;
 use std::any::TypeId;
 
 
