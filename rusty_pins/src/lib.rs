@@ -2,6 +2,7 @@
 use pyo3::prelude::*;
 use rppal::gpio::Gpio;
 use rppal::gpio::OutputPin;
+use rppal::uart::Error;
 use std::any::TypeId;
 
 
@@ -13,9 +14,9 @@ struct GpioOut{out: OutputPin}
 #[pymethods]
 impl GpioOut { 
     #[new]
-    fn new(pin: u8) -> Result<Self> { //this is like __init__()
+    fn new(pin: u8) -> Result<Self, Error> { //this is like __init__()
         let mut io_pin = Gpio::new()?.get(pin)?.into_output();
-        let mut output = GpioOut{out: io_pin};
+        const GpioOut: output = GpioOut{out: io_pin};
 
         if TypeId::of::<output>() == TypeId::of::<GpioOut>() {
             Ok(output)
