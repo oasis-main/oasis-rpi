@@ -1,17 +1,18 @@
 //Other people's hard work
 use pyo3::prelude::*;
 use rppal::gpio::Gpio;
+use rppal::gpio::OutputPin;
 
 // A Python-ready GPIO output class
 #[pyclass]
-struct GpioOut {out: gpio::OutputPin}
+struct GpioOut {out: OutputPin}
 
 // Behavior of the GPIO output class
 #[pymethods] 
 impl GpioOut { 
     #[new]
     fn new(pin: u8) -> Self { //this is like __init__()
-        GPIO_Out{out: Gpio::new()?.get(pin)?.into_output()}
+        GPIO_Out{out = Gpio::new()?.get(pin)?.into_output()}
     }
     
     fn set_high(&mut self){
