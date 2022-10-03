@@ -14,15 +14,10 @@ struct GpioOut{out: OutputPin}
 #[pymethods]
 impl GpioOut { 
     #[new]
-    fn new(pin: u8) -> Result<Self, Error> { //this is like __init__()
+    fn new(pin: u8) -> PyResult<Self> { //this is like __init__()
         let mut io_pin = Gpio::new()?.get(pin)?.into_output();
         let mut output = GpioOut{out: io_pin};
-
-        if TypeId::of::<output>() == TypeId::of::<GpioOut>() {
-            Ok(output)
-        } else {
-            Err(output.out)
-        }
+        Ok(output)
     }
     
     fn set_high(&mut self){
