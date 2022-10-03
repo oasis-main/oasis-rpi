@@ -15,7 +15,7 @@ impl GpioOut {
         let mut io_pin = Gpio::new()?.get(pin)?.into_output();
         let mut ouxtput = GpioOut{out: io_pin};
 
-        if TypeId::of::<output>() == TypeId::of::<GpioOut>() ==  {
+        if TypeId::of::<output>() == TypeId::of::<GpioOut>() {
             Ok(output)
         } else {
             Err(PyValueError::new_err("Nope"))
