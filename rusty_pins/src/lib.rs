@@ -2,8 +2,6 @@
 use pyo3::prelude::*;
 use rppal::gpio::Gpio;
 use rppal::gpio::OutputPin;
-use rppal::gpio::Error;
-use std::any::TypeId;
 
 
 // A Python-ready GPIO output class
@@ -27,7 +25,7 @@ impl GpioOut {
         self.out.set_low();
     }
 
-    fn clean_up(&mut self){
+    fn clean_up(self){
         drop(self.out);
     }
 
