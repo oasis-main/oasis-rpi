@@ -16,7 +16,7 @@ impl GpioOut {
     #[new]
     fn new(pin: u8) -> Result<Self, Error> { //this is like __init__()
         let mut io_pin = Gpio::new()?.get(pin)?.into_output();
-        const GpioOut: output = GpioOut{out: io_pin};
+        let mut output = GpioOut{out: io_pin};
 
         if TypeId::of::<output>() == TypeId::of::<GpioOut>() {
             Ok(output)
