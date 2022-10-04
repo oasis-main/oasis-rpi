@@ -28,7 +28,7 @@ from utils import reset_model
 from utils import error_handler as err
 from networking import db_tools as dbt
 from networking import wifi
-from minions import microcontroller_manager as minion
+from peripherals import microcontroller_manager as minion
 
 #declare process management variables
 core_process = None #variable to launch & manage the grow controller
@@ -420,7 +420,10 @@ def main_loop(led_timer, connect_timer):
             cbutton_state = get_button_state(connect_internet_button) #Connect Button
             if cbutton_state == 0:
                 print("User pressed the connect button")
-                wifi.enable_AP(dbt.patch_firebase) #launch access point and reboot
+                if cs.structs["device_state"]["connected"] == "1":
+                    wifi.enable_AP(dbt.patch_firebase) #launch access point and reboot
+                else:
+                    wifi.enable_AP()
                 time.sleep(1)
 
             if cs.structs["feature_toggles"]["action_button"] == "1":

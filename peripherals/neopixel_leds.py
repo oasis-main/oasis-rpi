@@ -1,4 +1,3 @@
-#must be run as root
 #import shell modules
 import sys
 import os
