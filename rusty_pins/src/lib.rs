@@ -45,7 +45,7 @@ impl GpioIn {
     }
 
     fn check_low(&self) -> bool {
-        self.input.is_high()
+        self.input.is_low()
     }
 }
 
