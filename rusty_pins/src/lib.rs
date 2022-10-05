@@ -1,8 +1,8 @@
 //Other people's hard work
 use pyo3::prelude::*;
-use rppal::gpio::Gpio;
-use rppal::gpio::OutputPin;
-use rppal::gpio::InputPin;
+use rppal_w_frontend::gpio::Gpio;
+use rppal_w_frontend::gpio::OutputPin;
+use rppal_w_frontend::gpio::InputPin;
 
 // A Python-ready GPIO output class
 #[pyclass(unsendable)]

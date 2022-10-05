@@ -10,4 +10,4 @@ crate-type = ["cdylib"]
 
 [dependencies]
 pyo3 = { version = "0.16.4", features = ["extension-module"] }
-rppal = { version = "0.13.1" } 
+rppal = { version = "0.0.4" } 
