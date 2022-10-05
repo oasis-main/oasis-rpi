@@ -14,12 +14,12 @@ if __name__ == "__main__":
     test = new(27) #this is normally the connect_device button
     
     print("Are we initialized?")
-    print(test.is_high())
+    print(test.check_high())
     
     print("Cool. Now press the button.")
 
     while True:
-        if test.is_low():
+        if test.check_low():
             print("Button press detected!")
             break
     
