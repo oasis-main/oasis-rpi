@@ -92,6 +92,6 @@ def reset_all():
     reset_sensor_info()
     reset_image_feed()
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     reset_all()
 

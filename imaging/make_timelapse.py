@@ -79,7 +79,7 @@ def send_timelapse(path):
     dbt.patch_firebase(cs.structs["access_config"], "timelapse_sent","1")
     print("Firebase has a timelapse in waiting")
 
-if __name__ == "main":
+if __name__ == '__main__':
 	
 	#dir where images are stored
 	image_folder = '/home/pi/oasis-grow/data_out/image_feed'

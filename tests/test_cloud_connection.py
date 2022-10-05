@@ -38,7 +38,7 @@ def send_timelapse_test():
 
 def test_update():
     print("Testing update functionality...")
-    update.get_update_test()
+    update.get_update()
 
 if __name__ == '__main__':  
     test_connect()

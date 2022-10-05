@@ -1,4 +1,3 @@
-#must be run as root
 #import shell modules
 import sys
 import os
@@ -79,7 +78,7 @@ def run():
     while True:
         check_led_status()
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     run()
 
 

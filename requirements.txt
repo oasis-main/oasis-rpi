@@ -6,6 +6,5 @@ pickle5
 Pillow
 RPi.GPIO
 opencv-python
-streamlit==0.62.0
 orjson
 maturin

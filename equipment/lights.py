@@ -26,7 +26,7 @@ GPIO.setup(Light_GPIO, GPIO.OUT) #GPIO setup relay open = GPIO.HIGH, closed = GP
 GPIO.output(Light_GPIO, GPIO.LOW) #relay open = GPIO.HIGH, closed = GPIO.LOW
 
 #define a function to actuate element
-def actuate(time_on = 8, time_off = 20, interval = 15): #arguments = hour of day(int, 24), hour of day(int, 24), minutes
+def actuate_hod(time_on = 8, time_off = 20, interval = 15): #arguments = hour of day(int, 8), hour of day(int, 20), minutes (int, 15)
 
     now = datetime.datetime.now()
     HoD = now.hour
@@ -49,10 +49,11 @@ def actuate(time_on = 8, time_off = 20, interval = 15): #arguments = hour of day
         GPIO.output(Light_GPIO, GPIO.HIGH)
         time.sleep(float(interval)*60)
 
-try:
-    actuate(int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]))
-except KeyboardInterrupt:
-    print("Interrupted")
-finally:
-    GPIO.cleanup()
+if __name__ == '__main__':
+    try:
+        actuate_hod(int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]))
+    except KeyboardInterrupt:
+        print("Interrupted")
+    finally:
+        GPIO.cleanup()
 

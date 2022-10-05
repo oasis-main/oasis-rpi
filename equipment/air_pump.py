@@ -29,7 +29,6 @@ def actuate(time_on = 0, time_off = 0, interval = 900): #time on must be less th
     now = datetime.datetime.now()
     HoD = now.hour
 
-
     if time_on < time_off:
         if HoD >= time_on and HoD < time_off:
             GPIO.output(Air_GPIO, GPIO.HIGH) #light on (relay closed)

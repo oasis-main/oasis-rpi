@@ -105,12 +105,13 @@ def actuate_interval(duration = 15, interval = 45): #amount of time between humi
     GPIO.output(Dehum_GPIO, GPIO.LOW)
     time.sleep(float(interval))
 
-try:
-    if cs.structs["feature_toggles"]["dehum_pid"] == "1":
-        actuate_pid(float(sys.argv[1])) #trigger appropriate response
-    else:
-        actuate_interval(float(sys.argv[1]),float(sys.argv[2]))
-except KeyboardInterrupt:
-    print("Interrupted")
-finally:    
-    GPIO.cleanup()
+if __name__ == '__main__':
+    try:
+        if cs.structs["feature_toggles"]["dehum_pid"] == "1":
+            actuate_pid(float(sys.argv[1])) #trigger appropriate response
+        else:
+            actuate_interval(float(sys.argv[1]),float(sys.argv[2]))
+    except KeyboardInterrupt:
+        print("Interrupted")
+    finally:    
+        GPIO.cleanup()

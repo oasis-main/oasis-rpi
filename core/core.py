@@ -28,7 +28,7 @@ import datetime
 from utils import concurrent_state as cs
 from utils import error_handler as err
 from networking import db_tools as dbt
-from minions import microcontroller_manager as minion
+from peripherals import microcontroller_manager as minion
 
 #declare process management variables
 heat_process = None

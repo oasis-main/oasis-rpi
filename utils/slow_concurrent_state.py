@@ -322,7 +322,7 @@ def write_dict(path, dictionary, db_writer = None, loop_limit=2500): #Depends on
                 print(err.full_stack())
                 pass #continue the loop until write is successful or ceiling is hit
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     print("This is a unit test:")
     load_state()
     load_locks()

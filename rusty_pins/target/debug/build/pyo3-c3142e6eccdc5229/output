@@ -1,0 +1,6 @@
+cargo:rustc-cfg=Py_3_6
+cargo:rustc-cfg=Py_3_7
+cargo:rustc-cfg=Py_3_8
+cargo:rustc-cfg=Py_3_9
+cargo:rustc-cfg=min_const_generics
+cargo:rustc-cfg=addr_of

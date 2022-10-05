@@ -26,9 +26,9 @@ def test_state_handlers():
     core.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"), dbt.patch_firebase)
     core.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"), dbt.patch_firebase)
 
-    connect_oasis.cs.load_state()
-    connect_oasis.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"), dbt.patch_firebase)
-    connect_oasis.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"), dbt.patch_firebase)
+    connect_oasis.slow_cs.load_state()
+    connect_oasis.slow_cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"), dbt.patch_firebase)
+    connect_oasis.slow_cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"), dbt.patch_firebase)
 
     camera.cs.load_state()
     camera.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"), dbt.patch_firebase)
@@ -114,17 +114,17 @@ def test_led():
     
     print("connected_running")
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "connected_running", dbt.patch_firebase)
-    cs.check("onboard_led", main.update_onboard_led, main.update_minion_led)
+    cs.check_state("onboard_led", main.launch_onboard_led, main.update_minion_led)
     time.sleep(5)
 
     print("error")
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "error", dbt.patch_firebase)
-    cs.check("onboard_led", main.update_onboard_led, main.update_minion_led)
+    cs.check_state("onboard_led", main.update_onboard_led, main.update_minion_led)
     time.sleep(5)
     
     print("offline_idle")
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "offline_idle", dbt.patch_firebase)
-    cs.check("onboard_led", main.update_onboard_led, main.update_minion_led)
+    cs.check_state("onboard_led", main.update_onboard_led, main.update_minion_led)
     time.sleep(5)
 
     print("Are the leds behaving as expected?")
@@ -135,7 +135,7 @@ def test_core(interval):
     time.sleep(int(interval))
     api.stop_core()
     
-if __name__ == "__main__":
+if __name__ == '__main__':
    test_state_handlers()
    test_reset_model()
    test_serial_connections()
