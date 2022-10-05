@@ -26,8 +26,7 @@ sudo apt install python3-pip -y
 sudo apt-get install python3-venv -y
 
 echo "Installing Rust Compiler..."
-curl https://sh.rustup.rs -sSf | sh
-. "$HOME/.cargo/env"
+. /home/pi/oasis-grow/setup_scripts/install_rust.sh
 
 echo "Installing Python Modules..."
 python3 -m venv /home/pi/oasis-grow/oasis_venv_pi #uncomment to build env from source
