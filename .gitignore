@@ -3,3 +3,5 @@ __pycache__/
 /configs
 /data_out
 /oasis_venv_pi
+/rusty_locks/target/debug
+/rusty_pins/target/debug 
