@@ -164,10 +164,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "rppal"
-version = "0.13.1"
+name = "rppal_w_frontend"
+version = "0.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c88c9c6248de4d337747b619d8f671055ef48a87dc21b97998833f189a0bbd4f"
+checksum = "ad6d5c5d832f4ecc7724b2a87f583a437a55c06767d6988c0b75f13867a774f5"
 dependencies = [
  "lazy_static",
  "libc",
@@ -178,7 +178,7 @@ name = "rusty_pins"
 version = "0.1.0"
 dependencies = [
  "pyo3",
- "rppal",
+ "rppal_w_frontend",
 ]
 
 [[package]]
