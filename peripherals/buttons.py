@@ -11,7 +11,7 @@ def new(bcm_pin_number: int):
 
 if __name__ == "__main__":
     print("This is a unit test for buttons.")
-    test = new(18) #this is normally the connect_device button
+    test = new(5) #this is normally the connect_device button
     
     print("Are we initialized?")
     print(test.check_low())
