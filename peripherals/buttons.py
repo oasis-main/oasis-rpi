@@ -11,16 +11,20 @@ def new(bcm_pin_number: int):
 
 if __name__ == "__main__":
     print("This is a unit test for buttons.")
-    test = new(5) #this is normally the connect_device button
-    
+    start = new(5)
+    connect = new(6) #this is normally the connect_device button
+    action = new(13)
+
     print("Are we initialized?")
-    print(test.check_low())
+    print(start.check_high())
+    print(connect.check_high())
+    print(action.check_high())
     
     print("Cool. Now press the button.")
 
     while True:
-        state = test.check_high()
-        if  state == True:
+        state = start.check_high()
+        if  state == False:
             print("Button press detected!")
             break
     
