@@ -1,3 +1,8 @@
+import sys
+
+#set proper path for modules
+sys.path.append('/home/pi/oasis-grow')
+
 import rusty_pins
 
 def new(bcm_pin_number: int):

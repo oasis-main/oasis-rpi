@@ -1,6 +1,11 @@
 import time
 import datetime
 
+import sys
+
+#set proper path for modules
+sys.path.append('/home/pi/oasis-grow')
+
 import rusty_pins
 
 def time_actuate(pin: int, time_on = 0, time_off = 0, interval = 900):
