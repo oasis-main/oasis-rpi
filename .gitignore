@@ -1,8 +1,8 @@
 /configs
 /data_out
 /oasis_venv_pi
-/rusty_locks/target/debug
-/rusty_pins/target/debug
+/rusty_locks/target
+/rusty_pins/target
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
