@@ -16,15 +16,15 @@ if __name__ == "__main__":
     action = new(13)
 
     print("Are we initialized?")
-    print(start.check_high())
-    print(connect.check_high())
-    print(action.check_high())
+    print(start.check_low())
+    print(connect.check_low())
+    print(action.check_low())
     
     print("Cool. Now press the button.")
 
     while True:
         state = start.check_high()
-        if  state == False:
+        if  state == True:
             print("Button press detected!")
             break
     
