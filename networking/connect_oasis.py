@@ -60,7 +60,6 @@ def modAccessConfig(name, e, p):
     print("Access configs added")
 
 def save_creds_exit(email, password, wifi_name, wifi_pass, device_name, cmd = False):
-    global st
     
     device_name = re.sub('[^a-zA-Z0-9\n\.]', ' ', device_name) #sub all non-alphaneumeric characters with spaces
 

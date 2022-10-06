@@ -51,7 +51,7 @@ lock_filepath = "/home/pi/oasis-grow/configs/locks.json"
 def load_state(loop_limit=1000): 
     global structs
 
-    for struct in structs: #now we're going to load an populat the data    
+    for struct in structs: #now we're going to load an populate the data    
 
         #load device state
         for i in list(range(int(loop_limit))): #try to load, pass and try again if fails
@@ -174,7 +174,6 @@ def write_state(path, field, value, db_writer = None, loop_limit=2500): #Depends
                     safety.unlock(lock_filepath, path)
                     
                     load_state()
-                    
                     break #break the loop when the write has been successful
                 else:
                     print("Waiting...")
@@ -207,8 +206,8 @@ def write_state(path, field, value, db_writer = None, loop_limit=2500): #Depends
 
                 break
             else:
+                #print(err.full_stack())
                 print(path + " write failed, trying again. If this persists, file is corrupted.")
-                print(err.full_stack())
                 pass #continue the loop until write is successful or ceiling is hit
 
 #save key values to .json
@@ -296,8 +295,8 @@ def write_dict(path, dictionary, db_writer = None, loop_limit=2500): #Depends on
                 break
 
             else:
+                #print(err.full_stack())
                 print(path + " write failed, trying again. If this persists, file is corrupted.")
-                print(err.full_stack())
                 pass #continue the loop until write is successful or ceiling is hit
 
 #Higher-order device_state checker with reaction and alternative, no params

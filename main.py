@@ -28,6 +28,8 @@ from networking import wifi
 from peripherals import buttons as btn
 from peripherals import microcontroller_manager as minion
 
+from equipment import water_pump
+
 #declare process management variables
 core_process = None #variable to launch & manage the grow controller
 
@@ -271,7 +273,7 @@ def connect_firebase(): #depends on: cs.load_state(), cs.write_state(), dbt.patc
             print("Device is connected over HTTPS to the Oasis Network")
             
         except Exception as e:
-            #print(err.full_stack()) #display error
+            print(err.full_stack()) #display error
             #write state as not connected
             cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = dbt.patch_firebase)
             print("Could not establish an HTTPS connection to Oasis Network")
@@ -382,7 +384,7 @@ def main_loop(led_timer, connect_timer):
                 abutton_state = btn.get_button_state(btn.action_button) #Water Button
                 if abutton_state == 0:
                     if cs.structs["feature_toggles"]["action_water"] == "1":
-                        run_water(60)
+                        water_pump.actuate(60, )
                     if cs.structs["feature_toggles"]["action_camera"] == "1":
                         say_cheese = Popen(['python3', '/home/pi/oasis-grow/imaging/camera.py', "0"])
                         say_cheese.wait()
@@ -391,7 +393,6 @@ def main_loop(led_timer, connect_timer):
                 led_timer = time.time()
 
     except(KeyboardInterrupt):
-        GPIO.cleanup()
         time.sleep(5)
         reset_model.reset_device_state()
 

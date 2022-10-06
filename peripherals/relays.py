@@ -3,7 +3,6 @@
 
 import time
 import datetime
-
 import sys
 
 #set proper path for modules
@@ -11,27 +10,48 @@ sys.path.append('/home/pi/oasis-grow')
 
 import rusty_pins
 
-def actuate_time(pin: int, time_on = 0, time_off = 0, interval = 900):
+def turn_on(output, mode = "momentary"):
+    if mode == "momentary":
+        pass
+    if mode == "latching":
+        pass
+
+def turn_off(output, mode = "momentary"):
+    if mode == "momentary":
+        pass
+    if mode == "latching":
+        pass
+
+def actuate_time_hod(pin: int, time_on = 0, time_off = 0, interval = 20, units = "seconds"): #updates every 20 minutes by default 
     try:
         output = rusty_pins.GpioOut(pin)
         
+        if units == "seconds":
+            time_active = interval
+        if units == "minutes":
+            time_active = interval*60
+        if units == "hours":
+            time_active = interval*60**2
+        if units == "days":
+            time_active = interval*24*60**2
+
         now = datetime.datetime.now()
         HoD = now.hour
 
         if time_on < time_off:
             if HoD >= time_on and HoD < time_off:
                 output.set_high() #light on (relay closed)
-                time.sleep(float(interval)*60)
+                time.sleep(float(time_active))
             if HoD < time_on or HoD >= time_off:
                 output.set_low()
-                time.sleep(float(interval)*60)
+                time.sleep(float(time_active))
         if time_on > time_off:
             if HoD >=  time_on or HoD < time_off:
                 output.set_high() #light on (relay closed)
-                time.sleep(float(interval)*60)
+                time.sleep(float(time_active))
             if HoD < time_on and  HoD >= time_off:
                 output.set_low() #light on (relay closed)
-                time.sleep(float(interval)*60)
+                time.sleep(float(time_active))
         if time_on == time_off:
             output.set_high()
             time.sleep(float(interval)*60)
@@ -40,20 +60,33 @@ def actuate_time(pin: int, time_on = 0, time_off = 0, interval = 900):
     finally:
         output.set_low()
 
-def interval_actuate(pin: int, duration = 15, interval = 45):
+def actuate_interval_sleep(pin: int, duration = 15, sleep = 45, units = "seconds"):
     try:
         output = rusty_pins.GpioOut(pin)
         
+        if units == "seconds":
+            time_active = duration
+            time_sleep = sleep
+        if units == "minutes":
+            time_active = duration * 60
+            time_sleep = sleep * 60
+        if units == "hours":
+            time_active = duration * 60 ** 2
+            time_sleep = sleep * 60 ** 2
+        if units == "days":
+            time_active = duration * 24 * 60 ** 2
+            time_sleep = sleep * 24 * 60 ** 2
+
         output.set_high()
-        time.sleep(float(duration))
+        time.sleep(float(time_active)) #set seconds to minutes
         output.set_low()
-        time.sleep(float(interval))
+        time.sleep(float(time_sleep))
     except KeyboardInterrupt:
         print("You terminated the program while a relay was in use. Cleaning up...")
     finally:
         output.set_low()
 
-def slow_pwm_actuate(pin: int, intensity: int, pulse_domain = 10.0):
+def actuate_slow_pwm(pin: int, intensity: int, pulse_domain = 10.0):
     try:
         output = rusty_pins.GpioOut(pin)
 
@@ -133,3 +166,9 @@ def slow_pwm_actuate(pin: int, intensity: int, pulse_domain = 10.0):
         print("You terminated the program while a relay was in use. Cleaning up...")
     finally:
         output.set_low()
+
+if __name__ == "__main__":
+    print("This is a unit test for relays physical I/O.")
+    print("Watch the lights...")
+    actuate_time_hod(pin = 14, interval=.5)
+    actuate_interval_sleep(pin = 14, duration = 15, sleep = 45)
