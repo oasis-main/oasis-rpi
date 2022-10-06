@@ -22,17 +22,17 @@ from utils import reset_model
 from utils import error_handler as err
 from networking import db_tools as dbt
 from networking import wifi
-from peripherals import buttons as btn
+from peripherals import buttons
+from peripherals import relays
 from peripherals import microcontroller_manager as minion
 
-from equipment import water_pump
 
 #declare process management variables
 core_process = None #variable to launch & manage the grow controller
 
 #checks whether system is booting in Access Point Mode, launches connection script if so
 def launch_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); Modifies: state_variables, 'ser_out', device_state.json
-    global minion, connect_internet_button
+    global minion
 
     #launch server subprocess to accept credentials over Oasis wifi network, does not wait
     server_process = Popen(["sudo", "streamlit", "run", "/home/pi/oasis-grow/networking/connect_oasis.py", "--server.headless=true", "--server.port=80", "--server.address=192.168.4.1", "--server.enableCORS=false", "--server.enableWebsocketCompression=false"])
@@ -40,7 +40,7 @@ def launch_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); 
 
     time.sleep(3)
 
-    btn.setup_button_interface()
+    buttons.setup_button_interface()
 
     if minion.ser_out is not None:
         #set led_status = "connectWifi"
@@ -49,7 +49,7 @@ def launch_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); 
         #write LED state to seriaL
         while True: #place the "exit button" here to leave connection mode
             minion.ser_out.write(bytes(str(cs.structs["device_state"]["led_status"]+"\n"), "utf-8"))
-            cbutton_state = btn.get_button_state(btn.connect_internet_button)
+            cbutton_state = buttons.get_button_state(buttons.connect_internet_button)
             if cbutton_state == 0:
                 cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","offline_idle", db_writer = dbt.patch_firebase)
                 minion.ser_out.write(bytes(str(cs.structs["device_state"]["led_status"]+"\n"), "utf-8"))
@@ -58,7 +58,7 @@ def launch_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); 
                 time.sleep(1)
     else:
         while True:
-            cbutton_state = btn.get_button_state(btn.connect_internet_button)
+            cbutton_state = buttons.get_button_state(buttons.connect_internet_button)
             if cbutton_state == 0:
                 server_process.terminate()
                 wifi.enable_WiFi()
@@ -334,7 +334,7 @@ def main_setup():
     
     setup_core_process() #launch sensor, data collection, & feedback management
 
-    btn.setup_button_interface() #Setup on-device interface for interacting with device using buttons
+    buttons.setup_button_interface() #Setup on-device interface for interacting with device using buttons
 
     #start the clock for  refresh
     led_timer = time.time()
@@ -362,13 +362,13 @@ def main_loop(led_timer, connect_timer):
 
             cs.check_state("running", start_core, stop_core) #check if core is supposed to be running
 
-            sbutton_state = btn.get_button_state(btn.start_stop_button) #Start Button
+            sbutton_state = buttons.get_button_state(buttons.start_stop_button) #Start Button
             if sbutton_state == 0:
                 print("User pressed the start/stop button")
                 switch_core_running() #turn core on/off
                 time.sleep(1)
 
-            cbutton_state = btn.get_button_state(btn.connect_internet_button) #Connect Button
+            cbutton_state = buttons.get_button_state(buttons.connect_internet_button) #Connect Button
             if cbutton_state == 0:
                 print("User pressed the connect button")
                 if cs.structs["device_state"]["connected"] == "1":
@@ -378,10 +378,12 @@ def main_loop(led_timer, connect_timer):
                 time.sleep(1)
 
             if cs.structs["feature_toggles"]["action_button"] == "1":
-                abutton_state = btn.get_button_state(btn.action_button) #Water Button
+                abutton_state = buttons.get_button_state(buttons.action_button) #Water Button
                 if abutton_state == 0:
                     if cs.structs["feature_toggles"]["action_water"] == "1":
-                        water_pump.actuate(60, )
+                        water_GPIO = cs.structs["hardware_config"]["equipment_gpio_map"]["water_relay"] #bcm pin_no pulls from config file
+                        water_GPIO = int(water_GPIO)
+                        relays.actuate_interval_sleep(pin = water_GPIO, duration = 60, sleep = 0, mode = "seconds")
                     if cs.structs["feature_toggles"]["action_camera"] == "1":
                         say_cheese = Popen(['python3', '/home/pi/oasis-grow/imaging/camera.py', "0"])
                         say_cheese.wait()

@@ -8,8 +8,6 @@ import sys
 sys.path.append('/home/pi/oasis-grow')
 
 #import libraries
-import time
-
 from peripherals import relays
 from utils import concurrent_state as cs
 
