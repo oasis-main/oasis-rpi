@@ -1,3 +1,6 @@
+#add latching, normally-closed, and normally-open
+#add multi-channel output results
+
 import time
 import datetime
 
@@ -8,7 +11,7 @@ sys.path.append('/home/pi/oasis-grow')
 
 import rusty_pins
 
-def time_actuate(pin: int, time_on = 0, time_off = 0, interval = 900):
+def actuate_time(pin: int, time_on = 0, time_off = 0, interval = 900):
     try:
         output = rusty_pins.GpioOut(pin)
         

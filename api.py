@@ -12,7 +12,6 @@ from utils import reset_model as r
 from networking import wifi
 from networking import db_tools as dbt
 
-
 def start_core():
     cs.load_state()
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","1", db_writer = dbt.patch_firebase)
