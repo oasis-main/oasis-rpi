@@ -42,6 +42,8 @@ action_button = None #holds GPIO object for triggering the desired action
 def setup_button_interface(): #depends on: cs.load_state(), 'RPi.GPIO'; modifies: start_stop_button, connect_internet_button, run_action_button, state variables
     global start_stop_button, connect_internet_button, action_button
     
+    print("Setting up button interface...")
+
     #specify gpio pin number mode
     GPIO.setmode(GPIO.BCM)
 
@@ -61,6 +63,7 @@ def setup_button_interface(): #depends on: cs.load_state(), 'RPi.GPIO'; modifies
 #gets the state of a button (returns 1 if not pressed, 0 if pressed)
 def get_button_state(button): #Depends on: RPi.GPIO; Modifies: None
     state = GPIO.input(button)
+    print(state)
     return state
 
 #checks whether system is booting in Access Point Mode, launches connection script if so
@@ -70,6 +73,8 @@ def launch_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); 
     #launch server subprocess to accept credentials over Oasis wifi network, does not wait
     server_process = Popen(["sudo", "streamlit", "run", "/home/pi/oasis-grow/networking/connect_oasis.py", "--server.headless=true", "--server.port=80", "--server.address=192.168.4.1", "--server.enableCORS=false", "--server.enableWebsocketCompression=false"])
     print("Access Point Mode enabled")
+
+    time.sleep(3)
 
     setup_button_interface()
 
@@ -85,7 +90,6 @@ def launch_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); 
                 cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","offline_idle", db_writer = dbt.patch_firebase)
                 minion.ser_out.write(bytes(str(cs.structs["device_state"]["led_status"]+"\n"), "utf-8"))
                 server_process.terminate()
-                server_process.wait()
                 wifi.enable_WiFi()
                 time.sleep(1)
     else:
@@ -93,7 +97,6 @@ def launch_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); 
             cbutton_state = get_button_state(connect_internet_button)
             if cbutton_state == 0:
                 server_process.terminate()
-                server_process.wait()
                 wifi.enable_WiFi()
                 time.sleep(1)
 
@@ -192,6 +195,7 @@ def switch_core_running(): #Depends on: cs.load_state(), cs.write_state(), dbt.p
 
 #Executes update if connected & idle, waits for completion
 def get_updates(): #depends on: cs.load_state(),'subproceess', update.py; modifies: system code, state variables
+    print("Fetching over-the-air updates")
     cs.load_state()
     
     if cs.structs["device_state"]["running"] == "0": #replicated in the main loop
