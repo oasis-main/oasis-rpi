@@ -63,7 +63,6 @@ def setup_button_interface(): #depends on: cs.load_state(), 'RPi.GPIO'; modifies
 #gets the state of a button (returns 1 if not pressed, 0 if pressed)
 def get_button_state(button): #Depends on: RPi.GPIO; Modifies: None
     state = GPIO.input(button)
-    print(state)
     return state
 
 #checks whether system is booting in Access Point Mode, launches connection script if so
