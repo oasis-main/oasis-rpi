@@ -40,7 +40,7 @@ def launch_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); 
 
     time.sleep(3)
 
-    buttons.setup_button_interface()
+    buttons.setup_button_interface(cs.structs["hardware_config"])
 
     if minion.ser_out is not None:
         #set led_status = "connectWifi"
@@ -334,7 +334,7 @@ def main_setup():
     
     setup_core_process() #launch sensor, data collection, & feedback management
 
-    buttons.setup_button_interface() #Setup on-device interface for interacting with device using buttons
+    buttons.setup_button_interface(cs.structs["hardware_config"]) #Setup on-device interface for interacting with device using buttons
 
     #start the clock for  refresh
     led_timer = time.time()
