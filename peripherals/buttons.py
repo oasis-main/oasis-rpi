@@ -19,7 +19,7 @@ if __name__ == "__main__":
     print("Cool. Now press the button.")
 
     while True:
-        state = connect.check_high()
+        state = connect.check_low()
         if  state == True:
             print("Button press detected!")
             break
