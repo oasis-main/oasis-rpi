@@ -8,9 +8,6 @@ sys.path.append('/home/pi/oasis-grow')
 sys.path.append('/home/pi/oasis-grow/core')
 sys.path.append('/home/pi/oasis-grow/utils')
 
-#data
-import json
-
 #concurrency
 from subprocess import Popen
 import multiprocessing
