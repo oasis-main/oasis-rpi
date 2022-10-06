@@ -1,5 +1,4 @@
 #import shell modules
-import os.path
 import sys
 
 #set proper path for modules
@@ -8,10 +7,12 @@ sys.path.append('/home/pi/oasis-grow')
 #data handling
 import json
 import re
+import time
 
 #import custom modules
 from utils import reset_model
 from utils import slow_concurrent_state as slow_cs
+from utils import error_handler as err
 from networking import wifi
 
 #create a password-protected lan interface for accepting credentials
@@ -52,10 +53,7 @@ def modAccessConfig(name, e, p):
     slow_cs.structs["access_config"]["id_token"] = " "
     slow_cs.structs["access_config"]["local_id"] = " "
 
-    with open("/home/pi/oasis-grow/configs/access_config.json", "r+") as a:
-        a.seek(0)
-        json.dump(slow_cs.structs["access_config"], a)
-        a.truncate()
+    slow_cs.write_dict("/home/pi/oasis-grow/configs/access_config.json", slow_cs.structs["access_config"], db_writer = None)
 
     print("Access configs added")
 
@@ -74,7 +72,7 @@ def save_creds_exit(email, password, wifi_name, wifi_pass, device_name, cmd = Fa
     #reset_box
     reset_model.reset_device_state()
 
-    #set new_device to "0" before rebooting
+    #set new_device to "1" before rebooting
     slow_cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "new_device", "1", db_writer = None)
 
     if cmd == False: #pass this argument as true to save creds without rebooting
@@ -100,4 +98,9 @@ if __name__ == '__main__':
     #st.button('Launch', on_click=save_creds_exit, args=[email, password, wifi_name, wifi_pass, device_name]) #only for recent streamlit versions
 
     if st.button("Launch"):
-        save_creds_exit(email, password, wifi_name, wifi_pass, device_name)
+        try:
+            save_creds_exit(email, password, wifi_name, wifi_pass, device_name)
+            time.sleep(1)
+        except:
+            print(err.full_stack())
+            sys.exit()
