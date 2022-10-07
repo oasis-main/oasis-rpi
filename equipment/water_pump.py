@@ -8,6 +8,7 @@ import sys
 sys.path.append('/home/pi/oasis-grow')
 
 #import libraries
+import rusty_locks as safety
 from peripherals import relays
 from utils import concurrent_state as cs
 
@@ -19,7 +20,9 @@ water_GPIO = int(water_GPIO)
 if __name__ == "__main__":
     try:
         if cs.structs["feature_toggles"]["water_pid"] == "1":
+            cs.safety.lock(cs.lock_filepath, "water_pump")
             relays.actuate_slow_pwm(pin = water_GPIO, intensity = float(sys.argv[1])) #trigger appropriate response
+            cs.safety.unlock(cs.lock_filepath, "water_pump")
         else:
             relays.actuate_interval_sleep(pin = water_GPIO, duration = float(sys.argv[1]), sleep = float(sys.argv[2]))
     except KeyboardInterrupt:

@@ -26,7 +26,6 @@ from peripherals import buttons
 from peripherals import relays
 from peripherals import microcontroller_manager as minion
 
-
 #declare process management variables
 core_process = None #variable to launch & manage the grow controller
 
@@ -237,33 +236,31 @@ def connect_firebase(): #depends on: cs.load_state(), cs.write_state(), dbt.patc
 
     def try_connect():
         try:
-            print("FireBase verification...")
+            print("FireBase verification:")
 
             #fetch refresh token
             refresh_token = dbt.get_refresh_token(wak, email, password)
-
             #fetch refresh token and save to access_config
             cs.write_state("/home/pi/oasis-grow/configs/access_config.json","refresh_token", refresh_token, db_writer = None)
 
             #bring in the refresh token for use further down
             cs.load_state()
             refresh_token = cs.structs["access_config"]["refresh_token"]
-            print("Obtained refresh token")
+            print("Obtained a refresh token!")
 
             #fetch a new id_token & local_id
             id_token, user_id = dbt.get_local_credentials(wak, refresh_token)
-
             #write local credentials to access config
             cs.write_state("/home/pi/oasis-grow/configs/access_config.json","id_token", id_token, db_writer = None)
             cs.write_state("/home/pi/oasis-grow/configs/access_config.json","local_id", user_id, db_writer = None)
-            print("Obtained local credentials")
+            print("Devie authorized with local credentials.")
 
             #launch new_device check at network startup
             cs.check_state("new_device", add_new_device)
 
             #start listener to bring in db changes on startup
-            #Main setup always sets local var to "0"
-            dbt.launch_listener() #Flip local + cloud connected to 1 and start listener
+            #Main setup always sets 'connected' == "0"
+            dbt.launch_listener() #start listener, then flip local & cloud 'connected' == "1"
             cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"connected","1", db_writer = dbt.patch_firebase)
         
             #update the device state to "connected"

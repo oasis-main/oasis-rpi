@@ -70,20 +70,23 @@ def store_file(user, storage, path, device_name, filename):
 
 #gets new refresh token from firebase
 def get_refresh_token(wak,email,password): #Depends on: 'requests', 'json'; Modifies: None
+    print("Requesting refresh token...")
     sign_in_url = "https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key=" + wak
     sign_in_payload = json.dumps({"email": email, "password": password, "returnSecureToken": "true"})
     r = requests.post(sign_in_url, sign_in_payload)
     data = json.loads(r.content)
+    print("Done.")
     return data["refreshToken"]
 
 #get local_id and id_token from firebase
 def get_local_credentials(wak,refresh_token): #Depends on: cs.load_state(), 'requests'; Modifies: state variables,  cs.structs["access_config"].json
-    #get local credentials
+    print("Fetching local credentials...")
     refresh_url = "https://securetoken.googleapis.com/v1/token?key=" + wak
     refresh_payload = '{"grant_type": "refresh_token", "refresh_token": "%s"}' % refresh_token
     refresh_req = requests.post(refresh_url, data=refresh_payload)
     id_token = refresh_req.json()["id_token"]
     user_id = refresh_req.json()["user_id"]
+    print("Done.")
     return id_token, user_id
 
 def fetch_device_data(access_config):
@@ -161,6 +164,15 @@ def detect_multiple_field_events(user, db):
     listener = multiprocessing.Process(target=detect_field_event, args=(user, db))
     listener.start()
 
+def kill_listener():
+    global listener
+    if listener is not None:
+        listener.terminate()
+        listener = None
+    else:
+        print("Listener does not exist")
+        pass
+
 #This function launches a thread that checks whether the device has been deleted and kills this script if so
 def stop_condition(field,value): #Depends on: os, Process,cs.load_state(); Modifies: listener_list, stops this whole script
 
@@ -198,18 +210,10 @@ def run():
 
 #launches a script to detect changes in the database
 def launch_listener(): #depends on 'subprocess', modifies: state variables
-    if listener is None:
+    cs.load_state()
+    if cs.structs["device_state"]["connected"] == "0":
         db_monitor =  multiprocessing.Process(target = run)
         db_monitor.start()
     else:
         print("Listener already exists")
-
-def kill_listener():
-    global listener
-    if listener is not None:
-        listener.terminate()
-        listener = None
-    else:
-        print("Listener does not exist")
-        pass
         
