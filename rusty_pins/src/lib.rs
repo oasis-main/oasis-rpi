@@ -36,7 +36,7 @@ struct GpioIn{input: InputPin}
 impl GpioIn { 
     #[new] // call this from python with rusty_pins.GpioOut(pin#)
     fn new(pin: u8) -> Self { //this is like python __init__()
-        let io_pin = Gpio::new().unwrap().get(pin).unwrap().into_input_pullup();
+        let io_pin = Gpio::new().unwrap().get(pin).unwrap().into_input_pulldown();
         GpioIn{input: io_pin}
     }
 
