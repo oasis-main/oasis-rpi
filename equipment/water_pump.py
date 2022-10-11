@@ -1,14 +1,13 @@
 #---------------------------------------------------------------------------------------
-#Manages Hardware and timer for watering
+# I/O for controlling a watering pump
 #---------------------------------------------------------------------------------------
-#import shell modules
+#import OS modules
 import sys
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
 
 #import libraries
-import rusty_locks as safety
 from peripherals import relays
 from utils import concurrent_state as cs
 

@@ -8,8 +8,9 @@ sys.path.append('/home/pi/oasis-grow')
 
 #import libraries
 import time
-from subprocess import PIPE, Popen
 from imaging import noir_ndvi
+
+import rusty_pipes
 from utils import concurrent_state as cs
 from utils import error_handler as err
 from networking import db_tools as dbt
@@ -23,11 +24,11 @@ def take_picture(image_path, device_params):
 
     if device_params["awb_mode"] == "on":
         #take picture and save to standard location: libcamera-still -e png -o test.png
-        still = Popen(["raspistill", "-e", "jpg",  "-o", str(image_path)]) #snap: call the camera. "-w", "1920", "-h", "1080",
-        still.communicate()
+        still = rusty_pipes.Open(["raspistill", "-e", "jpg",  "-o", str(image_path)]) #snap: call the camera. "-w", "1920", "-h", "1080",
+        still.wait()
     else:
-        still = Popen(["raspistill", "-e", "jpg",  "-o", str(image_path), "-awb", "off", "-awbg", device_params["awb_red"] + "," + device_params["awb_blue"]]) #snap: call the camera. "-w", "1920", "-h", "1080",
-        still.communicate()
+        still = rusty_pipes.Open(["raspistill", "-e", "jpg",  "-o", str(image_path), "-awb", "off", "-awbg", device_params["awb_red"] + "," + device_params["awb_blue"]]) #snap: call the camera. "-w", "1920", "-h", "1080",
+        still.wait()
 
     cs.safety.unlock(cs.lock_filepath, resource_name)
 
@@ -35,8 +36,8 @@ def save_to_feed(image_path):
     #timestamp image
     timestamp = time.time()
     #move timestamped image into feed
-    save_most_recent = Popen(["cp", str(image_path), "/home/pi/oasis-grow/data_out/image_feed/image_at_" + str(timestamp)+'.jpg'])
-    save_most_recent.communicate()
+    save_most_recent = rusty_pipes.Open(["cp", str(image_path), "/home/pi/oasis-grow/data_out/image_feed/image_at_" + str(timestamp)+'.jpg'])
+    save_most_recent.wait()
 
 def send_image(path):
     #send new image to firebase

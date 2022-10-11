@@ -4,15 +4,14 @@
 
 #system
 import os
-import os.path
 import sys
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
 
 #Process management
-from subprocess import Popen
-import gc
+import signal
+import rusty_pipes
 
 #data handling
 import json
@@ -370,119 +369,119 @@ def run_heat(intensity = 0): #Depends on: 'subprocess'; Modifies: heat_process
     global heat_process
 
     try: #actuates heat process
-        poll_heat = heat_process.poll() #heat
-        if poll_heat is not None: #active processes return None, exited processes return 0
+        poll_heat = heat_process.exited() #heat
+        if poll_heat is True: #active processes return None, exited processes return 0
             if cs.structs["feature_toggles"]["heat_pid"] == "1":
-                heat_process = Popen(['python3', '/home/pi/oasis-grow/equipment/heater.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
+                heat_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/heater.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
             else:
-                heat_process = Popen(['python3', '/home/pi/oasis-grow/equipment/heater.py', cs.structs["device_params"]["heater_duration"], cs.structs["device_params"]["heater_interval"]])
+                heat_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/heater.py', cs.structs["device_params"]["heater_duration"], cs.structs["device_params"]["heater_interval"]])
                 
     except: #launches heat process on program startup, when heat_process itself is none
         if cs.structs["feature_toggles"]["heat_pid"] == "1":
-            heat_process = Popen(['python3', '/home/pi/oasis-grow/equipment/heater.py', str(intensity)]) #If no process, then starts
+            heat_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/heater.py', str(intensity)]) #If no process, then starts
         else:
-            heat_process = Popen(['python3', '/home/pi/oasis-grow/equipment/heater.py', cs.structs["device_params"]["heater_duration"], cs.structs["device_params"]["heater_interval"]])
+            heat_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/heater.py', cs.structs["device_params"]["heater_duration"], cs.structs["device_params"]["heater_interval"]])
 
 #poll humidityf subprocess if applicable and relaunch/update equipment
 def run_hum(intensity = 0): #Depends on: 'subprocess'; Modifies: hum_process
     global humidity_process
 
     try:  #launches heat process on program startup, when heat_process itself is none
-        poll_humidity = humidity_process.poll() #humidity
-        if poll_humidity is not None:  #active processes return None, exited processes return 0
+        poll_humidity = humidity_process.exited() #humidity
+        if poll_humidity is True:  #active processes return None, exited processes return 0
             if cs.structs["feature_toggles"]["hum_pid"] == "1":
-                humidity_process = Popen(['python3', '/home/pi/oasis-grow/equipment/humidifier.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
+                humidity_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/humidifier.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
             else:
-                humidity_process = Popen(['python3', '/home/pi/oasis-grow/equipment/humidifier.py', cs.structs["device_params"]["humidifier_duration"], cs.structs["device_params"]["humidifier_interval"]])
+                humidity_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/humidifier.py', cs.structs["device_params"]["humidifier_duration"], cs.structs["device_params"]["humidifier_interval"]])
     except:  #launches heat process on program startup, when heat_process itself is none
         if cs.structs["feature_toggles"]["hum_pid"] == "1":
-            humidity_process = Popen(['python3', '/home/pi/oasis-grow/equipment/humidifier.py', str(intensity)])
+            humidity_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/humidifier.py', str(intensity)])
         else:
-            humidity_process = Popen(['python3', '/home/pi/oasis-grow/equipment/humidifier.py', cs.structs["device_params"]["humidifier_duration"], cs.structs["device_params"]["humidifier_interval"]])
+            humidity_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/humidifier.py', cs.structs["device_params"]["humidifier_duration"], cs.structs["device_params"]["humidifier_interval"]])
 
 #poll dehumidify subprocess if applicable and relaunch/update equipment
 def run_dehum(intensity = 0): #Depends on: 'subprocess'; Modifies: hum_process
     global dehumidify_process
 
     try:
-        poll_dehumidify = dehumidify_process.poll() #dehumidify
-        if poll_dehumidify is not None:
+        poll_dehumidify = dehumidify_process.exited() #dehumidify
+        if poll_dehumidify is True:
             if cs.structs["feature_toggles"]["hum_pid"] == "1":
-                dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/equipment/dehumidifier.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
+                dehumidify_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/dehumidifier.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
             else:
-                dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/equipment/dehumidifier.py', cs.structs["device_params"]["dehumidifier_duration"], cs.structs["device_params"]["dehumidifier_interval"]])
+                dehumidify_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/dehumidifier.py', cs.structs["device_params"]["dehumidifier_duration"], cs.structs["device_params"]["dehumidifier_interval"]])
     except:
         if cs.structs["feature_toggles"]["hum_pid"] == "1":
-            dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/equipment/dehumidifier.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
+            dehumidify_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/dehumidifier.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
         else:
-            dehumidify_process = Popen(['python3', '/home/pi/oasis-grow/equipment/dehumidifier.py', cs.structs["device_params"]["dehumidifier_duration"], cs.structs["device_params"]["dehumidifier_interval"]])
+            dehumidify_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/dehumidifier.py', cs.structs["device_params"]["dehumidifier_duration"], cs.structs["device_params"]["dehumidifier_interval"]])
 
 #poll fan subprocess if applicable and relaunch/update equipment
 def run_fan(intensity = 0): #Depends on: 'subprocess'; Modifies: humidity_process
     global fan_process
 
     try:
-        poll_fan = fan_process.poll() #fan
-        if poll_fan is not None: #If running, then skips. If idle then restarts, If no process, then fails
+        poll_fan = fan_process.exited() #fan
+        if poll_fan is True: #If running, then skips. If idle then restarts, If no process, then fails
             if cs.structs["feature_toggles"]["hum_pid"] == "1":
-                fan_process = Popen(['python3', '/home/pi/oasis-grow/equipment/fan.py', str(intensity)]) 
+                fan_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/fan.py', str(intensity)]) 
             else:
-                fan_process = Popen(['python3', '/home/pi/oasis-grow/equipment/fan.py', cs.structs["device_params"]["fan_duration"], cs.structs["device_params"]["fan_interval"]])
+                fan_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/fan.py', cs.structs["device_params"]["fan_duration"], cs.structs["device_params"]["fan_interval"]])
     except: #If no process, then starts
         if cs.structs["feature_toggles"]["hum_pid"] == "1":
-            fan_process = Popen(['python3', '/home/pi/oasis-grow/equipment/fan.py', str(intensity)]) 
+            fan_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/fan.py', str(intensity)]) 
         else:
-            fan_process = Popen(['python3', '/home/pi/oasis-grow/equipment/fan.py', cs.structs["device_params"]["fan_duration"], cs.structs["device_params"]["fan_interval"]])
+            fan_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/fan.py', cs.structs["device_params"]["fan_duration"], cs.structs["device_params"]["fan_interval"]])
 
 #poll water subprocess if applicable and relaunch/update equipment
 def run_water(intensity = 0): #Depends on: 'subprocess'; Modifies: water_process
     global water_process
 
     try:
-        poll_water = water_process.poll() #water
-        if poll_water is not None:
+        poll_water = water_process.exited() #water
+        if poll_water is True:
             if cs.structs["feature_toggles"]["water_pid"] == "1":
-                water_process = Popen(['python3', '/home/pi/oasis-grow/equipment/water_pump.py', str(intensity)])
+                water_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/water_pump.py', str(intensity)])
             else:
-                water_process = Popen(['python3', '/home/pi/oasis-grow/equipment/water_pump.py', str(cs.structs["device_params"]["watering_duration"]), str(cs.structs["device_params"]["watering_frequency"])]) #If running, then skips. If idle then restarts, If no process, then fails
+                water_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/water_pump.py', str(cs.structs["device_params"]["watering_duration"]), str(cs.structs["device_params"]["watering_frequency"])]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
         if cs.structs["feature_toggles"]["water_pid"] == "1":
-            water_process = Popen(['python3', '/home/pi/oasis-grow/equipment/water_pump.py', str(intensity)])
+            water_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/water_pump.py', str(intensity)])
         else:
-            water_process = Popen(['python3', '/home/pi/oasis-grow/equipment/water_pump.py', str(cs.structs["device_params"]["watering_duration"]), str(cs.structs["device_params"]["watering_frequency"])]) #If running, then skips. If idle then restarts, If no process, then fails        
+            water_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/water_pump.py', str(cs.structs["device_params"]["watering_duration"]), str(cs.structs["device_params"]["watering_frequency"])]) #If running, then skips. If idle then restarts, If no process, then fails        
 
 #poll light subprocess if applicable and relaunch/update equipment
 def run_light():
     global light_process #Depends on: 'subprocess'; Modifies: light_process
 
     try:
-        poll_light = light_process.poll() #light
-        if poll_light is not None:
-            light_process = Popen(['python3', '/home/pi/oasis-grow/equipment/lights.py', cs.structs["device_params"]["time_start_light"], cs.structs["device_params"]["time_stop_light"], cs.structs["device_params"]["lighting_interval"]]) #If running, then skips. If idle then restarts, If no process, then fails
+        poll_light = light_process.exited() #light
+        if poll_light is True:
+            light_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/lights.py', cs.structs["device_params"]["time_start_light"], cs.structs["device_params"]["time_stop_light"], cs.structs["device_params"]["lighting_interval"]]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
-        light_process = Popen(['python3', '/home/pi/oasis-grow/equipment/lights.py', cs.structs["device_params"]["time_start_light"], cs.structs["device_params"]["time_stop_light"], cs.structs["device_params"]["lighting_interval"]]) #If running, then skips. If idle then restarts, If no process, then fails
+        light_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/lights.py', cs.structs["device_params"]["time_start_light"], cs.structs["device_params"]["time_stop_light"], cs.structs["device_params"]["lighting_interval"]]) #If running, then skips. If idle then restarts, If no process, then fails
 
 #poll air subprocess if applicable and relaunch/update equipment
 def run_air():
     global air_process #Depends on: 'subprocess'; Modifies: light_process
 
     try:
-        poll_air = air_process.poll() #light
-        if poll_air is not None:
-            air_process = Popen(['python3', '/home/pi/oasis-grow/equipment/air_pump.py', cs.structs["device_params"]["time_start_air"], cs.structs["device_params"]["time_stop_air"], cs.structs["device_params"]["air_interval"]]) #If running, then skips. If idle then restarts, If no process
+        poll_air = air_process.exited() #light
+        if poll_air is True:
+            air_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/air_pump.py', cs.structs["device_params"]["time_start_air"], cs.structs["device_params"]["time_stop_air"], cs.structs["device_params"]["air_interval"]]) #If running, then skips. If idle then restarts, If no process
     except Exception as e:
-        air_process = Popen(['python3', '/home/pi/oasis-grow/equipment/air_pump.py', cs.structs["device_params"]["time_start_air"], cs.structs["device_params"]["time_stop_air"], cs.structs["device_params"]["air_interval"]]) #If no process, then starts
+        air_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/air_pump.py', cs.structs["device_params"]["time_start_air"], cs.structs["device_params"]["time_stop_air"], cs.structs["device_params"]["air_interval"]]) #If no process, then starts
 
 #poll camera subprocess if applicable and relaunch/update equipment
 def run_camera(): #Depends on: 'subprocess'; Modifies: camera_process
     global camera_process
 
     try:
-        poll_camera = camera_process.poll() #camera
-        if poll_camera is not None:
-            camera_process = Popen(['python3', '/home/pi/oasis-grow/imaging/camera.py', cs.structs["device_params"]["camera_interval"]]) #If running, then skips. If idle then restarts, If no process, then fails
+        poll_camera = camera_process.exited() #camera
+        if poll_camera is True:
+            camera_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/imaging/camera.py', cs.structs["device_params"]["camera_interval"]]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
-        camera_process = Popen(['python3', '/home/pi/oasis-grow/imaging/camera.py', cs.structs["device_params"]["camera_interval"]]) #If no process, then starts
+        camera_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/imaging/camera.py', cs.structs["device_params"]["camera_interval"]]) #If no process, then starts
 
 def clean_up_processes():
     global heat_process, humidity_process, dehumidify_process, fan_process, light_process, camera_process, water_process, air_process        

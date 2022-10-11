@@ -9,7 +9,7 @@ sys.path.append('/home/pi/oasis-grow/core')
 sys.path.append('/home/pi/oasis-grow/utils')
 
 #concurrency
-from subprocess import Popen
+import rusty_pipes
 import multiprocessing
 
 #time
@@ -26,6 +26,8 @@ from peripherals import buttons
 from peripherals import relays
 from peripherals import microcontroller_manager as minion
 
+import rusty_pipes
+
 #declare process management variables
 core_process = None #variable to launch & manage the grow controller
 
@@ -34,7 +36,7 @@ def launch_AP():
     global minion
 
     #launch server subprocess to accept credentials over Oasis wifi network, does not wait
-    server_process = Popen(["sudo", "streamlit", "run", "/home/pi/oasis-grow/networking/connect_oasis.py", "--server.headless=true", "--server.port=80", "--server.address=192.168.4.1", "--server.enableCORS=false", "--server.enableWebsocketCompression=false"])
+    server_process = rusty_pipes.Open(["sudo", "streamlit", "run", "/home/pi/oasis-grow/networking/connect_oasis.py", "--server.headless=true", "--server.port=80", "--server.address=192.168.4.1", "--server.enableCORS=false", "--server.enableWebsocketCompression=false"])
     print("Access Point Mode enabled")
 
     time.sleep(3)
@@ -72,7 +74,7 @@ def setup_core_process(): #Depends on: cs.load_state(), cs.write_state(), 'subpr
     if cs.structs["device_state"]["running"] == "1":
 
         #launch core main
-        core_process = Popen(["python3", "/home/pi/oasis-grow/core/core.py", "main"])
+        core_process = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/core/core.py", "main"])
 
         if cs.structs["device_state"]["connected"] == "1": #if connected
             #LEDmode = "connected_running"
@@ -85,7 +87,7 @@ def setup_core_process(): #Depends on: cs.load_state(), cs.write_state(), 'subpr
     else:
 
         #launch sensing-feedback subprocess in daemon mode
-        core_process = Popen(["python3", "/home/pi/oasis-grow/core/core.py", "daemon"])
+        core_process = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/core/core.py", "daemon"])
 
         if cs.structs["device_state"]["connected"] == "1": #if connected
             #LEDmode = "connected_idle"
@@ -111,10 +113,10 @@ def cmd_line_args():
 def start_core():
     global core_process
     cs.load_state()
-    poll_core = core_process.poll() #check if core process is running
-    if poll_core is not None: #if it is not running
+    poll_core = core_process.exited() #check if core process is running
+    if poll_core is True: #if it is not running
         #launch it
-        core_process = Popen(["python3", "/home/pi/oasis-grow/core/core.py", "main"])
+        core_process = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/core/core.py", "main"])
         print("launched core process")
 
         if cs.structs["device_state"]["connected"] == "1": #if connected
@@ -127,8 +129,8 @@ def start_core():
 def stop_core():
     global core_process
     cs.load_state()
-    poll_core = core_process.poll() #check if core process is running
-    if poll_core is None: #if it is running
+    poll_core = core_process.exited() #check if core process is running
+    if poll_core is False: #if it is running
         try: #try to kill it
             core_process.terminate()
             core_process.wait()
@@ -167,10 +169,8 @@ def get_updates(): #depends on: cs.load_state(),'subproceess', update.py; modifi
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = dbt.patch_firebase) #make sure the cloud does not update main code, kill listener
         dbt.kill_listener()
         #launch update.py and wait to complete
-        update_process = Popen(["python3", "/home/pi/oasis-grow/utils/update.py"])
-        output, error = update_process.communicate()
-        if update_process.returncode != 0:
-            print("Failure " + str(update_process.returncode)+ " " +str(output)+str(error))
+        update_process = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/utils/update.py"])
+        update_process.wait()
         
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","1", db_writer = dbt.patch_firebase)#restore listener
     
@@ -181,10 +181,9 @@ def get_updates(): #depends on: cs.load_state(),'subproceess', update.py; modifi
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = dbt.patch_firebase) #make sure the cloud does not update main code, kill listener
         dbt.kill_listener()
         #launch update.py and wait to complete
-        update_process = Popen(["python3", "/home/pi/oasis-grow/utils/update.py"])
-        output, error = update_process.communicate()
-        if update_process.returncode != 0:
-            print("Failure " + str(update_process.returncode)+ " " +str(output)+str(error))
+        update_process = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/utils/update.py"])
+        update_process.wait()
+        
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","1", db_writer = dbt.patch_firebase) #restore running
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","1", db_writer = dbt.patch_firebase)#restore listener
 
@@ -197,7 +196,7 @@ def delete_device():
     reset_model.reset_nonhw_configs()
     
     print("Device has been reset to default configuration")
-    systemctl_reboot = Popen(["sudo", "systemctl", "reboot"])
+    systemctl_reboot = rusty_pipes.Open(["sudo", "systemctl", "reboot"])
     systemctl_reboot.wait()
 
 #check if the device is waiting to be added to firebase, if it is then add it, otherwise skip
@@ -303,14 +302,14 @@ def update_minion_led(): #Depends on: cs.load_state(), 'datetime'; Modifies: ser
         pass
 
 def export_timelapse():
-    export_tl = Popen(["python3", "/home/pi/oasis-grow/imaging/make_timelapse.py"])
+    export_tl = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/imaging/make_timelapse.py"])
 
 def clear_data():
     reset_model.reset_data_out()
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "awaiting_clear_data_out", "0", db_writer = dbt.patch_firebase)
 
 def launch_onboard_led():
-    launch_led = Popen(["sudo", "python3", "/home/pi/oasis-grow/peripherals/neopixel_leds.py"])
+    launch_led = rusty_pipes.Open(["sudo", "python3", "/home/pi/oasis-grow/peripherals/neopixel_leds.py"])
 
 def main_setup():
     #Initialize Oasis-Grow:
@@ -383,7 +382,7 @@ def main_loop(led_timer, connect_timer):
                         water_GPIO = int(water_GPIO)
                         relays.actuate_interval_sleep(pin = water_GPIO, duration = 60, sleep = 0, mode = "seconds")
                     if cs.structs["feature_toggles"]["action_camera"] == "1":
-                        say_cheese = Popen(['python3', '/home/pi/oasis-grow/imaging/camera.py', "0"])
+                        say_cheese = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/imaging/camera.py', "0"])
                         say_cheese.wait()
             if time.time() - led_timer > 5: #send data to LED every 5s
                 update_minion_led()

@@ -15,25 +15,25 @@ impl Open {
         Open{process: sub_proc}
     }
     
-    fn wait(&mut self){
+    fn wait(&mut self){ //don't do whatever's next until the child has exited
         self.process.wait().unwrap();
     }
 
-    fn wait_timeout(&mut self, secs: u64){
-        let seconds = Duration::new(secs, 0); 
+    fn wait_timeout(&mut self, secs: u64){ //moves on after some time
+        let seconds = Duration::new(secs, 0); //but DOES NOT KILL the child proc
         self.process.wait_timeout(seconds).unwrap();
     }
 
-    fn exited(&mut self) -> bool{
+    fn exited(&mut self) -> bool{ //has it exited?
         let value = self.process.poll();
         if let Some(_exit_status) = value {
-            true
+            true //yes -> return true
         } else {
-            false
+            false //no -> return false
         }
     }
 
-    fn terminate(&mut self){
+    fn terminate(&mut self){ //be careful with calling this
         self.process.terminate().unwrap();
     }
 
