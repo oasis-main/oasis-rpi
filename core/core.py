@@ -11,7 +11,7 @@ import sys
 sys.path.append('/home/pi/oasis-grow')
 
 #Process management
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen
 import gc
 
 #data handling

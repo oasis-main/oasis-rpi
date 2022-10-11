@@ -3,6 +3,7 @@
 /oasis_venv_pi
 /rusty_locks/target
 /rusty_pins/target
+/rusty_pipes/target
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

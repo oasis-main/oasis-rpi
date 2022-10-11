@@ -1,6 +1,9 @@
 //Other people's hard work
 use pyo3::prelude::*;
 use rppal::gpio::Gpio;
+
+//We're only doing outputs this way, as peripheral reads in rust are unsafe
+//The python implementation for hardware peripheral reads is actually better for raspi
 use rppal::gpio::OutputPin;
 
 // A safe, Python-ready GPIO output class that operates on the hardware level

@@ -30,7 +30,7 @@ from peripherals import microcontroller_manager as minion
 core_process = None #variable to launch & manage the grow controller
 
 #checks whether system is booting in Access Point Mode, launches connection script if so
-def launch_AP(): #Depends on: 'subprocess', oasis_server.py, setup_button_AP(); Modifies: state_variables, 'ser_out', device_state.json
+def launch_AP(): 
     global minion
 
     #launch server subprocess to accept credentials over Oasis wifi network, does not wait
@@ -95,17 +95,18 @@ def setup_core_process(): #Depends on: cs.load_state(), cs.write_state(), 'subpr
 
         print("core process not launched")
 
-#checks in the the core process has been called from the command line
+#checks in the the core process has been called from the command line, or explicitly deactivated
 def cmd_line_args():
     try:
         if sys.argv[1] == "run":
             cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","1", db_writer = dbt.patch_firebase)
-            print("Command line argument set to run")
+            print("Command line set core to run. Launching device engine...")
         if sys.argv[1] == "idle":
             cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","0", db_writer = dbt.patch_firebase)
-            print("Command line argument set to idle")
-    except Exception as e:
-        print("Defaulting to last saved mode...")
+            print("Command line set core to idle. Device engine is on standby.")
+    except Exception as e: #if no arguments are given, the above will fail
+        print("No command line arguments were given.")
+        print("Defaulting to last saved mode or default if new.")
 
 def start_core():
     global core_process
@@ -390,7 +391,7 @@ def main_loop(led_timer, connect_timer):
 
     except(KeyboardInterrupt):
         time.sleep(5)
-        reset_model.reset_device_state()
+        reset_model.reset_device_state() #This is for testing purposes, to keep behavior the same between debugs
 
     except Exception as e:
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "error", db_writer = dbt.patch_firebase)
