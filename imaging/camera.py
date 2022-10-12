@@ -3,6 +3,7 @@
 #---------------------------------------------------------------------------------------
 import sys
 import signal
+from typing import Type
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
@@ -80,6 +81,8 @@ if __name__ == '__main__':
         actuate(str(sys.argv[1]))
     except KeyboardInterrupt:
         print("Interrupted")
+    except TypeError:
+        print("Tried do image stuff without an image. Is your camera properly set up?")
     except Exception:
         print("Encountered an error!")
         print(err.full_stack())
