@@ -109,6 +109,7 @@ def load_locks(loop_limit = 10000): #leave this alone since it's the python brid
         except Exception as e:
             if i == int(loop_limit):
                 print("Tried to load locks max number of times. File is corrupted. Resetting locks...")
+                print(err.full_stack())
                 reset_locks(lock_filepath)
             else:
                 print("Main.py tried to read while locks were being written. If this continues, file is corrupted.")
