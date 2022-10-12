@@ -185,12 +185,6 @@ def launch_onboard_led():
     global led
     led = rusty_pipes.Open(["sudo", "python3", "/home/pi/oasis-grow/peripherals/neopixel_leds.py"])
 
-def halt_onboard_led():
-    global led
-    if led is not None:
-        led.terminate()
-        led.wait()
-
 #updates the state of the LED, serial must be set up,
 def update_minion_led(): #Depends on: cs.load_state(), 'datetime'; Modifies: ser_out
     global minion
@@ -332,9 +326,6 @@ def main_loop(led_timer, connect_timer):
         reset_model.reset_device_state() #This is for testing purposes, to keep behavior the same between debugs
         
         stop_core()
-
-        if cs.structs["feature_toggles"]["onboard_led"] == "1":
-            halt_onboard_led()
 
     except Exception as e:
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "error", db_writer = dbt.patch_firebase)
