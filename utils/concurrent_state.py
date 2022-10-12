@@ -315,16 +315,9 @@ def check_lock(resource):
     load_locks()
     if locks[resource] == 1: #if resource is locked
         print(resource + " is currently in use by another process.")
-        sys.exit()
+        sys.exit() #termiating for safety
     else:
         safety.lock(lock_filepath, resource)
-
-#check to make sure this is the only instance of core running 
-    if cs.check_lock[resource_name]:
-        print("Terminating for safety...")
-        sys.exit()
-    else:
-        cs.safety.lock(cs.lock_filepath,resource_name)
 
 if __name__ == '__main__':
     print("This is a unit test:")

@@ -14,6 +14,7 @@ import time
 import datetime
 
 import rusty_pins
+from peripherals import relays
 from utils import concurrent_state as cs
 from utils import error_handler as err
 
@@ -31,7 +32,7 @@ def clean_up(*args):
 
 if __name__ == '__main__':
     try:
-        actuate_hod(int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]))
+        relays.actuate_time_hod(int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]))
     except KeyboardInterrupt:
         print("Interrupted")
     finally:

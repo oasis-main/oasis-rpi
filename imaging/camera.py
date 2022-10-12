@@ -2,6 +2,7 @@
 #Manages Camera Timing & Image transmission
 #---------------------------------------------------------------------------------------
 import sys
+signal
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
