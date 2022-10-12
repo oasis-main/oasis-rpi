@@ -76,8 +76,6 @@ def start_listener():
     global listener
     if listener is None:
         listener = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/networking/firebase_listener.py"])
-    else:
-        print("The listener is already running")
 
 def stop_listener():
     global listener
@@ -85,8 +83,6 @@ def stop_listener():
         listener.terminate()
         listener.wait()
         listener = None
-    else:
-        print("The listener is not running") 
 
 #check if core is supposed to be running, launch it if so. Do nothing if not
 def setup_core_process(): #Depends on: cs.load_state(), cs.write_state(), 'subprocess'; Modifies: core, state_variables, device_state.json
@@ -148,8 +144,6 @@ def start_core():
         else: #if not connected
             #send LEDmode = "offline_running"
             cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","offline_running", db_writer = dbt.patch_firebase)
-    else:
-        print("Core is already running.")
 
 def stop_core():
     global core
@@ -168,8 +162,7 @@ def stop_core():
         else: #if not connected
             #send LEDmode = "offline_idle"
             cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","offline_idle", db_writer = dbt.patch_firebase)
-    else:
-        print("Tried to stop core but it is not running!")
+
 
 #checks if core is running, kills it if so, starts it otherwise
 def switch_core_running(): #Depends on: cs.load_state(), cs.write_state(), dbt.patch_firebase(), 'subprocess'; Modifies: device_state.json, state_variables
@@ -290,7 +283,7 @@ def main_loop(led_timer, connect_timer):
                 connect_firebase()
                 connect_timer = time.time()
             
-            cs.check_state("connected", start_listener)
+            cs.check_state("connected", start_listener, stop_listener)
             cs.check_state("awaiting_update", get_updates)
             cs.check_state("awaiting_deletion", firebase_manager.delete_device)
             cs.check_state("awaiting_clear_data_out", clear_data)
