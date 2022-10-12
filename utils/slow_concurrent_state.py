@@ -95,7 +95,7 @@ def load_locks(loop_limit = 10000): #leave this alone since it's the python brid
         try:
             with open(lock_filepath, "rb") as l:
                 locks = json.load(l) #get locks
-                print(type(locks))
+                #print(type(locks))
 
             for k,v in locks.items():
                 if locks[k] is None:
@@ -122,7 +122,7 @@ def load_locks(loop_limit = 10000): #leave this alone since it's the python brid
 def lock(lock_filepath: str, resource_key: str):
     global locks
 
-    with open(lock_filepath, "wb") as x:
+    with open(lock_filepath, "w") as x:
         locks[resource_key] = 1 #write the desired value
         x.seek(0)
         json.dump(locks,x)
@@ -131,7 +131,7 @@ def lock(lock_filepath: str, resource_key: str):
 def unlock(lock_filepath: str, resource_key: str):
     global locks
 
-    with open(lock_filepath, "wb") as x:
+    with open(lock_filepath, "w") as x:
         locks[resource_key] = 0 #write the desired value
         x.seek(0)
         json.dump(locks,x)
@@ -143,7 +143,7 @@ def reset_locks(lock_filepath):
     for lock in locks:
         locks[lock] = 0
     
-    with open(lock_filepath, "wb") as x:
+    with open(lock_filepath, "w") as x:
         x.seek(0)
         json.dump(locks,x)
         x.truncate()
@@ -173,7 +173,7 @@ def write_state(path, field, value, db_writer = None, loop_limit=2500): #Depends
                 
                 lock(lock_filepath, path)
 
-                with open(path, "wb") as x:
+                with open(path, "w") as x:
                     data[field] = value #write the desired value
                     x.seek(0)
                     json.dump(data,x)
@@ -192,7 +192,7 @@ def write_state(path, field, value, db_writer = None, loop_limit=2500): #Depends
                     #Now write safely
                     lock(lock_filepath, path)
 
-                    with open(path, "wb") as x:
+                    with open(path, "w") as x:
                         data[field] = value #write the desired value
                         x.seek(0)
                         json.dump(data,x)
@@ -222,7 +222,7 @@ def write_state(path, field, value, db_writer = None, loop_limit=2500): #Depends
                 if locks[path] == 0: #check is the file is available to be written
                     lock(lock_filepath, path)
                     
-                    with open(path, "wb") as x:
+                    with open(path, "w") as x:
                         data[field] = value #write the desired value
                         x.seek(0)
                         json.dump(data,x)
@@ -262,7 +262,7 @@ def write_dict(path, dictionary, db_writer = None, loop_limit=2500): #Depends on
             if locks[path] == 0: #check is the file is available to be written
                 lock(lock_filepath, path)
 
-                with open(path, "wb") as x:
+                with open(path, "w") as x:
                     data.update(dictionary) #write the desired values
                     x.seek(0)
                     x.write(json.dump(data,x))
@@ -281,7 +281,7 @@ def write_dict(path, dictionary, db_writer = None, loop_limit=2500): #Depends on
                     #Now write safely
                     lock(lock_filepath, path)
 
-                    with open(path, "wb") as x:
+                    with open(path, "w") as x:
                         data.update(dictionary) #write the desired values
                         x.seek(0)
                         json.dump(data,x)
@@ -310,7 +310,7 @@ def write_dict(path, dictionary, db_writer = None, loop_limit=2500): #Depends on
                     if locks[path] == 0: #check is the file is available to be written
                         lock(lock_filepath, path)
 
-                        with open(path, "wb") as x:
+                        with open(path, "w") as x:
                             data.update(dictionary) #write the desired values
                             x.seek(0)
                             json.dump(data,x)
