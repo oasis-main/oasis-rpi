@@ -445,12 +445,12 @@ def run_water(intensity = 0): #Depends on: 'subprocess'; Modifies: water_process
             if cs.structs["feature_toggles"]["water_pid"] == "1":
                 water_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/water_pump.py', str(intensity)])
             else:
-                water_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/water_pump.py', str(cs.structs["device_params"]["watering_duration"]), str(cs.structs["device_params"]["watering_frequency"])]) #If running, then skips. If idle then restarts, If no process, then fails
+                water_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/water_pump.py', str(cs.structs["device_params"]["watering_duration"]), str(cs.structs["device_params"]["watering_interval"])]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
         if cs.structs["feature_toggles"]["water_pid"] == "1":
             water_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/water_pump.py', str(intensity)])
         else:
-            water_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/water_pump.py', str(cs.structs["device_params"]["watering_duration"]), str(cs.structs["device_params"]["watering_frequency"])]) #If running, then skips. If idle then restarts, If no process, then fails        
+            water_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/water_pump.py', str(cs.structs["device_params"]["watering_duration"]), str(cs.structs["device_params"]["watering_interval"])]) #If running, then skips. If idle then restarts, If no process, then fails        
 
 #poll light subprocess if applicable and relaunch/update equipment
 def run_light():
