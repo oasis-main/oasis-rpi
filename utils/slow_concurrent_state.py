@@ -121,7 +121,7 @@ def lock(lock_filepath: str, resource_key: str):
     with open(lock_filepath, "wb") as x:
         locks[resource_key] = 1 #write the desired value
         x.seek(0)
-        x.write(json.dump(dict(locks)))
+        x.write(json.dump(locks))
         x.truncate()
 
 def unlock(lock_filepath: str, resource_key: str):
@@ -130,7 +130,7 @@ def unlock(lock_filepath: str, resource_key: str):
     with open(lock_filepath, "wb") as x:
         locks[resource_key] = 0 #write the desired value
         x.seek(0)
-        x.write(json.dump(dict(locks)))
+        x.write(json.dump(locks))
         x.truncate()
 
 def reset_locks(lock_filepath):
@@ -141,7 +141,7 @@ def reset_locks(lock_filepath):
     
     with open(lock_filepath, "wb") as x:
         x.seek(0)
-        x.write(json.dump(dict(locks)))
+        x.write(json.dump(locks))
         x.truncate()
 
 #save key values to .json
