@@ -28,16 +28,13 @@ def clean_up(*args):
 if __name__ == "__main__":
     cs.check_lock(resource_name)
     signal.signal(signal.SIGTERM, clean_up)
-    
     try:
-        
         if cs.structs["feature_toggles"]["water_pid"] == "1":
-            called_correctly = sys.argv[2] #will fail if called incorrectly & throw an error
             print("Running water pump in pulse mode with " + sys.argv[1] + "%" + " power...")
             relays.actuate_slow_pwm(pin, intensity = float(sys.argv[1])) #trigger appropriate response
         else:
-            print("Running water pump for " + sys.argv[1] + " second(s) every" + sys.argv[2] + " day(s)...")
-            relays.actuate_interval_sleep(pin, duration = float(sys.argv[1]), sleep = float(sys.argv[2]))
+            print("Running water pump for " + sys.argv[1] + " second(s) every " + sys.argv[2] + " day(s)...")
+            relays.actuate_interval_sleep(pin, duration = float(sys.argv[1]), sleep = float(sys.argv[2]), duration_units="seconds", sleep_units="days")
     except KeyboardInterrupt:
         print("Interrupted")
     except Exception:

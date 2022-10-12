@@ -2,7 +2,7 @@
 #Manages Camera Timing & Image transmission
 #---------------------------------------------------------------------------------------
 import sys
-signal
+import signal
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
@@ -19,10 +19,6 @@ from networking import db_tools as dbt
 resource_name = "camera"
 
 def take_picture(image_path, device_params):
-    
-    cs.check_lock(resource_name)
-    cs.safety.lock(cs.lock_filepath, resource_name)
-
     if device_params["awb_mode"] == "on":
         #take picture and save to standard location: libcamera-still -e png -o test.png
         still = rusty_pipes.Open(["raspistill", "-e", "jpg",  "-o", str(image_path)]) #snap: call the camera. "-w", "1920", "-h", "1080",
@@ -30,8 +26,6 @@ def take_picture(image_path, device_params):
     else:
         still = rusty_pipes.Open(["raspistill", "-e", "jpg",  "-o", str(image_path), "-awb", "off", "-awbg", device_params["awb_red"] + "," + device_params["awb_blue"]]) #snap: call the camera. "-w", "1920", "-h", "1080",
         still.wait()
-
-    cs.safety.unlock(cs.lock_filepath, resource_name)
 
 def save_to_feed(image_path):
     #timestamp image
@@ -74,15 +68,24 @@ def actuate(interval, nosleep = False): #amount of time between shots in minutes
                                        #not a big deal if someone actuates again while the main spawn is waiting
                                        #so long as they aren't doing so with malicious intent (would need DB or root access, make sure to turn off SSH or change your password)
 
+def clean_up(*args):
+    cs.safety.unlock(cs.lock_filepath, resource_name)
+    sys.exit()
+
 if __name__ == '__main__':
+    cs.check_lock(resource_name)
+    signal.signal(signal.SIGTERM,clean_up)
+    
     try:    
         actuate(str(sys.argv[1]))
     except KeyboardInterrupt:
         print("Interrupted")
-        cs.safety.unlock(cs.lock_filepath, resource_name)
-    except:
+    except Exception:
+        print("Encountered an error!")
         print(err.full_stack())
-        cs.safety.unlock(cs.lock_filepath, resource_name)
+    finally:
+        clean_up()
+
         
 
 

@@ -740,8 +740,6 @@ def main_setup():
     #Load state variables to start the main program
     cs.load_state()
 
-    
-
     #exit early if opening subprocess daemon
     if str(sys.argv[1]) == "daemon":
         print("core daemon started")
@@ -806,7 +804,8 @@ def main_loop():
         terminate_program()
 
 if __name__ == '__main__':
-    signal.signal(signal.SIGTERM, terminate_program)
+    cs.check_lock(resource_name) #Convention should be to do locks and signal handlers here,
+    signal.signal(signal.SIGTERM, terminate_program) #as this is commonly understood as program entry point.
     main_setup()
     main_loop()
 
