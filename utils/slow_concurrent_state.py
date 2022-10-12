@@ -94,7 +94,7 @@ def load_locks(loop_limit = 10000): #leave this alone since it's the python brid
         try:
             with open(lock_filepath, "rb") as l:
                 locks = json.load(l) #get locks
-                print(locks)
+                print(type(locks))
 
             for k,v in locks.items():
                 if locks[k] is None:
