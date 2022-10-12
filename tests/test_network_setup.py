@@ -11,7 +11,7 @@ from networking import connect_oasis
 if __name__ == '__main__':
 
     print("Testing local setup server to receive creds...")
-    server_test = multiprocessing.Process(target = main.launch_AP)
+    server_test = multiprocessing.Process(target = main.launch_access_point)
     server_test.start()
 
     print("Testing credential-adding functionality")

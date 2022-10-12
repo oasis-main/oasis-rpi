@@ -9,11 +9,12 @@ import sys
 sys.path.append('/home/pi/oasis-grow')
 
 #import libraries
-import RPi.GPIO as GPIO
 import time
 import datetime
 
+import rusty_pins
 from utils import concurrent_state as cs
+from utils import error_handler as err
 
 cs.load_state()
 

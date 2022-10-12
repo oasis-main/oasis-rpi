@@ -1,9 +1,5 @@
-#add latching, normally-closed, and normally-open
-#add multi-channel output results
-
 #OS libraries
 import sys
-import signal
 
 #Time libraries
 import time
@@ -12,7 +8,8 @@ import datetime
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
 
-import rusty_pins
+#import rusty_pins and initialize GPIO pin from calling process
+#pass in the rust pin object for scoping & resource management
 
 def turn_on(output, switch_mode = "momentary", normal_state = "open", pulse_width = 1):
     if switch_mode == "momentary":
@@ -36,10 +33,8 @@ def turn_off(output, switch_mode = "momentary", normal_state = "open", pulse_wid
         time.sleep(pulse_width)
         output.set_low()
 
-def actuate_time_hod(pin: int, time_on = 0, time_off = 0, interval = 20, units = "seconds"): #updates every 20 minutes by default 
+def actuate_time_hod(output, time_on = 0, time_off = 0, interval = 20, units = "seconds"): #updates every 20 minutes by default 
     try:
-        output = rusty_pins.GpioOut(pin)
-        
         if units == "seconds":
             time_active = interval
         if units == "minutes":
@@ -74,10 +69,8 @@ def actuate_time_hod(pin: int, time_on = 0, time_off = 0, interval = 20, units =
     finally:
         turn_off(output)
 
-def actuate_interval_sleep(pin: int, duration = 15, sleep = 45, units = "seconds"):
+def actuate_interval_sleep(output, duration = 15, sleep = 45, units = "seconds"):
     try:
-        output = rusty_pins.GpioOut(pin)
-        
         if units == "seconds":
             time_active = duration
             time_sleep = sleep
@@ -100,10 +93,8 @@ def actuate_interval_sleep(pin: int, duration = 15, sleep = 45, units = "seconds
     finally:
         turn_off(output)
 
-def actuate_slow_pwm(pin: int, intensity: int, pulse_domain = 10.0):
+def actuate_slow_pwm(output, intensity: int, pulse_domain = 10.0):
     try:
-        output = rusty_pins.GpioOut(pin)
-
         if (intensity >= 0) and (intensity < 1):
             #print("level 0")
             turn_off(output) #off

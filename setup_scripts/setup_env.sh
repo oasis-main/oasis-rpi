@@ -43,6 +43,9 @@ cd /home/pi/oasis-grow/rusty_pins
 cargo build
 maturin build --release
 cd ..
+cd /home/pi/oasis-grow/rusty_pipes
+cargo build
+maturin build --release
 
 echo "Installing Python3 Root Dependencies for OS..."
 sudo apt-get -y install python3-rpi.gpio #GPIO Pin Access

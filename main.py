@@ -32,7 +32,7 @@ import rusty_pipes
 core_process = None #variable to launch & manage the grow controller
 
 #checks whether system is booting in Access Point Mode, launches connection script if so
-def launch_AP(): 
+def launch_access_point(): 
     global minion
 
     #launch server subprocess to accept credentials over Oasis wifi network, does not wait
@@ -55,14 +55,14 @@ def launch_AP():
                 cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","offline_idle", db_writer = dbt.patch_firebase)
                 minion.ser_out.write(bytes(str(cs.structs["device_state"]["led_status"]+"\n"), "utf-8"))
                 server_process.terminate()
-                wifi.enable_WiFi()
+                wifi.enable_wifi()
                 time.sleep(1)
     else:
         while True:
             cbutton_state = buttons.get_button_state(buttons.connect_internet_button)
             if cbutton_state == 0:
                 server_process.terminate()
-                wifi.enable_WiFi()
+                wifi.enable_wifi()
                 time.sleep(1)
 
 #check if core is supposed to be running, launch it if so. Do nothing if not
@@ -322,7 +322,7 @@ def main_setup():
     else:
         minion.start_serial_out() #start outbound serial command interface
     
-    cs.check_state("access_point", launch_AP) #check to see if the device should be in access point mode
+    cs.check_state("access_point", launch_access_point) #check to see if the device should be in access point mode
     
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = None) #set to 0 so listener launches
     connect_firebase() #listener will not be re-called unless a connection fails at some point
@@ -369,9 +369,9 @@ def main_loop(led_timer, connect_timer):
             if cbutton_state == 0:
                 print("User pressed the connect button")
                 if cs.structs["device_state"]["connected"] == "1":
-                    wifi.enable_AP(dbt.patch_firebase) #launch access point and reboot
+                    wifi.enable_access_point(dbt.patch_firebase) #launch access point and reboot
                 else:
-                    wifi.enable_AP()
+                    wifi.enable_access_point()
                 time.sleep(1)
 
             if cs.structs["feature_toggles"]["action_button"] == "1":

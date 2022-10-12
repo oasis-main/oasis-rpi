@@ -26,7 +26,7 @@ def stop_core():
 
 def connect_device():
     cs.load_state()
-    wifi.enable_AP(dbt.patch_firebase)
+    wifi.enable_access_point(dbt.patch_firebase)
     return
 
 def set_temperature_target(value):

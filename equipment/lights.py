@@ -4,50 +4,30 @@
 
 #import shell modules
 import sys
+import signal
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
 
-
 #import libraries
-import RPi.GPIO as GPIO
 import time
 import datetime
 
+import rusty_pins
 from utils import concurrent_state as cs
+from utils import error_handler as err
 
 #get configs
 cs.load_state()
+light_GPIO = int(cs.structs["hardware_config"]["equipment_gpio_map"]["light_relay"]) #heater pin pulls from config file
+pin = rusty_pins.GpioOut(light_GPIO)
 
-#setup GPIO
-GPIO.setmode(GPIO.BCM) #GPIO Numbers instead of board numbers
-Light_GPIO = cs.structs["hardware_config"]["equipment_gpio_map"]["light_relay"] #heater pin pulls from config file
-GPIO.setup(Light_GPIO, GPIO.OUT) #GPIO setup relay open = GPIO.HIGH, closed = GPIO.LOW
-GPIO.output(Light_GPIO, GPIO.LOW) #relay open = GPIO.HIGH, closed = GPIO.LOW
+resource_name = "light"
 
-#define a function to actuate element
-def actuate_hod(time_on = 8, time_off = 20, interval = 15): #arguments = hour of day(int, 8), hour of day(int, 20), minutes (int, 15)
-
-    now = datetime.datetime.now()
-    HoD = now.hour
-
-    if time_on < time_off:
-        if HoD >= time_on and HoD < time_off:
-            GPIO.output(Light_GPIO, GPIO.HIGH) #light on (relay closed)
-            time.sleep(float(interval)*60)
-        if HoD < time_on or HoD >= time_off:
-            GPIO.output(Light_GPIO, GPIO.LOW)
-            time.sleep(float(interval)*60)
-    if time_on > time_off:
-        if HoD >=  time_on or HoD < time_off:
-            GPIO.output(Light_GPIO, GPIO.HIGH) #light on (relay closed)
-            time.sleep(float(interval)*60)
-        if HoD < time_on and  HoD >= time_off:
-            GPIO.output(Light_GPIO, GPIO.LOW) #light on (relay closed)
-            time.sleep(float(interval)*60)
-    if time_on == time_off:
-        GPIO.output(Light_GPIO, GPIO.HIGH)
-        time.sleep(float(interval)*60)
+def clean_up(*args):
+    cs.safety.unlock(cs.lock_filepath, resource_name)
+    pin.set_low()
+    sys.exit()
 
 if __name__ == '__main__':
     try:

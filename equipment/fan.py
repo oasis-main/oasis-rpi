@@ -4,13 +4,16 @@
 
 #import shell modules
 import sys
+import signal
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
 
-import RPi.GPIO as GPIO
 import time
+
+import rusty_pins
 from utils import concurrent_state as cs
+from utils import error_handler as err
 
 #get hardware config
 cs.load_state()
@@ -21,86 +24,10 @@ Fan_GPIO = cs.structs["hardware_config"]["equipment_gpio_map"]["fan_relay"] #hea
 GPIO.setup(Fan_GPIO, GPIO.OUT) #GPIO setup
 GPIO.output(Fan_GPIO, GPIO.LOW)
 
-#define a function making PID discrete & actuate element accordingly
-def actuate_pid(fan_ctrl):
-    if (fan_ctrl >= 0) and (fan_ctrl < 1):
-        #print("level 0")
-        GPIO.output(Fan_GPIO,GPIO.LOW)
-        time.sleep(1)
-
-    if (fan_ctrl >= 1) and (fan_ctrl < 10):
-        #print("level 1")
-        GPIO.output(Fan_GPIO,GPIO.HIGH)
-        time.sleep(1) #on for 1
-        GPIO.output(Fan_GPIO,GPIO.LOW)
-        time.sleep(1) #off for 1
-
-    if (fan_ctrl >= 10) and (fan_ctrl < 20):
-        #print("level 2")
-        GPIO.output(Fan_GPIO,GPIO.HIGH)
-        time.sleep(2) #on for 2
-        GPIO.output(Fan_GPIO,GPIO.LOW)
-        time.sleep(1) #off for 1
-
-    if (fan_ctrl >= 20) and (fan_ctrl < 30):
-        #print("level 3")
-        GPIO.output(Fan_GPIO,GPIO.HIGH)
-        time.sleep(3) #on for 3
-        GPIO.output(Fan_GPIO,GPIO.LOW)
-        time.sleep(1) #off for 1
-
-    if (fan_ctrl >= 30) and (fan_ctrl < 40):
-        #print("level 4")
-        GPIO.output(Fan_GPIO,GPIO.LOW)
-        time.sleep(4) #on for 4
-        GPIO.output(Fan_GPIO,GPIO.HIGH)
-        time.sleep(1) #off for 1
-
-    if (fan_ctrl >= 40) and (fan_ctrl < 50):
-        #print("level 5")
-        GPIO.output(Fan_GPIO,GPIO.HIGH)
-        time.sleep(5) #on for 5
-        GPIO.output(Fan_GPIO,GPIO.LOW)
-        time.sleep(1) #off for 1
-
-    if (fan_ctrl >= 50) and (fan_ctrl < 60):
-        #print("level 6")
-        GPIO.output(Fan_GPIO,GPIO.HIGH)
-        time.sleep(6) #on for 6
-        GPIO.output(Fan_GPIO,GPIO.LOW)
-        time.sleep(1) #off for 1
-
-    if (fan_ctrl >= 60) and (fan_ctrl < 70):
-        #print("level 7")
-        GPIO.output(Fan_GPIO,GPIO.HIGH)
-        time.sleep(7) #on for 7
-        GPIO.output(Fan_GPIO,GPIO.LOW)
-        time.sleep(1) #off for 1
-
-    if (fan_ctrl >= 70) and (fan_ctrl < 80):
-        #print("level 8")
-        GPIO.output(Fan_GPIO,GPIO.HIGH)
-        time.sleep(8) #on for 8
-        GPIO.output(Fan_GPIO,GPIO.LOW)
-        time.sleep(1) #off for 1
-
-    if (fan_ctrl >= 80) and (fan_ctrl < 90):
-        #print("level 9")
-        GPIO.output(Fan_GPIO, GPIO.HIGH)
-        time.sleep(9) #on for 9
-        GPIO.output(Fan_GPIO,GPIO.LOW)
-        time.sleep(1) #off for 1
-
-    if (fan_ctrl >= 90) and (fan_ctrl <= 100):
-        #print("level 10")
-        GPIO.output(Fan_GPIO,GPIO.HIGH)
-        time.sleep(10) #on for 10
-
-def actuate_interval(duration = 1, interval = 59): #amount of time between fan runs (minutes, minutes)
-    GPIO.output(Fan_GPIO, GPIO.HIGH)
-    time.sleep(float(duration))
-    GPIO.output(Fan_GPIO, GPIO.LOW)
-    time.sleep(float(interval)*60)
+def clean_up(*args):
+    cs.safety.unlock(cs.lock_filepath, resource_name)
+    pin.set_low()
+    sys.exit()
 
 if __name__ == '__main__':
     try:

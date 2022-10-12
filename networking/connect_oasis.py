@@ -77,7 +77,7 @@ def save_creds_exit(email, password, wifi_name, wifi_pass, device_name, cmd = Fa
 
     if cmd == False: #pass this argument as true to save creds without rebooting
         #stand up wifi and reboot
-        wifi.enable_WiFi()
+        wifi.enable_wifi()
 
 if __name__ == '__main__':
 

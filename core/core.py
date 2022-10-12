@@ -29,6 +29,8 @@ from utils import error_handler as err
 from networking import db_tools as dbt
 from peripherals import microcontroller_manager as minion
 
+resource_name = "core"
+
 #declare process management variables
 heat_process = None
 humidity_process = None
@@ -263,7 +265,7 @@ def hum_pid(humidity, target_humidity, last_humidity, last_target_humidity,
 
     err_dot_humidity = target_humidity_dot - humidity_dot
 
-    humidity_level  = P_hum*err_humidity + I_hum * err_cum_humidity + D_hum*err_dot_humidity #positive response
+    humidity_level  = P_hum*err_humidity + I_hum*err_cum_humidity + D_hum*err_dot_humidity #positive response
     humidity_level  = max(min(int(humidity_level),100),0)
     print(humidity_level)
 
@@ -286,7 +288,7 @@ def dehum_pid(humidity, target_humidity, last_humidity, last_target_humidity,
 
     err_dot_humidity = target_humidity_dot - humidity_dot
 
-    dehumidify_level  = P_dehum*(0-err_humidity)+I_dehum*(0-err_cum_humidity)+D_dehum*(0-err_dot_humidity)
+    dehumidify_level  = (0-P_dehum)*err_humidity + (0-I_dehum)*err_cum_humidity + (0-D_dehum)*err_dot_humidity
     dehumidify_level  = max(min(int(dehumidify_level), 100), 0)
     print(dehumidify_level)
 
@@ -325,9 +327,9 @@ def fan_pid(temperature, humidity, co2,
     err_dot_humidity = target_humidity_dot - humidity_dot
     err_dot_co2 = target_co2_dot - co2_dot
 
-    fan_level  = Pt_fan*(0-err_temperature)+It_fan*(0-err_cum_temperature)+Dt_fan*(0-err_dot_temperature) \
-                +Ph_fan*(0-err_humidity)+Ih_fan*(0-err_cum_humidity)+Dh_fan*(0-err_dot_humidity) \
-                +Pc_fan*(0-err_co2)+Ic_fan*(0-err_cum_co2)+Dc_fan*(0-err_dot_co2)    
+    fan_level  = (0-Pt_fan)*err_temperature + (0-It_fan)*err_cum_temperature + (0-Dt_fan)*err_dot_temperature \
+                +(0-Ph_fan)*err_humidity + (0-Ih_fan)*err_cum_humidity + (0-Dh_fan)*err_dot_humidity \
+                +(0-Pc_fan)*err_co2 + (0-Ic_fan)*err_cum_co2 + (0-Dc_fan)*err_dot_co2    
     
     fan_level  = max(min(int(fan_level),100),0)
     print(fan_level)
@@ -365,12 +367,12 @@ def water_pid(soil_moisture, target_soil_moisture,
     return water_level
 
 #poll heat subprocess if applicable and relaunch/update equipment
-def run_heat(intensity = 0): #Depends on: 'subprocess'; Modifies: heat_process
+def run_heat(intensity = 0):
     global heat_process
 
     try: #actuates heat process
-        poll_heat = heat_process.exited() #heat
-        if poll_heat is True: #active processes return None, exited processes return 0
+        poll_heat = heat_process.exited() #process vars are initialized as None, so this fails
+        if poll_heat is True: #active processes return False, exited processes return True
             if cs.structs["feature_toggles"]["heat_pid"] == "1":
                 heat_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/heater.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
             else:
@@ -383,24 +385,24 @@ def run_heat(intensity = 0): #Depends on: 'subprocess'; Modifies: heat_process
             heat_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/heater.py', cs.structs["device_params"]["heater_duration"], cs.structs["device_params"]["heater_interval"]])
 
 #poll humidityf subprocess if applicable and relaunch/update equipment
-def run_hum(intensity = 0): #Depends on: 'subprocess'; Modifies: hum_process
+def run_hum(intensity = 0):
     global humidity_process
 
-    try:  #launches heat process on program startup, when heat_process itself is none
+    try:  #process vars are initialized as None, so this fails
         poll_humidity = humidity_process.exited() #humidity
-        if poll_humidity is True:  #active processes return None, exited processes return 0
+        if poll_humidity is True:  #active processes return False, exited processes return True
             if cs.structs["feature_toggles"]["hum_pid"] == "1":
                 humidity_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/humidifier.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
             else:
                 humidity_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/humidifier.py', cs.structs["device_params"]["humidifier_duration"], cs.structs["device_params"]["humidifier_interval"]])
-    except:  #launches heat process on program startup, when heat_process itself is none
+    except:  
         if cs.structs["feature_toggles"]["hum_pid"] == "1":
             humidity_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/humidifier.py', str(intensity)])
         else:
             humidity_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/humidifier.py', cs.structs["device_params"]["humidifier_duration"], cs.structs["device_params"]["humidifier_interval"]])
 
 #poll dehumidify subprocess if applicable and relaunch/update equipment
-def run_dehum(intensity = 0): #Depends on: 'subprocess'; Modifies: hum_process
+def run_dehum(intensity = 0):
     global dehumidify_process
 
     try:
@@ -482,57 +484,6 @@ def run_camera(): #Depends on: 'subprocess'; Modifies: camera_process
             camera_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/imaging/camera.py', cs.structs["device_params"]["camera_interval"]]) #If running, then skips. If idle then restarts, If no process, then fails
     except:
         camera_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/imaging/camera.py', cs.structs["device_params"]["camera_interval"]]) #If no process, then starts
-
-def clean_up_processes():
-    global heat_process, humidity_process, dehumidify_process, fan_process, light_process, camera_process, water_process, air_process        
-
-    #clean up all processes
-    cs.load_state()
-
-    if (cs.structs["feature_toggles"]["heater"] == "1") and (heat_process != None): #go through toggles and kill active processes
-        heat_process.terminate()
-        heat_process.wait()
-
-    if (cs.structs["feature_toggles"]["humidifier"] == "1") and (humidity_process != None):
-        humidity_process.terminate()
-        humidity_process.wait()
-
-    if (cs.structs["feature_toggles"]["dehumidifier"] == "1") and (dehumidify_process != None):
-        dehumidify_process.terminate()
-        dehumidify_process.wait()
-
-    if (cs.structs["feature_toggles"]["fan"] == "1") and (fan_process != None):
-        fan_process.terminate()
-        fan_process.wait()
-
-    if (cs.structs["feature_toggles"]["water"] == "1") and (water_process != None):
-        water_process.terminate()
-        water_process.wait()
-
-    if (cs.structs["feature_toggles"]["light"] == "1") and (light_process != None):
-        light_process.terminate()
-        light_process.wait()
-
-    if (cs.structs["feature_toggles"]["air"] == "1") and (air_process != None):
-        air_process.terminate()
-        air_process.wait()
-
-    if (cs.structs["feature_toggles"]["camera"] == "1") and (camera_process != None):
-        camera_process.terminate()
-        camera_process.wait()
-
-    gc.collect()
-
-#terminates the program and all running subprocesses
-def terminate_program(): #Depends on: cs.load_state(), 'sys', 'subprocess' #Modifies: heat_process, humidity_process, fan_process, light_process, camera_process, water_process
-
-    print("Terminating Program...")
-    clean_up_processes()
-
-    #flip "running" to 0
-    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "0", db_writer = dbt.patch_firebase)
-
-    sys.exit()
 
 def run_active_equipment():
     
@@ -732,16 +683,55 @@ def data_out():
             print(err.full_stack())
             data_timer = time.time()
 
-def check_exit():
-    #set exit condition    
-    cs.load_state()
-    if cs.structs["device_state"]["running"] == "0":
-        terminate_program()
-    else:
-        pass
+def clean_up_processes():
+    global heat_process, humidity_process, dehumidify_process, fan_process, light_process, camera_process, water_process, air_process        
 
-    #give the program some time to breathe
-    time.sleep(1)
+    #clean up all processes
+    cs.load_state()
+
+    if (cs.structs["feature_toggles"]["heater"] == "1") and (heat_process != None): #go through toggles and kill active processes
+        heat_process.terminate()
+        heat_process.wait()
+
+    if (cs.structs["feature_toggles"]["humidifier"] == "1") and (humidity_process != None):
+        humidity_process.terminate()
+        humidity_process.wait()
+
+    if (cs.structs["feature_toggles"]["dehumidifier"] == "1") and (dehumidify_process != None):
+        dehumidify_process.terminate()
+        dehumidify_process.wait()
+
+    if (cs.structs["feature_toggles"]["fan"] == "1") and (fan_process != None):
+        fan_process.terminate()
+        fan_process.wait()
+
+    if (cs.structs["feature_toggles"]["water"] == "1") and (water_process != None):
+        water_process.terminate()
+        water_process.wait()
+
+    if (cs.structs["feature_toggles"]["light"] == "1") and (light_process != None):
+        light_process.terminate()
+        light_process.wait()
+
+    if (cs.structs["feature_toggles"]["air"] == "1") and (air_process != None):
+        air_process.terminate()
+        air_process.wait()
+
+    if (cs.structs["feature_toggles"]["camera"] == "1") and (camera_process != None):
+        camera_process.terminate()
+        camera_process.wait()
+
+#terminates the program and all running subprocesses
+def terminate_program(*args): #Depends on: cs.load_state(), 'sys', 'subprocess' #Modifies: heat_process, humidity_process, fan_process, light_process, camera_process, water_process
+
+    print("Terminating Program...")
+    clean_up_processes()
+
+    #flip "running" to 0
+    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "0", db_writer = dbt.patch_firebase)
+
+    cs.safety.unlock(cs.lock_filepath,resource_name)
+    sys.exit()
 
 @err.Error_Handler
 def main_setup():
@@ -750,7 +740,9 @@ def main_setup():
     #Load state variables to start the main program
     cs.load_state()
 
-    #Exit early if opening subprocess daemon
+    
+
+    #exit early if opening subprocess daemon
     if str(sys.argv[1]) == "daemon":
         print("core daemon started")
         #kill the program
@@ -759,7 +751,10 @@ def main_setup():
         print("core main started")
         #log main start
         #flip "running" to 1 to make usable from command line
-        cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "1", db_writer = dbt.patch_firebase)
+        if cs.structs["device_state"]["connected"] == 1:
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "1", db_writer = dbt.patch_firebase)
+        else:
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "1")
         #continue with program execution
         pass
     else:
@@ -793,27 +788,30 @@ def main_loop():
             update_derivative_banks() #this occurs in near-realtime, as opposed to storage and exchange every 5 min
 
             cs.load_state() 
-
+            
             smart_listener()
-
+            
             run_active_equipment()
-
+            
             console_log()
-
+            
             data_out()
 
-            check_exit()
-
-    except (KeyboardInterrupt):
+    except KeyboardInterrupt:
+        print("Program interrupted by user.")
+        terminate_program()
+    except Exception:
+        print("Encoutered an error!")
+        print(err.full_stack())
         terminate_program()
 
-    except Exception as e:
-        print(err.full_stack())
-        if cs.structs["device_state"]["running"] == "1": #if there is an error, but device should stay running
-            clean_up_processes()
-        if cs.structs["device_state"]["running"] == "0":
-            terminate_program()
-            
 if __name__ == '__main__':
+    signal.signal(signal.SIGTERM, terminate_program)
     main_setup()
     main_loop()
+
+#FEATURE EXTRACTION:
+#   Almost everything we do here can be put into groups of functionality & extracted into various modules.
+#   We want the core to parse configs, load functions for each feature, and interatively run + chain for all enabled
+#   The end result should be that it is easier to add a new metrics, data sources, analyses, reaction, and outputs to the core program  
+#   An easier option would be to make everything in this file an imported module, and then manually note where each module group touches in the code :)

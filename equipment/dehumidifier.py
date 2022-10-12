@@ -3,14 +3,16 @@
 #---------------------------------------------------------------------------------------
 #import shell modules
 import sys
+import signal
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
 
-import RPi.GPIO as GPIO
 import time
 
+import rusty_pins
 from utils import concurrent_state as cs
+from utils import error_handler as err
 
 #get hardware config
 cs.load_state()
