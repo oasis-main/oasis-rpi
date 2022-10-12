@@ -56,7 +56,7 @@ def load_state(loop_limit=1000):
                     print(config_filepath + " does not exist. Have you run the setup scripts?")
                     return
 
-                with open(config_filepath, "rb") as x: #open the config filepath with bytes
+                with open(config_filepath, "r") as x: #open the config filepath with bytes
                         structs[struct] = json.load(x) #try to parse bytes to json -> dict
                         #print(struct)
 
@@ -93,7 +93,7 @@ def load_locks(loop_limit = 10000): #leave this alone since it's the python brid
     
     for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
         try:
-            with open(lock_filepath, "rb") as l:
+            with open(lock_filepath, "r") as l:
                 locks = json.load(l) #get locks
                 #print(type(locks))
 
@@ -166,7 +166,7 @@ def write_state(path, field, value, db_writer = None, loop_limit=2500): #Depends
 
     for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke if so 
         try:
-            with open(path, "rb") as x: # open the file.
+            with open(path, "r") as x: # open the file.
                 data = json.load(x) # can we load a valid json?
 
             if locks[path] == 0: #check is the file is available to be written
@@ -214,7 +214,7 @@ def write_state(path, field, value, db_writer = None, loop_limit=2500): #Depends
                 reset_model.reset_config_path(path)
                 
                 #now write
-                with open(path, "rb") as x: # open the file.
+                with open(path, "r") as x: # open the file.
                     data = json.load(x) # can we load a valid json?
                     
                 #only call this once with path or other unique string as argument
@@ -254,7 +254,7 @@ def write_dict(path, dictionary, db_writer = None, loop_limit=2500): #Depends on
 
     for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke if so
         try:
-            with open(path, "rb") as x: # open the file.
+            with open(path, "r") as x: # open the file.
                 data = json.load(x) # can we load a valid json?
                 
             #only call this once with path or other unique string as argument
@@ -302,7 +302,7 @@ def write_dict(path, dictionary, db_writer = None, loop_limit=2500): #Depends on
                 reset_model.reset_config_path(path)
                 
                 #now write
-                with open(path, "rb") as x: # open the file.
+                with open(path, "r") as x: # open the file.
                     data = json.load(x) # can we load a valid json?
                     
                     #only call this once with path or other unique string as argument
