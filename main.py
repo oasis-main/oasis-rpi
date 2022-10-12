@@ -70,12 +70,12 @@ def launch_access_point():
                 time.sleep(1)
 
 def connect_firebase():
-    connect = rusty_pipes.Open["python3", "/home/pi/oasis-grow/networking/firebase_manager.py"]
+    connect = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/networking/firebase_manager.py"])
 
 def start_listener():
     global listener
     if listener is None:
-        listener = rusty_pipes.Open["python3", "/home/pi/oasis-grow/networking/firebase_listener.py"]
+        listener = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/networking/firebase_listener.py"])
     else:
         print("The listener is already running")
 
