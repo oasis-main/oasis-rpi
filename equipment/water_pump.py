@@ -32,6 +32,7 @@ if __name__ == "__main__":
     try:
         
         if cs.structs["feature_toggles"]["water_pid"] == "1":
+            called_correctly = sys.argv[2] #will fail if called incorrectly & throw an error
             print("Running water pump in pulse mode with " + sys.argv[1] + "%" + " power...")
             relays.actuate_slow_pwm(pin, intensity = float(sys.argv[1])) #trigger appropriate response
         else:
