@@ -1,6 +1,7 @@
 #import modules
 import os
 import sys
+import time
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
@@ -35,13 +36,13 @@ structs = {"device_state": {},
 "feature_toggles": {}}
 
 #declare state locking varibles
-locks = None
+locks = {}
 lock_filepath = "/home/pi/oasis-grow/configs/locks.json"
 
 def load_state(loop_limit=1000): 
     global structs
 
-    for struct in structs: #now we're going to load an populat the data    
+    for struct in structs: #now we're going to load an populate the data    
 
         #load device state
         for i in list(range(int(loop_limit))): #try to load, pass and try again if fails
@@ -113,6 +114,7 @@ def load_locks(loop_limit = 10000): #leave this alone since it's the python brid
                 reset_locks(lock_filepath)
             else:
                 print("Main.py tried to read while locks were being written. If this continues, file is corrupted.")
+                print(err.full_stack())
                 pass
 
     return lock_filepath
