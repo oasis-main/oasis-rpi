@@ -36,6 +36,7 @@ structs = {"device_state": {},
 
 #declare state locking varibles
 locks = None
+lock_filepath = "/home/pi/oasis-grow/configs/locks.json"
 
 def load_state(loop_limit=1000): 
     global structs
@@ -321,6 +322,14 @@ def write_dict(path, dictionary, db_writer = None, loop_limit=2500): #Depends on
                 print(path + " write failed, trying again. If this persists, file is corrupted.")
                 print(err.full_stack())
                 pass #continue the loop until write is successful or ceiling is hit
+
+def check_lock(resource):
+    load_locks()
+    if locks[resource] == 1: #if resource is locked
+        print(resource + " is currently in use by another process.")
+        sys.exit() #termiating for safety
+    else:
+        lock(lock_filepath, resource)
 
 if __name__ == '__main__':
     print("This is a unit test:")

@@ -5,7 +5,6 @@ import sys
 sys.path.append('/home/pi/oasis-grow')
 
 #data handling
-import json
 import re
 import time
 

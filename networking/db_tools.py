@@ -1,4 +1,3 @@
-#replace this with MQTT subscriber to a cloud MQTT publisher that executed with requests to patch the database
 #File for all database functions
 import os
 import sys
@@ -7,14 +6,8 @@ import sys
 sys.path.append('/home/pi/oasis-grow')
 
 import requests
-import json
+import orjson
 import pyrebase
-import multiprocessing
-
-from utils import concurrent_state as cs
-from utils import error_handler as err
-
-listener = None
 
 def initialize_user(RefreshToken):
 
@@ -27,14 +20,12 @@ def initialize_user(RefreshToken):
     }
 
     firebase = pyrebase.initialize_app(config)
-
     # Get a reference to the auth service
     auth = firebase.auth()
     # Get a reference to the database service
     db = firebase.database()
     # Get a reference to the storage service
     storage = firebase.storage()
-
     #input by user on setup
     user = auth.refresh(RefreshToken)
 
@@ -46,20 +37,20 @@ def get_user_data(user, db):
 
 #modifies a firebase variable, now asynchroous
 def patch_firebase(access_config,field,value): #Depends on: load_state(),'requests','json'; Modifies: database['field'], state variables
-    data = json.dumps({field: value})
+    data = orjson.dumps({field: value})
     url = "https://oasis-state-af548-default-rtdb.firebaseio.com/"+str(access_config["local_id"])+"/"+str(access_config["device_name"])+".json?auth="+str(access_config["id_token"])
     result = requests.patch(url,data)
     return result
 
 def firebase_add_device(access_config,data): #Depends on: load_state(),'requests','json'; Modifies: database['field'], state variables
-    data = json.dumps(data)
+    data = orjson.dumps(data)
     url = "https://oasis-state-af548-default-rtdb.firebaseio.com/"+str(access_config["local_id"])+".json?auth="+str(access_config["id_token"])
     result = requests.patch(url,data)
     return result
 
 #modifies a firebase variable, now asynchroous
 def patch_firebase_dict(access_config, data): #Depends on: load_state(),'requests','json'; Modifies: database['field'], state variables
-    data = json.dumps(data)
+    data = orjson.dumps(data)
     url = "https://oasis-state-af548-default-rtdb.firebaseio.com/"+str(access_config["local_id"])+"/"+str(access_config["device_name"])+".json?auth="+str(access_config["id_token"])
     result = requests.patch(url,data)
     return result
@@ -72,9 +63,9 @@ def store_file(user, storage, path, device_name, filename):
 def get_refresh_token(wak,email,password): #Depends on: 'requests', 'json'; Modifies: None
     print("Requesting refresh token...")
     sign_in_url = "https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key=" + wak
-    sign_in_payload = json.dumps({"email": email, "password": password, "returnSecureToken": "true"})
+    sign_in_payload = orjson.dumps({"email": email, "password": password, "returnSecureToken": "true"})
     r = requests.post(sign_in_url, sign_in_payload)
-    data = json.loads(r.content)
+    data = orjson.loads(r.content)
     print("Done.")
     return data["refreshToken"]
 
@@ -92,128 +83,5 @@ def get_local_credentials(wak,refresh_token): #Depends on: cs.load_state(), 'req
 def fetch_device_data(access_config):
     url = "https://oasis-state-af548-default-rtdb.firebaseio.com/"+str(access_config["local_id"])+"/"+str(access_config["device_name"])+".json?auth="+str(access_config["id_token"])
     result = requests.get(url)
-    decoded_result = result.content.decode()
-    cloud_data = json.loads(decoded_result)
+    cloud_data = orjson.loads(result.content)
     return cloud_data
-
-#sync local configuration with 
-def sync_state():
-    cloud_data = fetch_device_data()
-    for key_value_pair in list(cloud_data.items()):
-        if key_value_pair[0] in list(cs.structs["device_state"].keys()):
-            #print("Updating device_state")
-            cs.write_state("/home/pi/oasis-grow/configs/device_state.json", key_value_pair[0], key_value_pair[1], db_writer = None)
-        elif key_value_pair[0] in list(cs.structs["device_params"].keys()):
-            #print("Updating device_params")
-            cs.write_state("/home/pi/oasis-grow/configs/device_params.json", key_value_pair[0], key_value_pair[1], db_writer = None)    
-        else:
-            #print("Not working")
-            pass
-
-#make change to config file
-def act_on_event(field, new_data):
-    #get data and field info
-
-    #checks if file exists and makes a blank one if not
-    #the path has to be set for box
-    device_state_fields = list(cs.structs["device_state"].keys())
-    device_params_fields = list(cs.structs["device_params"].keys())
-
-    path = " "
-
-    if field in device_state_fields:
-        path = "/home/pi/oasis-grow/configs/device_state.json"
-    elif field in device_params_fields:
-        path = "/home/pi/oasis-grow/configs/device_params.json"
-
-    if os.path.exists(path) == False:
-        return
-
-    #open data config file
-    #edit appropriate spot
-    #print(path)
-    cs.write_state(path, field, new_data, db_writer = None)
-
-def stream_handler(m):
-    #some kind of update
-    #might be from start up or might be user changed it
-    if m['event']=='put' or m['event']=='patch':
-        print(m)
-        path = m['path']
-        key = path[1:len(path)]
-        value = m['data']
-        act_on_event(key, value)
-
-    #something else
-    else:
-        #if this happens... theres a problem...
-        #should be handled for
-        print('something wierd...', m['event'])
-        pass
-
-@err.Error_Handler
-def detect_field_event(user, db):
-    my_stream = db.child(user['userId']+'/'+cs.structs["access_config"]["device_name"]+"/").stream(stream_handler, user['idToken'])
-
-#https://stackoverflow.com/questions/2046603/is-it-possible-to-run-function-in-a-subprocess-without-threading-or-writing-a-se
-#https://stackoverflow.com/questions/200469/what-is-the-difference-between-a-process-and-a-thread#:~:text=A%20process%20is%20an%20execution,sometimes%20called%20a%20lightweight%20process.
-#run multiprocesser to handle database listener
-def detect_multiple_field_events(user, db):
-    global listener
-
-    listener = multiprocessing.Process(target=detect_field_event, args=(user, db))
-    listener.start()
-
-def kill_listener():
-    global listener
-    if listener is not None:
-        listener.terminate()
-        listener = None
-    else:
-        print("Listener does not exist")
-        pass
-
-#This function launches a thread that checks whether the device has been deleted and kills this script if so
-def stop_condition(field,value): #Depends on: os, Process,cs.load_state(); Modifies: listener_list, stops this whole script
-
-    def check_exit(f,v): #This should be launched in its own thread, otherwise will hang the script
-        while True:
-            cs.load_state()
-            if cs.structs["device_state"][f] == v:
-                print("Exiting database listener...")
-                kill_listener()
-                return
-
-    stop_condition = multiprocessing.Process(target = check_exit, args = (field,value))
-    stop_condition.start()
-
-def run():
-    print("Starting listener...")
-    cs.load_state()
-    try:
-        user, db, storage = initialize_user(cs.structs["access_config"]["refresh_token"])
-        
-        #fetch all the most recent data from the database
-        fetch_device_data(cs.structs["access_config"])
-        
-        #actual section that launches the listener
-        detect_multiple_field_events(user, db)
-        stop_condition("awaiting_deletion","1")
-        stop_condition("connected", "0")
-        
-        print("Listener established a connection")
-        print("Database monitoring: active")
-    except Exception:
-        print(err.full_stack())
-        print("Listener could not connect")
-        print("Database monitoring: inactive")
-
-#launches a script to detect changes in the database
-def launch_listener(): #depends on 'subprocess', modifies: state variables
-    cs.load_state()
-    if cs.structs["device_state"]["connected"] == "0":
-        db_monitor =  multiprocessing.Process(target = run)
-        db_monitor.start()
-    else:
-        print("Listener already exists")
-        

@@ -15,6 +15,7 @@ from utils import concurrent_state as cs
 from utils import error_handler as err
 
 resource_name = "heater"
+cs.check_lock(resource_name)
 
 #get hardware config
 cs.load_state()
@@ -27,7 +28,6 @@ def clean_up(*args):
     sys.exit()
 
 if __name__ == '__main__':
-    cs.check_lock(resource_name)
     signal.signal(signal.SIGTERM, clean_up)
     try:
         if cs.structs["feature_toggles"]["heat_pid"] == "1":

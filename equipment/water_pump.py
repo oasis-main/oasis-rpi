@@ -15,6 +15,7 @@ from utils import concurrent_state as cs
 from utils import error_handler as err
 
 resource_name = "water_pump"
+cs.check_lock(resource_name)
 
 cs.load_state()
 water_GPIO = int(cs.structs["hardware_config"]["equipment_gpio_map"]["water_relay"]) #bcm pin_no pulls from config file
@@ -26,7 +27,6 @@ def clean_up(*args):
     sys.exit()
 
 if __name__ == "__main__":
-    cs.check_lock(resource_name)
     signal.signal(signal.SIGTERM, clean_up)
     try:
         if cs.structs["feature_toggles"]["water_pid"] == "1":

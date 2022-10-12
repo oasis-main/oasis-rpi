@@ -1,6 +1,6 @@
 #import shell modules
 import sys
-import os
+import signal
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
@@ -10,10 +10,14 @@ import neopixel
 import time
 
 from utils import slow_concurrent_state as slow_cs
+from utils import error_handler as err
+
+resource_name = "led"
+slow_cs.check_lock(resource_name) #anything GPIO-touching should check the lock before the object is declared
 
 #get hardware config & device state
 slow_cs.load_state()
-num_leds = slow_cs.structs["hardware_config"]["onboard_led_config"]["num_leds"]
+num_leds = int(slow_cs.structs["hardware_config"]["onboard_led_config"]["num_leds"])
 pixels = neopixel.NeoPixel(board.D21, num_leds)
 
 def check_led_status():
@@ -78,8 +82,27 @@ def run():
     while True:
         check_led_status()
 
-if __name__ == '__main__':
-    run()
+def clean_up(*args):
+    slow_cs.unlock(slow_cs.lock_filepath, resource_name) #free the leds for system
 
-
+    #off
+    for x in range(0, num_leds): #kill the neopixels
+        pixels[x] = (0, 0, 10)
+        time.sleep(0.04)
+    for x in range(0, num_leds):
+        pixels[x] = (0, 0, 5)
+        time.sleep(0.04)   
     
+    sys.exit()
+
+if __name__ == '__main__':
+    signal.signal(signal.SIGTERM,clean_up)
+    try:
+        run()
+    except KeyboardInterrupt:
+        print("A user interrupted the program")
+    except Exception:
+        print("Encountered an error!")
+        print(err.full_stack())
+    finally:
+        clean_up()

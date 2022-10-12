@@ -15,6 +15,7 @@ from utils import concurrent_state as cs
 from utils import error_handler as err
 
 resource_name = "lights"
+cs.check_lock(resource_name)
 
 #get configs
 cs.load_state()
@@ -27,9 +28,7 @@ def clean_up(*args):
     sys.exit()
 
 if __name__ == '__main__':
-    cs.check_lock(resource_name)
     signal.signal(signal.SIGTERM,clean_up)
-    
     try:
         print("Turning lights on at " + sys.argv[1] + ":00 and off at " + sys.argv[2] + ":00, refreshing every " + sys.argv[3] + " minutes...")
         relays.actuate_time_hod(pin, int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), interval_units = "minutes")

@@ -14,6 +14,7 @@ from utils import concurrent_state as cs
 from utils import error_handler as err
 
 resource_name = "humidifier"
+cs.check_lock(resource_name)
 
 #setup GPIO
 cs.load_state()#get configs
@@ -26,7 +27,6 @@ def clean_up(*args):
     sys.exit()
 
 if __name__ == '__main__':
-    cs.check_lock(resource_name)
     signal.signal(signal.SIGTERM, clean_up)
     try:
         if cs.structs["feature_toggles"]["hum_pid"] == "1":

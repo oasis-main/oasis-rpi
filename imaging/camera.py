@@ -73,8 +73,8 @@ def clean_up(*args):
     sys.exit()
 
 if __name__ == '__main__':
-    cs.check_lock(resource_name)
-    signal.signal(signal.SIGTERM,clean_up)
+    cs.check_lock(resource_name) #no hardware acquisition happens on import
+    signal.signal(signal.SIGTERM,clean_up) #so we can check for the lock in __main__
     
     try:    
         actuate(str(sys.argv[1]))

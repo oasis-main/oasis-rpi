@@ -5,14 +5,15 @@
   "/home/pi/oasis-grow/configs/feature_toggles.json": 0,
   "/home/pi/oasis-grow/configs/hardware_config.json": 0,
   "/home/pi/oasis-grow/data_out/sensor_info.json": 0,
-  "air_pump": 0,
-  "camera": 0,
-  "core": 0,
-  "dehumidifier": 0,
-  "fan": 0,
   "heater": 0,
   "humidifier": 0,
+  "dehumidifier": 0,
+  "fan": 0,
   "lights": 0,
+  "air_pump": 0,
+  "water_pump": 0,
+  "core": 0,
   "listener": 0,
-  "water_pump": 0
+  "camera": 0,
+  "led": 0
 }

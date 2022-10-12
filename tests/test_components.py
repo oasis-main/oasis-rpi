@@ -8,7 +8,6 @@ sys.path.append('/home/pi/oasis-grow')
 import main
 import api
 from core import core
-from networking import connect_oasis
 from networking import db_tools as dbt
 from imaging import camera
 from utils import update, reset_model
@@ -25,10 +24,6 @@ def test_state_handlers():
     core.cs.load_state()
     core.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"), dbt.patch_firebase)
     core.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"), dbt.patch_firebase)
-
-    connect_oasis.slow_cs.load_state()
-    connect_oasis.slow_cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"), dbt.patch_firebase)
-    connect_oasis.slow_cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"), dbt.patch_firebase)
 
     camera.cs.load_state()
     camera.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"), dbt.patch_firebase)

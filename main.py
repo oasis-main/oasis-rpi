@@ -8,28 +8,32 @@ sys.path.append('/home/pi/oasis-grow')
 sys.path.append('/home/pi/oasis-grow/core')
 sys.path.append('/home/pi/oasis-grow/utils')
 
-#concurrency
-import rusty_pipes
-import multiprocessing
-
 #time
 import time
 import datetime
 
-#other oasis-raspi packages
+#concurrency
+import rusty_pipes
 from utils import concurrent_state as cs
-from utils import reset_model
-from utils import error_handler as err
+
+#connectivity
 from networking import db_tools as dbt
+from networking import firebase_manager
 from networking import wifi
+
+#hardware
 from peripherals import buttons
 from peripherals import relays
 from peripherals import microcontroller_manager as minion
 
-import rusty_pipes
+#housekeeping
+from utils import reset_model
+from utils import error_handler as err
 
-#declare process management variables
-core_process = None #variable to launch & manage the grow controller
+#declare subprocess management variables
+core = None
+led = None
+listener = None
 
 #checks whether system is booting in Access Point Mode, launches connection script if so
 def launch_access_point(): 
@@ -65,16 +69,35 @@ def launch_access_point():
                 wifi.enable_wifi()
                 time.sleep(1)
 
+def connect_firebase():
+    connect = rusty_pipes.Open["python3", "/home/pi/oasis-grow/networking/firebase_manager.py"]
+
+def start_listener():
+    global listener
+    if listener is None:
+        listener = rusty_pipes.Open["python3", "/home/pi/oasis-grow/networking/firebase_listener.py"]
+    else:
+        print("The listener is already running")
+
+def stop_listener():
+    global listener
+    if listener is not None:
+        listener.terminate()
+        listener.wait()
+        listener = None
+    else:
+        print("The listener is not running") 
+
 #check if core is supposed to be running, launch it if so. Do nothing if not
-def setup_core_process(): #Depends on: cs.load_state(), cs.write_state(), 'subprocess'; Modifies: core_process, state_variables, device_state.json
-    global core_process
+def setup_core_process(): #Depends on: cs.load_state(), cs.write_state(), 'subprocess'; Modifies: core, state_variables, device_state.json
+    global core
     cs.load_state()
 
     #if the device is supposed to be running
     if cs.structs["device_state"]["running"] == "1":
 
         #launch core main
-        core_process = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/core/core.py", "main"])
+        core = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/core/core.py", "main"])
 
         if cs.structs["device_state"]["connected"] == "1": #if connected
             #LEDmode = "connected_running"
@@ -87,7 +110,7 @@ def setup_core_process(): #Depends on: cs.load_state(), cs.write_state(), 'subpr
     else:
 
         #launch sensing-feedback subprocess in daemon mode
-        core_process = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/core/core.py", "daemon"])
+        core = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/core/core.py", "daemon"])
 
         if cs.structs["device_state"]["connected"] == "1": #if connected
             #LEDmode = "connected_idle"
@@ -111,13 +134,13 @@ def cmd_line_args():
         print("Defaulting to last saved mode or default if new.")
 
 def start_core():
-    global core_process
+    global core
     cs.load_state()
-    poll_core = core_process.exited() #check if core process is running
+    poll_core = core.exited() #check if core process is running
     if poll_core is True: #if it is not running
         #launch it
-        core_process = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/core/core.py", "main"])
-        print("launched core process")
+        core = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/core/core.py", "main"])
+        print("Core process is running...")
 
         if cs.structs["device_state"]["connected"] == "1": #if connected
             #send LEDmode = "connected_running"
@@ -125,18 +148,19 @@ def start_core():
         else: #if not connected
             #send LEDmode = "offline_running"
             cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","offline_running", db_writer = dbt.patch_firebase)
+    else:
+        print("Core is already running.")
 
 def stop_core():
-    global core_process
+    global core
     cs.load_state()
-    poll_core = core_process.exited() #check if core process is running
+    poll_core = core.exited() #check if core process is running
     if poll_core is False: #if it is running
-        try: #try to kill it
-            core_process.terminate()
-            core_process.wait()
-            print("core process deactivated")
-        except:
-            pass
+        #kill it
+        core.terminate()
+        core.wait()
+        print("Core process is idle...")
+        
 
         if cs.structs["device_state"]["connected"] == "1": #if connected
             #send LEDmode = "connected_idle"
@@ -144,6 +168,8 @@ def stop_core():
         else: #if not connected
             #send LEDmode = "offline_idle"
             cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","offline_idle", db_writer = dbt.patch_firebase)
+    else:
+        print("Tried to stop core but it is not running!")
 
 #checks if core is running, kills it if so, starts it otherwise
 def switch_core_running(): #Depends on: cs.load_state(), cs.write_state(), dbt.patch_firebase(), 'subprocess'; Modifies: device_state.json, state_variables
@@ -158,6 +184,38 @@ def switch_core_running(): #Depends on: cs.load_state(), cs.write_state(), dbt.p
     else:
         #set running state to on = 1
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","1", db_writer = dbt.patch_firebase)
+
+def export_timelapse():
+    export_tl = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/imaging/make_timelapse.py"])
+
+def launch_onboard_led():
+    launch_led = rusty_pipes.Open(["sudo", "python3", "/home/pi/oasis-grow/peripherals/neopixel_leds.py"])
+
+#updates the state of the LED, serial must be set up,
+def update_minion_led(): #Depends on: cs.load_state(), 'datetime'; Modifies: ser_out
+    global minion
+    cs.load_state()
+
+    #write "off" or write status depending on ToD + settings
+    now = datetime.datetime.now()
+    HoD = now.hour
+
+    if minion.ser_out is not None:
+        if int(cs.structs["device_params"]["time_start_led"]) < int(cs.structs["device_params"]["time_stop_led"]):
+            if HoD >= int(cs.structs["device_params"]["time_start_led"]) and HoD < int(cs.structs["device_params"]["time_stop_led"]):
+                minion.ser_out.write(bytes(str(cs.structs["device_state"]["led_status"]+"\n"), 'utf-8')) #write status
+            if HoD < int(cs.structs["device_params"]["time_start_led"]) or HoD >= int(cs.structs["device_params"]["time_stop_led"]):
+                minion.ser_out.write(bytes(str("off"+"\n"), 'utf-8')) #write off
+        if int(cs.structs["device_params"]["time_start_led"]) > int(cs.structs["device_params"]["time_stop_led"]):
+            if HoD >=  int(cs.structs["device_params"]["time_start_led"]) or HoD < int(cs.structs["device_params"]["time_stop_led"]):
+                minion.ser_out.write(bytes(str(cs.structs["device_state"]["led_status"]+"\n"), 'utf-8')) #write status
+            if HoD < int(cs.structs["device_params"]["time_start_led"]) and  HoD >= int(cs.structs["device_params"]["time_stop_led"]):
+                minion.ser_out.write(bytes(str("off"+"\n"), 'utf-8')) #write off
+        if int(cs.structs["device_params"]["time_start_led"]) == int(cs.structs["device_params"]["time_stop_led"]):
+                minion.ser_out.write(bytes(str(cs.structs["device_state"]["led_status"]+"\n"), 'utf-8')) #write status
+    else:
+        #print("no serial connection, cannot update LED view")
+        pass
 
 #Executes update if connected & idle, waits for completion
 def get_updates(): #depends on: cs.load_state(),'subproceess', update.py; modifies: system code, state variables
@@ -187,135 +245,14 @@ def get_updates(): #depends on: cs.load_state(),'subproceess', update.py; modifi
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","1", db_writer = dbt.patch_firebase) #restore running
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","1", db_writer = dbt.patch_firebase)#restore listener
 
-#deletes a box if the cloud is indicating that it should do so
-def delete_device():    
-    print("Removing device from Oasis Network...")
-    cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = dbt.patch_firebase) #make sure it doesn't write anything to the cloud
-
-    print("Database monitoring deactivated")
-    reset_model.reset_nonhw_configs()
-    
-    print("Device has been reset to default configuration")
-    systemctl_reboot = rusty_pipes.Open(["sudo", "systemctl", "reboot"])
-    systemctl_reboot.wait()
-
-#check if the device is waiting to be added to firebase, if it is then add it, otherwise skip
-def add_new_device():
-    cs.load_state()
-
-    #assemble data to initialize firebase
-    setup_dict = {} #Access & hardware config will be kept private, not shared with cloud 
-    setup_dict.update(cs.structs["device_state"])
-    setup_dict.update(cs.structs["device_params"])
-    setup_dict.update(cs.structs["feature_toggles"])
-    setup_dict.update(cs.structs["sensor_info"])
-    setup_dict_named = {cs.structs["access_config"]["device_name"] : setup_dict}
-    my_data = setup_dict_named
-    #print(my_data)
-    #print(type(my_data))
-
-    #add box data to firebase (replace with send_dict)
-    patch_request = dbt.firebase_add_device(cs.structs["access_config"],my_data)
-    
-    if patch_request.ok:
-        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","new_device","0", db_writer = dbt.patch_firebase)
-        print("New device added to firebase")
-    else:
-        print("Failed to add new device")
-
-#connects system to firebase
-def connect_firebase(): #depends on: cs.load_state(), cs.write_state(), dbt.patch_firebase(), 'requests'; Modifies: access_config.json, device_state.json
-    
-    #load state so we can use access credentials
-    cs.load_state()
-    wak = cs.structs["access_config"]["wak"]
-    email = cs.structs["access_config"]["e"]
-    password = cs.structs["access_config"]["p"]
-
-    print("Checking for connection...")
-
-    def try_connect():
-        try:
-            print("FireBase verification:")
-
-            #fetch refresh token
-            refresh_token = dbt.get_refresh_token(wak, email, password)
-            #fetch refresh token and save to access_config
-            cs.write_state("/home/pi/oasis-grow/configs/access_config.json","refresh_token", refresh_token, db_writer = None)
-
-            #bring in the refresh token for use further down
-            cs.load_state()
-            refresh_token = cs.structs["access_config"]["refresh_token"]
-            print("Obtained a refresh token!")
-
-            #fetch a new id_token & local_id
-            id_token, user_id = dbt.get_local_credentials(wak, refresh_token)
-            #write local credentials to access config
-            cs.write_state("/home/pi/oasis-grow/configs/access_config.json","id_token", id_token, db_writer = None)
-            cs.write_state("/home/pi/oasis-grow/configs/access_config.json","local_id", user_id, db_writer = None)
-            print("Devie authorized with local credentials.")
-
-            #launch new_device check at network startup
-            cs.check_state("new_device", add_new_device)
-
-            #start listener to bring in db changes on startup
-            #Main setup always sets 'connected' == "0"
-            dbt.launch_listener() #start listener, then flip local & cloud 'connected' == "1"
-            cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"connected","1", db_writer = dbt.patch_firebase)
-        
-            #update the device state to "connected"
-            print("Device is connected over HTTPS to the Oasis Network")
-            
-        except Exception as e:
-            print(err.full_stack()) #display error
-            #write state as not connected
-            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = dbt.patch_firebase)
-            print("Could not establish an HTTPS connection to Oasis Network")
-
-    connection_attempt = multiprocessing.Process(target = try_connect)
-    connection_attempt.start()
-
-#updates the state of the LED, serial must be set up,
-def update_minion_led(): #Depends on: cs.load_state(), 'datetime'; Modifies: ser_out
-    global minion
-    cs.load_state()
-
-    #write "off" or write status depending on ToD + settings
-    now = datetime.datetime.now()
-    HoD = now.hour
-
-    if minion.ser_out is not None:
-        if int(cs.structs["device_params"]["time_start_led"]) < int(cs.structs["device_params"]["time_stop_led"]):
-            if HoD >= int(cs.structs["device_params"]["time_start_led"]) and HoD < int(cs.structs["device_params"]["time_stop_led"]):
-                minion.ser_out.write(bytes(str(cs.structs["device_state"]["led_status"]+"\n"), 'utf-8')) #write status
-            if HoD < int(cs.structs["device_params"]["time_start_led"]) or HoD >= int(cs.structs["device_params"]["time_stop_led"]):
-                minion.ser_out.write(bytes(str("off"+"\n"), 'utf-8')) #write off
-        if int(cs.structs["device_params"]["time_start_led"]) > int(cs.structs["device_params"]["time_stop_led"]):
-            if HoD >=  int(cs.structs["device_params"]["time_start_led"]) or HoD < int(cs.structs["device_params"]["time_stop_led"]):
-                minion.ser_out.write(bytes(str(cs.structs["device_state"]["led_status"]+"\n"), 'utf-8')) #write status
-            if HoD < int(cs.structs["device_params"]["time_start_led"]) and  HoD >= int(cs.structs["device_params"]["time_stop_led"]):
-                minion.ser_out.write(bytes(str("off"+"\n"), 'utf-8')) #write off
-        if int(cs.structs["device_params"]["time_start_led"]) == int(cs.structs["device_params"]["time_stop_led"]):
-                minion.ser_out.write(bytes(str(cs.structs["device_state"]["led_status"]+"\n"), 'utf-8')) #write status
-    else:
-        #print("no serial connection, cannot update LED view")
-        pass
-
-def export_timelapse():
-    export_tl = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/imaging/make_timelapse.py"])
-
 def clear_data():
     reset_model.reset_data_out()
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "awaiting_clear_data_out", "0", db_writer = dbt.patch_firebase)
-
-def launch_onboard_led():
-    launch_led = rusty_pipes.Open(["sudo", "python3", "/home/pi/oasis-grow/peripherals/neopixel_leds.py"])
 
 def main_setup():
     #Initialize Oasis-Grow:
     print("Initializing...")
     reset_model.reset_locks()
-    print("reset all process locks")
     cs.load_state() #get the device data
     
     if cs.structs["feature_toggles"]["onboard_led"] == "1":
@@ -353,8 +290,9 @@ def main_loop(led_timer, connect_timer):
                 connect_firebase()
                 connect_timer = time.time()
             
+            cs.check_state("connected", start_listener)
             cs.check_state("awaiting_update", get_updates)
-            cs.check_state("awaiting_deletion", delete_device)
+            cs.check_state("awaiting_deletion", firebase_manager.delete_device)
             cs.check_state("awaiting_clear_data_out", clear_data)
             cs.check_state("awaiting_timelapse", export_timelapse)
 
@@ -392,11 +330,15 @@ def main_loop(led_timer, connect_timer):
     except(KeyboardInterrupt):
         time.sleep(5)
         reset_model.reset_device_state() #This is for testing purposes, to keep behavior the same between debugs
+        stop_core()
 
     except Exception as e:
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "error", db_writer = dbt.patch_firebase)
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "device_error", str(err.full_stack()), db_writer = dbt.patch_firebase)
         print(err.full_stack())
+    
+    finally:
+        stop_listener()
         
 if __name__ == '__main__':
     led_timer, connect_timer = main_setup()
