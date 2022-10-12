@@ -315,6 +315,7 @@ def main_setup():
     #Initialize Oasis-Grow:
     print("Initializing...")
     reset_model.reset_locks()
+    print("reset all process locks")
     cs.load_state() #get the device data
     
     if cs.structs["feature_toggles"]["onboard_led"] == "1":

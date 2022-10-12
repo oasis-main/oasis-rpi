@@ -11,7 +11,8 @@ struct Open{process: Popen}
 impl Open { 
     #[new] // call this from python with rusty_pipes.Ropen(pin#)
     fn new(arg_list: Vec<String>) -> Self { //this is like python __init__()
-        let sub_proc = Popen::create(&arg_list[..], PopenConfig::default()).unwrap();
+        let mut sub_proc = Popen::create(&arg_list[..], PopenConfig::default()).unwrap();
+        sub_proc.detach();
         Open{process: sub_proc}
     }
     
