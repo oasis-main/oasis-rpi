@@ -74,7 +74,7 @@ def connect_firebase():
 
 def start_listener():
     global listener
-    if listener is None and cs.structs["device_state"]["connected"] == "1":
+    if listener is None:
         listener = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/networking/firebase_listener.py"])
 
 def stop_listener():

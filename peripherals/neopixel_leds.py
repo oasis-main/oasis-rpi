@@ -100,7 +100,7 @@ if __name__ == '__main__':
     try:
         run()
     except KeyboardInterrupt:
-        print("Shutting down listener...")
+        print("Shutting down led...")
     except Exception:
         print("Encountered an error!")
         print(err.full_stack())
