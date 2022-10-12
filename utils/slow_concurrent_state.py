@@ -56,7 +56,7 @@ def load_state(loop_limit=1000):
                     return
 
                 with open(config_filepath, "rb") as x: #open the config filepath with bytes
-                        structs[struct] = json.loads(x.read()) #try to parse bytes to json -> dict
+                        structs[struct] = json.load(x) #try to parse bytes to json -> dict
                         #print(struct)
 
                 for k in structs[struct]: 
@@ -93,7 +93,7 @@ def load_locks(loop_limit = 10000): #leave this alone since it's the python brid
     for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
         try:
             with open(lock_filepath, "rb") as l:
-                locks = json.loads(l.read()) #get locks
+                locks = json.load(l.read()) #get locks
 
             for k,v in locks.items():
                 if locks[k] is None:
@@ -121,7 +121,7 @@ def lock(lock_filepath: str, resource_key: str):
     with open(lock_filepath, "wb") as x:
         locks[resource_key] = 1 #write the desired value
         x.seek(0)
-        x.write(json.dumps(dict(locks)))
+        x.write(json.dump(dict(locks)))
         x.truncate()
 
 def unlock(lock_filepath: str, resource_key: str):
@@ -130,7 +130,7 @@ def unlock(lock_filepath: str, resource_key: str):
     with open(lock_filepath, "wb") as x:
         locks[resource_key] = 0 #write the desired value
         x.seek(0)
-        x.write(json.dumps(dict(locks)))
+        x.write(json.dump(dict(locks)))
         x.truncate()
 
 def reset_locks(lock_filepath):
@@ -141,7 +141,7 @@ def reset_locks(lock_filepath):
     
     with open(lock_filepath, "wb") as x:
         x.seek(0)
-        x.write(json.dumps(dict(locks)))
+        x.write(json.dump(dict(locks)))
         x.truncate()
 
 #save key values to .json
@@ -163,7 +163,7 @@ def write_state(path, field, value, db_writer = None, loop_limit=2500): #Depends
     for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke if so 
         try:
             with open(path, "rb") as x: # open the file.
-                data = json.loads(x.read()) # can we load a valid json?
+                data = json.load(x) # can we load a valid json?
 
             if locks[path] == 0: #check is the file is available to be written
                 
@@ -172,7 +172,7 @@ def write_state(path, field, value, db_writer = None, loop_limit=2500): #Depends
                 with open(path, "wb") as x:
                     data[field] = value #write the desired value
                     x.seek(0)
-                    x.write(json.dumps(dict(data)))
+                    x.write(json.dump(dict(data)))
                     x.truncate()
 
                 unlock(lock_filepath, path)
@@ -191,7 +191,7 @@ def write_state(path, field, value, db_writer = None, loop_limit=2500): #Depends
                     with open(path, "wb") as x:
                         data[field] = value #write the desired value
                         x.seek(0)
-                        x.write(json.dumps(dict(data)))
+                        x.write(json.dump(dict(data)))
                         x.truncate()
 
                     unlock(lock_filepath, path)
@@ -211,7 +211,7 @@ def write_state(path, field, value, db_writer = None, loop_limit=2500): #Depends
                 
                 #now write
                 with open(path, "rb") as x: # open the file.
-                    data = json.loads(x.read()) # can we load a valid json?
+                    data = json.load(x) # can we load a valid json?
                     
                 #only call this once with path or other unique string as argument
                 
@@ -221,7 +221,7 @@ def write_state(path, field, value, db_writer = None, loop_limit=2500): #Depends
                     with open(path, "wb") as x:
                         data[field] = value #write the desired value
                         x.seek(0)
-                        x.write(json.dumps(dict(data)))
+                        x.write(json.dump(dict(data)))
                         x.truncate()
 
                     unlock(lock_filepath, path)
@@ -251,7 +251,7 @@ def write_dict(path, dictionary, db_writer = None, loop_limit=2500): #Depends on
     for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke if so
         try:
             with open(path, "rb") as x: # open the file.
-                data = json.loads(x.read()) # can we load a valid json?
+                data = json.load(x) # can we load a valid json?
                 
             #only call this once with path or other unique string as argument
             
@@ -261,7 +261,7 @@ def write_dict(path, dictionary, db_writer = None, loop_limit=2500): #Depends on
                 with open(path, "wb") as x:
                     data.update(dictionary) #write the desired values
                     x.seek(0)
-                    x.write(json.dumps(dict(data)))
+                    x.write(json.dump(dict(data)))
                     x.truncate()
 
                 unlock(lock_filepath, path)
@@ -280,7 +280,7 @@ def write_dict(path, dictionary, db_writer = None, loop_limit=2500): #Depends on
                     with open(path, "wb") as x:
                         data.update(dictionary) #write the desired values
                         x.seek(0)
-                        x.write(json.dumps(dict(data)))
+                        x.write(json.dump(dict(data)))
                         x.truncate()
 
                     unlock(lock_filepath, path)
@@ -299,7 +299,7 @@ def write_dict(path, dictionary, db_writer = None, loop_limit=2500): #Depends on
                 
                 #now write
                 with open(path, "rb") as x: # open the file.
-                    data = json.loads(x.read()) # can we load a valid json?
+                    data = json.load(x) # can we load a valid json?
                     
                     #only call this once with path or other unique string as argument
                     
@@ -309,7 +309,7 @@ def write_dict(path, dictionary, db_writer = None, loop_limit=2500): #Depends on
                         with open(path, "wb") as x:
                             data.update(dictionary) #write the desired values
                             x.seek(0)
-                            x.write(json.dumps(dict(data)))
+                            x.write(json.dump(dict(data)))
                             x.truncate()
 
                         unlock(lock_filepath, path)
