@@ -33,9 +33,9 @@ if __name__ == '__main__':
         print("Turning lights on at " + sys.argv[1] + ":00 and off at " + sys.argv[2] + ":00, refreshing every " + sys.argv[3] + " minutes...")
         relays.actuate_time_hod(pin, int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), interval_units = "minutes")
     except KeyboardInterrupt:
-        print("Interrupted")
+        print("Lights were interrupted.")
     except Exception:
-        print("Encountered an error!")
+        print("Lights encountered an error!")
         print(err.full_stack())
     finally:
         clean_up()

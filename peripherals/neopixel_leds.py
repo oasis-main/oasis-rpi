@@ -100,9 +100,9 @@ if __name__ == '__main__':
     try:
         run()
     except KeyboardInterrupt:
-        print("Shutting down led...")
+        print("Shutting down LED...")
     except Exception:
-        print("Encountered an error!")
+        print("LED encountered an error!")
         print(err.full_stack())
     finally:
         clean_up()

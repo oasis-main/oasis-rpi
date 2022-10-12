@@ -36,9 +36,9 @@ if __name__ == "__main__":
             print("Running water pump for " + sys.argv[1] + " second(s) every " + sys.argv[2] + " day(s)...")
             relays.actuate_interval_sleep(pin, duration = float(sys.argv[1]), sleep = float(sys.argv[2]), duration_units="seconds", sleep_units="days")
     except KeyboardInterrupt:
-        print("Interrupted")
+        print("Water pump was interrupted")
     except Exception:
-        print("Encountered an error!")
+        print("Water pump encountered an error!")
         print(err.full_stack())
     finally:
         clean_up()

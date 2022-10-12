@@ -36,9 +36,9 @@ if __name__ == '__main__':
             print("Running humidifier for " + sys.argv[1] + " minute(s) on, " + sys.argv[2] + " minute(s) off...")
             relays.actuate_interval_sleep(pin, float(sys.argv[1]), float(sys.argv[2]), duration_units= "minutes", sleep_units="minutes")
     except KeyboardInterrupt:
-        print("Interrupted")
+        print("Humidifier was interrupted.")
     except Exception:    
-        print("Encountered an error!")
+        print("Humidifier ncountered an error!")
         print(err.full_stack())
     finally:
         clean_up()

@@ -37,9 +37,9 @@ if __name__ == '__main__':
             print("Fans on for " + sys.argv[1] + " minute(s), off for " + sys.argv[2] + " minute(s)...")
             relays.actuate_interval_sleep(pin, float(sys.argv[1]), float(sys.argv[2]), duration_units= "minutes", sleep_units="minutes")
     except KeyboardInterrupt:
-        print("Interrupted")
+        print("Fan was interrupted.")
     except Exception:    
-        print("Encountered an error!")
+        print("Fan encountered an error!")
         print(err.full_stack())
     finally:
         clean_up()

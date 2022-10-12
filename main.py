@@ -324,9 +324,9 @@ def main_loop(led_timer, connect_timer):
             time.sleep(0.1)
 
     except(KeyboardInterrupt):
+        print("   <----- Exiting program...")
         time.sleep(5)
         reset_model.reset_device_state() #This is for testing purposes, to keep behavior the same between debugs
-        
         stop_core()
 
     except Exception as e:

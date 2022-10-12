@@ -80,11 +80,12 @@ if __name__ == '__main__':
     try:    
         actuate(str(sys.argv[1]))
     except KeyboardInterrupt:
-        print("Interrupted")
+        print("Camera was interrupted.")
     except TypeError:
         print("Tried do image stuff without an image. Is your camera properly set up?")
+        time.sleep(10)
     except Exception:
-        print("Encountered an error!")
+        print("Camera encountered an error!")
         print(err.full_stack())
     finally:
         clean_up()

@@ -798,10 +798,10 @@ def main_loop():
             time.sleep(5)
 
     except KeyboardInterrupt:
-        print("Program interrupted by user.")
+        print("Core interrupted by user.")
         terminate_program()
     except Exception:
-        print("Encoutered an error!")
+        print("Core ncoutered an error!")
         print(err.full_stack())
         terminate_program()
 
