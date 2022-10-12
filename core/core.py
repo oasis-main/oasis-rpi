@@ -622,8 +622,8 @@ def console_log():
         if cs.structs["feature_toggles"]["water_pid"] == "1":
             feedback.update({"Irrigation Intensity: ": water_feedback})
         else:
-            timers.update({"Irrigation Duration (seconds run for): ": cs.structs["device_params"]["water_duration"]})
-            timers.update({"Irrigation Interval (hours between runs): ": cs.structs["device_params"]["water_interval"]})
+            timers.update({"Irrigation Duration (seconds run for): ": cs.structs["device_params"]["watering_duration"]})
+            timers.update({"Irrigation Interval (hours between runs): ": cs.structs["device_params"]["watering_interval"]})
     
     if cs.structs["feature_toggles"]["air"] == "1":
         timers.update({"Air Pump Turns On at (Hourly Time 0-23): ": cs.structs["device_params"]["time_start_air"]})
