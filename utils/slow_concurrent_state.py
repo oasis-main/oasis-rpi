@@ -93,7 +93,7 @@ def load_locks(loop_limit = 10000): #leave this alone since it's the python brid
     for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
         try:
             with open(lock_filepath, "rb") as l:
-                locks = json.load(l.read()) #get locks
+                locks = json.load() #get locks
 
             for k,v in locks.items():
                 if locks[k] is None:
