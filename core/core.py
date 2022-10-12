@@ -795,6 +795,8 @@ def main_loop():
             
             data_out()
 
+            time.sleep(5)
+
     except KeyboardInterrupt:
         print("Program interrupted by user.")
         terminate_program()
