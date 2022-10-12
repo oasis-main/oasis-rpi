@@ -30,9 +30,12 @@ if __name__ == "__main__":
     signal.signal(signal.SIGTERM, clean_up)
     
     try:
+        
         if cs.structs["feature_toggles"]["water_pid"] == "1":
+            print("Running water pump in pulse mode with " + sys.argv[1] + "%" + " power...")
             relays.actuate_slow_pwm(pin, intensity = float(sys.argv[1])) #trigger appropriate response
         else:
+            print("Running water pump for " + sys.argv[1] + " second(s) every" + sys.argv[2] + " day(s)...")
             relays.actuate_interval_sleep(pin, duration = float(sys.argv[1]), sleep = float(sys.argv[2]))
     except KeyboardInterrupt:
         print("Interrupted")

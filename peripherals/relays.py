@@ -33,15 +33,15 @@ def turn_off(output, switch_mode = "momentary", normal_state = "open", pulse_wid
         time.sleep(pulse_width)
         output.set_low()
 
-def actuate_time_hod(output, time_on = 0, time_off = 0, interval = 20, units = "seconds"): #updates every 20 minutes by default 
+def actuate_time_hod(output, time_on = 0, time_off = 0, interval = 20, interval_units = "minutes"): #updates every 20 minutes by default 
     try:
-        if units == "seconds":
+        if interval_units == "seconds":
             time_active = interval
-        if units == "minutes":
+        if interval_units == "minutes":
             time_active = interval*60
-        if units == "hours":
+        if interval_units == "hours":
             time_active = interval*60**2
-        if units == "days":
+        if interval_units == "days":
             time_active = interval*24*60**2
 
         now = datetime.datetime.now()
@@ -69,19 +69,24 @@ def actuate_time_hod(output, time_on = 0, time_off = 0, interval = 20, units = "
     finally:
         turn_off(output)
 
-def actuate_interval_sleep(output, duration = 15, sleep = 45, units = "seconds"):
+def actuate_interval_sleep(output, duration = 15, sleep = 45, duration_units = "seconds", sleep_units = "seconds"):
     try:
-        if units == "seconds":
+        if duration_units == "seconds":
             time_active = duration
-            time_sleep = sleep
-        if units == "minutes":
+        if duration_units == "minutes":
             time_active = duration * 60
-            time_sleep = sleep * 60
-        if units == "hours":
+        if duration_units == "hours":
             time_active = duration * 60 ** 2
-            time_sleep = sleep * 60 ** 2
-        if units == "days":
+        if duration_units == "days":
             time_active = duration * 24 * 60 ** 2
+
+        if sleep_units == "seconds":
+            time_sleep = sleep
+        if sleep_units == "minutes":
+            time_sleep = sleep * 60
+        if sleep_units == "hours":
+            time_sleep = sleep * 60 ** 2
+        if sleep_units == "days":
             time_sleep = sleep * 24 * 60 ** 2
 
         turn_on(output)
