@@ -74,7 +74,7 @@ def connect_firebase():
 
 def start_listener():
     global listener
-    if listener is None:
+    if listener is None and cs.structs["device_state"]["connected"] == "1":
         listener = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/networking/firebase_listener.py"])
 
 def stop_listener():
@@ -320,6 +320,8 @@ def main_loop(led_timer, connect_timer):
             if time.time() - led_timer > 5: #send data to LED every 5s
                 update_minion_led()
                 led_timer = time.time()
+            
+            time.sleep(0.1)
 
     except(KeyboardInterrupt):
         time.sleep(5)
