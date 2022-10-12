@@ -121,7 +121,7 @@ def lock(lock_filepath: str, resource_key: str):
     with open(lock_filepath, "wb") as x:
         locks[resource_key] = 1 #write the desired value
         x.seek(0)
-        x.write(json.dumps(locks))
+        x.write(json.dump(locks))
         x.truncate()
 
 def unlock(lock_filepath: str, resource_key: str):
@@ -130,7 +130,7 @@ def unlock(lock_filepath: str, resource_key: str):
     with open(lock_filepath, "wb") as x:
         locks[resource_key] = 0 #write the desired value
         x.seek(0)
-        x.write(json.dumps(locks))
+        x.write(json.dump(locks))
         x.truncate()
 
 def reset_locks(lock_filepath):
@@ -141,7 +141,7 @@ def reset_locks(lock_filepath):
     
     with open(lock_filepath, "wb") as x:
         x.seek(0)
-        x.write(json.dumps(locks))
+        x.write(json.dump(locks))
         x.truncate()
 
 #save key values to .json
@@ -172,7 +172,7 @@ def write_state(path, field, value, db_writer = None, loop_limit=2500): #Depends
                 with open(path, "wb") as x:
                     data[field] = value #write the desired value
                     x.seek(0)
-                    x.write(json.dumps(data))
+                    x.write(json.dump(data))
                     x.truncate()
 
                 unlock(lock_filepath, path)
@@ -191,7 +191,7 @@ def write_state(path, field, value, db_writer = None, loop_limit=2500): #Depends
                     with open(path, "wb") as x:
                         data[field] = value #write the desired value
                         x.seek(0)
-                        x.write(json.dumps(data))
+                        x.write(json.dump(data))
                         x.truncate()
 
                     unlock(lock_filepath, path)
@@ -221,7 +221,7 @@ def write_state(path, field, value, db_writer = None, loop_limit=2500): #Depends
                     with open(path, "wb") as x:
                         data[field] = value #write the desired value
                         x.seek(0)
-                        x.write(json.dumps(data))
+                        x.write(json.dump(data))
                         x.truncate()
 
                     unlock(lock_filepath, path)
@@ -261,7 +261,7 @@ def write_dict(path, dictionary, db_writer = None, loop_limit=2500): #Depends on
                 with open(path, "wb") as x:
                     data.update(dictionary) #write the desired values
                     x.seek(0)
-                    x.write(json.dumps(data))
+                    x.write(json.dump(data))
                     x.truncate()
 
                 unlock(lock_filepath, path)
@@ -280,7 +280,7 @@ def write_dict(path, dictionary, db_writer = None, loop_limit=2500): #Depends on
                     with open(path, "wb") as x:
                         data.update(dictionary) #write the desired values
                         x.seek(0)
-                        x.write(json.dumps(data))
+                        x.write(json.dump(data))
                         x.truncate()
 
                     unlock(lock_filepath, path)
@@ -309,7 +309,7 @@ def write_dict(path, dictionary, db_writer = None, loop_limit=2500): #Depends on
                         with open(path, "wb") as x:
                             data.update(dictionary) #write the desired values
                             x.seek(0)
-                            x.write(json.dumps(data))
+                            x.write(json.dump(data))
                             x.truncate()
 
                         unlock(lock_filepath, path)
