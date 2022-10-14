@@ -1,6 +1,6 @@
 use std::time::Duration;
 use pyo3::prelude::*;
-use subprocess::{Popen,PopenConfig};
+use subprocess::{Popen,PopenConfig,ExitStatus};
 
 // A safe, Python-ready subprocess class for spawning & managing unix children
 #[pyclass(unsendable)]
@@ -32,6 +32,16 @@ impl Open {
         } else {
             false //no -> return false
         }
+    }
+
+    fn successful_exit(&mut self) -> u32{
+        let value = self.process.exit_status();
+        if let Some(ExitStatus::Exited(exit_status)) = value {
+            exit_status
+        } else {
+            1000 //obviously a failure lol
+        }
+        
     }
 
     fn terminate(&mut self){ //be careful with calling this

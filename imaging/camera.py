@@ -27,6 +27,9 @@ def take_picture(image_path, device_params):
     else:
         still = rusty_pipes.Open(["raspistill", "-e", "jpg",  "-o", str(image_path), "-awb", "off", "-awbg", device_params["awb_red"] + "," + device_params["awb_blue"]]) #snap: call the camera. "-w", "1920", "-h", "1080",
         still.wait()
+    
+    exit_status = still.exit_status()
+    return exit_status
 
 def save_to_feed(image_path):
     #timestamp image
@@ -46,32 +49,39 @@ def send_image(path):
     dbt.patch_firebase(cs.structs["access_config"], "image_sent", "1")
     print("Firebase has an image in waiting")
 
+def clean_up(*args):
+    cs.safety.unlock(cs.lock_filepath, resource_name)
+    sys.exit()
+
 #define a function to actuate element
 def actuate(interval, nosleep = False): #amount of time between shots in minutes
     cs.load_state()
 
-    take_picture('/home/pi/oasis-grow/data_out/image.jpg', cs.structs["device_params"])
+    exit_status = take_picture('/home/pi/oasis-grow/data_out/image.jpg', cs.structs["device_params"])
+    
+    if exit_status is not 0:
 
-    if cs.structs["feature_toggles"]["ndvi"] == "1":
-        noir_ndvi.convert_image('/home/pi/oasis-grow/data_out/image.jpg')
+        if cs.structs["feature_toggles"]["ndvi"] == "1":
+            noir_ndvi.convert_image('/home/pi/oasis-grow/data_out/image.jpg')
 
-    if cs.structs["feature_toggles"]["save_images"] == "1":
-        save_to_feed('/home/pi/oasis-grow/data_out/image.jpg')
+        if cs.structs["feature_toggles"]["save_images"] == "1":
+            save_to_feed('/home/pi/oasis-grow/data_out/image.jpg')
 
-    if cs.structs["device_state"]["connected"] == "1":
-        #send new image to firebase
-        send_image('/home/pi/oasis-grow/data_out/image.jpg')
+        if cs.structs["device_state"]["connected"] == "1":
+            #send new image to firebase
+            send_image('/home/pi/oasis-grow/data_out/image.jpg')
 
-    if nosleep == True:
-        return
+        if nosleep == True:
+            return
+        else:
+            time.sleep(float(interval)*60) #once the physical resource itself is done being used, we can free it
+                                        #not a big deal if someone actuates again while the main spawn is waiting
+                                        #so long as they aren't doing so with malicious intent (would need DB or root access, make sure to turn off SSH or change your password)
     else:
-        time.sleep(float(interval)*60) #once the physical resource itself is done being used, we can free it
-                                       #not a big deal if someone actuates again while the main spawn is waiting
-                                       #so long as they aren't doing so with malicious intent (would need DB or root access, make sure to turn off SSH or change your password)
+        print("Was not able to take picture!")
+        time.sleep(5)
+        clean_up()
 
-def clean_up(*args):
-    cs.safety.unlock(cs.lock_filepath, resource_name)
-    sys.exit()
 
 if __name__ == '__main__':
     cs.check_lock(resource_name) #no hardware acquisition happens on import
