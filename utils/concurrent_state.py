@@ -56,7 +56,7 @@ def load_state(loop_limit=1000):
         #load device state
         for i in list(range(int(loop_limit))): #try to load, pass and try again if fails
             try:
-                config_filepath = "/home/pi/oasis-grow/data_out/" + struct + ".json"
+                config_filepath = "/home/pi/oasis-grow/configs/" + struct + ".json"
 
                 if not os.path.exists(config_filepath):
                     print(config_filepath + " does not exist. Have you run the setup scripts?")
