@@ -18,13 +18,11 @@
 "D_dehum": "10",
 
 "target_co2": "0",
-"co2_calibration": "0", 
 "Pc_fan": "0",
 "Ic_fan": "0", 
 "Dc_fan": "0",
 
 "target_soil_moisture": "75",
-"soil_moisture_calibration": "0", 
 "P_moisture": "0",
 "I_moisture": "0",
 "D_moisture": "0",
