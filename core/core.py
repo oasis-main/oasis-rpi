@@ -31,16 +31,6 @@ from peripherals import microcontroller_manager as minion
 
 resource_name = "core"
 
-#declare process management variables
-heat_process = None
-humidity_process = None
-dehumidify_process= None
-fan_process = None
-light_process = None
-water_process = None
-air_process = None
-camera_process = None
-
 #declare sensor data variables
 temperature = 0
 last_temperature = 0
@@ -148,52 +138,48 @@ def listen(): #Depends on 'serial', start_serial()
         #print("but here's my number")
         if cs.structs["feature_toggles"]["temperature_sensor"] == "1":
             last_temperature = temperature
-            temperature = sensor_info["temperature"]
-            cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "temperature", str(temperature), db_writer = None)      
+            temperature = int(cs.structs["sensor_info"]["temperature"]) + int(cs.structs["sensor_info"]["temperature_calibration"])
+            cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "temperature", str(temperature), db_writer = None)      
         if cs.structs["feature_toggles"]["humidity_sensor"] == "1":
             last_humidity = humidity
-            humidity = sensor_info["humidity"]
-            cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "humidity", str(humidity), db_writer = None)
+            humidity = int(cs.structs["sensor_info"]["humidity"]) + int(cs.structs["sensor_info"]["humidity_calibration"])
+            cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "humidity", str(humidity), db_writer = None)
         if cs.structs["feature_toggles"]["co2_sensor"] == "1":
             last_co2 = co2
-            co2 = sensor_info["co2"]
-            cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "co2", str(co2), db_writer = None)
+            co2 = int(cs.structs["sensor_info"]["co2"]) + int(cs.structs["sensor_info"]["co2_calibration"])
+            cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "co2", str(co2), db_writer = None)
         if cs.structs["feature_toggles"]["soil_moisture_sensor"] == "1":
             last_soil_moisture = soil_moisture
-            soil_moisture = sensor_info["soil_moisture"]
-            cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "soil_moisture", str(soil_moisture), db_writer = None)
-        
+            soil_moisture = int(cs.structs["sensor_info"]["soil_moisture"]) + int(cs.structs["sensor_info"]["soil_moisture_calibration"])
+            cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "soil_moisture", str(soil_moisture), db_writer = None)
+        if cs.structs["feature_toggles"]["lux_sensor"] == "1":
+            lux = int(cs.structs["sensor_info"]["lux"]) + int(cs.structs["sensor_info"]["lux_calibration"])
+            cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "lux", str(lux), db_writer = None)
+        if cs.structs["feature_toggles"]["ph_sensor"] == "1":
+            ph = int(cs.structs["sensor_info"]["ph"]) + int(cs.structs["sensor_info"]["ph_calibration"])
+            cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "ph", str(ph), db_writer = None)
+        if cs.structs["feature_toggles"]["tds_sensor"] == "1":
+            tds = int(cs.structs["sensor_info"]["tds"]) + int(cs.structs["sensor_info"]["tds_calibration"])
+            cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "tds", str(tds), db_writer = None)
+
         if cs.structs["feature_toggles"]["vpd_calculation"] == "1":
             f = float(temperature) #temperature farenheit
             t =	(5/9)*(f + 459.67) #temperature kelvin
             rh =  float(humidity) #relative humidity
-            
             #https://www.cs.helsinki.fi/u/ssmoland/physics/envphys/lecture_2.pdf
             a = 77.34 #empirically
             b = -7235 #fitted
             c = -8.2 #exponental
             d = 0.005711 #constants
             svp = math.e ** (a+(b/t)+(c*math.log(t))+d*t) #saturation vapor pressure
-            
             #https://agradehydroponics.com/blogs/a-grade-news/how-to-calculate-vapour-pressure-deficit-vpd-via-room-temperature
             vpd_pa = (1 - (rh/100)) * svp #vapor pressure deficit in pascals
             vpd = vpd_pa / 1000 #convert vpd to kilopascals
-
-            cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "vpd", str(vpd), db_writer = None)
+            cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "vpd", str(vpd), db_writer = None)
         
         if cs.structs["feature_toggles"]["water_level_sensor"] == "1":
             water_low = int(sensor_info["water_low"])
-            cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "water_low", str(water_low), db_writer = None)
-        if cs.structs["feature_toggles"]["lux_sensor"] == "1":
-            lux = sensor_info["lux"]
-            cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "lux", str(lux), db_writer = None)
-        if cs.structs["feature_toggles"]["ph_sensor"] == "1":
-            ph = sensor_info["pH"]
-            cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "ph", str(ph), db_writer = None)
-        if cs.structs["feature_toggles"]["tds_sensor"] == "1":
-            tds = sensor_info["tds"]
-            cs.write_state("/home/pi/oasis-grow/data_out/sensor_info.json", "tds", str(tds), db_writer = None)
-        #print("so call me maybe")
+            cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "water_low", str(water_low), db_writer = None)
     except:
         #print(err.full_stack()) #uncomment to debug listener
         pass

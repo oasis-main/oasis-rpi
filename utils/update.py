@@ -34,7 +34,7 @@ def save_old_configs():
     saveparams = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/configs/device_params.json", "/home/pi/oasis-grow/configs/device_params_temp.json"])
     saveparams.wait()
 
-    savesensors = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/data_out/sensor_info.json", "/home/pi/oasis-grow/data_out/sensor_info_temp.json"])
+    savesensors = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/configs/sensor_info.json", "/home/pi/oasis-grow/data_out/sensor_info_temp.json"])
     savesensors.wait()
 
     print("Saved existing configs to temporary files")
@@ -91,7 +91,7 @@ def get_update(test=False):
     transfer_compatible_configs('/home/pi/oasis-grow/configs/access_config.json', '/home/pi/oasis-grow/configs/access_config_temp.json')
     transfer_compatible_configs('/home/pi/oasis-grow/configs/device_state.json', '/home/pi/oasis-grow/configs/device_state_temp.json')
     transfer_compatible_configs('/home/pi/oasis-grow/configs/device_params.json', '/home/pi/oasis-grow/configs/device_params_temp.json')
-    transfer_compatible_configs('/home/pi/oasis-grow/data_out/sensor_info.json', '/home/pi/oasis-grow/data_out/sensor_info_temp.json')
+    transfer_compatible_configs('/home/pi/oasis-grow/configs/sensor_info.json', '/home/pi/oasis-grow/data_out/sensor_info_temp.json')
     print("Transfered compatible state & configs, removing temporary files")
 
     #run external update commands
