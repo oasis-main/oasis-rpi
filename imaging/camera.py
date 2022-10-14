@@ -59,7 +59,7 @@ def actuate(interval, nosleep = False): #amount of time between shots in minutes
 
     exit_status = take_picture('/home/pi/oasis-grow/data_out/image.jpg', cs.structs["device_params"])
     
-    if exit_status is not 0:
+    if exit_status == 0:
 
         if cs.structs["feature_toggles"]["ndvi"] == "1":
             noir_ndvi.convert_image('/home/pi/oasis-grow/data_out/image.jpg')
