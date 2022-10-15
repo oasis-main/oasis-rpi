@@ -59,7 +59,7 @@ def modAccessConfig(name, e, p):
 def save_creds_exit(email, password, wifi_name, wifi_pass, device_name, cmd = False):
     
     device_name = re.sub('[^a-zA-Z0-9\n\.]', ' ', device_name) #sub all non-alphaneumeric characters with spaces
-    device_name - device_name.replace(" ","-") #sub all spaces with dashes
+    device_name = device_name.replace(" ","-") #sub all spaces with dashes
 
     #place credentials in proper locations
     modWiFiConfig(wifi_name, wifi_pass)
