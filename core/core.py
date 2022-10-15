@@ -65,6 +65,16 @@ dehum_feedback = 0
 fan_feedback = 0
 water_feedback = 0
 
+#subprocess vars
+heat_process = None
+humidity_process = None
+dehumidify_process = None
+fan_process = None
+light_process = None
+camera_process = None
+water_process = None
+air_process = None
+
 #timekeeping variables
 data_timer = None
 
@@ -365,6 +375,8 @@ def water_pid(soil_moisture, target_soil_moisture,
 
 #poll heat subprocess if applicable and relaunch/update equipment
 def run_heat(intensity = 0):
+    global heat_process
+
     resource_name =  "heater"
     cs.load_locks()
     if cs.locks[resource_name] == 0:
@@ -376,6 +388,8 @@ def run_heat(intensity = 0):
 
 #poll humidityf subprocess if applicable and relaunch/update equipment
 def run_hum(intensity = 0):
+    global humidity_process
+
     resource_name =  "humidifier"
     cs.load_locks()
     if cs.locks[resource_name] == 0:
@@ -386,6 +400,8 @@ def run_hum(intensity = 0):
     
 #poll dehumidify subprocess if applicable and relaunch/update equipment
 def run_dehum(intensity = 0):
+    global dehumidify_process
+
     resource_name =  "dehumidifier"
     cs.load_locks()
     if cs.locks[resource_name] == 0:
@@ -396,6 +412,8 @@ def run_dehum(intensity = 0):
 
 #poll fan subprocess if applicable and relaunch/update equipment
 def run_fan(intensity = 0): #Depends on: 'subprocess'; Modifies: humidity_process
+    global fan_process
+    
     resource_name =  "fan"
     cs.load_locks()
     if cs.locks[resource_name] == 0:
@@ -406,6 +424,8 @@ def run_fan(intensity = 0): #Depends on: 'subprocess'; Modifies: humidity_proces
 
 #poll water subprocess if applicable and relaunch/update equipment
 def run_water(intensity = 0): #Depends on: 'subprocess'; Modifies: water_process
+    global water_process
+    
     resource_name =  "water_pump"
     cs.load_locks()
     if cs.locks[resource_name] == 0:
@@ -416,6 +436,8 @@ def run_water(intensity = 0): #Depends on: 'subprocess'; Modifies: water_process
     
 #poll light subprocess if applicable and relaunch/update equipment
 def run_light():
+    global light_process
+    
     resource_name =  "lights"
     cs.load_locks()
     if cs.locks[resource_name] == 0:
@@ -423,6 +445,8 @@ def run_light():
    
 #poll air subprocess if applicable and relaunch/update equipment
 def run_air():
+    global air_process
+    
     resource_name =  "air_pump"
     cs.load_locks()
     if cs.locks[resource_name] == 0:
@@ -430,6 +454,8 @@ def run_air():
     
 #poll camera subprocess if applicable and relaunch/update equipment
 def run_camera(): #Depends on: 'subprocess'; Modifies: camera_process
+    global camera_process
+
     resource_name =  "camera"
     cs.load_locks()
     if cs.locks[resource_name] == 0:
