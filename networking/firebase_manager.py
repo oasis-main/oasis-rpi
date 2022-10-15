@@ -87,7 +87,6 @@ def connect_to_firebase(): #depends on: cs.load_state(), cs.write_state(), dbt.p
 
         #start listener to bring in db changes on startup
         #Main setup always sets 'connected' == "0"
-        dbt.launch_listener() #start listener, then flip local & cloud 'connected' == "1"
         cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"connected","1", db_writer = dbt.patch_firebase)
     
         #update the device state to "connected"
