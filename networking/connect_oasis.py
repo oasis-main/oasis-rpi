@@ -68,16 +68,13 @@ def save_creds_exit(email, password, wifi_name, wifi_pass, device_name, cmd = Fa
     print("Access creds added")
     
     st.success("Added WiFi & access credentials to device. Please reconnect computer to internet, leave this page, and log back into https://dashboard.oasis-gardens.io. If successful, you will see the device name appear under 'Your Fleet.'")
-    
-    #reset_box
-    reset_model.reset_device_state()
 
     #set new_device to "1" before rebooting
     slow_cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "new_device", "1", db_writer = None)
 
     if cmd == False: #pass this argument as true to save creds without rebooting
         #stand up wifi and reboot
-        wifi.enable_wifi()
+        wifi.enable_wifi() #turns off the access point flag, no need to do it here.
 
 if __name__ == '__main__':
 
