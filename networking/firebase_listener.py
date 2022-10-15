@@ -2,6 +2,9 @@ import sys
 import os
 import signal
 
+#set custom module path
+sys.path.append('/home/pi/oasis-grow')
+
 from utils import concurrent_state as cs
 from networking import db_tools as dbt
 from utils import error_handler as err
