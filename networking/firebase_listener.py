@@ -87,11 +87,11 @@ if __name__ == "__main__":
         #actual section that launches the listener
         detect_field_events(user, db)
     except KeyboardInterrupt:
-        print("Listener was interrupted!")    
+        print("Listener was interrupted!")
+        clean_up()    
     except Exception:
         print(err.full_stack())
         print("Listener encountered an error!")
-    finally:
         clean_up()
         
         

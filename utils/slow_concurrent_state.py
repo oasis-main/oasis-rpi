@@ -205,6 +205,8 @@ def write_state(path, field, value, db_writer = None, loop_limit=2500): #Depends
                     break #break the loop when the write has been successful
                 else:
                     print("Waiting...")
+                    print(err.full_stack())
+                    time.sleep(10)
                     pass
 
         except Exception as e: #If any of the above fails
