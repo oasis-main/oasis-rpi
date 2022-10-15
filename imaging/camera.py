@@ -28,7 +28,7 @@ def take_picture(image_path, device_params):
         still = rusty_pipes.Open(["raspistill", "-e", "jpg",  "-o", str(image_path), "-awb", "off", "-awbg", device_params["awb_red"] + "," + device_params["awb_blue"]]) #snap: call the camera. "-w", "1920", "-h", "1080",
         still.wait()
     
-    exit_status = still.exit_status()
+    exit_status = still.exit_code()
     return exit_status
 
 def save_to_feed(image_path):

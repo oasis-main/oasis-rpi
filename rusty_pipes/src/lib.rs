@@ -34,7 +34,7 @@ impl Open {
         }
     }
 
-    fn successful_exit(&mut self) -> u32{
+    fn exit_code(&mut self) -> u32{
         let value = self.process.exit_status();
         if let Some(ExitStatus::Exited(exit_status)) = value {
             exit_status
