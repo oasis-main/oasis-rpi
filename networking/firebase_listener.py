@@ -71,6 +71,7 @@ def detect_field_events(user, db):
     my_stream = db.child(user['userId']+'/'+cs.structs["access_config"]["device_name"]+"/").stream(stream_handler, user['idToken'])
 
 def clean_up(*args):
+    print("Database listener deactivated.")
     cs.safety.unlock(cs.lock_filepath,resource_name)
     sys.exit()
 
@@ -91,7 +92,6 @@ if __name__ == "__main__":
         print(err.full_stack())
         print("Listener encountered an error!")
     finally:
-        print("Database listener deactivated.")
         clean_up()
         
         

@@ -9,13 +9,27 @@ import re
 import time
 
 #import custom modules
-from utils import reset_model
+import subprocess
 from utils import slow_concurrent_state as slow_cs
 from utils import error_handler as err
 from networking import wifi
 
 #create a password-protected lan interface for accepting credentials
 import streamlit as st
+
+def enable_wifi(): #we're going to use subprocess here because the regular one uses Popen
+#tell system that the access point should not be launched on next controller startup
+    slow_cs.write_state("/home/pi/oasis-grow/configs/device_state.json","access_point","0", db_writer = None)
+
+    #disable WiFi, enable AP, reboot
+    config_wifi_dchpcd = subprocess.Popen(["sudo", "cp", "/etc/dhcpcd_wifi.conf", "/etc/dhcpcd.conf"])
+    config_wifi_dchpcd.wait()
+    config_wifi_dns = subprocess.Popen(["sudo", "cp", "/etc/dnsmasq_wifi.conf", "/etc/dnsmasq.conf"])
+    config_wifi_dns.wait()
+    disable_hostapd = subprocess.Popen(["sudo", "systemctl", "disable", "hostapd"])
+    disable_hostapd.wait()
+    systemctl_reboot = subprocess.Popen(["sudo", "systemctl", "reboot"])
+    systemctl_reboot.wait()
 
 #update wpa_supplicant.conf
 def modWiFiConfig(SSID, password):
@@ -74,7 +88,7 @@ def save_creds_exit(email, password, wifi_name, wifi_pass, device_name, cmd = Fa
 
     if cmd == False: #pass this argument as true to save creds without rebooting
         #stand up wifi and reboot
-        wifi.enable_wifi() #turns off the access point flag, no need to do it here.
+        enable_wifi() #turns off the access point flag, no need to do it here.
 
 if __name__ == '__main__':
 
