@@ -144,7 +144,7 @@ def listen(): #Depends on 'serial', start_serial()
     #print("and this is crazy")
     
     try:
-        sensor_info = orjson.loads(bytes(minion.ser_in.readline().decode('UTF-8').strip()))
+        sensor_info = orjson.loads(minion.ser_in.readline().decode('UTF-8').strip().encode())
         #print("but here's my number")
         if cs.structs["feature_toggles"]["temperature_sensor"] == "1":
             last_temperature = temperature
