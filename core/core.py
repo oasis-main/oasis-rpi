@@ -144,33 +144,33 @@ def listen(): #Depends on 'serial', start_serial()
     #print("and this is crazy")
     
     try:
-        sensor_info = orjson.loads(minion.ser_in.readline().decode('UTF-8').strip().encode())
-        print(sensor_info)
+        sensor_data = orjson.loads(minion.ser_in.readline().decode('UTF-8').strip().encode())
+        #print(sensor_data)
         #print("but here's my number")
         if cs.structs["feature_toggles"]["temperature_sensor"] == "1":
             last_temperature = temperature
-            temperature = temperature + float(cs.structs["sensor_info"]["temperature_calibration"])
+            temperature = float(sensor_data["temperature"]) + float(cs.structs["sensor_info"]["temperature_calibration"])
             cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "temperature", str(temperature), db_writer = None)      
         if cs.structs["feature_toggles"]["humidity_sensor"] == "1":
             last_humidity = humidity
-            humidity = humidity + float(cs.structs["sensor_info"]["humidity_calibration"])
+            humidity = float(sensor_data["humidity"]) + float(cs.structs["sensor_info"]["humidity_calibration"])
             cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "humidity", str(humidity), db_writer = None)
         if cs.structs["feature_toggles"]["co2_sensor"] == "1":
             last_co2 = co2
-            co2 = co2 + float(cs.structs["sensor_info"]["co2_calibration"])
+            co2 = float(sensor_data["co2"]) + float(cs.structs["sensor_info"]["co2_calibration"])
             cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "co2", str(co2), db_writer = None)
         if cs.structs["feature_toggles"]["soil_moisture_sensor"] == "1":
             last_soil_moisture = soil_moisture
-            soil_moisture = soil_moisture + float(cs.structs["sensor_info"]["soil_moisture_calibration"])
+            soil_moisture = float(sensor_data["soil_moisture"]) + float(cs.structs["sensor_info"]["soil_moisture_calibration"])
             cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "soil_moisture", str(soil_moisture), db_writer = None)
         if cs.structs["feature_toggles"]["lux_sensor"] == "1":
-            lux = lux + float(cs.structs["sensor_info"]["lux_calibration"])
+            lux = float(sensor_data["lux"]) + float(cs.structs["sensor_info"]["lux_calibration"])
             cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "lux", str(lux), db_writer = None)
         if cs.structs["feature_toggles"]["ph_sensor"] == "1":
-            ph = ph + float(cs.structs["sensor_info"]["ph_calibration"])
+            ph = float(sensor_data["ph"]) + float(cs.structs["sensor_info"]["ph_calibration"])
             cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "ph", str(ph), db_writer = None)
         if cs.structs["feature_toggles"]["tds_sensor"] == "1":
-            tds = tds + float(cs.structs["sensor_info"]["tds_calibration"])
+            tds = float(sensor_data["tds"]) + float(cs.structs["sensor_info"]["tds_calibration"])
             cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "tds", str(tds), db_writer = None)
 
         if cs.structs["feature_toggles"]["vpd_calculation"] == "1":
@@ -189,7 +189,7 @@ def listen(): #Depends on 'serial', start_serial()
             cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "vpd", str(vpd), db_writer = None)
         
         if cs.structs["feature_toggles"]["water_level_sensor"] == "1":
-            water_low = int(sensor_info["water_low"])
+            water_low = int(sensor_data["water_low"])
             cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "water_low", str(water_low), db_writer = None)
     except:
         print(err.full_stack()) #uncomment to debug listener
