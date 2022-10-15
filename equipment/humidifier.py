@@ -18,7 +18,7 @@ cs.check_lock(resource_name)
 
 #setup GPIO
 cs.load_state()#get configs
-hum_GPIO = int(cs.structs["hardware_config"]["equipment_gpio_map"]["dehumidifier_relay"]) #heater pin pulls from config file
+hum_GPIO = int(cs.structs["hardware_config"]["equipment_gpio_map"]["humidifier_relay"]) #heater pin pulls from config file
 pin = rusty_pins.GpioOut(hum_GPIO)
 
 def clean_up(*args):
