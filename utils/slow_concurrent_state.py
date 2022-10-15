@@ -47,10 +47,7 @@ def load_state(loop_limit=1000):
         #load device state
         for i in list(range(int(loop_limit))): #try to load, pass and try again if fails
             try:
-                if struct != 'sensor_info':
-                    config_filepath = "/home/pi/oasis-grow/configs/" + struct + ".json"
-                else:
-                    config_filepath = "/home/pi/oasis-grow/data_out/" + struct + ".json"
+                config_filepath = "/home/pi/oasis-grow/configs/" + struct + ".json"
 
                 if not os.path.exists(config_filepath):
                     print(config_filepath + " does not exist. Have you run the setup scripts?")
@@ -154,7 +151,7 @@ def write_state(path, field, value, db_writer = None, loop_limit=2500): #Depends
         if structs["device_state"]["connected"] == "1": #write state to cloud
             try:
                 db_writer(structs["access_config"],field,value) #will be loaded in by listener, so is best represent change db first
-            except Exception as e:
+            except Exception:
                 print(err.full_stack())
                 pass
             
@@ -205,8 +202,6 @@ def write_state(path, field, value, db_writer = None, loop_limit=2500): #Depends
                     break #break the loop when the write has been successful
                 else:
                     print("Waiting...")
-                    print(err.full_stack())
-                    time.sleep(10)
                     pass
 
         except Exception as e: #If any of the above fails

@@ -191,7 +191,7 @@ def listen(): #Depends on 'serial', start_serial()
             water_low = int(sensor_info["water_low"])
             cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "water_low", str(water_low), db_writer = None)
     except:
-        #print(err.full_stack()) #uncomment to debug listener
+        print(err.full_stack()) #uncomment to debug listener
         pass
 
 def smart_listener():
