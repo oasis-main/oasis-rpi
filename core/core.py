@@ -149,28 +149,28 @@ def listen(): #Depends on 'serial', start_serial()
         #print("but here's my number")
         if cs.structs["feature_toggles"]["temperature_sensor"] == "1":
             last_temperature = temperature
-            temperature = int(cs.structs["sensor_info"]["temperature"]) + int(cs.structs["sensor_info"]["temperature_calibration"])
+            temperature = temperature + float(cs.structs["sensor_info"]["temperature_calibration"])
             cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "temperature", str(temperature), db_writer = None)      
         if cs.structs["feature_toggles"]["humidity_sensor"] == "1":
             last_humidity = humidity
-            humidity = int(cs.structs["sensor_info"]["humidity"]) + int(cs.structs["sensor_info"]["humidity_calibration"])
+            humidity = humidity + float(cs.structs["sensor_info"]["humidity_calibration"])
             cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "humidity", str(humidity), db_writer = None)
         if cs.structs["feature_toggles"]["co2_sensor"] == "1":
             last_co2 = co2
-            co2 = int(cs.structs["sensor_info"]["co2"]) + int(cs.structs["sensor_info"]["co2_calibration"])
+            co2 = co2 + float(cs.structs["sensor_info"]["co2_calibration"])
             cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "co2", str(co2), db_writer = None)
         if cs.structs["feature_toggles"]["soil_moisture_sensor"] == "1":
             last_soil_moisture = soil_moisture
-            soil_moisture = int(cs.structs["sensor_info"]["soil_moisture"]) + int(cs.structs["sensor_info"]["soil_moisture_calibration"])
+            soil_moisture = soil_moisture + float(cs.structs["sensor_info"]["soil_moisture_calibration"])
             cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "soil_moisture", str(soil_moisture), db_writer = None)
         if cs.structs["feature_toggles"]["lux_sensor"] == "1":
-            lux = int(cs.structs["sensor_info"]["lux"]) + int(cs.structs["sensor_info"]["lux_calibration"])
+            lux = lux + float(cs.structs["sensor_info"]["lux_calibration"])
             cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "lux", str(lux), db_writer = None)
         if cs.structs["feature_toggles"]["ph_sensor"] == "1":
-            ph = int(cs.structs["sensor_info"]["ph"]) + int(cs.structs["sensor_info"]["ph_calibration"])
+            ph = ph + float(cs.structs["sensor_info"]["ph_calibration"])
             cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "ph", str(ph), db_writer = None)
         if cs.structs["feature_toggles"]["tds_sensor"] == "1":
-            tds = int(cs.structs["sensor_info"]["tds"]) + int(cs.structs["sensor_info"]["tds_calibration"])
+            tds = tds + float(cs.structs["sensor_info"]["tds_calibration"])
             cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "tds", str(tds), db_writer = None)
 
         if cs.structs["feature_toggles"]["vpd_calculation"] == "1":
