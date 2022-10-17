@@ -13,8 +13,8 @@
 "ph": "0",
 "ph_calibration": "0",
 
-"soil_moisture": "0",
-"soil_moisture_calibration": "0",
+"substrate_moisture": "0",
+"substrate_moisture_calibration": "0",
 
 "tds": "0",
 "tds_calibration": "0",

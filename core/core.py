@@ -47,10 +47,10 @@ last_co2 = 0
 last_target_co2 = 0
 err_cum_co2 = 0
 
-soil_moisture = 0
-last_soil_moisture = 0
-last_target_soil_moisture = 0
-err_cum_soil_moisture = 0
+substrate_moisture = 0
+last_substrate_moisture = 0
+last_target_substrate_moisture = 0
+err_cum_substrate_moisture = 0
 
 water_low = 0
 vpd = 0
@@ -91,8 +91,8 @@ def write_csv(filename, dict): #Depends on: "os" "csv"
             headers.append("humidity")
         if cs.structs["feature_toggles"]["co2_sensor"] == "1":
             headers.append("co2")
-        if cs.structs["feature_toggles"]["soil_moisture_sensor"] == "1":
-            headers.append("soil_moisture")
+        if cs.structs["feature_toggles"]["substrate_moisture_sensor"] == "1":
+            headers.append("substrate_moisture")
         if cs.structs["feature_toggles"]["vpd_calculation"] == "1":
             headers.append("vpd")
         if cs.structs["feature_toggles"]["water_level_sensor"] == "1":
@@ -134,8 +134,8 @@ def send_csv(path):
 
 #gets data from serial, will parse a simple string or accept a dictionary
 def listen(): #Depends on 'serial', start_serial()
-    global minion, temperature,  humidity,  co2,  soil_moisture, vpd, water_low, lux, ph, tds  
-    global last_temperature, last_humidity, last_co2, last_soil_moisture #past readings for derivative calculations
+    global minion, temperature,  humidity,  co2,  substrate_moisture, vpd, water_low, lux, ph, tds  
+    global last_temperature, last_humidity, last_co2, last_substrate_moisture #past readings for derivative calculations
     #print("hey I just met you")
     if minion.ser_in == None:
         print("ser_in is none")
@@ -159,10 +159,10 @@ def listen(): #Depends on 'serial', start_serial()
             last_co2 = co2
             co2 = float(sensor_data["co2"]) + float(cs.structs["sensor_info"]["co2_calibration"])
             cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "co2", str(co2), db_writer = None)
-        if cs.structs["feature_toggles"]["soil_moisture_sensor"] == "1":
-            last_soil_moisture = soil_moisture
-            soil_moisture = float(sensor_data["soil_moisture"]) + float(cs.structs["sensor_info"]["soil_moisture_calibration"])
-            cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "soil_moisture", str(soil_moisture), db_writer = None)
+        if cs.structs["feature_toggles"]["substrate_moisture_sensor"] == "1":
+            last_substrate_moisture = substrate_moisture
+            substrate_moisture = float(sensor_data["substrate_moisture"]) + float(cs.structs["sensor_info"]["substrate_moisture_calibration"])
+            cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "substrate_moisture", str(substrate_moisture), db_writer = None)
         if cs.structs["feature_toggles"]["lux_sensor"] == "1":
             lux = float(sensor_data["lux"]) + float(cs.structs["sensor_info"]["lux_calibration"])
             cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "lux", str(lux), db_writer = None)
@@ -203,7 +203,7 @@ def smart_listener():
                             or (cs.structs["feature_toggles"]["lux_sensor"] == "1") \
                                 or (cs.structs["feature_toggles"]["ph_sensor"] == "1") \
                                     or (cs.structs["feature_toggles"]["tds_sensor"] == "1") \
-                                        or (cs.structs["feature_toggles"]["soil_moisture_sensor"] == "1")):
+                                        or (cs.structs["feature_toggles"]["substrate_moisture_sensor"] == "1")):
         try: #attempt to read data from sensor, raise exception if there is a problem
             #print("Smart listener is attempting to collect data from arduino")
             listen() #this will be changed to run many sensor functions as opposed to one serial listener
@@ -212,13 +212,13 @@ def smart_listener():
             print("Listener Failure")
 
 def update_derivative_banks():
-    global last_target_temperature, last_target_humidity, last_target_co2, last_target_soil_moisture
+    global last_target_temperature, last_target_humidity, last_target_co2, last_target_substrate_moisture
 
     #save last temperature and humidity targets to calculate delta for PD controllers
     last_target_temperature = float(cs.structs["device_params"]["target_temperature"]) 
     last_target_humidity = float(cs.structs["device_params"]["target_humidity"])
     last_target_co2 = float(cs.structs["device_params"]["target_co2"])
-    last_target_soil_moisture = float(cs.structs["device_params"]["target_soil_moisture"])
+    last_target_substrate_moisture = float(cs.structs["device_params"]["target_substrate_moisture"])
 
 #PID controller to modulate heater feedback
 def heat_pid(temperature, target_temperature, last_temperature, last_target_temperature,
@@ -334,29 +334,29 @@ def fan_pid(temperature, humidity, co2,
     return fan_level
 
 #PID controller to modulate heater feedback
-def water_pid(soil_moisture, target_soil_moisture, 
-              last_soil_moisture, last_target_soil_moisture,
+def water_pid(substrate_moisture, target_substrate_moisture, 
+              last_substrate_moisture, last_target_substrate_moisture,
               P_moisture, I_moisture, D_moisture):    
     
-    global err_cum_soil_moisture
+    global err_cum_substrate_moisture
 
-    err_soil_moisture = target_soil_moisture - soil_moisture   #If target is 70 and temperature is 60, this value = 10, more heat
+    err_substrate_moisture = target_substrate_moisture - substrate_moisture   #If target is 70 and temperature is 60, this value = 10, more heat
                                                         #If target is 50 and temperature is 60, this value is negative, less heat
 
-    soil_moisture_dot = soil_moisture-last_soil_moisture  #If temp is increasing, this value is positive (+#)
+    substrate_moisture_dot = substrate_moisturesture-substsubstrate_moisturesture  #If temp is increasing, this value is positive (+#)
                                                     #If temp is decreasing, this value is negative (-#)
 
-    err_cum_soil_moisture = max(min(err_cum_soil_moisture + err_soil_moisture, 50), -50)
+    err_cum_substrate_moisturesture = max(min(err_cum_substrate_moisture + err_substrate_moisture, 50), -50)
 
-    target_soil_moisture_dot = target_soil_moisture-last_target_soil_moisture #When target remains the same, this value is 0
+    target_substrate_moisture_dot = target_substrate_moisture-last_target_substrate_moisture #When target remains the same, this value is 0
                                                                         #When adjusting target up, this value is positive (+#)
                                                                         #When adjusting target down, this value is negative (-#)
 
-    err_dot_soil_moisture = target_soil_moisture_dot-soil_moisture_dot    #When positive, boosts heat signal
+    err_dot_substrate_moisture = target_substrate_moisture_dot-substrate_moisture_dot    #When positive, boosts heat signal
                                                                     #When negative, dampens heat signal
-    water_level  = P_moisture * err_soil_moisture \
-                   + I_moisture * err_cum_soil_moisture \
-                   + D_moisture * err_dot_soil_moisture
+    water_level  = P_moisture * err_substrate_moisture \
+                   + I_moisture * err_cum_substrate_moisture \
+                   + D_moisture * err_dot_substrate_moisture
     
     water_level  = max(min(int(water_level), 100), 0)
     print(water_level)
@@ -460,7 +460,7 @@ def run_camera(): #Depends on: 'subprocess'; Modifies: camera_process
     resource_name =  "camera"
     cs.load_locks()
     if cs.locks[resource_name] == 0:
-        camera_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/imaging/camera.py', cs.structs["device_params"]["camera_interval"]]) #If running, then skips. If idle then restarts.
+        camera_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/imaging/camera.py', cs.structs["hardware_config"]["camera_settings"]["picture_frequency"]]) #If running, then skips. If idle then restarts.
 
 def run_active_equipment():
     
@@ -473,9 +473,9 @@ def run_active_equipment():
                                         int(cs.structs["device_params"]["target_temperature"]),
                                         last_temperature,
                                         last_target_temperature,
-                                        int(cs.structs["device_params"]["P_temp"]),
-                                        int(cs.structs["device_params"]["I_temp"]),
-                                        int(cs.structs["device_params"]["D_temp"])))
+                                        int(cs.structs["device_params"]["P_heat"]),
+                                        int(cs.structs["device_params"]["I_heat"]),
+                                        int(cs.structs["device_params"]["D_heat"])))
         run_heat(temp_feedback) #this function always takes a feedback value
                                 #but it runs differently when pid is off in feature toggles
                                 #the way it runs is dependent on the external configuration
@@ -518,8 +518,8 @@ def run_active_equipment():
 
     if cs.structs["feature_toggles"]["water"] == "1":
         if cs.structs["feature_toggles"]["water_pid"] == "1":
-            water_feedback = int(water_pid(soil_moisture, int(cs.structs["device_params"]["target_soil_moisture"]),
-                                last_soil_moisture, last_target_soil_moisture,
+            water_feedback = int(water_pid(substrate_moisture, int(cs.structs["device_params"]["target_substrate_moisture"]),
+                                last_substrate_moisture, last_target_substrate_moisture,
                                 int(cs.structs["device_params"]["P_moisture"]), int(cs.structs["device_params"]["I_moisture"]), int(cs.structs["device_params"]["D_moisture"])))
         run_water(water_feedback)
 
@@ -533,36 +533,7 @@ def run_active_equipment():
         run_camera()
 
 #unfinished
-def console_log():
-    
-    sensors = {}
-    
-    if cs.structs["feature_toggles"]["temperature_sensor"] == "1":
-        sensors.update({"Temperature (F): ": cs.structs["sensor_info"]["temperature"]})
-    
-    if cs.structs["feature_toggles"]["humidity_sensor"] == "1":
-        sensors.update({"Relative Humidity (%): ": cs.structs["sensor_info"]["humidity"]})
-    
-    if cs.structs["feature_toggles"]["co2_sensor"] == "1":
-        sensors.update({"Carbon Dioxide (ppm): ": cs.structs["sensor_info"]["co2"]})
-    
-    if cs.structs["feature_toggles"]["soil_moisture_sensor"] == "1":
-        sensors.update({"Soil Moisture (%): ": cs.structs["sensor_info"]["soil_moisture"]})
-    
-    if cs.structs["feature_toggles"]["vpd_calculation"] == "1":
-        sensors.update({"Vapor Pressure Deficit (kPa): ": cs.structs["sensor_info"]["vpd"]})
-    
-    if cs.structs["feature_toggles"]["water_level_sensor"] == "1":
-        sensors.update({"Tank Below Level Sensor? (yes/no): ": cs.structs["sensor_info"]["water_low"]})
-    
-    if cs.structs["feature_toggles"]["lux_sensor"] == "1":
-        sensors.update({"Light Intensity (lux): ": cs.structs["sensor_info"]["lux"]})
-    
-    if cs.structs["feature_toggles"]["ph_sensor"] == "1":
-        sensors.update({"Acidity/Alkalinity (ph 0-14): ": cs.structs["sensor_info"]["ph"]})
-    
-    if cs.structs["feature_toggles"]["tds_sensor"] == "1":
-        sensors.update({"Total Disolved Solids: ": cs.structs["sensor_info"]["tds"]})
+def controller_log():
 
     feedback = {}
     timers = {}
@@ -618,11 +589,8 @@ def console_log():
             timers.update({"Capture Mode": "NDVI"})
         else:
             timers.update({"Capture Mode": "Raw AWB Imaging"})
-        timers.update({"Camera Interval (seconds between image capture): ": cs.structs["device_params"]["camera_interval"]})
+        timers.update({"Camera Interval (seconds between image capture): ": cs.structs["hardware_config"]["camera_settings"]["picture_frequency"]})
 
-    if sensors:
-        print("Sensor Readings = ")
-        pprint.pprint(sensors)
     if feedback:
         print("Feedback Settings = ")
         pprint.pprint(feedback)
@@ -744,7 +712,7 @@ def main_setup():
                             or (cs.structs["feature_toggles"]["lux_sensor"] == "1") \
                                 or (cs.structs["feature_toggles"]["ph_sensor"] == "1") \
                                     or (cs.structs["feature_toggles"]["tds_sensor"] == "1") \
-                                        or (cs.structs["feature_toggles"]["soil_moisture_sensor"] == "1") \
+                                        or (cs.structs["feature_toggles"]["substrate_moisture_sensor"] == "1") \
                                             or (cs.structs["feature_toggles"]["onboard_led"] == "0")):
         minion.start_serial_in()
 
@@ -768,7 +736,7 @@ def main_loop():
             
             run_active_equipment()
             
-            console_log()
+            controller_log()
             
             data_out()
 

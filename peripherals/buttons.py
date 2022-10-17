@@ -21,9 +21,9 @@ def setup_button_interface(hardware_config): #depends on: cs.load_state(), 'RPi.
     GPIO.setmode(GPIO.BCM)
 
     #set button pins
-    start_stop_button = hardware_config["button_gpio_map"]["start_stop_button"]
-    connect_internet_button = hardware_config["button_gpio_map"]["connect_internet_button"]
-    action_button = hardware_config["button_gpio_map"]["action_button"]
+    start_stop_button = int(hardware_config["button_gpio_map"]["start_stop_button"])
+    connect_internet_button = int(hardware_config["button_gpio_map"]["connect_internet_button"])
+    action_button = int(hardware_config["button_gpio_map"]["action_button"])
 
     #Setup buttons
     GPIO.setup(start_stop_button, GPIO.IN, pull_up_down=GPIO.PUD_UP)

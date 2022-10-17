@@ -155,7 +155,6 @@ def stop_core():
         core.wait()
         print("Core process is idle...")
         
-
         if cs.structs["device_state"]["connected"] == "1": #if connected
             #send LEDmode = "connected_idle"
             cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","connected_idle", db_writer = dbt.patch_firebase)
@@ -195,17 +194,17 @@ def update_minion_led(): #Depends on: cs.load_state(), 'datetime'; Modifies: ser
     HoD = now.hour
 
     if minion.ser_out is not None:
-        if int(cs.structs["device_params"]["time_start_led"]) < int(cs.structs["device_params"]["time_stop_led"]):
-            if HoD >= int(cs.structs["device_params"]["time_start_led"]) and HoD < int(cs.structs["device_params"]["time_stop_led"]):
+        if int(cs.structs["hardware_config"]["onboard_led_settings"]["time_start_led"]) < int(cs.structs["hardware_config"]["onboard_led_settings"]["time_stop_led"]):
+            if HoD >= int(cs.structs["hardware_config"]["onboard_led_settings"]["time_start_led"]) and HoD < int(cs.structs["hardware_config"]["onboard_led_settings"]["time_stop_led"]):
                 minion.ser_out.write(bytes(str(cs.structs["device_state"]["led_status"]+"\n"), 'utf-8')) #write status
-            if HoD < int(cs.structs["device_params"]["time_start_led"]) or HoD >= int(cs.structs["device_params"]["time_stop_led"]):
+            if HoD < int(cs.structs["hardware_config"]["onboard_led_settings"]["time_start_led"]) or HoD >= int(cs.structs["hardware_config"]["onboard_led_settings"]["time_stop_led"]):
                 minion.ser_out.write(bytes(str("off"+"\n"), 'utf-8')) #write off
-        if int(cs.structs["device_params"]["time_start_led"]) > int(cs.structs["device_params"]["time_stop_led"]):
-            if HoD >=  int(cs.structs["device_params"]["time_start_led"]) or HoD < int(cs.structs["device_params"]["time_stop_led"]):
+        if int(cs.structs["hardware_config"]["onboard_led_settings"]["time_start_led"]) > int(cs.structs["hardware_config"]["onboard_led_settings"]["time_stop_led"]):
+            if HoD >=  int(cs.structs["hardware_config"]["onboard_led_settings"]["time_start_led"]) or HoD < int(cs.structs["hardware_config"]["onboard_led_settings"]["time_stop_led"]):
                 minion.ser_out.write(bytes(str(cs.structs["device_state"]["led_status"]+"\n"), 'utf-8')) #write status
-            if HoD < int(cs.structs["device_params"]["time_start_led"]) and  HoD >= int(cs.structs["device_params"]["time_stop_led"]):
+            if HoD < int(cs.structs["hardware_config"]["onboard_led_settings"]["time_start_led"]) and  HoD >= int(cs.structs["hardware_config"]["onboard_led_settings"]["time_stop_led"]):
                 minion.ser_out.write(bytes(str("off"+"\n"), 'utf-8')) #write off
-        if int(cs.structs["device_params"]["time_start_led"]) == int(cs.structs["device_params"]["time_stop_led"]):
+        if int(cs.structs["hardware_config"]["onboard_led_settings"]["time_start_led"]) == int(cs.structs["hardware_config"]["onboard_led_settings"]["time_stop_led"]):
                 minion.ser_out.write(bytes(str(cs.structs["device_state"]["led_status"]+"\n"), 'utf-8')) #write status
     else:
         #print("no serial connection, cannot update LED view")
@@ -284,13 +283,12 @@ def main_loop(led_timer, connect_timer):
                 connect_firebase()
                 connect_timer = time.time()
             
+            cs.check_state("running", start_core, stop_core) #check if core is supposed to be running
             cs.check_state("connected", start_listener, stop_listener)
             cs.check_state("awaiting_update", get_updates)
             cs.check_state("awaiting_deletion", firebase_manager.delete_device)
             cs.check_state("awaiting_clear_data_out", clear_data)
             cs.check_state("awaiting_timelapse", export_timelapse)
-
-            cs.check_state("running", start_core, stop_core) #check if core is supposed to be running
 
             sbutton_state = buttons.get_button_state(buttons.start_stop_button) #Start Button
             if sbutton_state == 0:
@@ -321,7 +319,7 @@ def main_loop(led_timer, connect_timer):
                 update_minion_led()
                 led_timer = time.time()
             
-            time.sleep(0.1)
+            time.sleep(0.25)
 
     except(KeyboardInterrupt):
         print("   <----- Exiting program...")

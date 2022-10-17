@@ -51,9 +51,9 @@ def set_light_timer(time_start_light, time_stop_light, lighting_interval):
     print("Lights will refresh every " + str(lighting_interval) + " seconds.")
     return
 
-def set_camera_interval(value):
+def set_picture_frequency(value):
     cs.load_state()
-    cs.write_state("/home/pi/oasis-grow/configs/device_params.json", "camera_interval", str(value), db_writer = dbt.patch_firebase)
+    cs.write_state("/home/pi/oasis-grow/configs/device_params.json", "picture_frequency", str(value), db_writer = dbt.patch_firebase)
     print("Camera will take a picture every " + str(value) + " seconds.")
     return
 
@@ -92,13 +92,13 @@ def read_water_level():
 
 def set_heater_response(value):
     cs.load_state()
-    cs.write_state("/home/pi/oasis-grow/configs/device_params.json", "P_temp", str(value), db_writer = dbt.patch_firebase)
+    cs.write_state("/home/pi/oasis-grow/configs/device_params.json", "P_heat", str(value), db_writer = dbt.patch_firebase)
     print("Heater response gain set to: " + str(value))
     return
 
 def set_heater_damping(value):
     cs.load_state()
-    cs.write_state("/home/pi/oasis-grow/configs/device_params.json", "D_temp", str(value), db_writer = dbt.patch_firebase)
+    cs.write_state("/home/pi/oasis-grow/configs/device_params.json", "D_heat", str(value), db_writer = dbt.patch_firebase)
     print("Heater damping gain set to: " + str(value))
     return
 

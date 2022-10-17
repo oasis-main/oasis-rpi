@@ -12,15 +12,11 @@
 "lux_sensor": "1",
 "ph_sensor": "1",
 "tds_sensor": "1",
-"soil_moisture_sensor": "0",
+"substrate_moisture_sensor": "0",
 "camera": "1",
 
-"heat_pid": "1",
-"hum_pid": "1",
-"dehum_pid": "1",
-"fan_pid": "1",
-"water_pid": "1",
-"ndvi": "1",
+"save_images": "1",
+"save_data": "1",
 
 "heater": "1",
 "humidifier": "1",
@@ -30,5 +26,9 @@
 "water": "1",
 "air": "1",
 
-"save_images": "1",
-"save_data": "1"}
+"heat_pid": "1",
+"hum_pid": "1",
+"dehum_pid": "1",
+"fan_pid": "1",
+"water_pid": "1",
+"ndvi": "1"}

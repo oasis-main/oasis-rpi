@@ -19,13 +19,13 @@ from networking import db_tools as dbt
 
 resource_name = "camera"
 
-def take_picture(image_path, device_params):
-    if device_params["awb_mode"] == "on":
+def take_picture(image_path):
+    if cs.structs["hardware_config"]["camera_settings"]["awb_mode"] == "on":
         #take picture and save to standard location: libcamera-still -e png -o test.png
         still = rusty_pipes.Open(["raspistill", "-e", "jpg",  "-o", str(image_path)]) #snap: call the camera. "-w", "1920", "-h", "1080",
         still.wait()
     else:
-        still = rusty_pipes.Open(["raspistill", "-e", "jpg",  "-o", str(image_path), "-awb", "off", "-awbg", device_params["awb_red"] + "," + device_params["awb_blue"]]) #snap: call the camera. "-w", "1920", "-h", "1080",
+        still = rusty_pipes.Open(["raspistill", "-e", "jpg",  "-o", str(image_path), "-awb", "off", "-awbg", cs.structs["hardware_config"]["camera_settings"]["awb_red"] + "," + cs.structs["hardware_config"]["camera_settings"]["awb_blue"]]) #snap: call the camera. "-w", "1920", "-h", "1080",
         still.wait()
     
     exit_status = still.exit_code()
@@ -57,7 +57,7 @@ def clean_up(*args):
 def actuate(interval, nosleep = False): #amount of time between shots in minutes
     cs.load_state()
 
-    exit_status = take_picture('/home/pi/oasis-grow/data_out/image.jpg', cs.structs["device_params"])
+    exit_status = take_picture('/home/pi/oasis-grow/data_out/image.jpg')
     
     if exit_status == 0:
 

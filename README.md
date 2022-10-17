@@ -136,7 +136,7 @@ For example:
 "co2": "0",
 "lux": "0",
 "ph": "0",
-"soil_moisture": "0",
+"substrate_moisture": "0",
 "tds": "0"}
 '''
 
@@ -186,7 +186,7 @@ Finally, edit "feature_toggles.json" in 'configs' to tell the system what capabi
 "lux_sensor": "1",
 "ph_sensor": "0",
 "tds_sensor": "0",
-"soil_moisture_sensor": "0",
+"substrate_moisture_sensor": "0",
 "heater": "1",
 "heat_pid": "1",
 "humidifier": "1",

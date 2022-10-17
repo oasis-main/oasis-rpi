@@ -17,8 +17,8 @@ slow_cs.check_lock(resource_name) #anything GPIO-touching should check the lock 
 
 #get hardware config & device state
 slow_cs.load_state()
-num_leds = int(slow_cs.structs["hardware_config"]["onboard_led_config"]["num_leds"])
-pixels = neopixel.NeoPixel(board.D21, num_leds)
+num_leds = int(slow_cs.structs["hardware_config"]["onboard_led_settings"]["num_leds"])
+pixels = neopixel.NeoPixel(board.D21, num_leds) #NeoPixels must be connected to GPIO10, GPIO12, GPIO18 or GPIO21 to work!
 
 def check_led_status():
     slow_cs.load_state()
