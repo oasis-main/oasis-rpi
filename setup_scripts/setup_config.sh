@@ -16,7 +16,7 @@ cp /home/pi/oasis-grow/defaults/hardware_config_default_template.json /home/pi/o
 cp /home/pi/oasis-grow/defaults/access_config_default_template.json /home/pi/oasis-grow/configs/access_config.json
 cp /home/pi/oasis-grow/defaults/feature_toggles_default_template.json /home/pi/oasis-grow/configs/feature_toggles.json
 cp /home/pi/oasis-grow/defaults/device_state_default_template.json /home/pi/oasis-grow/configs/device_state.json
-cp /home/pi/oasis-grow/defaults/device_params_default_template.json /home/pi/oasis-grow/configs/device_params.json
+cp /home/pi/oasis-grow/defaults/control_params_default_template.json /home/pi/oasis-grow/configs/control_params.json
 cp /home/pi/oasis-grow/defaults/sensor_info_default_template.json /home/pi/oasis-grow/configs/sensor_info.json
 
 #Rust will create lockfiles and entries automatically when called

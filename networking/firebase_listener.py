@@ -18,9 +18,9 @@ def sync_state():
         if key_value_pair[0] in list(cs.structs["device_state"].keys()):
             #print("Updating device_state")
             cs.write_state("/home/pi/oasis-grow/configs/device_state.json", key_value_pair[0], key_value_pair[1], db_writer = None)
-        elif key_value_pair[0] in list(cs.structs["device_params"].keys()):
-            #print("Updating device_params")
-            cs.write_state("/home/pi/oasis-grow/configs/device_params.json", key_value_pair[0], key_value_pair[1], db_writer = None)    
+        elif key_value_pair[0] in list(cs.structs["control_params"].keys()):
+            #print("Updating control_params")
+            cs.write_state("/home/pi/oasis-grow/configs/control_params.json", key_value_pair[0], key_value_pair[1], db_writer = None)    
         else:
             #print("Not working")
             pass
@@ -32,14 +32,14 @@ def act_on_event(field, new_data):
     #checks if file exists and makes a blank one if not
     #the path has to be set for box
     device_state_fields = list(cs.structs["device_state"].keys())
-    device_params_fields = list(cs.structs["device_params"].keys())
+    control_params_fields = list(cs.structs["control_params"].keys())
 
     path = " "
 
     if field in device_state_fields:
         path = "/home/pi/oasis-grow/configs/device_state.json"
-    elif field in device_params_fields:
-        path = "/home/pi/oasis-grow/configs/device_params.json"
+    elif field in control_params_fields:
+        path = "/home/pi/oasis-grow/configs/control_params.json"
 
     if os.path.exists(path) == False:
         return

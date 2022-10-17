@@ -22,7 +22,7 @@ def add_new_device():
     #assemble data to initialize firebase
     setup_dict = {} #Access & hardware config will be kept private, not shared with cloud 
     setup_dict.update(cs.structs["device_state"])
-    setup_dict.update(cs.structs["device_params"])
+    setup_dict.update(cs.structs["control_params"])
     setup_dict.update(cs.structs["feature_toggles"])
     setup_dict.update(cs.structs["sensor_info"])
     setup_dict_named = {cs.structs["access_config"]["device_name"] : setup_dict}

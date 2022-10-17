@@ -18,7 +18,7 @@ from utils import error_handler as err
 
 #...cloud-synced:
 #device_state #describes the current state of the system
-#device_params #describes the grow configuration of the system
+#control_params #describes the grow configuration of the system
 
 #...cloud-touching
 #sensor_info #tells the system which features are in use (data only goes out)
@@ -29,7 +29,7 @@ from utils import error_handler as err
 #hardware_config #holds hardware I/O setting & pin
 
 structs = {"device_state": {}, 
-"device_params": {}, 
+"control_params": {}, 
 "sensor_info": {}, 
 "access_config" : {}, 
 "hardware_config": {}, 

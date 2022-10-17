@@ -1,6 +1,6 @@
 {
   "/home/pi/oasis-grow/configs/access_config.json": 0,
-  "/home/pi/oasis-grow/configs/device_params.json": 0,
+  "/home/pi/oasis-grow/configs/control_params.json": 0,
   "/home/pi/oasis-grow/configs/device_state.json": 0,
   "/home/pi/oasis-grow/configs/feature_toggles.json": 0,
   "/home/pi/oasis-grow/configs/hardware_config.json": 0,

@@ -16,8 +16,8 @@ def reset_device_state():
     reset_d = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/defaults/device_state_default_template.json", "/home/pi/oasis-grow/configs/device_state.json"])
     reset_d.wait()
 
-def reset_device_params():
-    reset_p = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/defaults/device_params_default_template.json", "/home/pi/oasis-grow/configs/device_params.json"])
+def reset_control_params():
+    reset_p = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/defaults/control_params_default_template.json", "/home/pi/oasis-grow/configs/control_params.json"])
     reset_p.wait()
     
 def reset_sensor_info():
@@ -55,7 +55,7 @@ def reset_locks():
 
 def reset_nonhw_configs():
     reset_device_state()
-    reset_device_params()
+    reset_control_params()
     reset_sensor_info()
     reset_access_config()
 
@@ -84,7 +84,7 @@ def reset_image_feed():
 def reset_all():
     reset_device_state()
     reset_feature_toggles()
-    reset_device_params()
+    reset_control_params()
     reset_access_config()
     reset_hardware_config()
     reset_feature_toggles()
