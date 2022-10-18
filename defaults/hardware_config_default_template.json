@@ -1,4 +1,20 @@
-{"equipment_gpio_map": {
+{"button_gpio_map":{
+                    "start_stop_button": "17",
+                    "connect_internet_button": "27",
+                    "action_button": "22"
+                    },
+"onboard_led_settings":{
+                        "num_leds": "12",
+                        "time_start_led": "0",
+                        "time_stop_led": "0"
+                        },
+"camera_settings":{
+                    "picture_frequency": "60",
+                    "awb_mode": "on",
+                    "awb_red": "0.8",
+                    "awb_blue": "1.5"
+                    },
+"equipment_gpio_map": {
                    "heat_relay": "14",
                    "humidifier_relay": "15",
                    "fan_relay": "18",
@@ -7,21 +23,14 @@
                    "air_relay": "25",
                    "dehumidifier_relay": "8"
                    },
-"button_gpio_map": {
-                 "start_stop_button": "17",
-                 "connect_internet_button": "27",
-                 "action_button": "22"
-                 },
-"onboard_led_settings": {
-                "num_leds": "12",
-                "time_start_led": "0",
-                "time_stop_led": "0"
-                },
-"camera_settings":{
-                    "picture_frequency": "60",
-                    "awb_mode": "on",
-                    "awb_red": "0.8",
-                    "awb_blue": "1.5"
-                }
+"equipment_wattage": {
+                    "heater": "0",
+                    "humidifier": "0",
+                    "fan": "0",
+                    "lights": "0",
+                    "water_pump": "0",
+                    "air_pump": "0",
+                    "dehumidifier": "0"
+                    }
 }
 

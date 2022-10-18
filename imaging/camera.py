@@ -19,6 +19,10 @@ from networking import db_tools as dbt
 
 resource_name = "camera"
 
+'''Here's the calling code
+camera_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/imaging/camera.py', cs.structs["hardware_config"]["camera_settings"]["picture_frequency"]]) #If running, then skips. If idle then restarts.
+'''
+
 def take_picture(image_path):
     if cs.structs["hardware_config"]["camera_settings"]["awb_mode"] == "on":
         #take picture and save to standard location: libcamera-still -e png -o test.png

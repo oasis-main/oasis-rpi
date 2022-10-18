@@ -26,6 +26,14 @@ def clean_up(*args):
     pin.set_low()
     sys.exit()
 
+'''Here is the old calling code
+if cs.locks[resource_name] == 0:
+        if cs.structs["feature_toggles"]["dehum_pid"] == "1":
+            dehumidify_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/dehumidifier.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
+        else:
+            dehumidify_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/dehumidifier.py', cs.structs["control_params"]["dehumidifier_duration"], cs.structs["control_params"]["dehumidifier_interval"]])
+'''
+
 if __name__ == '__main__':
     signal.signal(signal.SIGTERM, clean_up)
     try:

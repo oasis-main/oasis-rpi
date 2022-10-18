@@ -26,6 +26,13 @@ def clean_up(*args):
     pin.set_low()
     sys.exit()
 
+''' Here's the old calling code:
+if cs.structs["feature_toggles"]["water_pid"] == "1":
+            water_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/water_pump.py', str(intensity)])
+        else:
+            water_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/water_pump.py', str(cs.structs["control_params"]["watering_duration"]), str(cs.structs["control_params"]["watering_interval"])]) #If running, then skips. If idle then restarts.
+'''
+
 if __name__ == "__main__":
     signal.signal(signal.SIGTERM, clean_up)
     try:

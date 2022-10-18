@@ -27,6 +27,10 @@ def clean_up(*args):
     pin.set_low()
     sys.exit()
 
+''' This is the old calling code:
+        air_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/air_pump.py', cs.structs["control_params"]["time_start_air"], cs.structs["control_params"]["time_stop_air"], cs.structs["control_params"]["air_interval"]]
+'''
+
 if __name__ == '__main__':
     
     signal.signal(signal.SIGTERM,clean_up)

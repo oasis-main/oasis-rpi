@@ -27,6 +27,13 @@ def clean_up(*args):
     pin.set_low()
     sys.exit()
 
+'''Here's the old calling code
+if cs.structs["feature_toggles"]["fan_pid"] == "1":
+            fan_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/fan.py', str(intensity)]) 
+        else:
+            fan_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/fan.py', cs.structs["control_params"]["fan_duration"], cs.structs["control_params"]["fan_interval"]])
+'''
+
 if __name__ == '__main__':
     signal.signal(signal.SIGTERM, clean_up)
     try:

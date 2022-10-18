@@ -27,11 +27,15 @@ def clean_up(*args):
     pin.set_low()
     sys.exit()
 
+'''This is the old calling code
+light_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/lights.py', cs.structs["control_paramstime_start_light"], cs.structs["contcontrol_paramstime_stop_light"], cs.structs["control_params"]["lighting_interval"]]) #If running, then skips. If free then restarts.
+'''
+
 if __name__ == '__main__':
     signal.signal(signal.SIGTERM,clean_up)
     try:
         print("Turning lights on at " + sys.argv[1] + ":00 and off at " + sys.argv[2] + ":00, refreshing every " + sys.argv[3] + " minutes...")
-        relays.actuate_time_hod(pin, int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), interval_units = "minutes")
+        pin = relays.actuate_time_hod(pin, int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), interval_units = "minutes")
     except KeyboardInterrupt:
         print("Lights were interrupted.")
     except Exception:

@@ -26,6 +26,14 @@ def clean_up(*args):
     pin.set_low()
     sys.exit()
 
+'''Here's the old calling code:
+if cs.locks[resource_name] == 0:
+        if cs.structs["feature_toggles"]["hum_pid"] == "1":
+            humidity_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/humidifier.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
+        else:
+            humidity_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/humidifier.py', cs.structs["control_params"]["humidifier_duration"], cs.structs["control_params"]["humidifier_interval"]])
+'''
+
 if __name__ == '__main__':
     signal.signal(signal.SIGTERM, clean_up)
     try:

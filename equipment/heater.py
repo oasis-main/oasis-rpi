@@ -27,6 +27,13 @@ def clean_up(*args):
     pin.set_low()
     sys.exit()
 
+''' Here's the old calling code...
+if cs.structs["feature_toggles"]["heat_pid"] == "1":
+            heat_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/heater.py']) #If process not free, then skips.
+        else:
+            heat_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/heater.py', cs.structs["control_params"]["heater_duration"], cs.structs["control_params"]["heater_interval"]]) #If process not free, then skips.
+'''
+
 if __name__ == '__main__':
     signal.signal(signal.SIGTERM, clean_up)
     try:
