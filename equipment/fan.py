@@ -23,26 +23,23 @@ fan_GPIO = int(cs.structs["hardware_config"]["equipment_gpio_map"]["fan_relay"])
 pin = rusty_pins.GpioOut(fan_GPIO)
 
 def clean_up(*args):
+    print("Shutting down fans...")
     cs.safety.unlock(cs.lock_filepath, resource_name)
-    pin.set_low()
+    relays.turn_off(pin)
     sys.exit()
-
-'''Here's the old calling code
-if cs.structs["feature_toggles"]["fan_pid"] == "1":
-            fan_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/fan.py', str(intensity)]) 
-        else:
-            fan_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/fan.py', cs.structs["control_params"]["fan_duration"], cs.structs["control_params"]["fan_interval"]])
-'''
 
 if __name__ == '__main__':
     signal.signal(signal.SIGTERM, clean_up)
     try:
-        if cs.structs["feature_toggles"]["fan_pid"] == "1":
-            print("Ventilating in pulse mode with " + sys.argv[1] + "%" + " power...")
-            relays.actuate_slow_pwm(pin, float(sys.argv[1])) #trigger appropriate response
-        else:
-            print("Fans on for " + sys.argv[1] + " minute(s), off for " + sys.argv[2] + " minute(s)...")
-            relays.actuate_interval_sleep(pin, float(sys.argv[1]), float(sys.argv[2]), duration_units= "minutes", sleep_units="minutes")
+        while True:
+            if cs.structs["feature_toggles"]["fan_pid"] == "1":
+                print("Ventilating in pulse mode with " + cs.structs["control_params"]["fan_pid"] + "%" + " power...")
+                relays.actuate_slow_pwm(pin, float(cs.structs["control_params"]["fan_pid"])) #trigger appropriate response
+            else:
+                print("Fans on for " + cs.structs["control_params"]["fan_duration"] + " minute(s), off for " + cs.structs["control_params"]["fan_interval"] + " minute(s)...")
+                relays.actuate_interval_sleep(pin, float(cs.structs["control_params"]["fan_duration"]), float(cs.structs["control_params"]["fan_interval"]), duration_units= "minutes", sleep_units="minutes")
+   
+            cs.load_state()
     except KeyboardInterrupt:
         print("Fan was interrupted.")
     except Exception:    

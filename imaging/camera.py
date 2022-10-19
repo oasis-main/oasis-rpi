@@ -19,7 +19,7 @@ from networking import db_tools as dbt
 
 resource_name = "camera"
 
-'''Here's the calling code
+'''Here's the old calling code
 camera_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/imaging/camera.py', cs.structs["hardware_config"]["camera_settings"]["picture_frequency"]]) #If running, then skips. If idle then restarts.
 '''
 
@@ -54,6 +54,7 @@ def send_image(path):
     print("Firebase has an image in waiting")
 
 def clean_up(*args):
+    print("Shutting down camera...")
     cs.safety.unlock(cs.lock_filepath, resource_name)
     sys.exit()
 
@@ -92,7 +93,8 @@ if __name__ == '__main__':
     signal.signal(signal.SIGTERM,clean_up) #so we can check for the lock in __main__
     
     try:    
-        actuate(str(sys.argv[1]))
+        while True:
+            actuate(str(sys.argv[1]))
     except KeyboardInterrupt:
         print("Camera was interrupted.")
     except TypeError:

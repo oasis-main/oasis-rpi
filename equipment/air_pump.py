@@ -23,8 +23,9 @@ air_GPIO = int(cs.structs["hardware_config"]["equipment_gpio_map"]["air_relay"])
 pin = rusty_pins.GpioOut(air_GPIO)
 
 def clean_up(*args):
+    print("Shutting down air pump...")
     cs.safety.unlock(cs.lock_filepath, resource_name)
-    pin.set_low()
+    relays.turn_off(pin)
     sys.exit()
 
 ''' This is the old calling code:
@@ -35,8 +36,9 @@ if __name__ == '__main__':
     
     signal.signal(signal.SIGTERM,clean_up)
     try:
-        print("Turning air pump on at " + sys.argv[1] + ":00 and off at " + sys.argv[2] + ":00, refreshing every " + sys.argv[3] + " minutes...")
-        relays.actuate_time_hod(pin, int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), interval_units = "minutes")
+        while True:
+            print("Turning air pump on at " + sys.argv[1] + ":00 and off at " + sys.argv[2] + ":00, refreshing every " + sys.argv[3] + " minutes...")
+            relays.actuate_time_hod(pin, int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), interval_units = "minutes")
     except KeyboardInterrupt:
         print("Air pump was interrupted")
     except Exception:

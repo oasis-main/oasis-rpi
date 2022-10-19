@@ -23,26 +23,23 @@ heat_GPIO = int(cs.structs["hardware_config"]["equipment_gpio_map"]["heat_relay"
 pin = rusty_pins.GpioOut(heat_GPIO)
 
 def clean_up(*args):
+    print("Shutting down heater...")
     cs.safety.unlock(cs.lock_filepath, resource_name)
-    pin.set_low()
+    relays.turn_off(pin)
     sys.exit()
-
-''' Here's the old calling code...
-if cs.structs["feature_toggles"]["heat_pid"] == "1":
-            heat_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/heater.py']) #If process not free, then skips.
-        else:
-            heat_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/heater.py', cs.structs["control_params"]["heater_duration"], cs.structs["control_params"]["heater_interval"]]) #If process not free, then skips.
-'''
 
 if __name__ == '__main__':
     signal.signal(signal.SIGTERM, clean_up)
     try:
-        if cs.structs["feature_toggles"]["heat_pid"] == "1":
-            print("Heating in pulse mode with " + sys.argv[1] + "%" + " power...")
-            relays.actuate_slow_pwm(pin, float(sys.argv[1])) #trigger appropriate response
-        else:
-            print("Heater on for " + sys.argv[1] + " minute(s), off for " + sys.argv[2] + " minute(s)...")
-            relays.actuate_interval_sleep(pin, float(sys.argv[1]), float(sys.argv[2]), duration_units= "minutes", sleep_units="minutes")
+        while True:
+            if cs.structs["feature_toggles"]["heat_pid"] == "1":
+                print("Heating in pulse mode with " + cs.structs["control_params"]["heat_feedback"] + "%" + " power...")
+                relays.actuate_slow_pwm(pin, float(cs.structs["control_params"]["heat_feedback"])) #trigger appropriate response
+            else:
+                print("Heater on for " + cs.structs["control_params"]["heater_duration"] + " minute(s), off for " + cs.structs["control_params"]["heater_interval"] + " minute(s)...")
+                relays.actuate_interval_sleep(pin, float(cs.structs["control_params"]["heater_duration"]), float(cs.structs["control_params"]["heater_interval"]), duration_units= "minutes", sleep_units="minutes")
+   
+            cs.load_state()
     except KeyboardInterrupt:
         print("Heater was interrupted.")
     except Exception:    

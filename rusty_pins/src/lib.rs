@@ -27,6 +27,13 @@ impl GpioOut {
         self.output.set_low();
     }
 
+    fn is_high(&mut self){
+        self.output.is_set_high();
+    }
+
+    fn is_low(&mut self){
+        self.output.is_set_low();
+    }
 }
 
 // A Python-ready GPIO I/O module

@@ -22,26 +22,23 @@ water_GPIO = int(cs.structs["hardware_config"]["equipment_gpio_map"]["water_rela
 pin = rusty_pins.GpioOut(water_GPIO)
 
 def clean_up(*args):
+    print("Shutting down water pump...")
     cs.safety.unlock(cs.lock_filepath, resource_name)
-    pin.set_low()
+    relays.turn_off(pin)
     sys.exit()
-
-''' Here's the old calling code:
-if cs.structs["feature_toggles"]["water_pid"] == "1":
-            water_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/water_pump.py', str(intensity)])
-        else:
-            water_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/water_pump.py', str(cs.structs["control_params"]["watering_duration"]), str(cs.structs["control_params"]["watering_interval"])]) #If running, then skips. If idle then restarts.
-'''
 
 if __name__ == "__main__":
     signal.signal(signal.SIGTERM, clean_up)
     try:
-        if cs.structs["feature_toggles"]["water_pid"] == "1":
-            print("Running water pump in pulse mode with " + sys.argv[1] + "%" + " power...")
-            relays.actuate_slow_pwm(pin, intensity = float(sys.argv[1])) #trigger appropriate response
-        else:
-            print("Running water pump for " + sys.argv[1] + " second(s) every " + sys.argv[2] + " day(s)...")
-            relays.actuate_interval_sleep(pin, duration = float(sys.argv[1]), sleep = float(sys.argv[2]), duration_units="seconds", sleep_units="days")
+        while True:
+            if cs.structs["feature_toggles"]["water_pid"] == "1":
+                print("Running water pump in pulse mode with " + cs.structs["control_params"]["moisture_feedback"] + "%" + " power...")
+                relays.actuate_slow_pwm(pin, intensity = float(cs.structs["control_params"]["moisture_feedback"])) #trigger appropriate response
+            else:
+                print("Running water pump for " + sys.argv[1] + " second(s) every " + sys.argv[2] + " day(s)...")
+                relays.actuate_interval_sleep(pin, duration = float(cs.structs["control_params"]["watering_duration"]), sleep = float(cs.structs["control_params"]["watering_interval"]), duration_units="seconds", sleep_units="days")
+    
+            cs.load_state()
     except KeyboardInterrupt:
         print("Water pump was interrupted")
     except Exception:

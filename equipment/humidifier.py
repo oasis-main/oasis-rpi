@@ -22,27 +22,23 @@ hum_GPIO = int(cs.structs["hardware_config"]["equipment_gpio_map"]["humidifier_r
 pin = rusty_pins.GpioOut(hum_GPIO)
 
 def clean_up(*args):
+    print("Shutting down humidifier...")
     cs.safety.unlock(cs.lock_filepath, resource_name)
-    pin.set_low()
+    relays.turn_off(pin)
     sys.exit()
-
-'''Here's the old calling code:
-if cs.locks[resource_name] == 0:
-        if cs.structs["feature_toggles"]["hum_pid"] == "1":
-            humidity_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/humidifier.py', str(intensity)]) #If running, then skips. If idle then restarts, If no process, then fails
-        else:
-            humidity_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/humidifier.py', cs.structs["control_params"]["humidifier_duration"], cs.structs["control_params"]["humidifier_interval"]])
-'''
 
 if __name__ == '__main__':
     signal.signal(signal.SIGTERM, clean_up)
     try:
-        if cs.structs["feature_toggles"]["hum_pid"] == "1":
-            print("Running humidifier in pulse mode with " + sys.argv[1] + "%" + " power...")
-            relays.actuate_slow_pwm(pin, float(sys.argv[1])) #trigger appropriate response
-        else:
-            print("Running humidifier for " + sys.argv[1] + " minute(s) on, " + sys.argv[2] + " minute(s) off...")
-            relays.actuate_interval_sleep(pin, float(sys.argv[1]), float(sys.argv[2]), duration_units= "minutes", sleep_units="minutes")
+        while True:
+            if cs.structs["feature_toggles"]["hum_pid"] == "1":
+                print("Running humidifier in pulse mode with " + cs.structs["control_params"]["hum_feedback"] + "%" + " power...")
+                relays.actuate_slow_pwm(pin, float(cs.structs["control_params"]["hum_feedback"])) #trigger appropriate response
+            else:
+                print("Running humidifier for " + cs.structs["control_params"]["humidifier_duration"] + " minute(s) on, " + cs.structs["control_params"]["humidifier_interval"] + " minute(s) off...")
+                relays.actuate_interval_sleep(pin, float(cs.structs["control_params"]["humidifier_duration"]), float(cs.structs["control_params"]["humidifier_interval"]), duration_units= "minutes", sleep_units="minutes")
+    
+            cs.load_state()
     except KeyboardInterrupt:
         print("Humidifier was interrupted.")
     except Exception:    
