@@ -1,24 +1,17 @@
 {"temperature": "0",
-"temperature_calibration": "0", 
-
 "humidity": "0",
-"humidity_calibration": "0",
-
 "co2": "0",
-"co2_calibration": "0", 
-
 "lux": "0",
-"lux_calibration": "0",
-
 "ph": "0",
-"ph_calibration": "0",
-
 "substrate_moisture": "0",
-"substrate_moisture_calibration": "0",
-
 "tds": "0",
-"tds_calibration": "0",
-
 "vpd": "0",
+"water_low": "0",
 
-"water_low": "0"}
+"temperature_calibration": "0",
+"humidity_calibration": "0",
+"co2_calibration": "0", 
+"lux_calibration": "0",
+"ph_calibration": "0",
+"substrate_moisture_calibration": "0",
+"tds_calibration": "0"}

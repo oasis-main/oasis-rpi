@@ -1,4 +1,5 @@
 #import shell modules
+import os
 import sys
 
 #set custom module path
@@ -10,6 +11,9 @@ from utils import concurrent_state as cs
 
 #networking
 from networking import db_tools as dbt
+
+#data
+import csv
 
 #housekeeping
 from utils import error_handler as err
@@ -50,6 +54,60 @@ def delete_device():
     print("Device has been reset to default configuration")
     systemctl_reboot = rusty_pipes.Open(["sudo", "systemctl", "reboot"])
     systemctl_reboot.wait()
+
+#write some data to a .csv, takes a dictionary and a path
+def write_csv(filename, dict): #Depends on: "os" "csv"
+    file_exists = os.path.isfile(filename)
+
+    with open (filename, 'a') as csvfile:
+        headers = ["time"]
+
+        if cs.structs["feature_toggles"]["temperature_sensor"] == "1":
+            headers.append("temperature")
+        if cs.structs["feature_toggles"]["humidity_sensor"] == "1":
+            headers.append("humidity")
+        if cs.structs["feature_toggles"]["co2_sensor"] == "1":
+            headers.append("co2")
+        if cs.structs["feature_toggles"]["substrate_moisture_sensor"] == "1":
+            headers.append("substrate_moisture")
+        if cs.structs["feature_toggles"]["vpd_calculation"] == "1":
+            headers.append("vpd")
+        if cs.structs["feature_toggles"]["water_level_sensor"] == "1":
+            headers.append("water_low")
+        if cs.structs["feature_toggles"]["lux_sensor"] == "1":
+            headers.append("lux")
+        if cs.structs["feature_toggles"]["ph_sensor"] == "1":
+            headers.append("ph")
+        if cs.structs["feature_toggles"]["tds_sensor"] == "1":
+            headers.append("tds")
+
+        writer = csv.DictWriter(csvfile, delimiter=',', lineterminator='\n',fieldnames=headers)
+
+        if not file_exists:
+            writer.writeheader()  # file doesn't exist yet, write a header
+
+        variables = {}
+
+        for variable in dict.keys():
+            if variable in headers:
+                variables[variable] = dict[variable]
+
+        writer.writerow(variables)
+
+        writer = None
+
+    return
+
+def send_csv(path):
+    #send new image to firebase
+    cs.load_state()
+    user, db, storage = dbt.initialize_user(cs.structs["access_config"]["refresh_token"])
+    dbt.store_file(user, storage, path, cs.structs["access_config"]["device_name"], "sensor_data.csv")
+    print("Sent csv timeseries")
+
+    #tell firebase that there is a new time series
+    dbt.patch_firebase(cs.structs["access_config"], "csv_sent", "1")
+    print("Firebase has a time-series in waiting")
 
 #connects system to firebase
 def connect_to_firebase(): #depends on: cs.load_state(), cs.write_state(), dbt.patch_firebase(), 'requests'; Modifies: access_config.json, device_state.json

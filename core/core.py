@@ -1,9 +1,10 @@
-#Yes, I understand the core is a procedural mess. It runs without bugs, for now
-#We're working on refactoring this to an object oriented and functional approach in v2
-#This will make it easier to and add new features, expand existing ones, and change behavior.
+#FEATURE EXTRACTION:
+#   Almost everything we do here can be put into groups of functionality & extracted into various modules.
+#   We want the core to parse configs, load functions for each feature, and interatively run + chain for all enabled
+#   The end result should be that it is easier to add a new metrics, data sources, analyses, reaction, and outputs to the core program  
+#   An easier option would be to make everything in this file an imported module, and then manually note where each module group touches in the code :)
 
 #system
-import os
 import sys
 
 #set proper path for modules
@@ -15,8 +16,6 @@ import rusty_pipes
 
 #data handling
 import orjson
-import csv
-import math
 import pprint
 
 #dealing with specific times of the day
@@ -25,13 +24,18 @@ import datetime
 
 #import other oasis packages
 from utils import concurrent_state as cs
+from utils import physics
 from utils import error_handler as err
 from networking import db_tools as dbt
+from networking import firebase_manager as fb
 from peripherals import microcontroller_manager as minion
 
 resource_name = "core"
 
-#declare sensor data variables
+#declare sensors
+sensor_data = {}
+
+#declare environmental variables 
 temperature = float()
 last_temperature = float()
 last_target_temperature = float()
@@ -58,7 +62,7 @@ lux = float()
 ph = float()
 tds = float()
 
-#subprocess vars
+#declare long-running process objects
 heat_process = None
 humidity_process = None
 dehumidify_process = None
@@ -68,148 +72,98 @@ camera_process = None
 water_process = None
 air_process = None
 
-#timekeeping variables
-data_timer = None
-
-#write some data to a .csv, takes a dictionary and a path
-def write_csv(filename, dict): #Depends on: "os" "csv"
-    file_exists = os.path.isfile(filename)
-
-    with open (filename, 'a') as csvfile:
-        headers = ["time"]
-
-        if cs.structs["feature_toggles"]["temperature_sensor"] == "1":
-            headers.append("temperature")
-        if cs.structs["feature_toggles"]["humidity_sensor"] == "1":
-            headers.append("humidity")
-        if cs.structs["feature_toggles"]["co2_sensor"] == "1":
-            headers.append("co2")
-        if cs.structs["feature_toggles"]["substrate_moisture_sensor"] == "1":
-            headers.append("substrate_moisture")
-        if cs.structs["feature_toggles"]["vpd_calculation"] == "1":
-            headers.append("vpd")
-        if cs.structs["feature_toggles"]["water_level_sensor"] == "1":
-            headers.append("water_low")
-        if cs.structs["feature_toggles"]["lux_sensor"] == "1":
-            headers.append("lux")
-        if cs.structs["feature_toggles"]["ph_sensor"] == "1":
-            headers.append("ph")
-        if cs.structs["feature_toggles"]["tds_sensor"] == "1":
-            headers.append("tds")
-
-        writer = csv.DictWriter(csvfile, delimiter=',', lineterminator='\n',fieldnames=headers)
-
-        if not file_exists:
-            writer.writeheader()  # file doesn't exist yet, write a header
-
-        variables = {}
-
-        for variable in dict.keys():
-            if variable in headers:
-                variables[variable] = dict[variable]
-
-        writer.writerow(variables)
-
-        writer = None
-
-    return
-
-def send_csv(path):
-    #send new image to firebase
-    cs.load_state()
-    user, db, storage = dbt.initialize_user(cs.structs["access_config"]["refresh_token"])
-    dbt.store_file(user, storage, path, cs.structs["access_config"]["device_name"], "sensor_data.csv")
-    print("Sent csv timeseries")
-
-    #tell firebase that there is a new time series
-    dbt.patch_firebase(cs.structs["access_config"], "csv_sent", "1")
-    print("Firebase has a time-series in waiting")
-
-#gets data from serial, will parse a simple string or accept a dictionary
-def listen(): #Depends on 'serial', start_serial()
-    global temperature,  humidity,  co2,  substrate_moisture, vpd, water_low, lux, ph, tds  
-    global last_temperature, last_humidity, last_co2, last_substrate_moisture #past readings for derivative calculations
-    #print("hey I just met you")
-    if minion.ser_in == None:
-        print("ser_in is none")
-        return 
-    
-    try:
-        sensor_data = orjson.loads(minion.ser_in.readline().decode('UTF-8').strip().encode())
-        #print(sensor_data)
-        
-        if cs.structs["feature_toggles"]["temperature_sensor"] == "1":
-            last_temperature = temperature
-            temperature = float(sensor_data["temperature"]) + float(cs.structs["sensor_info"]["temperature_calibration"])
-            cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "temperature", str(temperature), db_writer = None)      
-        if cs.structs["feature_toggles"]["humidity_sensor"] == "1":
-            last_humidity = humidity
-            humidity = float(sensor_data["humidity"]) + float(cs.structs["sensor_info"]["humidity_calibration"])
-            cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "humidity", str(humidity), db_writer = None)
-        if cs.structs["feature_toggles"]["co2_sensor"] == "1":
-            last_co2 = co2
-            co2 = float(sensor_data["co2"]) + float(cs.structs["sensor_info"]["co2_calibration"])
-            cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "co2", str(co2), db_writer = None)
-        if cs.structs["feature_toggles"]["substrate_moisture_sensor"] == "1":
-            last_substrate_moisture = substrate_moisture
-            substrate_moisture = float(sensor_data["substrate_moisture"]) + float(cs.structs["sensor_info"]["substrate_moisture_calibration"])
-            cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "substrate_moisture", str(substrate_moisture), db_writer = None)
-        if cs.structs["feature_toggles"]["lux_sensor"] == "1":
-            lux = float(sensor_data["lux"]) + float(cs.structs["sensor_info"]["lux_calibration"])
-            cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "lux", str(lux), db_writer = None)
-        if cs.structs["feature_toggles"]["ph_sensor"] == "1":
-            ph = float(sensor_data["ph"]) + float(cs.structs["sensor_info"]["ph_calibration"])
-            cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "ph", str(ph), db_writer = None)
-        if cs.structs["feature_toggles"]["tds_sensor"] == "1":
-            tds = float(sensor_data["tds"]) + float(cs.structs["sensor_info"]["tds_calibration"])
-            cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "tds", str(tds), db_writer = None)
-
-        if cs.structs["feature_toggles"]["vpd_calculation"] == "1":
-            f = float(temperature) #temperature farenheit
-            t =	(5/9)*(f + 459.67) #temperature kelvin
-            rh =  float(humidity) #relative humidity
-            #https://www.cs.helsinki.fi/u/ssmoland/physics/envphys/lecture_2.pdf
-            a = 77.34 #empirically
-            b = -7235 #fitted
-            c = -8.2 #exponental
-            d = 0.005711 #constants
-            svp = math.e ** (a+(b/t)+(c*math.log(t))+d*t) #saturation vapor pressure
-            #https://agradehydroponics.com/blogs/a-grade-news/how-to-calculate-vapour-pressure-deficit-vpd-via-room-temperature
-            vpd_pa = (1 - (rh/100)) * svp #vapor pressure deficit in pascals
-            vpd = vpd_pa / 1000 #convert vpd to kilopascals
-            cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "vpd", str(vpd), db_writer = None)
-        
-        if cs.structs["feature_toggles"]["water_level_sensor"] == "1":
-            water_low = int(sensor_data["water_low"])
-            cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "water_low", str(water_low), db_writer = None)
-    except:
-        print(err.full_stack()) #uncomment to debug listener
-        pass
-
-def smart_listener():
-    if ((cs.structs["feature_toggles"]["temperature_sensor"] == "1") \
-                or (cs.structs["feature_toggles"]["humidity_sensor"] == "1") \
-                    or (cs.structs["feature_toggles"]["water_level_sensor"] == "1") \
-                        or (cs.structs["feature_toggles"]["co2_sensor"] == "1") \
-                            or (cs.structs["feature_toggles"]["lux_sensor"] == "1") \
-                                or (cs.structs["feature_toggles"]["ph_sensor"] == "1") \
-                                    or (cs.structs["feature_toggles"]["tds_sensor"] == "1") \
-                                        or (cs.structs["feature_toggles"]["substrate_moisture_sensor"] == "1")):
-        try: #attempt to read data from sensor, raise exception if there is a problem
-            #print("Smart listener is attempting to collect data from arduino")
-            listen() #this will be changed to run many sensor functions as opposed to one serial listener
-        except Exception as e:
-            print(err.full_stack())
-            print("Listener Failure")
+#declare our timekeeping stamp
+data_timer = None #will be a timestamp object
 
 def update_derivative_banks():
     global last_target_temperature, last_target_humidity, last_target_co2, last_target_substrate_moisture
-
     #save last temperature and humidity targets to calculate delta for PD controllers
     last_target_temperature = float(cs.structs["control_params"]["target_temperature"]) 
     last_target_humidity = float(cs.structs["control_params"]["target_humidity"])
     last_target_co2 = float(cs.structs["control_params"]["target_co2"])
     last_target_substrate_moisture = float(cs.structs["control_params"]["target_substrate_moisture"])
+
+#gets data from serial, will parse a simple string or accept a dictionary
+def listen_active_sensors(): #Depends on 'serial', start_serial()
+    global sensor_data
+    if minion.ser_in == None: #to add more devices, simply import more minions and make objects for them
+        print("Primary sensor minion not connected.") #then set the mapping from sensor reading -> env variable throught globals
+        return 
+    try:
+        sensor_data = orjson.loads(minion.ser_in.readline().decode('UTF-8').strip().encode())
+        return
+    except:
+        print(err.full_stack()) #uncomment to debug listener
+        return
+
+def get_temperature():
+    global temperature, last_temperature #all PID enabled environmental variables must have historical values
+    last_temperature = temperature
+    temperature = float(sensor_data["temperature"]) + float(cs.structs["sensor_info"]["temperature_calibration"])
+    cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "temperature", str(temperature), db_writer = None)      
+
+def get_humidity():
+    global humidity, last_humidity
+    last_humidity = humidity
+    humidity = float(sensor_data["humidity"]) + float(cs.structs["sensor_info"]["humidity_calibration"])
+    cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "humidity", str(humidity), db_writer = None)
+
+def get_co2():
+    global co2, last_co2
+    last_co2 = co2
+    co2 = float(sensor_data["co2"]) + float(cs.structs["sensor_info"]["co2_calibration"])
+    cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "co2", str(co2), db_writer = None)
+
+def get_substrate_moisture():
+    global substrate_moisture, last_substrate_moisture
+    last_substrate_moisture = substrate_moisture
+    substrate_moisture = float(sensor_data["substrate_moisture"]) + float(cs.structs["sensor_info"]["substrate_moisture_calibration"])
+    cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "substrate_moisture", str(substrate_moisture), db_writer = None)
+
+def get_lux():
+    global lux
+    lux = float(sensor_data["lux"]) + float(cs.structs["sensor_info"]["lux_calibration"])
+    cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "lux", str(lux), db_writer = None)
+
+def get_ph():
+    global ph
+    ph = float(sensor_data["ph"]) + float(cs.structs["sensor_info"]["ph_calibration"])
+    cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "ph", str(ph), db_writer = None)
+
+def get_tds():
+    global tds
+    tds = float(sensor_data["tds"]) + float(cs.structs["sensor_info"]["tds_calibration"])
+    cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "tds", str(tds), db_writer = None)
+
+def get_vpd():
+    global vpd
+    vpd = physics.vpd(temperature, humidity)
+    cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "vpd", str(vpd), db_writer = None)
+
+def get_water_level():
+    global water_low
+    water_low = int(sensor_data["water_low"])
+    cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "water_low", str(water_low), db_writer = None)
+
+def collect_environmental_data():
+    if cs.structs["feature_toggles"]["temperature_sensor"] == "1":
+        get_temperature()
+    if cs.structs["feature_toggles"]["humidity_sensor"] == "1":
+        get_humidity()
+    if cs.structs["feature_toggles"]["co2_sensor"] == "1":
+        get_co2()
+    if cs.structs["feature_toggles"]["substrate_moisture_sensor"] == "1":
+        get_substrate_moisture()
+    if cs.structs["feature_toggles"]["lux_sensor"] == "1":
+        get_lux()
+    if cs.structs["feature_toggles"]["ph_sensor"] == "1":
+        get_ph()
+    if cs.structs["feature_toggles"]["tds_sensor"] == "1":
+        get_tds()
+    if cs.structs["feature_toggles"]["vpd_calculation"] == "1":
+        get_vpd()
+    if cs.structs["feature_toggles"]["water_level_sensor"] == "1":
+        get_water_level()
 
 #PID controller to modulate heater feedback
 def heat_pid(temperature, target_temperature, last_temperature, last_target_temperature,
@@ -354,7 +308,7 @@ def water_pid(substrate_moisture, target_substrate_moisture,
 
     return water_level
 
-def update_active_pids(): #these should come with an accompanying option in feature_toggles_default_template.json
+def update_pid_controllers(): #these should come with an accompanying option in feature_toggles_default_template.json
     
     if cs.structs["feature_toggles"]["heat_pid"] == "1": #computes a feedback value if PID is on
         heat_feedback = int(heat_pid(temperature,
@@ -484,35 +438,27 @@ def run_camera(): #Depends on: 'subprocess'; Modifies: camera_process
     if cs.locks[resource_name] == 0:
         camera_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/imaging/camera.py']) #If running, then skips. If idle then restarts.
 
-def run_active_equipment():
-
+def regulate_active_equipment():
     # calculate feedback levels and update equipment in use
     if cs.structs["feature_toggles"]["heater"] == "1":
         run_heat()
-    
     if cs.structs["feature_toggles"]["humidifier"] == "1":
         run_hum()
-    
     if cs.structs["feature_toggles"]["dehumidifier"] == "1":
         run_dehum()
-
     if cs.structs["feature_toggles"]["fan"] == "1":
         run_fan()
-
     if cs.structs["feature_toggles"]["water"] == "1":
         run_water()
-
     if cs.structs["feature_toggles"]["light"] == "1":
         run_light()
-
     if cs.structs["feature_toggles"]["air"] == "1":
         run_air()
-
     if cs.structs["feature_toggles"]["camera"] == "1":
         run_camera()
 
 #unfinished
-def controller_log():
+def console_log():
 
     feedback = {}
     timers = {}
@@ -592,14 +538,14 @@ def data_out():
             if cs.structs["feature_toggles"]["save_data"] == "1":
                 #save data to .csv
                 print("Writing to csv")
-                write_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv', payload)
+                fb.write_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv', payload)
 
                 if cs.structs["device_state"]["connected"] == "1":
                     #write data to disk and exchange with cloud if connected
                     dbt.patch_firebase_dict(cs.structs["access_config"],payload)
 
                     #send new time-series to firebase
-                    send_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv')
+                    fb.send_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv')
 
             data_timer = time.time()
 
@@ -616,31 +562,24 @@ def clean_up_processes():
     if (cs.structs["feature_toggles"]["heater"] == "1") and (heat_process != None): #go through toggles and kill active processes
         heat_process.terminate()
         heat_process.wait()
-
     if (cs.structs["feature_toggles"]["humidifier"] == "1") and (humidity_process != None):
         humidity_process.terminate()
         humidity_process.wait()
-
     if (cs.structs["feature_toggles"]["dehumidifier"] == "1") and (dehumidify_process != None):
         dehumidify_process.terminate()
         dehumidify_process.wait()
-
     if (cs.structs["feature_toggles"]["fan"] == "1") and (fan_process != None):
         fan_process.terminate()
         fan_process.wait()
-
     if (cs.structs["feature_toggles"]["water"] == "1") and (water_process != None):
         water_process.terminate()
         water_process.wait()
-
     if (cs.structs["feature_toggles"]["light"] == "1") and (light_process != None):
         light_process.terminate()
         light_process.wait()
-
     if (cs.structs["feature_toggles"]["air"] == "1") and (air_process != None):
         air_process.terminate()
         air_process.wait()
-
     if (cs.structs["feature_toggles"]["camera"] == "1") and (camera_process != None):
         camera_process.terminate()
         camera_process.wait()
@@ -666,11 +605,11 @@ def main_setup():
 
     #exit early if opening subprocess daemon
     if str(sys.argv[1]) == "daemon":
-        print("core daemon started")
+        print("<core on standby>")
         #kill the program
         sys.exit()
     if str(sys.argv[1]) == "main":
-        print("core main started")
+        print("<core is running>")
         #log main start
         #flip "running" to 1 to make usable from command line
         if cs.structs["device_state"]["connected"] == 1:
@@ -711,13 +650,15 @@ def main_loop():
 
             cs.load_state() 
 
-            smart_listener()
+            listen_active_sensors()
             
-            update_active_pids()
+            collect_environmental_data()
 
-            run_active_equipment()
+            update_pid_controllers()
+
+            regulate_active_equipment()
             
-            controller_log()
+            console_log()
             
             data_out()
 
@@ -736,9 +677,3 @@ if __name__ == '__main__':
     signal.signal(signal.SIGTERM, terminate_program) #as this is commonly understood as program entry point.
     main_setup()
     main_loop()
-
-#FEATURE EXTRACTION:
-#   Almost everything we do here can be put into groups of functionality & extracted into various modules.
-#   We want the core to parse configs, load functions for each feature, and interatively run + chain for all enabled
-#   The end result should be that it is easier to add a new metrics, data sources, analyses, reaction, and outputs to the core program  
-#   An easier option would be to make everything in this file an imported module, and then manually note where each module group touches in the code :)

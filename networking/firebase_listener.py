@@ -33,26 +33,34 @@ def act_on_event(field, new_data):
     #the path has to be set for box
     device_state_fields = list(cs.structs["device_state"].keys())
     control_params_fields = list(cs.structs["control_params"].keys())
+    hardware_config_fields = list(cs.structs["hardware_config"].keys())
+    sensor_info_fields = list(cs.structs["sensor_info"].keys())
 
-    path = " "
+    for field in sensor_info_fields:
+        if field[-12:] != "_calibration":
+            sensor_info_fields = sensor_info_fields.remove(field)
+
+    path = None
 
     if field in device_state_fields:
         path = "/home/pi/oasis-grow/configs/device_state.json"
-    elif field in control_params_fields:
+    if field in control_params_fields:
         path = "/home/pi/oasis-grow/configs/control_params.json"
-
-    if os.path.exists(path) == False:
-        return
+    if field in hardware_config_fields:
+        path = "/home/pi/oasis-grow/configs/hardware_config.json"
+    if field in sensor_info_fields:
+        path = "/home/pi/oasis-grow/configs/sensor_info.json"
 
     #open data config file
     #edit appropriate spot
-    #print(path)
-    cs.write_state(path, field, new_data, db_writer = None)
+    if path is not None:
+        print(path)
+        cs.write_state(path, field, new_data, db_writer = None) #will be interesting to see if this can update a nested dict
 
 def stream_handler(m):
     #some kind of update
     #might be from start up or might be user changed it
-    if m['event']=='put' or m['event']=='patch':
+    if m['event']=='put' or m['event']=='patch' or m['event']=='post':
         print(m)
         path = m['path']
         key = path[1:len(path)]
