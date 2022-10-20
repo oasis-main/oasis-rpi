@@ -15,6 +15,15 @@
                     "awb_red": "0.8",
                     "awb_blue": "1.5"
                     },
+"sensor_calibration":{
+                    "temperature_offset": "0",
+                    "humidity_offset": "0",
+                    "co2_offset": "0", 
+                    "lux_offset": "0",
+                    "ph_offset": "0",
+                    "substrate_moisture_offset": "0",
+                    "tds_offset": "0"
+                    },
 "equipment_gpio_map": {
                    "heat_relay": "14",
                    "humidifier_relay": "15",
@@ -25,6 +34,7 @@
                    "dehumidifier_relay": "8"
                    },
 "equipment_wattage": {
+                    "cpus": "0",
                     "heater": "0",
                     "humidifier": "0",
                     "fan": "0",

@@ -99,51 +99,51 @@ def listen_active_sensors(): #Depends on 'serial', start_serial()
 def get_temperature():
     global temperature, last_temperature #all PID enabled environmental variables must have historical values
     last_temperature = temperature
-    temperature = float(sensor_data["temperature"]) + float(cs.structs["sensor_info"]["temperature_calibration"])
-    cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "temperature", str(temperature), db_writer = None)      
+    temperature = float(sensor_data["temperature"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["temperature_offset"])
+    cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "temperature", str(temperature), db_writer = None)      
 
 def get_humidity():
     global humidity, last_humidity
     last_humidity = humidity
-    humidity = float(sensor_data["humidity"]) + float(cs.structs["sensor_info"]["humidity_calibration"])
-    cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "humidity", str(humidity), db_writer = None)
+    humidity = float(sensor_data["humidity"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["humidity_offset"])
+    cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "humidity", str(humidity), db_writer = None)
 
 def get_co2():
     global co2, last_co2
     last_co2 = co2
-    co2 = float(sensor_data["co2"]) + float(cs.structs["sensor_info"]["co2_calibration"])
-    cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "co2", str(co2), db_writer = None)
+    co2 = float(sensor_data["co2"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["co2_offset"])
+    cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "co2", str(co2), db_writer = None)
 
 def get_substrate_moisture():
     global substrate_moisture, last_substrate_moisture
     last_substrate_moisture = substrate_moisture
-    substrate_moisture = float(sensor_data["substrate_moisture"]) + float(cs.structs["sensor_info"]["substrate_moisture_calibration"])
-    cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "substrate_moisture", str(substrate_moisture), db_writer = None)
+    substrate_moisture = float(sensor_data["substrate_moisture"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["substrate_moisture_offset"])
+    cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "substrate_moisture", str(substrate_moisture), db_writer = None)
 
 def get_lux():
     global lux
-    lux = float(sensor_data["lux"]) + float(cs.structs["sensor_info"]["lux_calibration"])
-    cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "lux", str(lux), db_writer = None)
+    lux = float(sensor_data["lux"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["lux_offset"])
+    cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "lux", str(lux), db_writer = None)
 
 def get_ph():
     global ph
-    ph = float(sensor_data["ph"]) + float(cs.structs["sensor_info"]["ph_calibration"])
-    cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "ph", str(ph), db_writer = None)
+    ph = float(sensor_data["ph"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["ph_offset"])
+    cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "ph", str(ph), db_writer = None)
 
 def get_tds():
     global tds
-    tds = float(sensor_data["tds"]) + float(cs.structs["sensor_info"]["tds_calibration"])
-    cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "tds", str(tds), db_writer = None)
+    tds = float(sensor_data["tds"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["tds_offset"])
+    cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "tds", str(tds), db_writer = None)
 
 def get_vpd():
     global vpd
     vpd = physics.vpd(temperature, humidity)
-    cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "vpd", str(vpd), db_writer = None)
+    cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "vpd", str(vpd), db_writer = None)
 
 def get_water_level():
     global water_low
     water_low = int(sensor_data["water_low"])
-    cs.write_state("/home/pi/oasis-grow/configs/sensor_info.json", "water_low", str(water_low), db_writer = None)
+    cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "water_low", str(water_low), db_writer = None)
 
 def collect_environmental_data():
     if cs.structs["feature_toggles"]["temperature_sensor"] == "1":
@@ -531,7 +531,7 @@ def data_out():
 
         try:
             cs.load_state()
-            payload = cs.structs["sensor_info"]
+            payload = cs.structs["sensor_data"]
             timestamp = {"time": str(datetime.datetime.now())}
             payload.update(timestamp)
 

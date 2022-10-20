@@ -20,8 +20,8 @@ def reset_control_params():
     reset_p = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/defaults/control_params_default_template.json", "/home/pi/oasis-grow/configs/control_params.json"])
     reset_p.wait()
     
-def reset_sensor_info():
-    reset_s = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/defaults/sensor_info_default_template.json", "/home/pi/oasis-grow/configs/sensor_info.json"])
+def reset_sensor_data():
+    reset_s = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/defaults/sensor_data_default_template.json", "/home/pi/oasis-grow/configs/sensor_data.json"])
     reset_s.wait()
 
 def reset_access_config():
@@ -56,7 +56,7 @@ def reset_locks():
 def reset_nonhw_configs():
     reset_device_state()
     reset_control_params()
-    reset_sensor_info()
+    reset_sensor_data()
     reset_access_config()
 
 def reset_data_out():
@@ -89,7 +89,7 @@ def reset_all():
     reset_hardware_config()
     reset_feature_toggles()
     reset_data_out()
-    reset_sensor_info()
+    reset_sensor_data()
     reset_image_feed()
 
 if __name__ == '__main__':

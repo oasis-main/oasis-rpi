@@ -21,7 +21,7 @@ from utils import error_handler as err
 #control_params #describes the grow configuration of the system
 
 #...cloud-touching
-#sensor_info #tells the system which features are in use (data only goes out)
+#sensor_data #tells the system which features are in use (data only goes out)
 #feature_toggles #tells the system which features are in use (data comes in, but in a manually activated flow)
 
 #...locally-kept
@@ -30,7 +30,7 @@ from utils import error_handler as err
 
 structs = {"device_state": {}, 
 "control_params": {}, 
-"sensor_info": {}, 
+"sensor_data": {}, 
 "access_config" : {}, 
 "hardware_config": {}, 
 "feature_toggles": {}}

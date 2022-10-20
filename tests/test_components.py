@@ -52,7 +52,7 @@ def test_listen():
     print("Testing listener...")
     core.smart_listener()
     print("Listening for data from Arduino")
-    print(str(core.sensor_info))
+    print(str(core.sensor_data))
 
 def test_save_csv():
     print("Testing csv writer...")

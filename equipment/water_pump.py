@@ -1,5 +1,5 @@
 #---------------------------------------------------------------------------------------
-# I/O for controlling a watering pump
+# Hardware for controlling a watering pump
 #---------------------------------------------------------------------------------------
 #import OS modules
 import sys

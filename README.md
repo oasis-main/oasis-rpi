@@ -140,7 +140,7 @@ For example:
 "tds": "0"}
 '''
 
-is a valid data format for the arduino to output. It can alo take a command from the RPi to control Neopixel LEDs as the headless status indicator. All valid measurement types can be found in the "sensor_info.json" file that was created in the "configs" folder on install.
+is a valid data format for the arduino to output. It can alo take a command from the RPi to control Neopixel LEDs as the headless status indicator. All valid measurement types can be found in the "sensor_data.json" file that was created in the "configs" folder on install.
 
 You can configure all of this yourself, or follow these instructions and use one of our example programs in the 'minions' folder.
 1. Download the Arduino IDE (on your personal computer) from the [official download site](www.arduino.cc/en/software).
