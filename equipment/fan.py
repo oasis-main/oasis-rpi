@@ -19,7 +19,7 @@ cs.check_lock(resource_name)
 
 #setup GPIO
 cs.load_state()
-fan_GPIO = int(cs.structs["hardware_config"]["equipment_gpio_map"]["fan_relay"]) #heater pin pulls from config file
+fan_GPIO = int(cs.structs["hardware_config"]["equipment_gpio_map"]["fan_relay"]) #fan pin pulls from config file
 pin = rusty_pins.GpioOut(fan_GPIO)
 
 def clean_up(*args):
@@ -34,10 +34,10 @@ if __name__ == '__main__':
         while True:
             if cs.structs["feature_toggles"]["fan_pid"] == "1":
                 print("Ventilating in pulse mode with " + cs.structs["control_params"]["fan_pid"] + "%" + " power...")
-                relays.actuate_slow_pwm(pin, float(cs.structs["control_params"]["fan_pid"])) #trigger appropriate response
+                relays.actuate_slow_pwm(pin, float(cs.structs["control_params"]["fan_pid"]), wattage=cs.structs["hardware_config"]["equipment_wattage"]["fan"], log="fan_kwh") #trigger appropriate response
             else:
                 print("Fans on for " + cs.structs["control_params"]["fan_duration"] + " minute(s), off for " + cs.structs["control_params"]["fan_interval"] + " minute(s)...")
-                relays.actuate_interval_sleep(pin, float(cs.structs["control_params"]["fan_duration"]), float(cs.structs["control_params"]["fan_interval"]), duration_units= "minutes", sleep_units="minutes")
+                relays.actuate_interval_sleep(pin, float(cs.structs["control_params"]["fan_duration"]), float(cs.structs["control_params"]["fan_interval"]), duration_units= "minutes", sleep_units="minutes", wattage=cs.structs["hardware_config"]["equipment_wattage"]["fan"], log="fan_kwh")
    
             cs.load_state()
     except KeyboardInterrupt:

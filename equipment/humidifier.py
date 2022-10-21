@@ -33,10 +33,10 @@ if __name__ == '__main__':
         while True:
             if cs.structs["feature_toggles"]["hum_pid"] == "1":
                 print("Running humidifier in pulse mode with " + cs.structs["control_params"]["hum_feedback"] + "%" + " power...")
-                relays.actuate_slow_pwm(pin, float(cs.structs["control_params"]["hum_feedback"])) #trigger appropriate response
+                relays.actuate_slow_pwm(pin, float(cs.structs["control_params"]["hum_feedback"]), wattage=cs.structs["hardware_config"]["equipment_wattage"]["humidifier"], log="humidifier_kwh") #trigger appropriate response
             else:
                 print("Running humidifier for " + cs.structs["control_params"]["humidifier_duration"] + " minute(s) on, " + cs.structs["control_params"]["humidifier_interval"] + " minute(s) off...")
-                relays.actuate_interval_sleep(pin, float(cs.structs["control_params"]["humidifier_duration"]), float(cs.structs["control_params"]["humidifier_interval"]), duration_units= "minutes", sleep_units="minutes")
+                relays.actuate_interval_sleep(pin, float(cs.structs["control_params"]["humidifier_duration"]), float(cs.structs["control_params"]["humidifier_interval"]), duration_units= "minutes", sleep_units="minutes", wattage=cs.structs["hardware_config"]["equipment_wattage"]["humidifier"], log="humidifier_kwh")
     
             cs.load_state()
     except KeyboardInterrupt:

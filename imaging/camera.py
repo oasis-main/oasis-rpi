@@ -59,7 +59,7 @@ def clean_up(*args):
     sys.exit()
 
 #define a function to actuate element
-def actuate(interval, nosleep = False): #amount of time between shots in minutes
+def actuate(interval: int, nosleep = False): #interval is amount of time between shots in minutes, nosleep skips the wait
     cs.load_state()
 
     exit_status = take_picture('/home/pi/oasis-grow/data_out/image.jpg')
@@ -79,7 +79,7 @@ def actuate(interval, nosleep = False): #amount of time between shots in minutes
         if nosleep == True:
             return
         else:
-            time.sleep(float(interval)*60) #once the physical resource itself is done being used, we can free it
+            time.sleep(interval*60) #once the physical resource itself is done being used, we can free it
                                         #not a big deal if someone actuates again while the main spawn is waiting
                                         #so long as they aren't doing so with malicious intent (would need DB or root access, make sure to turn off SSH or change your password)
     else:
@@ -94,7 +94,7 @@ if __name__ == '__main__':
     
     try:    
         while True:
-            actuate(str(sys.argv[1]))
+            actuate(int(cs.structs["hardware_config"]["camera_settings"]["picture_frequency"]))
     except KeyboardInterrupt:
         print("Camera was interrupted.")
     except TypeError:

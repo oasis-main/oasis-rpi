@@ -40,11 +40,10 @@
 
 "time_start_light": "8", 
 "time_stop_light": "20", 
+"lighting_interval": "20", 
 
 "time_start_air": "8", 
 "time_stop_air": "20", 
-
-"lighting_interval": "20",  
 "air_interval": "20",
 
 "heat_feedback": "0",

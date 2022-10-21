@@ -19,7 +19,7 @@ cs.check_lock(resource_name)
 
 #setup GPIO
 cs.load_state()
-air_GPIO = int(cs.structs["hardware_config"]["equipment_gpio_map"]["air_relay"]) #heater pin pulls from config file
+air_GPIO = int(cs.structs["hardware_config"]["equipment_gpio_map"]["air_relay"]) #air pump pin pulls from config file
 pin = rusty_pins.GpioOut(air_GPIO)
 
 def clean_up(*args):
@@ -28,17 +28,13 @@ def clean_up(*args):
     relays.turn_off(pin)
     sys.exit()
 
-''' This is the old calling code:
-        air_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/air_pump.py', cs.structs["control_params"]["time_start_air"], cs.structs["control_params"]["time_stop_air"], cs.structs["control_params"]["air_interval"]]
-'''
-
 if __name__ == '__main__':
     
     signal.signal(signal.SIGTERM,clean_up)
     try:
         while True:
-            print("Turning air pump on at " + sys.argv[1] + ":00 and off at " + sys.argv[2] + ":00, refreshing every " + sys.argv[3] + " minutes...")
-            relays.actuate_time_hod(pin, int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), interval_units = "minutes")
+            print("Turning air pump on at " + cs.structs["control_params"]["time_start_air"] + ":00 and off at " + cs.structs["control_params"]["time_stop_air"] + ":00, refreshing every " + cs.structs["control_params"]["air_interval"] + " minutes...")
+            relays.actuate_time_hod(pin, int(cs.structs["control_params"]["time_start_air"]), int(cs.structs["control_params"]["time_stop_air"]), int(cs.structs["control_params"]["air_interval"]), interval_units = "minutes", wattage=cs.structs["hardware_config"]["equipment_wattage"]["air_pump"], log="air_pump_kwh")
     except KeyboardInterrupt:
         print("Air pump was interrupted")
     except Exception:

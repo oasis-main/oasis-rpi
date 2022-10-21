@@ -34,10 +34,10 @@ if __name__ == '__main__':
         while True:
             if cs.structs["feature_toggles"]["heat_pid"] == "1":
                 print("Heating in pulse mode with " + cs.structs["control_params"]["heat_feedback"] + "%" + " power...")
-                relays.actuate_slow_pwm(pin, float(cs.structs["control_params"]["heat_feedback"])) #trigger appropriate response
+                relays.actuate_slow_pwm(pin, float(cs.structs["control_params"]["heat_feedback"]), wattage=cs.structs["hardware_config"]["equipment_wattage"]["heater"], log="heater_kwh") #trigger appropriate response
             else:
                 print("Heater on for " + cs.structs["control_params"]["heater_duration"] + " minute(s), off for " + cs.structs["control_params"]["heater_interval"] + " minute(s)...")
-                relays.actuate_interval_sleep(pin, float(cs.structs["control_params"]["heater_duration"]), float(cs.structs["control_params"]["heater_interval"]), duration_units= "minutes", sleep_units="minutes")
+                relays.actuate_interval_sleep(pin, float(cs.structs["control_params"]["heater_duration"]), float(cs.structs["control_params"]["heater_interval"]), duration_units= "minutes", sleep_units="minutes", wattage=cs.structs["hardware_config"]["equipment_wattage"]["heater"], log="heater_kwh")
    
             cs.load_state()
     except KeyboardInterrupt:

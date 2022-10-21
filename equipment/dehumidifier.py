@@ -18,7 +18,7 @@ cs.check_lock(resource_name)
 
 #get hardware config
 cs.load_state()
-dehum_GPIO = int(cs.structs["hardware_config"]["equipment_gpio_map"]["dehumidifier_relay"]) #heater pin pulls from config file
+dehum_GPIO = int(cs.structs["hardware_config"]["equipment_gpio_map"]["dehumidifier_relay"]) #dehumidifier pin pulls from config file
 pin = rusty_pins.GpioOut(dehum_GPIO)
 
 def clean_up(*args):
@@ -33,10 +33,10 @@ if __name__ == '__main__':
         while True:
             if cs.structs["feature_toggles"]["dehum_pid"] == "1":
                 print("Running dehumidifier in pulse mode with " + cs.structs["control_params"]["dehum_feedback"] + "%" + " power...")
-                relays.actuate_slow_pwm(pin, float(cs.structs["control_params"]["dehum_feedback"])) #trigger appropriate response
+                relays.actuate_slow_pwm(pin, float(cs.structs["control_params"]["dehum_feedback"]), wattage=cs.structs["hardware_config"]["equipment_wattage"]["dehumidifier"], log="dehumidifier_kwh") #trigger appropriate response
             else:
                 print("Running dehumidifier for " + sys.argv[1] + " minute(s) on, " + sys.argv[2] + " minute(s) off...")
-                relays.actuate_interval_sleep(pin, float(cs.structs["control_params"]["dehumidifier_duration"]), float(cs.structs["control_params"]["dehumidifier_interval"]), duration_units= "minutes", sleep_units="minutes")
+                relays.actuate_interval_sleep(pin, float(cs.structs["control_params"]["dehumidifier_duration"]), float(cs.structs["control_params"]["dehumidifier_interval"]), duration_units= "minutes", sleep_units="minutes", wattage=cs.structs["hardware_config"]["equipment_wattage"]["dehumidifier"], log="dehumidifier_kwh")
     
             cs.load_state()
     except KeyboardInterrupt:
