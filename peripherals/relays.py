@@ -8,8 +8,19 @@ import datetime
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
 
+from utils import concurrent_state as cs
+from utils import error_handler as err
+from utils import physics
+
 #import rusty_pins and initialize GPIO pin from calling process
 #pass in the rust pin object for scoping & resource management
+
+wattage = 10
+time_active = 10
+log = "heat_kwh"
+
+time.sleep(time_active)
+cs.write_state("/home/pi/oasis-grow/configs/power_data.json", log, str(physics.kwh(wattage,time_active)))
 
 def turn_on(output, switch_mode = "momentary", normal_state = "open", pulse_width = 1):
     if switch_mode == "momentary":
@@ -33,7 +44,7 @@ def turn_off(output, switch_mode = "momentary", normal_state = "open", pulse_wid
         time.sleep(pulse_width)
         output.set_low()
 
-def actuate_time_hod(output, time_on = 0, time_off = 0, interval = 20, interval_units = "minutes"): #updates every 20 minutes by default 
+def actuate_time_hod(output, time_on = 0, time_off = 0, interval = 1, interval_units = "minutes", wattage = "0", log = None): #updates every 20 minutes by default 
     try:
         if interval_units == "seconds":
             time_active = interval
@@ -42,7 +53,9 @@ def actuate_time_hod(output, time_on = 0, time_off = 0, interval = 20, interval_
         if interval_units == "hours":
             time_active = interval*60**2
         if interval_units == "days":
-            time_active = interval*24*60**2
+            time_active = interval*24*60**2 #everything must be passed to sleep in seconds, thats why we convert it
+        
+        time_inactive = time_active #we make a time_inactive variable just for clarity-sake when calling time.sleep after pin i/o
 
         now = datetime.datetime.now()
         HoD = now.hour
@@ -50,26 +63,32 @@ def actuate_time_hod(output, time_on = 0, time_off = 0, interval = 20, interval_
         if time_on < time_off:
             if HoD >= time_on and HoD < time_off:
                 turn_on(output) #light on (relay closed)
-                time.sleep(float(time_active))
+                time.sleep(time_active)
+                if log is not None:
+                    cs.write_state("/home/pi/oasis-grow/configs/power_data.json", log, str(physics.kwh(wattage,time_active)))
             if HoD < time_on or HoD >= time_off:
                 turn_off(output)
-                time.sleep(float(time_active))
+                time.sleep(time_inactive)
         if time_on > time_off:
             if HoD >=  time_on or HoD < time_off:
                 turn_on(output) #light on (relay closed)
-                time.sleep(float(time_active))
+                time.sleep(time_active)
+                if log is not None:
+                    cs.write_state("/home/pi/oasis-grow/configs/power_data.json", log, str(physics.kwh(wattage,time_active)))
             if HoD < time_on and  HoD >= time_off:
                 turn_off(output) #light on (relay closed)
-                time.sleep(float(time_active))
+                time.sleep(time_inactive)
         if time_on == time_off:
             turn_on(output)
-            time.sleep(float(interval)*60)
+            time.sleep(time_active)
+            if log is not None:
+                cs.write_state("/home/pi/oasis-grow/configs/power_data.json", log, str(physics.kwh(wattage,time_active)))
     except KeyboardInterrupt:
         print("You terminated the program while a relay was in use. Cleaning up...")
-    finally:
-        turn_off(output)
+    except Exception:
+        print(err.full_stack())
 
-def actuate_interval_sleep(output, duration = 15, sleep = 45, duration_units = "seconds", sleep_units = "seconds"):
+def actuate_interval_sleep(output, duration = 15, sleep = 45, duration_units = "seconds", sleep_units = "seconds", wattage = "0", log = None):
     try:
         if duration_units == "seconds":
             time_active = duration
@@ -90,92 +109,45 @@ def actuate_interval_sleep(output, duration = 15, sleep = 45, duration_units = "
             time_sleep = sleep * 24 * 60 ** 2
 
         turn_on(output)
-        time.sleep(float(time_active)) #set seconds to minutes
+        time.sleep(time_active) #set seconds to minutes
+        if log is not None:
+                cs.write_state("/home/pi/oasis-grow/configs/power_data.json", log, str(physics.kwh(wattage,time_active)))
+        
         turn_off(output)
-        time.sleep(float(time_sleep))
+        time.sleep(time_sleep)
     except KeyboardInterrupt:
         print("You terminated the program while a relay was in use. Cleaning up...")
-    finally:
-        turn_off(output)
+    except Exception:
+        print(err.full_stack())
 
-def actuate_slow_pwm(output, intensity: int, pulse_domain = 10.0):
+def actuate_slow_pwm(output, intensity: int, pulse_domain = 10.0, wattage = "0", log = None):
     try:
+        
+        time_active = intensity/100 * pulse_domain #the intensity is a no. between 0-100, representing % power
+        time_off = pulse_domain - time_active #so the device time spent on is %power * pulse domain (secs), off is domain -on  
+
         if (intensity >= 0) and (intensity < 1):
-            #print("level 0")
             turn_off(output) #off
-            time.sleep(pulse_domain)
+            time.sleep(time_off)
 
-        if (intensity >= 1) and (intensity < 10):
-            #print("level 1")
+        if (intensity >= 1) and (intensity < 99):
             turn_on(output)
-            time.sleep(pulse_domain*(.1)) #on
+            time.sleep(time_active) #on
+            if log is not None:
+                cs.write_state("/home/pi/oasis-grow/configs/power_data.json", log, str(physics.kwh(wattage,time_active)))
             turn_off(output)
-            time.sleep(pulse_domain*(.9)) #off
+            time.sleep(time_off) #off
 
-        if (intensity >= 10) and (intensity < 20):
-            #print("level 2")
+        if (intensity > 99) and (intensity <= 100):
             turn_on(output)
-            time.sleep(pulse_domain*(.2)) #on
-            turn_off(output)
-            time.sleep(pulse_domain*(.8)) #off
+            time.sleep(time_active) #on
+            if log is not None:
+                cs.write_state("/home/pi/oasis-grow/configs/power_data.json", log, str(physics.kwh(wattage,time_active)))
 
-        if (intensity >= 20) and (intensity < 30):
-            #print("level 3")
-            turn_on(output)
-            time.sleep(pulse_domain*(.3)) #on
-            turn_off(output)
-            time.sleep(pulse_domain*(.7)) #off
-
-        if (intensity >= 30) and (intensity < 40):
-            #print("level 4")
-            turn_on(output)
-            time.sleep(pulse_domain*(.4)) #on
-            turn_off(output)
-            time.sleep(pulse_domain*(.6)) #off
-
-        if (intensity >= 40) and (intensity < 50):
-            #print("level 5")
-            turn_on(output)
-            time.sleep(pulse_domain*(.5)) #on
-            turn_off(output)
-            time.sleep(pulse_domain*(.5)) #off
-
-        if (intensity >= 50) and (intensity < 60):
-            #print("level 6")
-            turn_on(output)
-            time.sleep(pulse_domain*(.6)) #on
-            turn_off(output)
-            time.sleep(pulse_domain*(.4)) #off
-
-        if (intensity >= 60) and (intensity < 70):
-            #print("level 7")
-            turn_on(output)
-            time.sleep(pulse_domain*(.7)) #on
-            turn_off(output)
-            time.sleep(pulse_domain*(.3)) #off
-
-        if (intensity >= 70) and (intensity < 80):
-            #print("level 8")
-            turn_on(output)
-            time.sleep(pulse_domain*(.8)) #on
-            turn_off(output)
-            time.sleep(pulse_domain*(.2)) #off
-
-        if (intensity >= 80) and (intensity < 90):
-            #print("level 9")
-            turn_on(output)
-            time.sleep(pulse_domain*(.9)) #on
-            turn_off(output)
-            time.sleep(pulse_domain*(.1)) #off
-
-        if (intensity >= 90) and (intensity <= 100):
-            #print("level 10")
-            turn_on(output)
-            time.sleep(pulse_domain) #on
     except KeyboardInterrupt:
         print("You terminated the program while a relay was in use. Cleaning up...")
-    finally:
-        turn_off(output)
+    except Exception:
+        print(err.full_stack()) 
 
 if __name__ == "__main__":
     print("This is a unit test for relays physical I/O.")

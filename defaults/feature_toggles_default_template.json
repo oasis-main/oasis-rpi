@@ -17,6 +17,7 @@
 
 "save_images": "1",
 "save_data": "1",
+"save_power": "1",
 
 "heater": "1",
 "humidifier": "1",

@@ -34,7 +34,7 @@
                    "dehumidifier_relay": "8"
                    },
 "equipment_wattage": {
-                    "cpus": "0",
+                    "boards": "0",
                     "heater": "0",
                     "humidifier": "0",
                     "fan": "0",

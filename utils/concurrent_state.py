@@ -28,21 +28,24 @@ from utils import error_handler as err
 #...cloud-synced:
 #device_state #describes the current state of the system
 #control_params #describes the grow configuration of the system
-
+#hardware_config #nexted structs for pins config and hw variables   IMPORTANT: ALL WRITES MUST BE NESTED  
+                                                                    #Use cs.write_nested_state() etc. for hw updates
 #...cloud-touching
 #sensor_data #tells the system which features are in use (data only goes out)
+#power_data #holds the energy consumption over some time for various processes in kwh 
 #feature_toggles #tells the system which features are in use (data comes in, but in a manually activated flow)
 
 #...locally-kept
 #access_config #contains credentials for connecting to firebase
-#hardware_config #holds hardware I/O setting & pin
 
-structs = {"device_state": {}, 
-"control_params": {}, 
-"sensor_data": {}, 
+
+structs = {"device_state": {}, #any struct holding share state
+"control_params": {},          #must be declared here, as this is where 
+"sensor_data": {},             #the state machine gets its 
 "access_config" : {}, 
 "hardware_config": {}, 
-"feature_toggles": {}}
+"feature_toggles": {},
+"power_data": {},}
 
 #declare state locking varibles
 locks = {}
@@ -295,6 +298,12 @@ def write_dict(path, dictionary, db_writer = None, loop_limit=2500): #Depends on
                 #print(err.full_stack())
                 print(path + " write failed, trying again. If this persists, file is corrupted.")
                 pass #continue the loop until write is successful or ceiling is hit
+
+def write_nested_state(path, group, field, value, db_writer = None, loop_limit=2500): #listener needs this for patching hardware config
+    pass
+
+def write_nested_dict(path, group, dictionary, db_writer = None, loop_limit=2500): #may even come in handy locally, you never know
+    pass
 
 #Higher-order device_state checker with reaction and alternative, no params
 def check_state(state, function, alt_function = None):# = None, args = None, kwargs = None, alt_args = None, alt_kwargs = None):

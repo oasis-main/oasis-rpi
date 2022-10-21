@@ -17,8 +17,8 @@ def reset_device_state():
     reset_d.wait()
 
 def reset_control_params():
-    reset_p = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/defaults/control_params_default_template.json", "/home/pi/oasis-grow/configs/control_params.json"])
-    reset_p.wait()
+    reset_c = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/defaults/control_params_default_template.json", "/home/pi/oasis-grow/configs/control_params.json"])
+    reset_c.wait()
     
 def reset_sensor_data():
     reset_s = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/defaults/sensor_data_default_template.json", "/home/pi/oasis-grow/configs/sensor_data.json"])
@@ -35,6 +35,10 @@ def reset_hardware_config():
 def reset_feature_toggles():
     reset_f = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/defaults/feature_toggles_default_template.json", "/home/pi/oasis-grow/configs/feature_toggles.json"])
     reset_f.wait()
+
+def reset_power_data():
+    reset_p = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/defaults/power_data_default_template.json", "/home/pi/oasis-grow/configs/power_data.json"])
+    reset_p.wait()
 
 #new generic function for working on arbitrary structs with defaults
 def reset_config_path(path: str):
@@ -90,6 +94,7 @@ def reset_all():
     reset_feature_toggles()
     reset_data_out()
     reset_sensor_data()
+    reset_power_data()
     reset_image_feed()
 
 if __name__ == '__main__':

@@ -5,10 +5,12 @@ mkdir /home/pi/oasis-grow/configs
 mkdir /home/pi/oasis-grow/data_out
 mkdir /home/pi/oasis-grow/data_out/image_feed
 mkdir /home/pi/oasis-grow/data_out/sensor_feed
+mkdir /home/pi/oasis-grow/data_out/energy_use
 mkdir /home/pi/oasis-grow/data_out/logs
 
 chmod 777 /home/pi/oasis-grow/data_out/image_feed
 chmod 777 /home/pi/oasis-grow/data_out/sensor_feed
+chmod 777 /home/pi/oasis-grow/data_out/energy_use
 chmod 777 /home/pi/oasis-grow/data_out/logs
 
 echo "Moving configuration files..."
@@ -18,6 +20,7 @@ cp /home/pi/oasis-grow/defaults/feature_toggles_default_template.json /home/pi/o
 cp /home/pi/oasis-grow/defaults/device_state_default_template.json /home/pi/oasis-grow/configs/device_state.json
 cp /home/pi/oasis-grow/defaults/control_params_default_template.json /home/pi/oasis-grow/configs/control_params.json
 cp /home/pi/oasis-grow/defaults/sensor_data_default_template.json /home/pi/oasis-grow/configs/sensor_data.json
+cp /home/pi/oasis-grow/defaults/power_data_default_template.json /home/pi/oasis-grow/configs/power_data.json
 
 #Rust will create lockfiles and entries automatically when called
 #Should still leave this so Python can access a default set of values. 

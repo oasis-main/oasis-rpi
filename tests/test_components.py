@@ -60,7 +60,7 @@ def test_save_csv():
     temperature = str(70)
     humidity = str(50)
     water_low = str(0)
-    core.write_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv', {"time": tod, "temperature": temperature, "humidity": humidity, "water_low": water_low})
+    core.write_sensor_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv', {"time": tod, "temperature": temperature, "humidity": humidity, "water_low": water_low})
     reset_model.reset_data_out()
     print("wrote data to csv")
 

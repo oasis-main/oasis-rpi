@@ -25,6 +25,7 @@ from networking import wifi
 from peripherals import buttons
 from peripherals import relays
 from peripherals import microcontroller_manager as minion
+from utils import physics
 
 #housekeeping
 from utils import reset_model
@@ -210,6 +211,21 @@ def update_minion_led(): #Depends on: cs.load_state(), 'datetime'; Modifies: ser
         #print("no serial connection, cannot update LED view")
         pass
 
+def update_power_tracking():
+    cs.write_state("/home/pi/oasis-grow/configs/power_data.json","boards_kwh", physics.kwh(cs.structs["hardware_config.json"]["equipment_wattage"]["boards"], 3600))
+    dbt.patch_firebase_dict(cs.structs["access_config"], cs.structs["power_data"])
+    
+    if cs.structs["feature_toggles"]["save_power"] == "1": #should mimic how the core handles sensor data
+        payload = cs.structs["power_data"]
+        timestamp = {"time": str(datetime.datetime.now())} #add a timestamp
+        payload.update(timestamp)
+        firebase_manager.write_power_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv',payload)
+
+    reset_dict = {} #clear the power data over last hour, save to state
+    for key in cs.structs["power_data"]:
+        reset_dict.update({key: "0"})
+    cs.write_dict("/home/pi/oasis-grow/configs/power_data.json",reset_dict)
+
 #Executes update if connected & idle, waits for completion
 def get_updates(): #depends on: cs.load_state(),'subproceess', update.py; modifies: system code, state variables
     print("Fetching over-the-air updates")
@@ -267,10 +283,11 @@ def main_setup():
     #start the clock for  refresh
     led_timer = time.time()
     connect_timer = time.time()
+    power_timer = time.time()
 
-    return led_timer, connect_timer
+    return led_timer, connect_timer, power_timer
 
-def main_loop(led_timer, connect_timer):
+def main_loop(led_timer, connect_timer, power_timer):
     
     try:
         while True:
@@ -315,17 +332,22 @@ def main_loop(led_timer, connect_timer):
                     if cs.structs["feature_toggles"]["action_camera"] == "1":
                         say_cheese = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/imaging/camera.py', "0"])
                         say_cheese.wait()
+            
             if time.time() - led_timer > 5: #send data to LED every 5s
                 update_minion_led()
-                led_timer = time.time()
+                led_timer = time.time() #reset the timer
+
+            if time.time() - power_timer > 3600: #send last hour power data to firebase
+                update_power_tracking()
+                power_timer = time.time() #reset the timer
             
             time.sleep(0.25)
 
     except(KeyboardInterrupt):
         print("   <----- Exiting program...")
+        stop_core()
         time.sleep(5)
         reset_model.reset_device_state() #This is for testing purposes, to keep behavior the same between debugs
-        stop_core()
 
     except Exception as e:
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "error", db_writer = dbt.patch_firebase)
@@ -336,5 +358,5 @@ def main_loop(led_timer, connect_timer):
         stop_listener()
         
 if __name__ == '__main__':
-    led_timer, connect_timer = main_setup()
-    main_loop(led_timer, connect_timer)
+    led_timer, connect_timer, power_timer = main_setup()
+    main_loop(led_timer, connect_timer, power_timer)

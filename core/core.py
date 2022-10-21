@@ -538,7 +538,7 @@ def data_out():
             if cs.structs["feature_toggles"]["save_data"] == "1":
                 #save data to .csv
                 print("Writing to csv")
-                fb.write_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv', payload)
+                fb.write_sensor_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv', payload)
 
                 if cs.structs["device_state"]["connected"] == "1":
                     #write data to disk and exchange with cloud if connected

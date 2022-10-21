@@ -18,3 +18,9 @@ def vpd(temp: float, hum: float): #Temp in F, Hum in %
     vpd = vpd_pa / 1000 #convert vpd to kilopascals
 
     return vpd
+
+def kwh(wattage: float, time_active): #time_active is an int or float, representing seconds
+    
+    kwh_used = (wattage/1000)*(time_active/3600)
+    
+    return kwh_used

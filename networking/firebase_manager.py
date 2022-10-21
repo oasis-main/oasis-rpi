@@ -56,7 +56,7 @@ def delete_device():
     systemctl_reboot.wait()
 
 #write some data to a .csv, takes a dictionary and a path
-def write_csv(filename, dict): #Depends on: "os" "csv"
+def write_sensor_csv(filename, dict): #Depends on: "os" "csv"
     file_exists = os.path.isfile(filename)
 
     with open (filename, 'a') as csvfile:
@@ -84,6 +84,47 @@ def write_csv(filename, dict): #Depends on: "os" "csv"
         writer = csv.DictWriter(csvfile, delimiter=',', lineterminator='\n',fieldnames=headers)
 
         if not file_exists:
+            writer.writeheader()  # file doesn't exist yet, write a header
+
+        variables = {}
+
+        for variable in dict.keys():
+            if variable in headers:
+                variables[variable] = dict[variable]
+
+        writer.writerow(variables)
+
+        writer = None
+
+    return
+
+#write some data to a .csv, takes a dictionary and a path
+def write_power_csv(filename, dict): #Depends on: "os" "csv"
+    file_exists = os.path.isfile(filename)
+
+    with open (filename, 'a') as csvfile:
+        headers = ["time"]
+        
+        headers.append["boards_kwh"]
+
+        if cs.structs["feature_toggles"]["heater"] == "1":
+            headers.append("heater_kwh")
+        if cs.structs["feature_toggles"]["humidifier"] == "1":
+            headers.append("humidifier_kwh")
+        if cs.structs["feature_toggles"]["dehumidifier"] == "1":
+            headers.append("dehumidifier_kwh")
+        if cs.structs["feature_toggles"]["fan"] == "1":
+            headers.append("fan_kwh")
+        if cs.structs["feature_toggles"]["light"] == "1":
+            headers.append("lights_kwh")
+        if cs.structs["feature_toggles"]["water"] == "1":
+            headers.append("water_pump_kwh")
+        if cs.structs["feature_toggles"]["air"] == "1":
+            headers.append("air_pump_kwh")
+
+        writer = csv.DictWriter(csvfile, delimiter=',', lineterminator='\n',fieldnames=headers)
+
+        if not file_exists: 
             writer.writeheader()  # file doesn't exist yet, write a header
 
         variables = {}

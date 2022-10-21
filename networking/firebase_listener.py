@@ -34,11 +34,6 @@ def act_on_event(field, new_data):
     device_state_fields = list(cs.structs["device_state"].keys())
     control_params_fields = list(cs.structs["control_params"].keys())
     hardware_config_fields = list(cs.structs["hardware_config"].keys())
-    sensor_data_fields = list(cs.structs["sensor_data"].keys())
-
-    for field in sensor_data_fields:
-        if field[-12:] != "_calibration":
-            sensor_data_fields = sensor_data_fields.remove(field)
 
     path = None
 
@@ -48,8 +43,6 @@ def act_on_event(field, new_data):
         path = "/home/pi/oasis-grow/configs/control_params.json"
     if field in hardware_config_fields:
         path = "/home/pi/oasis-grow/configs/hardware_config.json"
-    if field in sensor_data_fields:
-        path = "/home/pi/oasis-grow/configs/sensor_data.json"
 
     #open data config file
     #edit appropriate spot
