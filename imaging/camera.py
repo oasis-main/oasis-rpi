@@ -94,6 +94,7 @@ if __name__ == '__main__':
     
     try:    
         while True:
+            cs.load_state()
             actuate(int(cs.structs["hardware_config"]["camera_settings"]["picture_frequency"]))
     except KeyboardInterrupt:
         print("Camera was interrupted.")

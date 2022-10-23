@@ -212,7 +212,7 @@ def update_minion_led(): #Depends on: cs.load_state(), 'datetime'; Modifies: ser
         pass
 
 def update_power_tracking():
-    cs.write_state("/home/pi/oasis-grow/configs/power_data.json","boards_kwh", physics.kwh(cs.structs["hardware_config"]["equipment_wattage"]["boards"], 3600))
+    cs.write_state("/home/pi/oasis-grow/configs/power_data.json","boards_kwh", physics.kwh(float(cs.structs["hardware_config"]["equipment_wattage"]["boards"]), 3600.00))
     dbt.patch_firebase_dict(cs.structs["access_config"], cs.structs["power_data"])
     
     if cs.structs["feature_toggles"]["save_power"] == "1": #should mimic how the core handles sensor data
