@@ -92,7 +92,7 @@ def listen_active_sensors(): #Depends on 'serial', start_serial()
     try:
         print(minion.ser_in.readline())
         print(type(minion.ser_in.readline()))
-        sensor_data = orjson.loads(minion.ser_in.readline())
+        sensor_data = orjson.loads(str(minion.ser_in.readline()).encode())
         return
     except Exception:
         print("Waiting on a valid sensor reading...")

@@ -37,7 +37,7 @@ def add_new_device():
     #print(type(my_data))
 
     #add box data to firebase (replace with send_dict)
-    patch_request = dbt.firebase_add_device(cs.structs["access_config"],my_data)
+    patch_request = dbt.firebase_add_device(cs.structs["access_config"],my_data) #this is really just a dict patch 
     
     if patch_request.ok:
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","new_device","0", db_writer = dbt.patch_firebase)
