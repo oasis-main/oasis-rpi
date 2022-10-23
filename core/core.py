@@ -94,7 +94,7 @@ def listen_active_sensors(): #Depends on 'serial', start_serial()
         return
     except Exception:
         print("Waiting on a valid sensor reading...")
-        #print(err.full_stack()) #uncomment to debug listener
+        print(err.full_stack()) #uncomment to debug listener
         return
 
 def get_temperature():
