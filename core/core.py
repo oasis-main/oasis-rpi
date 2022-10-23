@@ -93,7 +93,8 @@ def listen_active_sensors(): #Depends on 'serial', start_serial()
         sensor_data = orjson.loads(minion.ser_in.readline().decode('UTF-8').strip().encode())
         return
     except Exception:
-        print(err.full_stack()) #uncomment to debug listener
+        print("Waiting on a valid sensor reading...")
+        #print(err.full_stack()) #uncomment to debug listener
         return
 
 def get_temperature():
@@ -547,21 +548,21 @@ def console_log():
         if cs.structs["feature_toggles"]["water_pid"] == "1":
             feedback.update({"Irrigation Intensity: ": cs.structs["control_params"]["water_feedback"]})
         else:
-            timers.update({"Irrigation Duration (seconds run for): ": cs.structs["control_parameters"]["watering_duration"]})
-            timers.update({"Irrigation Interval (hours between runs): ": cs.structs["control_parameters"]["watering_interval"]})
+            timers.update({"Irrigation Duration (seconds run for): ": cs.structs["control params"]["watering_duration"]})
+            timers.update({"Irrigation Interval (hours between runs): ": cs.structs["control params"]["watering_interval"]})
     
     if cs.structs["feature_toggles"]["air"] == "1":
-        timers.update({"Air Pump Turns On at (Hourly Time 0-23): ": cs.structs["control_parameters"]["time_start_air"]})
-        timers.update({"Air Pump Turns Off at (Hourly Time 0-23): ": cs.structs["control_parameters"]["time_stop_air"]})
-        timers.update({"Air Pump Interval (seconds between runs): ": cs.structs["control_parameters"]["air_interval"]})
+        timers.update({"Air Pump Turns On at (Hourly Time 0-23): ": cs.structs["control params"]["time_start_air"]})
+        timers.update({"Air Pump Turns Off at (Hourly Time 0-23): ": cs.structs["control params"]["time_stop_air"]})
+        timers.update({"Air Pump Interval (seconds between runs): ": cs.structs["control params"]["air_interval"]})
 
     if cs.structs["feature_toggles"]["light"] == "1":
-        timers.update({"Light Turns On at (Hourly Time 0-23): ": cs.structs["control_parameters"]["time_start_light"]})
-        timers.update({"Light Turns Off at (Hourly Time 0-23): ": cs.structs["control_parameters"]["time_stop_light"]})
-        timers.update({"Light Interval (seconds between runs): ": cs.structs["control_parameters"]["air_interval"]})
+        timers.update({"Light Turns On at (Hourly Time 0-23): ": cs.structs["control params"]["time_start_light"]})
+        timers.update({"Light Turns Off at (Hourly Time 0-23): ": cs.structs["control params"]["time_stop_light"]})
+        timers.update({"Light Interval (seconds between runs): ": cs.structs["control params"]["air_interval"]})
 
     if cs.structs["feature_toggles"]["camera"] == "1":
-        timers.update({" Duration (seconds run for): ": cs.structs["control_parameters"]["heater_duration"]})
+        timers.update({" Duration (seconds run for): ": cs.structs["control params"]["heater_duration"]})
         if cs.structs["feature_toggles"]["ndvi"] == "1":
             timers.update({"Capture Mode": "NDVI"})
         else:
