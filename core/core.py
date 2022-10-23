@@ -90,6 +90,8 @@ def listen_active_sensors(): #Depends on 'serial', start_serial()
         print("Primary sensor minion not connected.") #then set the mapping from sensor reading -> env variable throught globals
         return 
     try:
+        print(minion.ser_in.readline())
+        print(type(minion.ser_in.readline()))
         sensor_data = orjson.loads(minion.ser_in.readline())
         return
     except Exception:
