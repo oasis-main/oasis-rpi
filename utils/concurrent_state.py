@@ -176,7 +176,7 @@ def write_state(path, field, value, db_writer = None, loop_limit=2500): #Depends
                     load_state()
                     break #break the loop when the write has been successful
                 else:
-                    print("Waiting...")
+                    #print("Waiting...")
                     pass
 
         except Exception as e: #If any of the above fails
@@ -265,7 +265,7 @@ def write_dict(path, dictionary, db_writer = None, loop_limit=2500): #Depends on
                     
                     break #break the loop when the write has been successful
                 else:
-                    print("Waiting...")
+                    #print("Waiting...")
                     pass
 
         except Exception: #If any of the above fails:
