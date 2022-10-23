@@ -104,7 +104,7 @@ def get_temperature():
         temperature = float(sensor_data["temperature"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["temperature_offset"])
     except Exception:
         print("Got faulty reading for temperature. Discarding...")
-        print(err.full_stack())
+        #print(err.full_stack())
 
     cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "temperature", str(temperature), db_writer = None)      
 
@@ -116,7 +116,7 @@ def get_humidity():
         humidity = float(sensor_data["humidity"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["humidity_offset"])
     except Exception:
         print("Got faulty reading for relative humidity. Discarding...")
-        print(err.full_stack())
+        #print(err.full_stack())
 
     cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "humidity", str(humidity), db_writer = None)
 
@@ -128,7 +128,7 @@ def get_co2():
         co2 = float(sensor_data["co2"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["co2_offset"])
     except Exception:
         print("Got faulty reading for co2. Discarding...")
-        print(err.full_stack())
+        #print(err.full_stack())
 
     cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "co2", str(co2), db_writer = None)
 
@@ -140,7 +140,7 @@ def get_substrate_moisture():
         substrate_moisture = float(sensor_data["substrate_moisture"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["substrate_moisture_offset"])
     except Exception:
         print("Got faulty reading for substrate moisture. Discarding...")
-        print(err.full_stack())
+        #print(err.full_stack())
 
     cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "substrate_moisture", str(substrate_moisture), db_writer = None)
 
@@ -151,7 +151,7 @@ def get_lux():
         lux = float(sensor_data["lux"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["lux_offset"])
     except Exception:
         print("Got faulty reading for lux. Discarding...")
-        print(err.full_stack())
+        #print(err.full_stack())
 
     cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "lux", str(lux), db_writer = None)
 
@@ -162,7 +162,7 @@ def get_ph():
         ph = float(sensor_data["ph"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["ph_offset"])
     except Exception:
         print("Got faulty reading for pH. Discarding...")
-        print(err.full_stack())
+        #print(err.full_stack())
 
     cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "ph", str(ph), db_writer = None)
 
@@ -173,7 +173,7 @@ def get_tds():
         tds = float(sensor_data["tds"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["tds_offset"])
     except Exception:
         print("Got faulty reading for total disolved solids. Discarding...")
-        print(err.full_stack())
+        #print(err.full_stack())
 
     cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "tds", str(tds), db_writer = None)
 
@@ -184,7 +184,7 @@ def get_vpd():
         vpd = physics.vpd(temperature, humidity)
     except Exception:
         print("Got error calculating vapor pressure deficit. Discarding...")
-        print(err.full_stack())
+        #print(err.full_stack())
 
     cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "vpd", str(vpd), db_writer = None)
 
@@ -195,7 +195,7 @@ def get_water_level():
         water_low = int(sensor_data["water_low"])
     except Exception:
         print("Got faulty reading for water level. Discarding...")
-        print(err.full_stack())
+        #print(err.full_stack())
 
     cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "water_low", str(water_low), db_writer = None)
 
@@ -517,35 +517,35 @@ def console_log():
 
     if cs.structs["feature_toggles"]["heater"] == "1":
         if cs.structs["feature_toggles"]["heat_pid"] == "1":
-            feedback.update({"Heater Intensity: ": cs.structs["heat_feedback"]})
+            feedback.update({"Heater Intensity: ": cs.structs["control_params"]["heat_feedback"]})
         else:
             timers.update({"Heater Duration (seconds run for): ": cs.structs["control_params"]["heater_duration"]})
             timers.update({"Heater Interval (seconds between runs): ": cs.structs["control_params"]["heater_interval"]})
     
     if cs.structs["feature_toggles"]["humidifier"] == "1":
         if cs.structs["feature_toggles"]["heat_pid"] == "1":
-            feedback.update({"Humidifier Intensity: ": cs.structs["hum_feedback"]})
+            feedback.update({"Humidifier Intensity: ": cs.structs["control_params"]["hum_feedback"]})
         else:
             timers.update({"Humidifier Duration (seconds run for): ": cs.structs["control_params"]["humidifier_duration"]})
             timers.update({"Humidifier Interval (seconds between runs): ": cs.structs["control_params"]["humidifier_interval"]})
     
     if cs.structs["feature_toggles"]["dehumidifier"] == "1":
         if cs.structs["feature_toggles"]["heat_pid"] == "1":
-            feedback.update({"Dehumidifier Intensity: ": cs.structs["dehum_feedback"]})
+            feedback.update({"Dehumidifier Intensity: ": cs.structs["control_params"]["dehum_feedback"]})
         else:
             timers.update({"Dehumidifier Duration (seconds run for): ": cs.structs["control_params"]["dehumidifier_duration"]})
             timers.update({"Dehumidifier Interval (seconds between runs): ": cs.structs["control_params"]["dehumidifier_interval"]})
     
     if cs.structs["feature_toggles"]["fan"] == "1":
         if cs.structs["feature_toggles"]["fan_pid"] == "1":
-            feedback.update({"Fan Intensity: ": cs.structs["fan_feedback"]})
+            feedback.update({"Fan Intensity: ": cs.structs["control_params"]["fan_feedback"]})
         else:
             timers.update({"Fan Duration (minutes run for): ": cs.structs["control_params"]["fan_duration"]})
             timers.update({"Fan Interval (minutes between runs): ": cs.structs["control_params"]["fan_interval"]})
 
     if cs.structs["feature_toggles"]["water"] == "1":
         if cs.structs["feature_toggles"]["water_pid"] == "1":
-            feedback.update({"Irrigation Intensity: ": cs.structs["water_feedback"]})
+            feedback.update({"Irrigation Intensity: ": cs.structs["control_params"]["water_feedback"]})
         else:
             timers.update({"Irrigation Duration (seconds run for): ": cs.structs["control_parameters"]["watering_duration"]})
             timers.update({"Irrigation Interval (hours between runs): ": cs.structs["control_parameters"]["watering_interval"]})
