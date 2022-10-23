@@ -92,57 +92,111 @@ def listen_active_sensors(): #Depends on 'serial', start_serial()
     try:
         sensor_data = orjson.loads(minion.ser_in.readline().decode('UTF-8').strip().encode())
         return
-    except:
+    except Exception:
         print(err.full_stack()) #uncomment to debug listener
         return
 
 def get_temperature():
     global temperature, last_temperature #all PID enabled environmental variables must have historical values
     last_temperature = temperature
-    temperature = float(sensor_data["temperature"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["temperature_offset"])
+    
+    try:
+        temperature = float(sensor_data["temperature"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["temperature_offset"])
+    except Exception:
+        print("Got faulty reading for temperature. Discarding...")
+        print(err.full_stack())
+
     cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "temperature", str(temperature), db_writer = None)      
 
 def get_humidity():
     global humidity, last_humidity
     last_humidity = humidity
-    humidity = float(sensor_data["humidity"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["humidity_offset"])
+    
+    try:
+        humidity = float(sensor_data["humidity"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["humidity_offset"])
+    except Exception:
+        print("Got faulty reading for relative humidity. Discarding...")
+        print(err.full_stack())
+
     cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "humidity", str(humidity), db_writer = None)
 
 def get_co2():
     global co2, last_co2
     last_co2 = co2
-    co2 = float(sensor_data["co2"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["co2_offset"])
+    
+    try:
+        co2 = float(sensor_data["co2"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["co2_offset"])
+    except Exception:
+        print("Got faulty reading for co2. Discarding...")
+        print(err.full_stack())
+
     cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "co2", str(co2), db_writer = None)
 
 def get_substrate_moisture():
     global substrate_moisture, last_substrate_moisture
     last_substrate_moisture = substrate_moisture
-    substrate_moisture = float(sensor_data["substrate_moisture"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["substrate_moisture_offset"])
+    
+    try:
+        substrate_moisture = float(sensor_data["substrate_moisture"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["substrate_moisture_offset"])
+    except Exception:
+        print("Got faulty reading for substrate moisture. Discarding...")
+        print(err.full_stack())
+
     cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "substrate_moisture", str(substrate_moisture), db_writer = None)
 
 def get_lux():
     global lux
-    lux = float(sensor_data["lux"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["lux_offset"])
+    
+    try:
+        lux = float(sensor_data["lux"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["lux_offset"])
+    except Exception:
+        print("Got faulty reading for lux. Discarding...")
+        print(err.full_stack())
+
     cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "lux", str(lux), db_writer = None)
 
 def get_ph():
     global ph
-    ph = float(sensor_data["ph"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["ph_offset"])
+    
+    try:
+        ph = float(sensor_data["ph"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["ph_offset"])
+    except Exception:
+        print("Got faulty reading for pH. Discarding...")
+        print(err.full_stack())
+
     cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "ph", str(ph), db_writer = None)
 
 def get_tds():
     global tds
-    tds = float(sensor_data["tds"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["tds_offset"])
+    
+    try:
+        tds = float(sensor_data["tds"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["tds_offset"])
+    except Exception:
+        print("Got faulty reading for total disolved solids. Discarding...")
+        print(err.full_stack())
+
     cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "tds", str(tds), db_writer = None)
 
 def get_vpd():
     global vpd
-    vpd = physics.vpd(temperature, humidity)
+    
+    try:
+        vpd = physics.vpd(temperature, humidity)
+    except Exception:
+        print("Got error calculating vapor pressure deficit. Discarding...")
+        print(err.full_stack())
+
     cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "vpd", str(vpd), db_writer = None)
 
 def get_water_level():
     global water_low
-    water_low = int(sensor_data["water_low"])
+    
+    try:
+        water_low = int(sensor_data["water_low"])
+    except Exception:
+        print("Got faulty reading for water level. Discarding...")
+        print(err.full_stack())
+
     cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "water_low", str(water_low), db_writer = None)
 
 def collect_environmental_data():
@@ -361,7 +415,6 @@ def update_pid_controllers(): #these should come with an accompanying option in 
         
         cs.write_state("/home/pi/oasis-grow/configs/control_params.json", "moisture_feedback", str(moisture_feedback), db_writer = None)
 
-
 #Concurrency Hell:
 #
 #   Ok, so the subprocess will always relaunch itself on every loop right now, because
@@ -380,7 +433,6 @@ def run_heat():
     cs.load_locks()
     if cs.locks[resource_name] == 0:
         heat_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/heater.py']) #If process not free, then skips.
-
 
 #poll humidityf subprocess if applicable and relaunch/update equipment
 def run_hum():

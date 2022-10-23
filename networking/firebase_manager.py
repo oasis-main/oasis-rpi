@@ -27,8 +27,10 @@ def add_new_device():
     setup_dict = {} #Access & hardware config will be kept private, not shared with cloud 
     setup_dict.update(cs.structs["device_state"])
     setup_dict.update(cs.structs["control_params"])
+    setup_dict.update(cs.structs["hardware_config"]) #nested dict, make sure to hangle appropriately
     setup_dict.update(cs.structs["feature_toggles"])
     setup_dict.update(cs.structs["sensor_data"])
+    setup_dict.update(cs.structs["power_data"])
     setup_dict_named = {cs.structs["access_config"]["device_name"] : setup_dict}
     my_data = setup_dict_named
     #print(my_data)

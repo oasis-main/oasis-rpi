@@ -1,5 +1,4 @@
 import sys
-import os
 import signal
 
 #set custom module path
@@ -33,7 +32,8 @@ def act_on_event(field, new_data):
     #the path has to be set for box
     device_state_fields = list(cs.structs["device_state"].keys())
     control_params_fields = list(cs.structs["control_params"].keys())
-    hardware_config_fields = list(cs.structs["hardware_config"].keys())
+    hardware_config_groups = list(cs.structs["hardware_config"].keys())
+
 
     path = None
 
@@ -41,14 +41,19 @@ def act_on_event(field, new_data):
         path = "/home/pi/oasis-grow/configs/device_state.json"
     if field in control_params_fields:
         path = "/home/pi/oasis-grow/configs/control_params.json"
-    if field in hardware_config_fields:
+    if field in hardware_config_groups:
         path = "/home/pi/oasis-grow/configs/hardware_config.json"
 
     #open data config file
     #edit appropriate spot
     if path is not None:
         print(path)
-        cs.write_state(path, field, new_data, db_writer = None) #will be interesting to see if this can update a nested dict
+        if path not in hardware_config_groups:
+            cs.write_state(path, field, new_data, db_writer = None)
+        else:
+            print(field)
+            print(new_data)
+            #cs.write_nested_dict(path,field,new_data) 
 
 def stream_handler(m):
     #some kind of update
