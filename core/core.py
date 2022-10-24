@@ -27,7 +27,7 @@ from utils import concurrent_state as cs
 from utils import physics
 from utils import error_handler as err
 from networking import db_tools as dbt
-from networking import firebase_manager as fb
+from networking import firebase_manager
 from peripherals import microcontroller_manager as minion
 
 resource_name = "core"
@@ -601,14 +601,14 @@ def data_out():
             if cs.structs["feature_toggles"]["save_data"] == "1":
                 #save data to .csv
                 print("Writing to csv")
-                fb.write_sensor_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv', payload)
+                firebase_manager.write_sensor_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv', payload)
 
                 if cs.structs["device_state"]["connected"] == "1":
                     #write data to disk and exchange with cloud if connected
                     dbt.patch_firebase_dict(cs.structs["access_config"],payload)
 
                     #send new time-series to firebase
-                    fb.send_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv')
+                    firebase_manager.send_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv', 'sensor_data.csv')
 
             data_timer = time.time()
 

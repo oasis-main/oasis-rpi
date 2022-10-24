@@ -21,16 +21,20 @@ cs.load_state()#get configs
 hum_GPIO = int(cs.structs["hardware_config"]["equipment_gpio_map"]["humidifier_relay"]) #heater pin pulls from config file
 pin = rusty_pins.GpioOut(hum_GPIO)
 
+running = True
+
 def clean_up(*args):
     print("Shutting down humidifier...")
-    cs.safety.unlock(cs.lock_filepath, resource_name)
+    global running
+    running = False
     relays.turn_off(pin)
+    cs.safety.unlock(cs.lock_filepath, resource_name)
     sys.exit()
 
 if __name__ == '__main__':
     signal.signal(signal.SIGTERM, clean_up)
     try:
-        while True:
+        while running:
             if cs.structs["feature_toggles"]["hum_pid"] == "1":
                 print("Running humidifier in pulse mode with " + cs.structs["control_params"]["hum_feedback"] + "%" + " power...")
                 relays.actuate_slow_pwm(pin, float(cs.structs["control_params"]["hum_feedback"]), wattage=cs.structs["hardware_config"]["equipment_wattage"]["humidifier"], log="humidifier_kwh") #trigger appropriate response

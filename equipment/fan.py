@@ -22,16 +22,20 @@ cs.load_state()
 fan_GPIO = int(cs.structs["hardware_config"]["equipment_gpio_map"]["fan_relay"]) #fan pin pulls from config file
 pin = rusty_pins.GpioOut(fan_GPIO)
 
+running = True
+
 def clean_up(*args):
     print("Shutting down fans...")
-    cs.safety.unlock(cs.lock_filepath, resource_name)
+    global running
+    running = False
     relays.turn_off(pin)
+    cs.safety.unlock(cs.lock_filepath, resource_name)
     sys.exit()
 
 if __name__ == '__main__':
     signal.signal(signal.SIGTERM, clean_up)
     try:
-        while True:
+        while running:
             if cs.structs["feature_toggles"]["fan_pid"] == "1":
                 print("Ventilating in pulse mode with " + cs.structs["control_params"]["fan_feedback"] + "%" + " power...")
                 relays.actuate_slow_pwm(pin, float(cs.structs["control_params"]["fan_feedback"]), wattage=cs.structs["hardware_config"]["equipment_wattage"]["fan"], log="fan_kwh") #trigger appropriate response

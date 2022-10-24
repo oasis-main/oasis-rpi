@@ -219,7 +219,8 @@ def update_power_tracking():
         payload = cs.structs["power_data"]
         timestamp = {"time": str(datetime.datetime.now())} #add a timestamp
         payload.update(timestamp)
-        firebase_manager.write_power_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv',payload)
+        firebase_manager.write_power_csv('/home/pi/oasis-grow/data_out/sensor_feed/power_data.csv')
+        firebase_manager.send_csv('/home/pi/oasis-grow/data_out/sensor_feed/power_data.csv', "power_data.csv")
 
     reset_dict = {} #clear the power data over last hour, save to state
     for key in cs.structs["power_data"]:

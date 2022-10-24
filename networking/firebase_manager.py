@@ -141,15 +141,16 @@ def write_power_csv(filename, dict): #Depends on: "os" "csv"
 
     return
 
-def send_csv(path):
+def send_csv(path, cloud_name):
     #send new image to firebase
     cs.load_state()
     user, db, storage = dbt.initialize_user(cs.structs["access_config"]["refresh_token"])
-    dbt.store_file(user, storage, path, cs.structs["access_config"]["device_name"], "sensor_data.csv")
+    dbt.store_file(user, storage, path, cs.structs["access_config"]["device_name"], cloud_name)
     print("Sent csv timeseries")
 
     #tell firebase that there is a new time series
     dbt.patch_firebase(cs.structs["access_config"], "csv_sent", "1")
+    dbt.patch_firebase(cs.structs["access_config"], "csv_filename", cloud_name)
     print("Firebase has a time-series in waiting")
 
 #connects system to firebase

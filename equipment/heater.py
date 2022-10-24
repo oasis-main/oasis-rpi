@@ -22,16 +22,20 @@ cs.load_state()
 heat_GPIO = int(cs.structs["hardware_config"]["equipment_gpio_map"]["heat_relay"]) #heater pin pulls from config file
 pin = rusty_pins.GpioOut(heat_GPIO)
 
+running = True
+
 def clean_up(*args):
     print("Shutting down heater...")
-    cs.safety.unlock(cs.lock_filepath, resource_name)
+    global running
+    running = False
     relays.turn_off(pin)
+    cs.safety.unlock(cs.lock_filepath, resource_name)
     sys.exit()
 
 if __name__ == '__main__':
     signal.signal(signal.SIGTERM, clean_up)
     try:
-        while True:
+        while running:
             if cs.structs["feature_toggles"]["heat_pid"] == "1":
                 print("Heating in pulse mode with " + cs.structs["control_params"]["heat_feedback"] + "%" + " power...")
                 relays.actuate_slow_pwm(pin, float(cs.structs["control_params"]["heat_feedback"]), wattage=cs.structs["hardware_config"]["equipment_wattage"]["heater"], log="heater_kwh") #trigger appropriate response

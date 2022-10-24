@@ -21,16 +21,20 @@ cs.load_state()
 dehum_GPIO = int(cs.structs["hardware_config"]["equipment_gpio_map"]["dehumidifier_relay"]) #dehumidifier pin pulls from config file
 pin = rusty_pins.GpioOut(dehum_GPIO)
 
+running = True
+
 def clean_up(*args):
     print("Shutting down dehumidifier...")
-    cs.safety.unlock(cs.lock_filepath, resource_name)
+    global running
+    running = False
     relays.turn_off(pin)
+    cs.safety.unlock(cs.lock_filepath, resource_name)
     sys.exit()
 
 if __name__ == '__main__':
     signal.signal(signal.SIGTERM, clean_up)
     try:
-        while True:
+        while running:
             if cs.structs["feature_toggles"]["dehum_pid"] == "1":
                 print("Running dehumidifier in pulse mode with " + cs.structs["control_params"]["dehum_feedback"] + "%" + " power...")
                 relays.actuate_slow_pwm(pin, float(cs.structs["control_params"]["dehum_feedback"]), wattage=cs.structs["hardware_config"]["equipment_wattage"]["dehumidifier"], log="dehumidifier_kwh") #trigger appropriate response
