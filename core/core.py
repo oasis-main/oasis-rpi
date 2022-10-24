@@ -56,11 +56,14 @@ last_substrate_moisture = float()
 last_target_substrate_moisture = float()
 err_cum_substrate_moisture = float()
 
-water_low = int()
 vpd = float()
 lux = float()
 ph = float()
 tds = float()
+water_low = int()
+
+running = True #used to exit the loop and prevent zombie processes from being called on exit
+                #set to false in terminate_program() to exit main loop
 
 #declare long-running process objects
 heat_process = None
@@ -91,9 +94,10 @@ def listen_active_sensors(): #Depends on 'serial', start_serial()
         return 
     try:
         print(minion.ser_in.readline()) #must pass a valid json in byte form
-        print(type(minion.ser_in.readline())) #multiple minions can be used to assemble different sensor data
+        #print(type(minion.ser_in.readline())) #multiple minions can be used to assemble different sensor data
         
         sensor_data = orjson.loads(minion.ser_in.readline().strip(b'\n').strip(b'\r'))
+        print
         return
     except Exception:
         print("Waiting on a valid sensor reading...")
@@ -642,8 +646,11 @@ def clean_up_processes():
 
 #terminates the program and all running subprocesses
 def terminate_program(*args): #Depends on: cs.load_state(), 'sys', 'subprocess' #Modifies: heat_process, humidity_process, fan_process, light_process, camera_process, water_process
+    global running
 
     print("Terminating Program...")
+    running = False
+
     clean_up_processes()
 
     #flip "running" to 0

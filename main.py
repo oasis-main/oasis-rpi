@@ -345,6 +345,7 @@ def main_loop(led_timer, connect_timer, power_timer):
 
     except(KeyboardInterrupt):
         print("   <----- Exiting program...")
+        cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "terminated")
         stop_core()
         time.sleep(5)
         reset_model.reset_device_state() #This is for testing purposes, to keep behavior the same between debugs

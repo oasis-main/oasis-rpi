@@ -22,10 +22,14 @@ pixels = neopixel.NeoPixel(board.D21, num_leds) #NeoPixels must be connected to 
 
 def check_led_status():
     slow_cs.load_state()
+    
+    if slow_cs.structs["device_state"]["led_status"] == "terminated":
+        slow_cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","off")
+        clean_up()
+
     if slow_cs.structs["device_state"]["led_status"] == "off":
         for x in range(0, num_leds):
             pixels[x] = (0, 0, 0)
-        return
 
     #Connected, Running (green, looping)
     if slow_cs.structs["device_state"]["led_status"] == "connected_running":
@@ -82,7 +86,7 @@ def run():
     while True:
         check_led_status()
 
-def clean_up(*args):
+def clean_up(): #signal is not used to terminate this, rather a flag is set from the outside
     slow_cs.unlock(slow_cs.lock_filepath, resource_name) #free the leds for system
 
     #off

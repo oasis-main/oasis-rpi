@@ -82,7 +82,7 @@ void loop() {
     } else if (co2 == 0) {
         //Serial.println("Invalid sample detected, skipping.");
     } else {
-        Serial.print("{")
+        Serial.print("{");//must pass a valid json byteobj
         Serial.print("\"temperature\":");
         Serial.print((double(temperature)*double(1.8))+double(32));
         Serial.print(", ");
