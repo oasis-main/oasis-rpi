@@ -97,7 +97,7 @@ def listen_active_sensors(): #Depends on 'serial', start_serial()
         #print(type(minion.ser_in.readline())) #multiple minions can be used to assemble different sensor data
         
         sensor_data = orjson.loads(minion.ser_in.readline().strip(b'\n').strip(b'\r'))
-        print
+        print(sensor_data)
         return
     except Exception:
         print("Waiting on a valid sensor reading...")
@@ -433,6 +433,9 @@ def update_pid_controllers(): #these should come with an accompanying option in 
 #   
 #   Solution: Use the system level mutex you've already built, get rid of the global variable.
 #   Simple Version: Check the lock, don't poll the process.
+#
+#   We're using a global "running" variable to turn off the core before it launches all the below when it shouldn't.
+#
 
 #poll heat subprocess if applicable and relaunch/update equipment
 def run_heat():
