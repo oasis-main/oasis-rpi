@@ -710,7 +710,7 @@ def main_loop():
         print("Begin environmental data collection and control")
         print("------------------------------------------------------------")
 
-        while True:
+        while running:
             
             update_derivative_banks() #this occurs in near-realtime, as opposed to storage and exchange every 5 min
 
