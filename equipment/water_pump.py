@@ -35,7 +35,7 @@ if __name__ == "__main__":
                 print("Running water pump in pulse mode with " + cs.structs["control_params"]["moisture_feedback"] + "%" + " power...")
                 relays.actuate_slow_pwm(pin, intensity = float(cs.structs["control_params"]["moisture_feedback"]), wattage=cs.structs["hardware_config"]["equipment_wattage"]["water_pump"], log="water_pump_kwh") #trigger appropriate response
             else:
-                print("Running water pump for " + sys.argv[1] + " second(s) every " + sys.argv[2] + " day(s)...")
+                print("Running water pump for " + cs.structs["control_params"]["watering_duration"] + " second(s) every " + cs.structs["control_params"]["watering_interval"] + " day(s)...")
                 relays.actuate_interval_sleep(pin, duration = float(cs.structs["control_params"]["watering_duration"]), sleep = float(cs.structs["control_params"]["watering_interval"]), duration_units="seconds", sleep_units="days", wattage=cs.structs["hardware_config"]["equipment_wattage"]["water_pump"], log="water_pump_kwh")
     
             cs.load_state()

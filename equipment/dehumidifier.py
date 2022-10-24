@@ -35,7 +35,7 @@ if __name__ == '__main__':
                 print("Running dehumidifier in pulse mode with " + cs.structs["control_params"]["dehum_feedback"] + "%" + " power...")
                 relays.actuate_slow_pwm(pin, float(cs.structs["control_params"]["dehum_feedback"]), wattage=cs.structs["hardware_config"]["equipment_wattage"]["dehumidifier"], log="dehumidifier_kwh") #trigger appropriate response
             else:
-                print("Running dehumidifier for " + sys.argv[1] + " minute(s) on, " + sys.argv[2] + " minute(s) off...")
+                print("Running dehumidifier for " + cs.structs["control_params"]["dehumidifier_duration"] + " minute(s) on, " + cs.structs["control_params"]["dehumidifier_interval"] + " minute(s) off...")
                 relays.actuate_interval_sleep(pin, float(cs.structs["control_params"]["dehumidifier_duration"]), float(cs.structs["control_params"]["dehumidifier_interval"]), duration_units= "minutes", sleep_units="minutes", wattage=cs.structs["hardware_config"]["equipment_wattage"]["dehumidifier"], log="dehumidifier_kwh")
     
             cs.load_state()
