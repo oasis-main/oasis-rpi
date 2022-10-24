@@ -15,7 +15,7 @@ import signal
 import rusty_pipes
 
 #data handling
-import json
+import orjson
 import pprint
 
 #dealing with specific times of the day
@@ -92,7 +92,13 @@ def listen_active_sensors(): #Depends on 'serial', start_serial()
     try:
         print(minion.ser_in.readline())
         print(type(minion.ser_in.readline()))
-        sensor_data = json.loads(str(minion.ser_in.readline().decode('UTF-8').strip()))
+        minion_str = minion.ser_in.readline().decode()
+        print(minion_str)
+        minion_str = minion_str.strip(["\n","\r"])
+        print(minion_str)
+        minion_bytes = minion_str.encode('utf-8')
+        print(minion_bytes)
+        sensor_data = orjson.loads(minion_bytes)
         return
     except Exception:
         print("Waiting on a valid sensor reading...")
