@@ -521,7 +521,7 @@ def check_lock(resource):
     else:
         lock(lock_filepath, resource)
 
-def check_signal(resource: str, signal: str, reaction: function, loop_limit = 100):
+def check_signal(resource: str, signal: str, reaction, loop_limit = 100):
     load_custom_signals()
     if signals[resource] == signal:
         for i in loop_limit:

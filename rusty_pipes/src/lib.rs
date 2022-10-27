@@ -30,7 +30,7 @@ fn custom_signal(sig_filepath: String, id: String , signal: &str){
 // Behavior of the subprocess class
 #[pymethods]
 impl Open { 
-    #[new] // call this from python with rusty_pipes.Ropen(pin#)
+    #[new] 
     fn new(arg_list: Vec<String>, proc_name: String) -> Self { //this is like python __init__()
         let mut sub_proc = Popen::create(&arg_list[..], PopenConfig::default()).unwrap();
         sub_proc.detach();
