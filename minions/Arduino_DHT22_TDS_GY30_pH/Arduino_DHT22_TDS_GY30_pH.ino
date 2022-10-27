@@ -18,7 +18,7 @@ float b;
 int buf[10],temp;
 
 //tds data
-#define tdsanalogPin A0
+#define tdsanalogPin A1
 #define VREF 5.0              // analog reference voltage(Volt) of the ADC
 #define SCOUNT  30            // sum of sample point
 int analogBuffer[SCOUNT];     // store the analog value in the array, read from ADC
@@ -128,7 +128,7 @@ void loop() {
     }
   }
 
-  
+ 
  //save data to known names
  float temperature = air_temperature_c;
  float humidity = relative_humidity;

@@ -2,7 +2,6 @@
 
 #import shell modules
 import sys
-from tkinter import E
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
