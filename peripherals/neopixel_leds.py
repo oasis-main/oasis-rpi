@@ -1,6 +1,6 @@
 #import shell modules
 import sys
-import signal
+
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
@@ -21,7 +21,6 @@ num_leds = int(slow_cs.structs["hardware_config"]["onboard_led_settings"]["num_l
 pixels = neopixel.NeoPixel(board.D21, num_leds) #NeoPixels must be connected to GPIO10, GPIO12, GPIO18 or GPIO21 to work!
 
 def check_led_status():
-    slow_cs.load_state()
     
     if slow_cs.structs["device_state"]["led_status"] == "terminated":
         slow_cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","off")
@@ -84,29 +83,30 @@ def check_led_status():
 
 def run():
     while True:
+        slow_cs.check_signal("led","terminated", clean_up)
         check_led_status()
+        slow_cs.load_state()
 
 def clean_up(): #signal is not used to terminate this, rather a flag is set from the outside
-    slow_cs.unlock(slow_cs.lock_filepath, resource_name) #free the leds for system
-
-    #off
-    for x in range(0, num_leds): #kill the neopixels
+    for x in range(0, num_leds): #kill the neopixels (turn all off)
         pixels[x] = (0, 0, 10)
         time.sleep(0.04)
     for x in range(0, num_leds):
         pixels[x] = (0, 0, 5)
         time.sleep(0.04)   
     
+    slow_cs.unlock(slow_cs.lock_filepath, resource_name) #free the leds for system
+    
     sys.exit()
 
 if __name__ == '__main__':
-    signal.signal(signal.SIGTERM,clean_up)
     try:
         run()
+    except SystemExit:
+        print("LED was terminated.")
     except KeyboardInterrupt:
         print("Shutting down LED...")
+        clean_up()
     except Exception:
         print("LED encountered an error!")
         print(err.full_stack())
-    finally:
-        clean_up()

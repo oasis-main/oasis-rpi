@@ -76,10 +76,17 @@ def actuate_time_hod(output, time_on = 0, time_off = 0, interval = 1, interval_u
             time.sleep(time_active)
             if log is not None:
                 cs.write_state("/home/pi/oasis-grow/configs/power_data.json", log, str(physics.kwh(float(wattage),float(time_active))))
+    except SystemExit:
+        print("Relay was terminated. Cleaning up...")
+        turn_off(output)
     except KeyboardInterrupt:
         print("You terminated the program while a relay was in use. Cleaning up...")
+        turn_off(output)
     except Exception:
+        print("Relay error:")
         print(err.full_stack())
+    
+    #there is no finally clause, because we don't want any of the error handlers to trigger if it is successful
 
 def actuate_interval_sleep(output, duration = 15, sleep = 45, duration_units = "seconds", sleep_units = "seconds", wattage = "0", log = None):
     try:
@@ -108,14 +115,18 @@ def actuate_interval_sleep(output, duration = 15, sleep = 45, duration_units = "
         
         turn_off(output)
         time.sleep(time_sleep)
+    except SystemExit:
+        print("Relay was terminated. Cleaning up...")
+        turn_off(output)
     except KeyboardInterrupt:
         print("You terminated the program while a relay was in use. Cleaning up...")
+        turn_off(output)
     except Exception:
-        print(err.full_stack())
+        print("Relay error:")
+        print(err.full_stack()) #we don't clean up the relay between calls, because that would cause an interruption
 
 def actuate_slow_pwm(output, intensity: int, pulse_domain = 10.0, wattage = "0", log = None):
     try:
-        
         time_active = intensity/100 * pulse_domain #the intensity is a no. between 0-100, representing % power
         time_off = pulse_domain - time_active #so the device time spent on is %power * pulse domain (secs), off is domain -on  
 
@@ -136,10 +147,14 @@ def actuate_slow_pwm(output, intensity: int, pulse_domain = 10.0, wattage = "0",
             time.sleep(time_active) #on
             if log is not None:
                 cs.write_state("/home/pi/oasis-grow/configs/power_data.json", log, str(physics.kwh(float(wattage),float(time_active))))
-
+    except SystemExit:
+        print("Relay was terminated. Cleaning up...")
+        turn_off(output)
     except KeyboardInterrupt:
         print("You terminated the program while a relay was in use. Cleaning up...")
+        turn_off(output)
     except Exception:
+        print("Relay error!")
         print(err.full_stack()) 
 
 if __name__ == "__main__":

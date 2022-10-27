@@ -2,6 +2,7 @@
 
 #import shell modules
 import sys
+from tkinter import E
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
@@ -22,10 +23,11 @@ from networking import firebase_manager
 from networking import wifi
 
 #hardware
+import rusty_pins
+from utils import physics
 from peripherals import buttons
 from peripherals import relays
 from peripherals import microcontroller_manager as minion
-from utils import physics
 
 #housekeeping
 from utils import reset_model
@@ -36,12 +38,25 @@ core = None
 led = None
 listener = None
 
+#checks in the the core process has been called from the command line, or explicitly deactivated
+def cmd_line_args():
+    try:
+        if sys.argv[1] == "run":
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","1", db_writer = dbt.patch_firebase)
+            print("Command line set core to run. Launching device engine...")
+        if sys.argv[1] == "idle":
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","0", db_writer = dbt.patch_firebase)
+            print("Command line set core to idle. Device engine is on standby.")
+    except Exception as e: #if no arguments are given, the above will fail
+        print("No command line arguments were given.")
+        print("Defaulting to last saved mode or default if new.")
+
 #checks whether system is booting in Access Point Mode, launches connection script if so
 def launch_access_point(): 
     global minion
 
     #launch server subprocess to accept credentials over Oasis wifi network, does not wait
-    server_process = rusty_pipes.Open(["sudo", "streamlit", "run", "/home/pi/oasis-grow/networking/connect_oasis.py", "--server.headless=true", "--server.port=80", "--server.address=192.168.4.1", "--server.enableCORS=false", "--server.enableWebsocketCompression=false"])
+    server_process = rusty_pipes.Open(["sudo", "streamlit", "run", "/home/pi/oasis-grow/networking/connect_oasis.py", "--server.headless=true", "--server.port=80", "--server.address=192.168.4.1", "--server.enableCORS=false", "--server.enableWebsocketCompression=false"], proc_name = "access_point")
     print("Access Point Mode enabled")
 
     time.sleep(3)
@@ -59,24 +74,24 @@ def launch_access_point():
             if cbutton_state == 0:
                 cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","offline_idle", db_writer = dbt.patch_firebase)
                 minion.ser_out.write(bytes(str(cs.structs["device_state"]["led_status"]+"\n"), "utf-8"))
-                server_process.terminate()
+                server_process.terminate("/home/pi/oasis-grow/configs/signals.json")
                 wifi.enable_wifi()
                 time.sleep(1)
     else:
         while True:
             cbutton_state = buttons.get_button_state(buttons.connect_internet_button)
             if cbutton_state == 0:
-                server_process.terminate()
+                server_process.terminate("/home/pi/oasis-grow/configs/signals.json")
                 wifi.enable_wifi()
                 time.sleep(1)
 
 def connect_firebase():
-    connect = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/networking/firebase_manager.py"])
+    connect_firebase = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/networking/firebase_manager.py"], proc_name = "firebase_manager")
 
 def start_listener():
     global listener
     if listener is None:
-        listener = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/networking/firebase_listener.py"])
+        listener = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/networking/firebase_listener.py"], proc_name = "listener")
 
 def stop_listener():
     global listener
@@ -85,58 +100,14 @@ def stop_listener():
         listener.wait()
         listener = None
 
-#check if core is supposed to be running, launch it if so. Do nothing if not
-def setup_core_process(): #Depends on: cs.load_state(), cs.write_state(), 'subprocess'; Modifies: core, state_variables, device_state.json
-    global core
-    cs.load_state()
-
-    #if the device is supposed to be running
-    if cs.structs["device_state"]["running"] == "1":
-
-        #launch core main
-        core = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/core/core.py", "main"])
-
-        if cs.structs["device_state"]["connected"] == "1": #if connected
-            #LEDmode = "connected_running"
-            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","connected_running", db_writer = dbt.patch_firebase)
-        else: #if not connected
-            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","offline_running", db_writer = dbt.patch_firebase)
-
-        print("launched core process")
-
-    else:
-
-        #launch sensing-feedback subprocess in daemon mode
-        core = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/core/core.py", "daemon"])
-
-        if cs.structs["device_state"]["connected"] == "1": #if connected
-            #LEDmode = "connected_idle"
-            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","connected_idle", db_writer = dbt.patch_firebase)
-        else: #if not connected
-            cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"led_status","offline_idle", db_writer = dbt.patch_firebase)
-
-        print("core process not launched")
-
-#checks in the the core process has been called from the command line, or explicitly deactivated
-def cmd_line_args():
-    try:
-        if sys.argv[1] == "run":
-            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","1", db_writer = dbt.patch_firebase)
-            print("Command line set core to run. Launching device engine...")
-        if sys.argv[1] == "idle":
-            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","0", db_writer = dbt.patch_firebase)
-            print("Command line set core to idle. Device engine is on standby.")
-    except Exception as e: #if no arguments are given, the above will fail
-        print("No command line arguments were given.")
-        print("Defaulting to last saved mode or default if new.")
-
 def start_core():
     global core
     cs.load_state()
-    poll_core = core.exited() #check if core process is running
-    if poll_core is True: #if it is not running
+    cs.load_locks()
+    
+    if (cs.locks["core"] == 0) & (core is None): #if it is free
         #launch it
-        core = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/core/core.py", "main"])
+        core = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/core/core.py"], proc_name = "core")
         print("Core process is running...")
 
         if cs.structs["device_state"]["connected"] == "1": #if connected
@@ -149,13 +120,15 @@ def start_core():
 def stop_core():
     global core
     cs.load_state()
-    poll_core = core.exited() #check if core process is running
-    if poll_core is False: #if it is running
+    cs.load_locks()
+    
+    if (cs.locks["core"] == 1) & (core is not None): #if it is running
         #kill it
         core.terminate()
         core.wait()
+        core = None
+
         print("Core process is idle...")
-        
         if cs.structs["device_state"]["connected"] == "1": #if connected
             #send LEDmode = "connected_idle"
             cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","connected_idle", db_writer = dbt.patch_firebase)
@@ -178,12 +151,18 @@ def switch_core_running(): #Depends on: cs.load_state(), cs.write_state(), dbt.p
         #set running state to on = 1
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","1", db_writer = dbt.patch_firebase)
 
-def export_timelapse():
-    export_tl = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/imaging/make_timelapse.py"])
-
-def launch_onboard_led():
+def start_onboard_led():
     global led
-    led = rusty_pipes.Open(["sudo", "python3", "/home/pi/oasis-grow/peripherals/neopixel_leds.py"])
+    led = rusty_pipes.Open(["sudo", "python3", "/home/pi/oasis-grow/peripherals/neopixel_leds.py"], proc_name = "led")
+
+def stop_onboard_led():
+    global led
+    cs.load_state()
+    cs.load_locks()
+
+    if (cs.locks["led"] == 1) & (core is not None):
+        led.terminate("/home/pi/oasis-grow/configs/signals.json")
+        led.wait()
 
 #updates the state of the LED, serial must be set up,
 def update_minion_led(): #Depends on: cs.load_state(), 'datetime'; Modifies: ser_out
@@ -219,8 +198,8 @@ def update_power_tracking():
         payload = cs.structs["power_data"]
         timestamp = {"time": str(datetime.datetime.now())} #add a timestamp
         payload.update(timestamp)
-        firebase_manager.write_power_csv('/home/pi/oasis-grow/data_out/sensor_feed/power_data.csv')
-        firebase_manager.send_csv('/home/pi/oasis-grow/data_out/sensor_feed/power_data.csv', "power_data.csv")
+        firebase_manager.write_power_csv('/home/pi/oasis-grow/data_out/resource_use/power_data.csv')
+        firebase_manager.send_csv('/home/pi/oasis-grow/data_out/resource_use/power_data.csv', "power_data.csv")
 
     reset_dict = {} #clear the power data over last hour, save to state
     for key in cs.structs["power_data"]:
@@ -237,7 +216,7 @@ def get_updates(): #depends on: cs.load_state(),'subproceess', update.py; modifi
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = dbt.patch_firebase) #make sure the cloud does not update main code, kill listener
         dbt.kill_listener()
         #launch update.py and wait to complete
-        update_process = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/utils/update.py"])
+        update_process = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/utils/update.py"], proc_name = "update")
         update_process.wait()
         
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","1", db_writer = dbt.patch_firebase)#restore listener
@@ -249,11 +228,14 @@ def get_updates(): #depends on: cs.load_state(),'subproceess', update.py; modifi
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = dbt.patch_firebase) #make sure the cloud does not update main code, kill listener
         dbt.kill_listener()
         #launch update.py and wait to complete
-        update_process = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/utils/update.py"])
+        update_process = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/utils/update.py"], proc_name = "update")
         update_process.wait()
         
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","1", db_writer = dbt.patch_firebase) #restore running
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","1", db_writer = dbt.patch_firebase)#restore listener
+
+def export_timelapse():
+    export_tl = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/imaging/make_timelapse.py"])
 
 def clear_data():
     reset_model.reset_data_out()
@@ -266,18 +248,17 @@ def main_setup():
     cs.load_state() #get the device data
     
     if cs.structs["feature_toggles"]["onboard_led"] == "1":
-        launch_onboard_led()
+        start_onboard_led()
     else:
         minion.start_serial_out() #start outbound serial command interface
     
     cs.check_state("access_point", launch_access_point) #check to see if the device should be in access point mode
-    
+                                                        #should block if so
+
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = None) #set to 0 so listener launches
     connect_firebase() #listener will not be re-called unless a connection fails at some point
 
     cmd_line_args() #Check command line flags for special instructions
-    
-    setup_core_process() #launch sensor, data collection, & feedback management
 
     buttons.setup_button_interface(cs.structs["hardware_config"]) #Setup on-device interface for interacting with device using buttons
 
@@ -289,7 +270,6 @@ def main_setup():
     return led_timer, connect_timer, power_timer
 
 def main_loop(led_timer, connect_timer, power_timer):
-    
     try:
         while True:
             cs.load_state()
@@ -301,8 +281,9 @@ def main_loop(led_timer, connect_timer, power_timer):
                 connect_firebase()
                 connect_timer = time.time()
             
-            cs.check_state("running", start_core, stop_core) #check if core is supposed to be running
-            cs.check_state("connected", start_listener, stop_listener)
+            cs.check_state("connected", start_listener, stop_listener) #if connected, listen to database
+            cs.check_state("running", start_core, stop_core) #if running, start the sensors and controllers
+            
             cs.check_state("awaiting_update", get_updates)
             cs.check_state("awaiting_deletion", firebase_manager.delete_device)
             cs.check_state("awaiting_clear_data_out", clear_data)
@@ -327,11 +308,16 @@ def main_loop(led_timer, connect_timer, power_timer):
                 abutton_state = buttons.get_button_state(buttons.action_button) #Water Button
                 if abutton_state == 0:
                     if cs.structs["feature_toggles"]["action_water"] == "1":
-                        water_GPIO = cs.structs["hardware_config"]["equipment_gpio_map"]["water_relay"] #bcm pin_no pulls from config file
-                        water_GPIO = int(water_GPIO)
-                        relays.actuate_interval_sleep(pin = water_GPIO, duration = 60, sleep = 0, mode = "seconds")
+                        cs.load_locks()
+                        if cs.locks["water_pump"] == 0:
+                            cs.safety.lock(cs.lock_filepath, "water_pump")
+                            water_GPIO = int(cs.structs["hardware_config"]["equipment_gpio_map"]["water_relay"]) #bcm pin # pulls from config file
+                            pin = rusty_pins.GpioOut(water_GPIO)
+                            relays.actuate_interval_sleep(pin, duration = float(cs.structs["control_params"]["watering_duration"]), sleep = float(cs.structs["control_params"]["watering_interval"]), duration_units="seconds", sleep_units="days", wattage=cs.structs["hardware_config"]["equipment_wattage"]["water_pump"], log="water_pump_kwh")
+                            pin = None
+                            cs.safety.unlock(cs.lock_filepath, "water_pump")
                     if cs.structs["feature_toggles"]["action_camera"] == "1":
-                        say_cheese = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/imaging/camera.py', "0"])
+                        say_cheese = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/imaging/camera.py', "0"], proc_name = "snapshot")
                         say_cheese.wait()
             
             if time.time() - led_timer > 5: #send data to LED every 5s
@@ -346,9 +332,6 @@ def main_loop(led_timer, connect_timer, power_timer):
 
     except(KeyboardInterrupt):
         print("   <----- Exiting program...")
-        cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "terminated")
-        stop_core()
-        time.sleep(5)
         reset_model.reset_device_state() #This is for testing purposes, to keep behavior the same between debugs
 
     except Exception as e:
@@ -357,7 +340,9 @@ def main_loop(led_timer, connect_timer, power_timer):
         print(err.full_stack())
     
     finally:
+        stop_core()
         stop_listener()
+        stop_onboard_led()
         
 if __name__ == '__main__':
     led_timer, connect_timer, power_timer = main_setup()

@@ -54,7 +54,7 @@ def delete_device():
     reset_model.reset_nonhw_configs()
     
     print("Device has been reset to default configuration")
-    systemctl_reboot = rusty_pipes.Open(["sudo", "systemctl", "reboot"])
+    systemctl_reboot = rusty_pipes.Open(["sudo", "systemctl", "reboot"], proc_name = "reboot")
     systemctl_reboot.wait()
 
 #write some data to a .csv, takes a dictionary and a path

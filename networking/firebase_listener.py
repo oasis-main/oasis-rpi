@@ -34,7 +34,6 @@ def act_on_event(field, new_data):
     control_params_fields = list(cs.structs["control_params"].keys())
     hardware_config_groups = list(cs.structs["hardware_config"].keys())
 
-
     path = None
 
     if field in device_state_fields:
@@ -44,16 +43,19 @@ def act_on_event(field, new_data):
     if field in hardware_config_groups:
         path = "/home/pi/oasis-grow/configs/hardware_config.json"
 
+    print(path)
+    print(field)
+    print(new_data)
+
     #open data config file
     #edit appropriate spot
     if path is not None:
-        print(path)
+        
         if path not in hardware_config_groups:
             cs.write_state(path, field, new_data, db_writer = None)
         else:
-            print(field)
-            print(new_data)
-            #cs.write_nested_dict(path,field,new_data) 
+            group = field #the "field" is actually the root of our nested json
+            cs.write_nested_dict(path, field, new_data) #so we pathc that field (nested json group ) with a new data ()
 
 def stream_handler(m):
     #some kind of update
@@ -76,14 +78,9 @@ def stream_handler(m):
 def detect_field_events(user, db):
     my_stream = db.child(user['userId']+'/'+cs.structs["access_config"]["device_name"]+"/").stream(stream_handler, user['idToken'])
 
-def clean_up(*args):
-    print("Database listener deactivated.")
-    cs.safety.unlock(cs.lock_filepath,resource_name)
-    sys.exit()
-
 if __name__ == "__main__":
     cs.check_lock(resource_name)
-    signal.signal(signal.SIGTERM, clean_up)
+    signal.signal(signal.SIGTERM, cs.wrapped_sys_exit)
     print("Database listener activated.")
     try:
         cs.load_state()
@@ -92,12 +89,19 @@ if __name__ == "__main__":
         dbt.fetch_device_data(cs.structs["access_config"])
         #actual section that launches the listener
         detect_field_events(user, db)
+        
+        while True:
+            pass #we're going to hang this one infinitely until terminated from above
+    
+    except SystemExit:
+        print("Terminating listener...")
     except KeyboardInterrupt:
-        print("Listener was interrupted!")
-        clean_up()    
+        print("Listener was interrupted...")    
     except Exception:
         print(err.full_stack())
         print("Listener encountered an error!")
-        clean_up()
+    finally:
+        print("Database listener deactivated.")
+        cs.safety.unlock(cs.lock_filepath,resource_name)
         
         

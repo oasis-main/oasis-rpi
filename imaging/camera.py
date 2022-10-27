@@ -3,7 +3,6 @@
 #---------------------------------------------------------------------------------------
 import sys
 import signal
-from typing import Type
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
@@ -19,17 +18,13 @@ from networking import db_tools as dbt
 
 resource_name = "camera"
 
-'''Here's the old calling code
-camera_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/imaging/camera.py', cs.structs["hardware_config"]["camera_settings"]["picture_frequency"]]) #If running, then skips. If idle then restarts.
-'''
-
 def take_picture(image_path):
     if cs.structs["hardware_config"]["camera_settings"]["awb_mode"] == "on":
         #take picture and save to standard location: libcamera-still -e png -o test.png
-        still = rusty_pipes.Open(["raspistill", "-e", "jpg",  "-o", str(image_path)]) #snap: call the camera. "-w", "1920", "-h", "1080",
+        still = rusty_pipes.Open(["raspistill", "-e", "jpg",  "-o", str(image_path)], proc_name = "raspistill") #snap: call the camera. "-w", "1920", "-h", "1080",
         still.wait()
     else:
-        still = rusty_pipes.Open(["raspistill", "-e", "jpg",  "-o", str(image_path), "-awb", "off", "-awbg", cs.structs["hardware_config"]["camera_settings"]["awb_red"] + "," + cs.structs["hardware_config"]["camera_settings"]["awb_blue"]]) #snap: call the camera. "-w", "1920", "-h", "1080",
+        still = rusty_pipes.Open(["raspistill", "-e", "jpg",  "-o", str(image_path), "-awb", "off", "-awbg", cs.structs["hardware_config"]["camera_settings"]["awb_red"] + "," + cs.structs["hardware_config"]["camera_settings"]["awb_blue"]], proc_name = "raspistill") #snap: call the camera. "-w", "1920", "-h", "1080",
         still.wait()
     
     exit_status = still.exit_code()
@@ -39,7 +34,7 @@ def save_to_feed(image_path):
     #timestamp image
     timestamp = time.time()
     #move timestamped image into feed
-    save_most_recent = rusty_pipes.Open(["cp", str(image_path), "/home/pi/oasis-grow/data_out/image_feed/image_at_" + str(timestamp)+'.jpg'])
+    save_most_recent = rusty_pipes.Open(["cp", str(image_path), "/home/pi/oasis-grow/data_out/image_feed/image_at_" + str(timestamp)+'.jpg'], proc_name = "cp")
     save_most_recent.wait()
 
 def send_image(path):
@@ -53,11 +48,6 @@ def send_image(path):
     dbt.patch_firebase(cs.structs["access_config"], "image_sent", "1")
     dbt.patch_firebase(cs.structs["access_config"], "image_filename", "image.jpg")
     print("Firebase has an image in waiting")
-
-def clean_up(*args):
-    print("Shutting down camera...")
-    cs.safety.unlock(cs.lock_filepath, resource_name)
-    sys.exit()
 
 #define a function to actuate element
 def actuate(interval: int, nosleep = False): #interval is amount of time between shots in minutes, nosleep skips the wait
@@ -86,17 +76,16 @@ def actuate(interval: int, nosleep = False): #interval is amount of time between
     else:
         print("Was not able to take picture!")
         time.sleep(5)
-        clean_up()
-
 
 if __name__ == '__main__':
     cs.check_lock(resource_name) #no hardware acquisition happens on import
-    signal.signal(signal.SIGTERM,clean_up) #so we can check for the lock in __main__
-    
+    signal.signal(signal.SIGTERM, cs.wrapped_sys_exit) #so we can check for the lock in __main__
     try:    
         while True:
             cs.load_state()
             actuate(int(cs.structs["hardware_config"]["camera_settings"]["picture_frequency"]))
+    except SystemExit:
+        print("Camera was terminated.")
     except KeyboardInterrupt:
         print("Camera was interrupted.")
     except TypeError:
@@ -106,7 +95,8 @@ if __name__ == '__main__':
         print("Camera encountered an error!")
         print(err.full_stack())
     finally:
-        clean_up()
+        print("Shutting down camera...")
+        cs.safety.unlock(cs.lock_filepath, resource_name)
 
         
 

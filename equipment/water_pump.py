@@ -21,27 +21,16 @@ cs.load_state()
 water_GPIO = int(cs.structs["hardware_config"]["equipment_gpio_map"]["water_relay"]) #bcm pin # pulls from config file
 pin = rusty_pins.GpioOut(water_GPIO)
 
-running = True
-
-def clean_up(*args):
-    print("Shutting down water pump...")
-    global running
-    running = False
-    relays.turn_off(pin)
-    cs.safety.unlock(cs.lock_filepath, resource_name)
-    sys.exit()
-
 if __name__ == "__main__":
-    signal.signal(signal.SIGTERM, clean_up)
+    signal.signal(signal.SIGTERM, cs.wrapped_sys_exit)
     try:
-        while running:
+        while True:
             if cs.structs["feature_toggles"]["water_pid"] == "1":
                 print("Running water pump in pulse mode with " + cs.structs["control_params"]["moisture_feedback"] + "%" + " power...")
                 relays.actuate_slow_pwm(pin, intensity = float(cs.structs["control_params"]["moisture_feedback"]), wattage=cs.structs["hardware_config"]["equipment_wattage"]["water_pump"], log="water_pump_kwh") #trigger appropriate response
             else:
                 print("Running water pump for " + cs.structs["control_params"]["watering_duration"] + " second(s) every " + cs.structs["control_params"]["watering_interval"] + " day(s)...")
                 relays.actuate_interval_sleep(pin, duration = float(cs.structs["control_params"]["watering_duration"]), sleep = float(cs.structs["control_params"]["watering_interval"]), duration_units="seconds", sleep_units="days", wattage=cs.structs["hardware_config"]["equipment_wattage"]["water_pump"], log="water_pump_kwh")
-    
             cs.load_state()
     except KeyboardInterrupt:
         print("Water pump was interrupted")
@@ -49,6 +38,7 @@ if __name__ == "__main__":
         print("Water pump encountered an error!")
         print(err.full_stack())
     finally:
-        clean_up()
+        print("Shutting down water pump...")
+        cs.safety.unlock(cs.lock_filepath, resource_name)
 
 

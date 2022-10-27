@@ -1,5 +1,5 @@
 use pyo3::prelude::*;
-use serde_json::{Number, Value};
+use serde_json::*;
 
 /// lock(lock_filepath, resource_key, /)
 /// --
@@ -30,9 +30,9 @@ fn lock(lock_filepath: String, resource_key: String) {
 /// unlock(lock_filepath, resource_key, /)
 /// --
 ///
-/// Obtain lock for a resource
+/// Obtain lock for a resource, should fail if lock is not held
 #[pyfunction]
-fn unlock(lock_filepath: String, resource_key: String) {
+fn unlock(lock_filepath: String, resource_key: String) { //equivalent to reset_lock (singular)
     //load the lock file into json
     let mut lock_obj = {
         // Load the first file into a string.

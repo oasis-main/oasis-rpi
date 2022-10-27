@@ -12,12 +12,11 @@ import time
 import subprocess
 from utils import slow_concurrent_state as slow_cs
 from utils import error_handler as err
-from networking import wifi
 
 #create a password-protected lan interface for accepting credentials
 import streamlit as st
 
-def enable_wifi(): #we're going to use subprocess here because the regular one uses Popen
+def enable_wifi(): #we're going to use subprocess here because the regular one uses rusty_piped, which is not availabe to root
 #tell system that the access point should not be launched on next controller startup
     slow_cs.write_state("/home/pi/oasis-grow/configs/device_state.json","access_point","0", db_writer = None)
 
@@ -111,7 +110,9 @@ if __name__ == '__main__':
     if st.button("Launch"):
         try:
             save_creds_exit(email, password, wifi_name, wifi_pass, device_name)
-            time.sleep(1)
+            time.sleep(5)
         except:
             print(err.full_stack())
             sys.exit()
+
+    slow_cs.check_signal("access_point", "terminated", slow_cs.wrapped_sys_exit)

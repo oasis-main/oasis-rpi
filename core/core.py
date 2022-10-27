@@ -6,12 +6,13 @@
 
 #system
 import sys
+import signal
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
 
 #Process management
-import signal
+
 import rusty_pipes
 
 #data handling
@@ -62,7 +63,7 @@ ph = float()
 tds = float()
 water_low = int()
 
-running = True #used to exit the loop and prevent zombie processes from being called on exit
+ #used to exit the loop and prevent zombie processes from being called on exit
                 #set to false in terminate_program() to exit main loop
 
 #declare long-running process objects
@@ -443,7 +444,7 @@ def run_heat():
     resource_name =  "heater"
     cs.load_locks()
     if cs.locks[resource_name] == 0:
-        heat_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/heater.py']) #If process not free, then skips.
+        heat_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/heater.py'], proc_name = "heater") #If process not free, then skips.
 
 #poll humidityf subprocess if applicable and relaunch/update equipment
 def run_hum():
@@ -451,7 +452,7 @@ def run_hum():
     resource_name =  "humidifier"
     cs.load_locks()
     if cs.locks[resource_name] == 0:
-        humidity_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/humidifier.py'])
+        humidity_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/humidifier.py'], proc_name = "humidifier")
     
 #poll dehumidify subprocess if applicable and relaunch/update equipment
 def run_dehum():
@@ -459,7 +460,7 @@ def run_dehum():
     resource_name =  "dehumidifier"
     cs.load_locks()
     if cs.locks[resource_name] == 0:
-        dehumidify_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/dehumidifier.py'])
+        dehumidify_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/dehumidifier.py'], proc_name = "dehumidifier")
 
 #poll fan subprocess if applicable and relaunch/update equipment
 def run_fan(): #Depends on: 'subprocess'; Modifies: humidity_process
@@ -467,7 +468,7 @@ def run_fan(): #Depends on: 'subprocess'; Modifies: humidity_process
     resource_name =  "fan"
     cs.load_locks()
     if cs.locks[resource_name] == 0:
-        fan_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/fan.py'])
+        fan_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/fan.py'], proc_name = "fan")
 
 #poll water subprocess if applicable and relaunch/update equipment
 def run_water(): #Depends on: 'subprocess'; Modifies: water_process
@@ -475,7 +476,7 @@ def run_water(): #Depends on: 'subprocess'; Modifies: water_process
     resource_name =  "water_pump"
     cs.load_locks()
     if cs.locks[resource_name] == 0:
-        water_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/water_pump.py']) #If running, then skips. If idle then restarts.
+        water_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/water_pump.py'], proc_name = "water_pump") #If running, then skips. If idle then restarts.
     
 #poll light subprocess if applicable and relaunch/update equipment
 def run_light():
@@ -483,7 +484,7 @@ def run_light():
     resource_name =  "lights"
     cs.load_locks()
     if cs.locks[resource_name] == 0:
-        light_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/lights.py']) #If running, then skips. If free then restarts.
+        light_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/lights.py'], proc_name = "lights") #If running, then skips. If free then restarts.
    
 #poll air subprocess if applicable and relaunch/update equipment
 def run_air():
@@ -491,7 +492,7 @@ def run_air():
     resource_name =  "air_pump"
     cs.load_locks()
     if cs.locks[resource_name] == 0:
-        air_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/air_pump.py']) #If running, then skips. If idle then restarts.
+        air_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/air_pump.py'], proc_name = "air_pump") #If running, then skips. If idle then restarts.
     
 #poll camera subprocess if applicable and relaunch/update equipment
 def run_camera(): #Depends on: 'subprocess'; Modifies: camera_process
@@ -499,7 +500,7 @@ def run_camera(): #Depends on: 'subprocess'; Modifies: camera_process
     resource_name =  "camera"
     cs.load_locks()
     if cs.locks[resource_name] == 0:
-        camera_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/imaging/camera.py']) #If running, then skips. If idle then restarts.
+        camera_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/imaging/camera.py'], proc_name = "camera") #If running, then skips. If idle then restarts.
 
 def regulate_active_equipment():
     # calculate feedback levels and update equipment in use
@@ -622,45 +623,37 @@ def clean_up_processes():
     #clean up all processes
     cs.load_state()
 
-    if (cs.structs["feature_toggles"]["heater"] == "1") and (heat_process != None): #go through toggles and kill active processes
+    if (cs.structs["feature_toggles"]["heater"] == "1") and (heat_process is not None): #go through toggles and kill active processes
         heat_process.terminate()
         heat_process.wait()
-    if (cs.structs["feature_toggles"]["humidifier"] == "1") and (humidity_process != None):
+    if (cs.structs["feature_toggles"]["humidifier"] == "1") and (humidity_process is not None):
         humidity_process.terminate()
         humidity_process.wait()
-    if (cs.structs["feature_toggles"]["dehumidifier"] == "1") and (dehumidify_process != None):
+    if (cs.structs["feature_toggles"]["dehumidifier"] == "1") and (dehumidify_process is not None):
         dehumidify_process.terminate()
         dehumidify_process.wait()
-    if (cs.structs["feature_toggles"]["fan"] == "1") and (fan_process != None):
+    if (cs.structs["feature_toggles"]["fan"] == "1") and (fan_process is not None):
         fan_process.terminate()
         fan_process.wait()
-    if (cs.structs["feature_toggles"]["water"] == "1") and (water_process != None):
+    if (cs.structs["feature_toggles"]["water"] == "1") and (water_process is not None):
         water_process.terminate()
         water_process.wait()
-    if (cs.structs["feature_toggles"]["light"] == "1") and (light_process != None):
+    if (cs.structs["feature_toggles"]["light"] == "1") and (light_process is not None):
         light_process.terminate()
         light_process.wait()
-    if (cs.structs["feature_toggles"]["air"] == "1") and (air_process != None):
+    if (cs.structs["feature_toggles"]["air"] == "1") and (air_process is not None):
         air_process.terminate()
         air_process.wait()
-    if (cs.structs["feature_toggles"]["camera"] == "1") and (camera_process != None):
+    if (cs.structs["feature_toggles"]["camera"] == "1") and (camera_process is not None):
         camera_process.terminate()
         camera_process.wait()
 
 #terminates the program and all running subprocesses
-def terminate_program(*args): #Depends on: cs.load_state(), 'sys', 'subprocess' #Modifies: heat_process, humidity_process, fan_process, light_process, camera_process, water_process
-    global running
-
-    print("Terminating Program...")
-    running = False
-
+def terminate_program(): #Depends on: cs.load_state(), 'sys', 'subprocess' #Modifies: heat_process, humidity_process, fan_process, light_process, camera_process, water_processs
+    print("Cleaning up processes...")
     clean_up_processes()
-
-    #flip "running" to 0
-    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "0", db_writer = dbt.patch_firebase)
-
-    cs.safety.unlock(cs.lock_filepath,resource_name)
-    sys.exit()
+    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "0", db_writer = dbt.patch_firebase) #flip "running" to 0
+    cs.safety.unlock(cs.lock_filepath,resource_name) #free the resource
 
 @err.Error_Handler
 def main_setup():
@@ -669,24 +662,8 @@ def main_setup():
     #Load state variables to start the main program
     cs.load_state()
 
-    #exit early if opening subprocess daemon
-    if str(sys.argv[1]) == "daemon":
-        print("<core on standby>")
-        #kill the program
-        sys.exit()
-    if str(sys.argv[1]) == "main":
-        print("<core is running>")
-        #log main start
-        #flip "running" to 1 to make usable from command line
-        if cs.structs["device_state"]["connected"] == 1:
-            cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "1", db_writer = dbt.patch_firebase)
-        else:
-            cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "1")
-        #continue with program execution
-        pass
-    else:
-        print("please offer valid run parameters")
-        sys.exit()
+    #Set up SIGTERM handler to throw a sys exit when signaled
+    signal.signal(signal.SIGTERM, cs.wrapped_sys_exit)
 
     #attempt to make serial connection but only if there is a sensor active
     if ((cs.structs["feature_toggles"]["temperature_sensor"] == "1") \
@@ -708,38 +685,28 @@ def main_loop():
     #launch main program loop
     try:
         print("Begin environmental data collection and control")
-        print("------------------------------------------------------------")
-
-        while running:
-            
+        print("-----------------------------------------------------")
+        while True:
             update_derivative_banks() #this occurs in near-realtime, as opposed to storage and exchange every 5 min
-
             cs.load_state() 
-
             listen_active_sensors()
-            
             collect_environmental_data()
-
             update_pid_controllers()
-
             regulate_active_equipment()
-            
             console_log()
-            
             data_out()
-
             time.sleep(5)
-
+    except SystemExit:
+        print("Core was terminated.")
     except KeyboardInterrupt:
         print("Core interrupted by user.")
-        terminate_program()
     except Exception:
         print("Core encoutered an error!")
         print(err.full_stack())
+    finally:
         terminate_program()
 
 if __name__ == '__main__':
-    cs.check_lock(resource_name) #Convention should be to do locks and signal handlers here,
-    signal.signal(signal.SIGTERM, terminate_program) #as this is commonly understood as program entry point.
+    cs.check_lock(resource_name) #Convention should be to do the lock-check here, and signal handlers in loops
     main_setup()
     main_loop()

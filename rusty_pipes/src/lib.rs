@@ -1,19 +1,40 @@
 use std::time::Duration;
 use pyo3::prelude::*;
+use serde_json::{Value};
 use subprocess::{Popen,PopenConfig,ExitStatus};
 
 // A safe, Python-ready subprocess class for spawning & managing unix children
 #[pyclass(unsendable)]
-struct Open{process: Popen}
+struct Open{process: Popen, name: String}
+
+fn custom_signal(sig_filepath: String, id: String , signal: &str){
+    let mut sig_obj = {
+        // Load the first file into a string.
+        let text = std::fs::read_to_string(&sig_filepath).unwrap();
+
+        // Parse the string into a dynamically-typed JSON structure.
+        serde_json::from_str::<Value>(&text).unwrap()
+    };
+
+    //lock this resource in the JSON structure
+    sig_obj[id] = Value::String(String::from(signal));
+
+    //write the new data back to the json file
+    // Save the JSON structure into the other file.
+    std::fs::write(
+        sig_filepath,
+        serde_json::to_string_pretty(&sig_obj).unwrap(),
+    ).unwrap();
+}
 
 // Behavior of the subprocess class
 #[pymethods]
 impl Open { 
     #[new] // call this from python with rusty_pipes.Ropen(pin#)
-    fn new(arg_list: Vec<String>) -> Self { //this is like python __init__()
+    fn new(arg_list: Vec<String>, proc_name: String) -> Self { //this is like python __init__()
         let mut sub_proc = Popen::create(&arg_list[..], PopenConfig::default()).unwrap();
         sub_proc.detach();
-        Open{process: sub_proc}
+        Open{process: sub_proc, name: proc_name}
     }
     
     fn wait(&mut self){ //don't do whatever's next until the child has exited
@@ -40,17 +61,18 @@ impl Open {
             exit_status
         } else {
             1000 //obviously a failure lol
-        }
-        
+        }  
     }
 
-    fn terminate(&mut self){ //be careful with calling this
-        self.process.terminate().unwrap();
+    fn terminate(&mut self, sig_filepath: Option<String>){ //not handled with OS signals now, we are going to set the signal manually
+        match sig_filepath {
+        None => self.process.terminate().unwrap(),
+        Some(signal_filepath) =>  custom_signal(signal_filepath,String::from(&self.name), "terminated"), 
+        }
     }
 
 }
-
-// A Python-ready GPIO I/O module
+// A Python-ready subprocess managment module
 #[pymodule]
 fn rusty_pipes(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<Open>()?;

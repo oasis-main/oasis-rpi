@@ -22,27 +22,21 @@ cs.load_state()
 light_GPIO = int(cs.structs["hardware_config"]["equipment_gpio_map"]["light_relay"]) #lights pin pulls from config file
 pin = rusty_pins.GpioOut(light_GPIO)
 
-running = True
-
-def clean_up(*args):
-    print("Shutting down lights...")
-    global running
-    running = False
-    relays.turn_off(pin)
-    cs.safety.unlock(cs.lock_filepath, resource_name)
-    sys.exit()
-
 if __name__ == '__main__':
-    signal.signal(signal.SIGTERM,clean_up)
+    signal.signal(signal.SIGTERM, cs.wrapped_sys_exit)
     try:
-        while running:
+        while True:
             print("Turning lights on at " + cs.structs["control_params"]["time_start_light"] + ":00 and off at " + cs.structs["control_params"]["time_stop_light"] + ":00, refreshing every " + cs.structs["control_params"]["lighting_interval"] + " minutes...")
             pin = relays.actuate_time_hod(pin, int(cs.structs["control_params"]["time_start_light"]), int(cs.structs["control_params"]["time_stop_light"]), int(cs.structs["control_params"]["lighting_interval"]), interval_units = "minutes", wattage=cs.structs["hardware_config"]["equipment_wattage"]["lights"], log="lights_kwh")
+            cs.load_state()
+    except SystemExit:
+        print("Lights were terminated.")
     except KeyboardInterrupt:
         print("Lights were interrupted.")
     except Exception:
         print("Lights encountered an error!")
         print(err.full_stack())
     finally:
-        clean_up()
+        print("Shutting down lights...")
+        cs.safety.unlock(cs.lock_filepath, resource_name)
 
