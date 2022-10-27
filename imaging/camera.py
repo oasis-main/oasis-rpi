@@ -21,10 +21,10 @@ resource_name = "camera"
 def take_picture(image_path):
     if cs.structs["hardware_config"]["camera_settings"]["awb_mode"] == "on":
         #take picture and save to standard location: libcamera-still -e png -o test.png
-        still = rusty_pipes.Open(["raspistill", "-e", "jpg",  "-o", str(image_path)], proc_name = "raspistill") #snap: call the camera. "-w", "1920", "-h", "1080",
+        still = rusty_pipes.Open(["raspistill", "-e", "jpg",  "-o", str(image_path)],"raspistill") #snap: call the camera. "-w", "1920", "-h", "1080",
         still.wait()
     else:
-        still = rusty_pipes.Open(["raspistill", "-e", "jpg",  "-o", str(image_path), "-awb", "off", "-awbg", cs.structs["hardware_config"]["camera_settings"]["awb_red"] + "," + cs.structs["hardware_config"]["camera_settings"]["awb_blue"]], proc_name = "raspistill") #snap: call the camera. "-w", "1920", "-h", "1080",
+        still = rusty_pipes.Open(["raspistill", "-e", "jpg",  "-o", str(image_path), "-awb", "off", "-awbg", cs.structs["hardware_config"]["camera_settings"]["awb_red"] + "," + cs.structs["hardware_config"]["camera_settings"]["awb_blue"]],"raspistill") #snap: call the camera. "-w", "1920", "-h", "1080",
         still.wait()
     
     exit_status = still.exit_code()
@@ -34,7 +34,7 @@ def save_to_feed(image_path):
     #timestamp image
     timestamp = time.time()
     #move timestamped image into feed
-    save_most_recent = rusty_pipes.Open(["cp", str(image_path), "/home/pi/oasis-grow/data_out/image_feed/image_at_" + str(timestamp)+'.jpg'], proc_name = "cp")
+    save_most_recent = rusty_pipes.Open(["cp", str(image_path), "/home/pi/oasis-grow/data_out/image_feed/image_at_" + str(timestamp)+'.jpg'],"cp")
     save_most_recent.wait()
 
 def send_image(path):

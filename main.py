@@ -55,7 +55,7 @@ def launch_access_point():
     global minion
 
     #launch server subprocess to accept credentials over Oasis wifi network, does not wait
-    server_process = rusty_pipes.Open(["sudo", "streamlit", "run", "/home/pi/oasis-grow/networking/connect_oasis.py", "--server.headless=true", "--server.port=80", "--server.address=192.168.4.1", "--server.enableCORS=false", "--server.enableWebsocketCompression=false"], proc_name = "access_point")
+    server_process = rusty_pipes.Open(["sudo", "streamlit", "run", "/home/pi/oasis-grow/networking/connect_oasis.py", "--server.headless=true", "--server.port=80", "--server.address=192.168.4.1", "--server.enableCORS=false", "--server.enableWebsocketCompression=false"],"access_point")
     print("Access Point Mode enabled")
 
     time.sleep(3)
@@ -85,12 +85,12 @@ def launch_access_point():
                 time.sleep(1)
 
 def connect_firebase():
-    connect_firebase = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/networking/firebase_manager.py"], proc_name = "firebase_manager")
+    connect_firebase = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/networking/firebase_manager.py"],"firebase_manager")
 
 def start_listener():
     global listener
     if listener is None:
-        listener = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/networking/firebase_listener.py"], proc_name = "listener")
+        listener = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/networking/firebase_listener.py"],"listener")
 
 def stop_listener():
     global listener
@@ -106,7 +106,7 @@ def start_core():
     
     if (cs.locks["core"] == 0) & (core is None): #if it is free
         #launch it
-        core = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/core/core.py"], proc_name = "core")
+        core = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/core/core.py"],"core")
         print("Core process is running...")
 
         if cs.structs["device_state"]["connected"] == "1": #if connected
@@ -152,7 +152,7 @@ def switch_core_running(): #Depends on: cs.load_state(), cs.write_state(), dbt.p
 
 def start_onboard_led():
     global led
-    led = rusty_pipes.Open(["sudo", "python3", "/home/pi/oasis-grow/peripherals/neopixel_leds.py"], proc_name = "led")
+    led = rusty_pipes.Open(["sudo", "python3", "/home/pi/oasis-grow/peripherals/neopixel_leds.py"],"led")
 
 def stop_onboard_led():
     global led
@@ -215,7 +215,7 @@ def get_updates(): #depends on: cs.load_state(),'subproceess', update.py; modifi
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = dbt.patch_firebase) #make sure the cloud does not update main code, kill listener
         dbt.kill_listener()
         #launch update.py and wait to complete
-        update_process = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/utils/update.py"], proc_name = "update")
+        update_process = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/utils/update.py"],"update")
         update_process.wait()
         
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","1", db_writer = dbt.patch_firebase)#restore listener
@@ -227,7 +227,7 @@ def get_updates(): #depends on: cs.load_state(),'subproceess', update.py; modifi
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = dbt.patch_firebase) #make sure the cloud does not update main code, kill listener
         dbt.kill_listener()
         #launch update.py and wait to complete
-        update_process = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/utils/update.py"], proc_name = "update")
+        update_process = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/utils/update.py"],"update")
         update_process.wait()
         
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","1", db_writer = dbt.patch_firebase) #restore running
@@ -316,7 +316,7 @@ def main_loop(led_timer, connect_timer, power_timer):
                             pin = None
                             cs.safety.unlock(cs.lock_filepath, "water_pump")
                     if cs.structs["feature_toggles"]["action_camera"] == "1":
-                        say_cheese = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/imaging/camera.py', "0"], proc_name = "snapshot")
+                        say_cheese = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/imaging/camera.py', "0"],"snapshot")
                         say_cheese.wait()
             
             if time.time() - led_timer > 5: #send data to LED every 5s

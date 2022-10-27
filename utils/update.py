@@ -18,32 +18,32 @@ from networking import db_tools as dbt
 
 #get latest code from designated repository
 def git_pull():
-    gitpull = rusty_pipes.Open(["git", "pull"], proc_name = "git_pull") #should be whatever branch the code was installed from
+    gitpull = rusty_pipes.Open(["git", "pull"],"git_pull") #should be whatever branch the code was installed from
     gitpull.wait()
 
     print("Pulled most recent code changes from repository.")
 
 #save existing data into temps
 def save_old_configs():
-    savefeatures = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/configs/feature_toggles.json", "/home/pi/oasis-grow/configs/feature_toggles_temp.json"], proc_name = "cp")
+    savefeatures = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/configs/feature_toggles.json", "/home/pi/oasis-grow/configs/feature_toggles_temp.json"],"cp")
     savefeatures.wait()
     
-    savehardware = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/configs/hardware_config.json", "/home/pi/oasis-grow/configs/hardware_config_temp.json"], proc_name = "cp")
+    savehardware = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/configs/hardware_config.json", "/home/pi/oasis-grow/configs/hardware_config_temp.json"],"cp")
     savehardware.wait()
 
-    saveaccess = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/configs/access_config.json", "/home/pi/oasis-grow/configs/access_config_temp.json"], proc_name = "cp")
+    saveaccess = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/configs/access_config.json", "/home/pi/oasis-grow/configs/access_config_temp.json"],"cp")
     saveaccess.wait()
 
-    savestate = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/configs/device_state.json", "/home/pi/oasis-grow/configs/device_state_temp.json"], proc_name = "cp")
+    savestate = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/configs/device_state.json", "/home/pi/oasis-grow/configs/device_state_temp.json"],"cp")
     savestate.wait()
 
-    saveparams = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/configs/control_params.json", "/home/pi/oasis-grow/configs/control_params_temp.json"], proc_name = "cp")
+    saveparams = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/configs/control_params.json", "/home/pi/oasis-grow/configs/control_params_temp.json"],"cp")
     saveparams.wait()
 
-    savesensors = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/configs/sensor_data.json", "/home/pi/oasis-grow/configs/sensor_data_temp.json"], proc_name = "cp")
+    savesensors = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/configs/sensor_data.json", "/home/pi/oasis-grow/configs/sensor_data_temp.json"],"cp")
     savesensors.wait()
 
-    savepower = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/configs/power_data.json", "/home/pi/oasis-grow/configs/power_data_temp.json"], proc_name = "cp")
+    savepower = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/configs/power_data.json", "/home/pi/oasis-grow/configs/power_data_temp.json"],"cp")
     savepower.wait()
 
     print("Saved existing configs to temporary files")
@@ -77,7 +77,7 @@ def transfer_compatible_configs(config_path,temp_config_path):
     for key in new_keys:
         dbt.patch_firebase(cs.structs["access_config"], key, config[key])
 
-    remove_temp = rusty_pipes.Open(["rm", temp_config_path], proc_name = "rm")
+    remove_temp = rusty_pipes.Open(["rm", temp_config_path],"rm")
     remove_temp.wait()
 
 def get_update(test=False):
@@ -106,10 +106,10 @@ def get_update(test=False):
     print("Transfered compatible state & configs, removing temporary files")
 
     #run external update commands
-    sh_stage = rusty_pipes.Open(["sudo", "chmod" ,"+x", "/home/pi/oasis-grow/setup_scripts/update_patch.sh"], proc_name = "chmod")
+    sh_stage = rusty_pipes.Open(["sudo", "chmod" ,"+x", "/home/pi/oasis-grow/setup_scripts/update_patch.sh"],"chmod")
     sh_stage.wait()
 
-    sh_patch = rusty_pipes.Open(["sudo", "/home/pi/oasis-grow/setup_scripts/update_patch.sh"], proc_name = "patch")
+    sh_patch = rusty_pipes.Open(["sudo", "/home/pi/oasis-grow/setup_scripts/update_patch.sh"],"patch")
     sh_patch.wait()
 
     #load state to get configs & state
@@ -123,7 +123,7 @@ def get_update(test=False):
     if not test:
         #reboot
         print("Rebooting...")
-        reboot = rusty_pipes.Open(["sudo", "systemctl", "reboot"], proc_name = "reboot")
+        reboot = rusty_pipes.Open(["sudo", "systemctl", "reboot"],"reboot")
         reboot.wait()
 
 if __name__ == '__main__':
