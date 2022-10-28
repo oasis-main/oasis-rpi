@@ -80,7 +80,7 @@ def load_state(loop_limit=1000):
     global structs
 
     for struct in structs: #now we're going to load an populate the data    
-        for i in list(range(int(loop_limit))): #attempt to load, pass and try again if fails
+        for i in list(range(int(loop_limit)+1)): #attempt to load, pass and try again if fails
             try:
                 config_filepath = "/home/pi/oasis-grow/configs/" + struct + ".json"
 
@@ -121,7 +121,7 @@ def load_locks(loop_limit = 10000): #leave this alone since it's the python brid
         print("Lockfile does not exist. Have you run the setup scripts?")
         return
     
-    for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
+    for i in list(range(int(loop_limit)+1)): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
         try:
             with open(lock_filepath, "r") as l:
                 locks = json.load(l) #get locks
@@ -157,7 +157,7 @@ def load_custom_signals(loop_limit = 10000): #leave this alone since it's the py
         print("Signal file does not exist. Have you run the setup scripts?")
         return
     
-    for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
+    for i in list(range(int(loop_limit)+1)): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
         try:
             with open(signal_filepath, "r") as s:
                 signals = json.load(s) #get locks
@@ -195,7 +195,7 @@ def write_state(path, field, value, db_writer = None, loop_limit=2500): #Depends
         print(path + " does not exist. Have you run the setup scripts?")
         return
 
-    for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state, make available 
+    for i in list(range(int(loop_limit)+1)): #try to load, check if available, make unavailable if so, write state, make available 
         load_locks() #get all the mutexes
         if locks[path] == 0: #check is the file is available to be written   
             
@@ -276,7 +276,7 @@ def write_dict(path, dictionary, db_writer = None, loop_limit=2500): #Depends on
                 print(err.full_stack())
                 pass
 
-    for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke if so
+    for i in list(range(int(loop_limit)+1)): #try to load, check if available, make unavailable if so, write state if so, write availabke if so
         load_locks()    
         if locks[path] == 0: #check is the file is available to be written
             
@@ -355,7 +355,7 @@ def write_nested_state(path: str, group: str, field: str, value: str, db_writer 
         print(path + " does not exist. Have you run the setup scripts?")
         return
 
-    for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state, make available 
+    for i in list(range(int(loop_limit)+1)): #try to load, check if available, make unavailable if so, write state, make available 
         load_locks() #get all the mutexes
         if locks[path] == 0: #check is the file is available to be written   
             
@@ -434,7 +434,7 @@ def write_nested_dict(path: str, group: str, dictionary: dict, db_writer = None,
                 print(err.full_stack())
                 pass
 
-    for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke if so
+    for i in list(range(int(loop_limit)+1)): #try to load, check if available, make unavailable if so, write state if so, write availabke if so
         load_locks()    
         if locks[path] == 0: #check is the file is available to be written
             

@@ -57,11 +57,11 @@ lock_filepath = "/home/pi/oasis-grow/configs/locks.json"
 signals = {}
 signal_filepath = "/home/pi/oasis-grow/configs/signals.json"
 
-def load_state(loop_limit=1000): 
+def load_state(loop_limit=100): 
     global structs
 
     for struct in structs: #now we're going to load an populate the data    
-        for i in list(range(int(loop_limit))): #attempt to load, pass and try again if fails
+        for i in list(range(int(loop_limit)+1)): #attempt to load, pass and try again if fails
             try:
                 config_filepath = "/home/pi/oasis-grow/configs/" + struct + ".json"
 
@@ -95,14 +95,14 @@ def load_state(loop_limit=1000):
                     pass
 
 #gets the mutex
-def load_locks(loop_limit = 10000): #leave this alone since it's the python bridge to ramport locks
+def load_locks(loop_limit = 100): #leave this alone since it's the python bridge to ramport locks
     global locks
             
     if not os.path.exists(lock_filepath):
         print("Lockfile does not exist. Have you run the setup scripts?")
         return
     
-    for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
+    for i in list(range(int(loop_limit)+1)): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
         try:
             with open(lock_filepath, "rb") as l:
                 locks = orjson.loads(l.read()) #get locks
@@ -131,14 +131,14 @@ def wrapped_sys_exit(*args):
     sys.exit()
 
 #gets the signals which cannot be process with signals.signal(SIGTERM, some_func)
-def load_custom_signals(loop_limit = 10000): #leave this alone since it's the python bridge to ramport locks
+def load_custom_signals(loop_limit = 100): #leave this alone since it's the python bridge to ramport locks
     global signals
 
     if not os.path.exists(signal_filepath):
         print("Signal file does not exist. Have you run the setup scripts?")
         return
     
-    for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
+    for i in list(range(int(loop_limit)+1)): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
         try:
             with open(signal_filepath, "rb") as s:
                 signals = orjson.loads(s.read()) #get locks
@@ -163,7 +163,7 @@ def load_custom_signals(loop_limit = 10000): #leave this alone since it's the py
                 reset_model.reset_signals()
 
 #save key values to .json
-def write_state(path, field, value, db_writer = None, loop_limit=2500): #Depends on: load_state()
+def write_state(path, field, value, db_writer = None, loop_limit=100): #Depends on: load_state()
     if db_writer is not None: #Accepts(path, field, value, custom timeout, db_writer function); Modifies: path
         if structs["device_state"]["connected"] == "1": #write state to cloud
             try:
@@ -176,7 +176,7 @@ def write_state(path, field, value, db_writer = None, loop_limit=2500): #Depends
         print(path + " does not exist. Have you run the setup scripts?")
         return
 
-    for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state, make available 
+    for i in list(range(int(loop_limit)+1)): #try to load, check if available, make unavailable if so, write state, make available 
         load_locks() #get all the mutexes
         if locks[path] == 0: #check is the file is available to be written   
             
@@ -246,7 +246,7 @@ def write_state(path, field, value, db_writer = None, loop_limit=2500): #Depends
                 break #break the loop when the write has been successful
             
 #save key values to .json
-def write_dict(path, dictionary, db_writer = None, loop_limit=2500): #Depends on: load_state(), dbt.patch_firebase, 'json'; Modifies: path
+def write_dict(path, dictionary, db_writer = None, loop_limit=100): #Depends on: load_state(), dbt.patch_firebase, 'json'; Modifies: path
 
     if db_writer is not None:
         #these will be loaded in by the listener, so best to make sure we represent the change in firebase too
@@ -257,7 +257,7 @@ def write_dict(path, dictionary, db_writer = None, loop_limit=2500): #Depends on
                 print(err.full_stack())
                 pass
 
-    for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke if so
+    for i in list(range(int(loop_limit)+1)): #try to load, check if available, make unavailable if so, write state if so, write availabke if so
         load_locks()    
         if locks[path] == 0: #check is the file is available to be written
             
@@ -336,7 +336,7 @@ def write_nested_state(path: str, group: str, field: str, value: str, db_writer 
         print(path + " does not exist. Have you run the setup scripts?")
         return
 
-    for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state, make available 
+    for i in list(range(int(loop_limit)+1)): #try to load, check if available, make unavailable if so, write state, make available 
         load_locks() #get all the mutexes
         if locks[path] == 0: #check is the file is available to be written   
             
@@ -415,7 +415,7 @@ def write_nested_dict(path: str, group: str, dictionary: dict, db_writer = None,
                 print(err.full_stack())
                 pass
 
-    for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke if so
+    for i in list(range(int(loop_limit)+1)): #try to load, check if available, make unavailable if so, write state if so, write availabke if so
         load_locks()    
         if locks[path] == 0: #check is the file is available to be written
             
