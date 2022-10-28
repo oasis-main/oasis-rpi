@@ -524,7 +524,7 @@ def check_lock(resource):
 def check_signal(resource: str, signal: str, reaction, loop_limit = 100):
     load_custom_signals()
     if signals[resource] == signal:
-        for i in loop_limit:
+        for i in range(loop_limit+1):
             if i < loop_limit:
                 try:
                     with open(signal_filepath, "r+") as x:
