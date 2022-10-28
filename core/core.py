@@ -655,7 +655,6 @@ def terminate_program(): #Depends on: cs.load_state(), 'sys', 'subprocess' #Modi
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "0", db_writer = dbt.patch_firebase) #flip "running" to 0
     cs.safety.unlock(cs.lock_filepath,resource_name) #free the resource
 
-@err.Error_Handler
 def main_setup():
     global data_timer, minion 
 
@@ -680,7 +679,6 @@ def main_setup():
     #start the clock for timimg .csv writes and data exchanges with server
     data_timer = time.time() - 300
 
-@err.Error_Handler
 def main_loop():
     #launch main program loop
     try:

@@ -38,6 +38,11 @@ if __name__ == '__main__':
         print(err.full_stack())
     finally:
         print("Shutting down air pump...")
+        try:
+            relays.turn_off(pin)
+        except:
+            print(resource_name + " has no relay objects remaining.")
+        
         cs.safety.unlock(cs.lock_filepath, resource_name)
 
 
