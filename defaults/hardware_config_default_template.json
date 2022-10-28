@@ -34,14 +34,14 @@
                    "dehumidifier_relay": "8"
                    },
 "equipment_wattage": {
-                    "boards": "0",
-                    "heater": "0",
-                    "humidifier": "0",
-                    "fan": "0",
-                    "lights": "0",
-                    "water_pump": "0",
-                    "air_pump": "0",
-                    "dehumidifier": "0"
+                    "boards": "10",
+                    "heater": "150",
+                    "humidifier": "10",
+                    "fan": "100",
+                    "lights": "1000",
+                    "water_pump": "50",
+                    "air_pump": "50",
+                    "dehumidifier": "10"
                     }
 }
 

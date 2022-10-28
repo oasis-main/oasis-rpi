@@ -250,7 +250,7 @@ def heat_pid(temperature, target_temperature, last_temperature, last_target_temp
                                                                     #When negative, dampens heat signal
     heat_level  = P_heat * err_temperature + I_heat * err_cum_temperature + D_heat * err_dot_temperature
     heat_level  = max(min(int(heat_level), 100), 0)
-    print(heat_level)
+    #print(heat_level)
 
     return heat_level
 
@@ -272,7 +272,7 @@ def hum_pid(humidity, target_humidity, last_humidity, last_target_humidity,
 
     humidity_level  = P_hum*err_humidity + I_hum*err_cum_humidity + D_hum*err_dot_humidity #positive response
     humidity_level  = max(min(int(humidity_level),100),0)
-    print(humidity_level)
+    #print(humidity_level)
 
     return humidity_level
 
@@ -295,7 +295,7 @@ def dehum_pid(humidity, target_humidity, last_humidity, last_target_humidity,
 
     dehumidify_level  = (0-P_dehum)*err_humidity + (0-I_dehum)*err_cum_humidity + (0-D_dehum)*err_dot_humidity
     dehumidify_level  = max(min(int(dehumidify_level), 100), 0)
-    print(dehumidify_level)
+    #print(dehumidify_level)
 
     return dehumidify_level
 
@@ -337,7 +337,7 @@ def fan_pid(temperature, humidity, co2,
                 +(0-Pc_fan)*err_co2 + (0-Ic_fan)*err_cum_co2 + (0-Dc_fan)*err_dot_co2    
     
     fan_level  = max(min(int(fan_level),100),0)
-    print(fan_level)
+    #print(fan_level)
 
     return fan_level
 
@@ -367,7 +367,7 @@ def water_pid(substrate_moisture, target_substrate_moisture,
                    + D_moisture * err_dot_substrate_moisture
     
     water_level  = max(min(int(water_level), 100), 0)
-    print(water_level)
+    #print(water_level)
 
     return water_level
 
@@ -523,7 +523,8 @@ def regulate_active_equipment():
 
 #unfinished
 def console_log():
-
+    sensors = cs.structs["sensor_data"]
+    targets = cs.structs["control_params"]
     feedback = {}
     timers = {}
 
@@ -580,6 +581,12 @@ def console_log():
             timers.update({"Capture Mode": "Raw AWB Imaging"})
         timers.update({"Camera Interval (seconds between image capture): ": cs.structs["hardware_config"]["camera_settings"]["picture_frequency"]})
 
+    
+    if sensors:
+        print("Sensor Data = ")
+        pprint.pprint(sensors)
+    if targets:
+        print("")
     if feedback:
         print("Feedback Settings = ")
         pprint.pprint(feedback)
