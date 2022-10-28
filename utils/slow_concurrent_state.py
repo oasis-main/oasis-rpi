@@ -124,7 +124,7 @@ def load_locks(loop_limit = 10000): #leave this alone since it's the python brid
     for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
         try:
             with open(lock_filepath, "r") as l:
-                locks = json.load(l.read()) #get locks
+                locks = json.load(l) #get locks
 
             for k,v in locks.items():
                 if locks[k] is None:
@@ -160,7 +160,7 @@ def load_custom_signals(loop_limit = 10000): #leave this alone since it's the py
     for i in list(range(int(loop_limit))): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
         try:
             with open(signal_filepath, "r") as s:
-                signals = json.load(s.read()) #get locks
+                signals = json.load(s) #get locks
 
             for k,v in signals.items():
                 if signals[k] is None:
