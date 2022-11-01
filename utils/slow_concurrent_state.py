@@ -47,31 +47,165 @@ lock_filepath = "/home/pi/oasis-grow/configs/locks.json"
 signals = {}
 signal_filepath = "/home/pi/oasis-grow/configs/signals.json"
 
-def lock(lock_filepath: str, resource_key: str):
+#gets the mutex
+def load_locks(loop_limit = 10000): #leave this alone since it's the python bridge to ramport locks
+    global locks
+            
+    if not os.path.exists(lock_filepath):
+        print("Lockfile does not exist. Have you run the setup scripts?")
+        return
+    
+    for i in list(range(int(loop_limit)+1)): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
+        try:
+            with open(lock_filepath, "r") as l:
+                locks = json.load(l) #get locks
+
+            for k,v in locks.items():
+                if locks[k] is None:
+                    print("Read NoneType in locks")
+                    print("Resetting lock...")
+                    unlock(lock_filepath,k)  
+                else: 
+                    pass
+             
+            break #exit the loop on success
+    
+        except Exception:
+            if i >= int(loop_limit):
+                print("Tried to load locks max number of times. File is corrupted. Resetting locks...")
+                reset_locks(lock_filepath)
+            else:
+                print("Waiting on lockfile...")
+                time.sleep(0.01)
+                pass
+
+'''
+LOCK:
+    //loop(
+    //S0: loop(load shared memory object, continue if fail), write x = x+1, copy x, continue if fail else proceed
+    
+    //S1: loop)load shared memory object, continue if fail), read y, proceed if y==0 else continue 
+
+    //S2: loop(load shared memory object, continue if fail), write y = y+1, copy y, continue if fail else proceed
+
+    //S3: loop(load shared memory object, continue if fail), read x, proceed if x == x_copy else delay ... loop(load_shared memory object, continue if fail), break if y==y_copy else continue) 
+    )
+'''
+def lock(lock_filepath: str, resource_key: str, loop_limit = 1000): #quick & dirty python implementation for our fast mutx
+    global locks
+    
+    x_lock_path = resource_key + "_x"
+    y_lock_path = resource_key + "_y"
+
+    for i in list(range(int(loop_limit)+1)):
+        
+        go_to_start = False
+        x_copy = 0
+        y_copy = 0
+
+        #S0: write x = x+1, copy x, continue if fail else proceed
+        for i in list(range(int(loop_limit)+1)):
+            try:
+                with open(lock_filepath, "r+") as x:
+                    locks = json.load(x)
+                    locks[x_lock_path] = locks[x_lock_path] + 1 #write the desired value
+                    x_copy = locks[x_lock_path]
+                    x.seek(0)
+                    json.dump(locks,x)
+                    x.truncate()
+                break
+            except:
+                pass
+        
+        #S1: read y, proceed if y==0 else continue
+        for i in list(range(int(loop_limit)+1)):
+            try:
+                with open(lock_filepath, "r") as x:
+                    locks = json.load(x)
+                    if locks[y_lock_path] == 0: #read and compare the desired value
+                        break
+                    else:
+                        go_to_start = True
+                        break
+            except:
+                pass
+        if go_to_start:
+            continue
+
+        #S2: write y = y+1, copy y, continue if fail else proceed
+        for i in list(range(int(loop_limit)+1)):
+            try:
+                with open(lock_filepath, "r+") as x:
+                    locks = json.load(x)
+                    locks[y_lock_path] = locks[y_lock_path] + 1 #write the desired value
+                    y_copy = locks[y_lock_path]
+                    x.seek(0)
+                    json.dump(locks,x)
+                    x.truncate()
+                break
+            except:
+                pass
+
+        #S3: read x, proceed if x == x_copy else delay ... loop(load_shared memory object, continue if fail), break if y==y_copy else continue) 
+        for i in list(range(int(loop_limit)+1)):
+            try:
+                with open(lock_filepath, "r") as x:
+                    locks = json.load(x)
+                    if locks[x_lock_path] == x_copy: #read and compare the desired value
+                        return
+                    else:
+                        time.sleep(0.25)
+                        for i in list(range(int(loop_limit)+1)):
+                            try:
+                                with open(lock_filepath, "r") as x:
+                                    locks = json.load(x)
+                                    if locks[y_lock_path] == y_copy: #read and compare the desired value
+                                        return
+                                    else:
+                                        go_to_start = True
+                                        break
+                            except:
+                                pass
+                break    
+            except:
+                pass
+        if go_to_start:
+            continue
+
+'''
+UNLOCK:
+    //loop(
+    //    S4: loop(load shared memory object, continue if fail), write y = 0, continue if fail, else break
+    //    )
+'''
+def unlock(lock_filepath: str, resource_key: str, loop_limit = 1000):
     global locks
 
-    with open(lock_filepath, "w") as x:
-        locks[resource_key] = 1 #write the desired value
-        x.seek(0)
-        json.dump(locks,x)
-        x.truncate()
+    y_lock_path = resource_key + "_y"
 
-def unlock(lock_filepath: str, resource_key: str):
-    global locks
-
-    with open(lock_filepath, "w") as x:
-        locks[resource_key] = 0 #write the desired value
-        x.seek(0)
-        json.dump(locks,x)
-        x.truncate()
+    #S4: write y = 0, continue if fail, else break
+    for i in list(range(int(loop_limit)+1)):
+        try:
+            with open(lock_filepath, "r+") as x:
+                locks[y_lock_path] = 0 #write the desired value
+                x.seek(0)
+                json.dump(locks,x)
+                x.truncate()
+            return
+            
+        except:
+            pass
 
 def reset_locks(lock_filepath):
     global locks
 
     for lock in locks:
-        locks[lock] = 0
+        lock_x = lock + "_x"
+        lock_y = lock + "_y"
+        locks[lock_x] = 0
+        locks[lock_y] = 0
     
-    with open(lock_filepath, "w") as x:
+    with open(lock_filepath, "r+") as x:
         x.seek(0)
         json.dump(locks,x)
         x.truncate()
@@ -113,38 +247,6 @@ def load_state(loop_limit=1000):
                     time.sleep(0.01)
                     pass
 
-#gets the mutex
-def load_locks(loop_limit = 10000): #leave this alone since it's the python bridge to ramport locks
-    global locks
-            
-    if not os.path.exists(lock_filepath):
-        print("Lockfile does not exist. Have you run the setup scripts?")
-        return
-    
-    for i in list(range(int(loop_limit)+1)): #try to load, check if available, make unavailable if so, write state if so, write availabke iff so,  
-        try:
-            with open(lock_filepath, "r") as l:
-                locks = json.load(l) #get locks
-
-            for k,v in locks.items():
-                if locks[k] is None:
-                    print("Read NoneType in locks")
-                    print("Resetting lock...")
-                    unlock(lock_filepath,k)  
-                else: 
-                    pass
-             
-            break #exit the loop on success
-    
-        except Exception:
-            if i >= int(loop_limit):
-                print("Tried to load locks max number of times. File is corrupted. Resetting locks...")
-                reset_locks(lock_filepath)
-            else:
-                print("Waiting on lockfile...")
-                time.sleep(0.01)
-                pass
-
 def wrapped_sys_exit(*args):
     print("See ya!")
     sys.exit()
@@ -183,6 +285,10 @@ def load_custom_signals(loop_limit = 10000): #leave this alone since it's the py
 
 #save key values to .json
 def write_state(path, field, value, db_writer = None, loop_limit=2500): #Depends on: load_state()
+    if not os.path.exists(path):
+        print(path + " does not exist. Have you run the setup scripts?")
+        return
+
     if db_writer is not None: #Accepts(path, field, value, custom timeout, db_writer function); Modifies: path
         if structs["device_state"]["connected"] == "1": #write state to cloud
             try:
@@ -191,82 +297,28 @@ def write_state(path, field, value, db_writer = None, loop_limit=2500): #Depends
                 print(err.full_stack())
                 pass
             
-    if not os.path.exists(path):
-        print(path + " does not exist. Have you run the setup scripts?")
-        return
+    #Now write safely
+    lock(lock_filepath, path)
 
-    for i in list(range(int(loop_limit)+1)): #try to load, check if available, make unavailable if so, write state, make available 
-        load_locks() #get all the mutexes
-        if locks[path] == 0: #check is the file is available to be written   
-            
-            try: #try to safely execute a write
-                with open(path, "r") as x: # can we load a valid json? #will fail if false
-                    data = json.load(x) # ie. lock is free, but another process saw it too and is already writing
+    with open(path, "r+") as x:
+        data = json.load(x)
+        data[field] = value #write the desired value
+        x.seek(0)
+        json.dump(data,x)
+        x.truncate()
 
-                lock(lock_filepath, path) # lock the the file
+    unlock(lock_filepath, path)
+    
+    load_state()
 
-                with open(path, "w") as x:
-                    data[field] = value #write the desired value
-                    x.seek(0)
-                    json.dump(data,x)
-                    x.truncate()
-
-                unlock(lock_filepath, path)
-                
-                load_state()
-                break #break the loop when the write has been successful
-            
-            except Exception:
-                if i < int(loop_limit): #Some error, try again some reasonable number of times
-                    #print(err.full_stack())
-                    print(path + " write failed, trying again...")
-                    pass #continue the loop until write is successful or ceiling is hit
-                else: #Ok, somethings seriously wrong. Reset the file.
-                    print(err.full_stack())
-                    print("Tried to write "+ path + " max # of times. File is corrupted. Resetting...")
-                    reset_model.reset_config_path(path)
-                    
-                    lock(lock_filepath, path) # lock the the file
-
-                    with open(path, "r+") as x:
-                        data = json.load(x)
-                        data[field] = value #write the desired value
-                        x.seek(0)
-                        json.dump(data,x)
-                        x.truncate()
-
-                    unlock(lock_filepath, path)
-                    
-                    load_state()
-                    break #break the loop when the write has been successful
-
-        else:
-            if i < int(loop_limit): #pass while waiting for lock
-                print("Waiting for " + path + "...")
-                time.sleep(0.1)
-                pass 
-            else:                   #if starved of lock, reset the locks
-                print("Tried to access "+ path + " max # of times. Lock is dead. Resetting...")
-                unlock(lock_filepath, path)
-                
-                #Now write safely
-                lock(lock_filepath, path)
-
-                with open(path, "r+") as x:
-                    data = json.load(x)
-                    data[field] = value #write the desired value
-                    x.seek(0)
-                    json.dump(data,x)
-                    x.truncate()
-
-                unlock(lock_filepath, path)
-                
-                load_state()
-                break #break the loop when the write has been successful
             
 #save key values to .json
 def write_dict(path, dictionary, db_writer = None, loop_limit=2500): #Depends on: load_state(), dbt.patch_firebase, 'json'; Modifies: path
 
+    if not os.path.exists(path):
+        print(path + " does not exist. Have you run the setup scripts?")
+        return
+
     if db_writer is not None:
         #these will be loaded in by the listener, so best to make sure we represent the change in firebase too
         if structs["device_state"]["connected"] == "1": #write state to cloud
@@ -276,155 +328,54 @@ def write_dict(path, dictionary, db_writer = None, loop_limit=2500): #Depends on
                 print(err.full_stack())
                 pass
 
-    for i in list(range(int(loop_limit)+1)): #try to load, check if available, make unavailable if so, write state if so, write availabke if so
-        load_locks()    
-        if locks[path] == 0: #check is the file is available to be written
-            
-            try: #attempt to write safely
-                with open(path, "r") as x: # open the file.
-                    data = json.load(x) # can we load a valid json?
+    #Now write safely
+    lock(lock_filepath, path)
+    
+    with open(path, "r+") as x:
+        data = json.load(x)
+        data.update(dictionary) #write the desired values
+        x.seek(0)
+        json.dump(data,x)
+        x.truncate()
+    
+    unlock(lock_filepath, path)
+    
+    load_state()
 
-                lock(lock_filepath, path)
-
-                with open(path, "w") as x:
-                    data.update(dictionary) #write the desired values
-                    x.seek(0)
-                    json.dump(data,x)
-                    x.truncate()
-
-                unlock(lock_filepath, path)
-                
-                load_state()
-                break #break the loop when the write has been successful
-            
-            except Exception: #If any of the above fails
-                if i < int(loop_limit):
-                    #print(err.full_stack())
-                    print(path + " write failed, trying again. If this persists, file is corrupted.")
-                    pass #continue the loop until write is successful or ceiling is hit
-                else:
-                    print("Tried to write "+ path + " max # of times. File is corrupted. Resetting...")
-                    reset_model.reset_config_path(path)
-                    
-                    lock(lock_filepath, path)
-                    
-                    with open(path, "r+") as x:
-                        data = json.load(x)
-                        data.update(dictionary) #write the desired values
-                        x.seek(0)
-                        json.dump(data,x)
-                        x.truncate()
-
-                    unlock(lock_filepath, path)
-                    
-                    load_state()
-                    break
-        else:
-            if i < int(loop_limit):
-                print("Waiting for " + path + "...")
-                pass
-            else:
-                print("Tried to access "+ path + " max # of times. Lock is dead. Resetting...")
-                unlock(lock_filepath, path)
-                
-                #Now write safely
-                lock(lock_filepath, path)
-                
-                with open(path, "r+") as x:
-                    data = json.load(x)
-                    data.update(dictionary) #write the desired values
-                    x.seek(0)
-                    json.dump(data,x)
-                    x.truncate()
-                
-                unlock(lock_filepath, path)
-                
-                load_state()
-                break #break the loop when the write has been successful
 
 def write_nested_state(path: str, group: str, field: str, value: str, db_writer = None, loop_limit=2500): #listener needs this for patching hardware config
+    if not os.path.exists(path):
+        print(path + " does not exist. Have you run the setup scripts?")
+        return
+    
     if db_writer is not None: #Accepts(path, field, value, custom timeout, db_writer function); Modifies: path
         if structs["device_state"]["connected"] == "1": #write state to cloud
             try:
                 db_writer(structs["access_config"],field,value) #will be loaded in by listener, so is best represent change db first
             except Exception as e:
                 print(err.full_stack())
-                pass
-            
+                pass   
+
+    #Now write safely
+    lock(lock_filepath, path)
+
+    with open(path, "r+") as x:
+        data = json.load(x)
+        data[group][field] = value #write the desired value
+        x.seek(0)
+        json.dump(data,x)
+        x.truncate()
+
+    unlock(lock_filepath, path)
+    
+    load_state()
+
+
+def write_nested_dict(path: str, group: str, dictionary: dict, db_writer = None, loop_limit=2500): #may even come in handy later, you never know
     if not os.path.exists(path):
         print(path + " does not exist. Have you run the setup scripts?")
         return
-
-    for i in list(range(int(loop_limit)+1)): #try to load, check if available, make unavailable if so, write state, make available 
-        load_locks() #get all the mutexes
-        if locks[path] == 0: #check is the file is available to be written   
-            
-            try: #try to safely execute a write
-                with open(path, "r") as x: # can we load a valid json? #will fail if false
-                    data = json.load(x) # ie. lock is free, but another process saw it too and is already writing
-
-                lock(lock_filepath, path) # lock the the file
-
-                with open(path, "w") as x:
-                    data[group][field] = value #write the desired value
-                    x.seek(0)
-                    json.dump(data,x)
-                    x.truncate()
-
-                unlock(lock_filepath, path)
-                
-                load_state()
-                break #break the loop when the write has been successful
-            
-            except Exception:
-                if i < int(loop_limit): #Some error, try again some reasonable number of times
-                    #print(err.full_stack())
-                    print(path + " write failed, trying again...")
-                    pass #continue the loop until write is successful or ceiling is hit
-                else: #Ok, somethings seriously wrong. Reset the file.
-                    print(err.full_stack())
-                    print("Tried to write "+ path + " max # of times. File is corrupted. Resetting...")
-                    reset_model.reset_config_path(path)
-
-                    lock(lock_filepath, path) # lock the the file
-
-                    with open(path, "r+") as x:
-                        data = json.load(x)
-                        data[group][field] = value #write the desired value
-                        x.seek(0)
-                        json.dump(data,x)
-                        x.truncate()
-
-                    unlock(lock_filepath, path)
-                    
-                    load_state()
-                    break #break the loop when the write has been successful
-
-        else:
-            if i < int(loop_limit): #pass while waiting for lock
-                print("Waiting for " + path + "...")
-                time.sleep(0.1)
-                pass 
-            else:                   #if starved of lock, reset the locks
-                print("Tried to access "+ path + " max # of times. Lock is dead. Resetting...")
-                unlock(lock_filepath, path)
-
-                #Now write safely
-                lock(lock_filepath, path)
-
-                with open(path, "r+") as x:
-                    data = json.load(x)
-                    data[group][field] = value #write the desired value
-                    x.seek(0)
-                    json.dump(data,x)
-                    x.truncate()
-
-                unlock(lock_filepath, path)
-                
-                load_state()
-                break #break the loop when the write has been successful
-
-def write_nested_dict(path: str, group: str, dictionary: dict, db_writer = None, loop_limit=2500): #may even come in handy later, you never know
+    
     if db_writer is not None:
         #these will be loaded in by the listener, so best to make sure we represent the change in firebase too
         if structs["device_state"]["connected"] == "1": #write state to cloud
@@ -434,73 +385,20 @@ def write_nested_dict(path: str, group: str, dictionary: dict, db_writer = None,
                 print(err.full_stack())
                 pass
 
-    for i in list(range(int(loop_limit)+1)): #try to load, check if available, make unavailable if so, write state if so, write availabke if so
-        load_locks()    
-        if locks[path] == 0: #check is the file is available to be written
-            
-            try: #attempt to write safely
-                with open(path, "r") as x: # open the file.
-                    data = json.load(x) # can we load a valid json?
-
-                lock(lock_filepath, path)
-
-                with open(path, "w") as x:
-                    data[group].update(dictionary) #write the desired values
-                    x.seek(0)
-                    json.dump(data,x)
-                    x.truncate()
-
-                unlock(lock_filepath, path)
+    #Now write safely
+    lock(lock_filepath, path)
+    
+    with open(path, "r+") as x:
+        data = json.load(x)
+        data[group].update(dictionary) #write the desired values
+        x.seek(0)
+        json.dump(data,x)
+        x.truncate()
+    
+    unlock(lock_filepath, path)
+    
+    load_state()
                 
-                load_state()
-                break #break the loop when the write has been successful
-            
-            except Exception: #If any of the above fails
-                if i < int(loop_limit):
-                    #print(err.full_stack())
-                    print(path + " write failed, trying again...")
-                    pass #continue the loop until write is successful or ceiling is hit
-                else:
-                    print("Tried to write "+ path + " max # of times. File is corrupted. Resetting...")
-                    reset_model.reset_config_path(path)
-                    
-                    lock(lock_filepath, path)
-                    
-                    with open(path, "r+") as x:
-                        data = json.load(x)
-                        data[group].update(dictionary) #write the desired values
-                        x.seek(0)
-                        json.dump(data,x)
-                        x.truncate()
-
-                    unlock(lock_filepath, path)
-                    
-                    load_state()
-                    break
-
-        else:
-            if i < int(loop_limit):
-                print("Waiting for " + path + "...")
-                pass
-            else:
-                print("Tried to access "+ path + " max # of times. Lock is dead. Resetting...")
-                unlock(lock_filepath, path)
-                
-                #Now write safely
-                lock(lock_filepath, path)
-                
-                with open(path, "r+") as x:
-                    data = json.load(x)
-                    data[group].update(dictionary) #write the desired values
-                    x.seek(0)
-                    json.dump(data,x)
-                    x.truncate()
-                
-                unlock(lock_filepath, path)
-                
-                load_state()
-                break #break the loop when the write has been successful
-
 #Higher-order device_state checker with reaction and alternative, no params
 def check_state(state, function, alt_function = None):# = None, args = None, kwargs = None, alt_args = None, alt_kwargs = None):
     load_state()
@@ -515,11 +413,12 @@ def check_state(state, function, alt_function = None):# = None, args = None, kwa
 
 def check_lock(resource):
     load_locks()
-    if locks[resource] == 1: #if resource is locked
+    resource_y_lock = resource + "_y"
+    if locks[resource_y_lock] is not 0: #if resource is locked
         print(resource + " is currently in use by another process.")
         sys.exit() #termiating for safety
     else:
-        lock(lock_filepath, resource)
+        lock(lock_filepath)
 
 def check_signal(resource: str, signal: str, reaction, loop_limit = 100):
     load_custom_signals()

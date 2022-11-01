@@ -59,8 +59,9 @@ pub fn lock(lock_filepath: String, resource_key: String, loop_limit: Option<u64>
     let resource_lock_x = format!("{}{}", resource_key, x_suffix);
     let resource_lock_y = format!("{}{}", resource_key, y_suffix);
 
-    println!("{}", &resource_lock_x);
-    println!("{}", &resource_lock_x);
+    //debugging
+    //println!("{}", &resource_lock_x);
+    //println!("{}", &resource_lock_x);
 
     'outer: for x in 0..limit+1{ //start attempting to load & write the lock  
         
@@ -248,7 +249,7 @@ pub fn lock(lock_filepath: String, resource_key: String, loop_limit: Option<u64>
             }   
 
         } else {
-            println!("Loop limit expired: lock()");
+            println!("Loop limit expired: lock(). Was not able to acquire {}.", &resource_key);
             return
         }
     }
@@ -306,7 +307,7 @@ pub fn unlock(lock_filepath: String, resource_key: String, loop_limit: Option<u6
                 }
             }
         } else {
-            println!("Loop limit expired: unlock()")
+            println!("Loop limit expired: unlock(). Was not able to free {}", &resource_key)
         }
     }
 }

@@ -96,7 +96,7 @@ if __name__ == '__main__':
         print(err.full_stack())
     finally:
         print("Shutting down camera...")
-        cs.rusty_pipes.unlock(cs.lock_filepath, resource_name, 1000)
+        cs.rusty_pipes.unlock(cs.lock_filepath, resource_name)
 
         
 

@@ -309,12 +309,12 @@ def main_loop(led_timer, connect_timer, power_timer):
                     if cs.structs["feature_toggles"]["action_water"] == "1":
                         cs.load_locks()
                         if cs.locks["water_pump"] == 0:
-                            cs.rusty_pipes.lock(cs.lock_filepath, "water_pump",1000)
+                            cs.rusty_pipes.lock(cs.lock_filepath, "water_pump")
                             water_GPIO = int(cs.structs["hardware_config"]["equipment_gpio_map"]["water_relay"]) #bcm pin # pulls from config file
                             pin = rusty_pins.GpioOut(water_GPIO)
                             relays.actuate_interval_sleep(pin, duration = float(cs.structs["control_params"]["watering_duration"]), sleep = float(cs.structs["control_params"]["watering_interval"]), duration_units="seconds", sleep_units="days", wattage=cs.structs["hardware_config"]["equipment_wattage"]["water_pump"], log="water_pump_kwh")
                             pin = None
-                            cs.rusty_pipes.unlock(cs.lock_filepath, "water_pump",1000)
+                            cs.rusty_pipes.unlock(cs.lock_filepath, "water_pump")
                     if cs.structs["feature_toggles"]["action_camera"] == "1":
                         say_cheese = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/imaging/camera.py', "0"],"snapshot")
                         say_cheese.wait()
