@@ -3,10 +3,13 @@ use pyo3::prelude::*;
 use serde_json::{Value};
 use subprocess::{Popen,PopenConfig,ExitStatus};
 
+pub mod fast_mutx;                                                                                        
+
 // A safe, Python-ready subprocess class for spawning & managing unix children
 #[pyclass(unsendable)]
 struct Open{process: Popen, name: String}
 
+#[pyfunction]
 fn custom_signal(sig_filepath: String, id: String , signal: &str){
     let mut sig_obj = {
         // Load the first file into a string.
@@ -58,7 +61,7 @@ impl Open {
     fn exit_code(&mut self) -> u32{
         let value = self.process.exit_status();
         if let Some(ExitStatus::Exited(exit_status)) = value {
-            exit_status
+            exit_status //return the exit status
         } else {
             1000 //obviously a failure lol
         }  
@@ -70,11 +73,20 @@ impl Open {
         Some(signal_filepath) =>  custom_signal(signal_filepath,String::from(&self.name), "terminated"), 
         }
     }
-
 }
+
 // A Python-ready subprocess managment module
 #[pymodule]
 fn rusty_pipes(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
+    
+    // MULTI-PROCESSING
     m.add_class::<Open>()?;
+    m.add_function(wrap_pyfunction!(custom_signal, m)?)?;
+    
+    //MUTUAL EXCLUSION
+    m.add_function(wrap_pyfunction!(fast_mutx::lock, m)?)?;
+    m.add_function(wrap_pyfunction!(fast_mutx::unlock, m)?)?;
+    m.add_function(wrap_pyfunction!(fast_mutx::reset_locks, m)?)?;
+    m.add_function(wrap_pyfunction!(fast_mutx::create_lock, m)?)?;
     Ok(())
 }
