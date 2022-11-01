@@ -87,6 +87,6 @@ fn rusty_pipes(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(fast_mutx::lock, m)?)?;
     m.add_function(wrap_pyfunction!(fast_mutx::unlock, m)?)?;
     m.add_function(wrap_pyfunction!(fast_mutx::reset_locks, m)?)?;
-    m.add_function(wrap_pyfunction!(fast_mutx::create_lock, m)?)?;
+    m.add_function(wrap_pyfunction!(fast_mutx::create_lock, m)?)?; 
     Ok(())
 }
