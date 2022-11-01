@@ -102,6 +102,6 @@ if __name__ == "__main__":
         print("Listener encountered an error!")
     finally:
         print("Database listener deactivated.")
-        cs.safety.unlock(cs.lock_filepath,resource_name)
+        cs.rusty_pipes.unlock(cs.lock_filepath, resource_name, 1000)
         
         

@@ -17,7 +17,7 @@ sys.path.append('/home/pi/oasis-grow')
 
 #rust modules
 import orjson #fast data interchange / and json parsing (read and write byte file objects)
-import rusty_locks as safety #rust concurrency modules (fast mutual exclusion for arbitrarily named resources) 
+import rusty_pipes #rust concurrency modules (fast mutual exclusion for arbitrarily named resources) 
 
 #oasis utilities
 from utils import reset_model
@@ -57,7 +57,7 @@ lock_filepath = "/home/pi/oasis-grow/configs/locks.json"
 signals = {}
 signal_filepath = "/home/pi/oasis-grow/configs/signals.json"
 
-def load_state(loop_limit=100): 
+def load_state(loop_limit=1000): 
     global structs
 
     for struct in structs: #now we're going to load an populate the data    
@@ -95,7 +95,7 @@ def load_state(loop_limit=100):
                     pass
 
 #gets the mutex
-def load_locks(loop_limit = 100): #leave this alone since it's the python bridge to ramport locks
+def load_locks(loop_limit = 1000): #leave this alone since it's the python bridge to ramport locks
     global locks
             
     if not os.path.exists(lock_filepath):
@@ -111,7 +111,7 @@ def load_locks(loop_limit = 100): #leave this alone since it's the python bridge
                 if locks[k] is None:
                     print("Read NoneType in locks")
                     print("Resetting lock...")
-                    safety.unlock(lock_filepath,k)  
+                    rusty_pipes.unlock(lock_filepath,k, loop_limit)  
                 else: 
                     pass
              
@@ -120,7 +120,7 @@ def load_locks(loop_limit = 100): #leave this alone since it's the python bridge
         except Exception:
             if i >= int(loop_limit):
                 print("Tried to load locks max number of times. File is corrupted. Resetting locks...")
-                safety.reset_locks(lock_filepath)
+                rusty_pipes.reset_locks(lock_filepath, loop_limit)
             else:
                 print("Waiting on lockfile...")
                 time.sleep(0.01)
@@ -131,7 +131,7 @@ def wrapped_sys_exit(*args):
     sys.exit()
 
 #gets the signals which cannot be process with signals.signal(SIGTERM, some_func)
-def load_custom_signals(loop_limit = 100): #leave this alone since it's the python bridge to ramport locks
+def load_custom_signals(loop_limit = 1000): #leave this alone since it's the python bridge to ramport locks
     global signals
 
     if not os.path.exists(signal_filepath):
@@ -163,91 +163,42 @@ def load_custom_signals(loop_limit = 100): #leave this alone since it's the pyth
                 reset_model.reset_signals()
 
 #save key values to .json
-def write_state(path, field, value, db_writer = None, loop_limit=100): #Depends on: load_state()
+def write_state(path, field, value, db_writer = None, loop_limit=1000): #Depends on: load_state()
+    
+    if not os.path.exists(path):
+        print(path + " does not exist. Have you run the setup scripts?")
+        return
+    
     if db_writer is not None: #Accepts(path, field, value, custom timeout, db_writer function); Modifies: path
         if structs["device_state"]["connected"] == "1": #write state to cloud
             try:
                 db_writer(structs["access_config"],field,value) #will be loaded in by listener, so is best represent change db first
-            except Exception as e:
-                print(err.full_stack())
-                pass
-            
-    if not os.path.exists(path):
-        print(path + " does not exist. Have you run the setup scripts?")
-        return
-
-    for i in list(range(int(loop_limit)+1)): #try to load, check if available, make unavailable if so, write state, make available 
-        load_locks() #get all the mutexes
-        if locks[path] == 0: #check is the file is available to be written   
-            
-            try: #try to safely execute a write
-                with open(path, "rb") as x: # can we load a valid json? #will fail if false
-                    data = orjson.loads(x.read()) # ie. lock is free, but another process saw it too and is already writing
-
-                safety.lock(lock_filepath, path) # lock the the file
-
-                with open(path, "wb") as x:
-                    data[field] = value #write the desired value
-                    x.seek(0)
-                    x.write(orjson.dumps(data))
-                    x.truncate()
-
-                safety.unlock(lock_filepath, path)
-                
-                load_state()
-                break #break the loop when the write has been successful
-            
             except Exception:
-                if i < int(loop_limit): #Some error, try again some reasonable number of times
-                    #print(err.full_stack())
-                    print(path + " write failed, trying again...")
-                    pass #continue the loop until write is successful or ceiling is hit
-                else: #Ok, somethings seriously wrong. Reset the file.
-                    print(err.full_stack())
-                    print("Tried to write "+ path + " max # of times. File is corrupted. Resetting...")
-                    reset_model.reset_config_path(path)
-                    
-                    safety.lock(lock_filepath, path) # lock the the file
+                print(err.full_stack())
+                pass        
+    
+    try:
+        rusty_pipes.lock(lock_filepath, path, loop_limit)
 
-                    with open(path, "rb+") as x:
-                        data = orjson.loads(x.read())
-                        data[field] = value #write the desired value
-                        x.seek(0)
-                        x.write(orjson.dumps(data))
-                        x.truncate()
+        with open(path, "rb+") as x:
+            data = orjson.loads(x.read())
+            data[field] = value #write the desired value
+            x.seek(0)
+            x.write(orjson.dumps(data))
+            x.truncate()
+    
+    finally:
+        rusty_pipes.unlock(lock_filepath, path, loop_limit)
+        load_state()
 
-                    safety.unlock(lock_filepath, path)
-                    
-                    load_state()
-                    break #break the loop when the write has been successful
-
-        else:
-            if i < int(loop_limit): #pass while waiting for lock
-                print("Waiting for " + path + "...")
-                time.sleep(0.1)
-                pass 
-            else:                   #if starved of lock, reset the locks
-                print("Tried to access "+ path + " max # of times. Lock is dead. Resetting...")
-                safety.unlock(lock_filepath, path)
-                
-                #Now write safely
-                safety.lock(lock_filepath, path)
-
-                with open(path, "rb+") as x:
-                    data = orjson.loads(x.read())
-                    data[field] = value #write the desired value
-                    x.seek(0)
-                    x.write(orjson.dumps(data))
-                    x.truncate()
-
-                safety.unlock(lock_filepath, path)
-                
-                load_state()
-                break #break the loop when the write has been successful
             
 #save key values to .json
-def write_dict(path, dictionary, db_writer = None, loop_limit=100): #Depends on: load_state(), dbt.patch_firebase, 'json'; Modifies: path
+def write_dict(path, dictionary, db_writer = None, loop_limit=1000): #Depends on: load_state(), dbt.patch_firebase, 'json'; Modifies: path
 
+    if not os.path.exists(path):
+        print(path + " does not exist. Have you run the setup scripts?")
+        return
+    
     if db_writer is not None:
         #these will be loaded in by the listener, so best to make sure we represent the change in firebase too
         if structs["device_state"]["connected"] == "1": #write state to cloud
@@ -257,73 +208,28 @@ def write_dict(path, dictionary, db_writer = None, loop_limit=100): #Depends on:
                 print(err.full_stack())
                 pass
 
-    for i in list(range(int(loop_limit)+1)): #try to load, check if available, make unavailable if so, write state if so, write availabke if so
-        load_locks()    
-        if locks[path] == 0: #check is the file is available to be written
-            
-            try: #attempt to write safely
-                with open(path, "rb") as x: # open the file.
-                    data = orjson.loads(x.read()) # can we load a valid json?
+    try:
+        #Now write safely
+        rusty_pipes.lock(lock_filepath, path, loop_limit)
+        
+        with open(path, "rb+") as x:
+            data = orjson.loads(x.read())
+            data.update(dictionary) #write the desired values
+            x.seek(0)
+            x.write(orjson.dumps(data))
+            x.truncate()
+    
+    finally:    
+        rusty_pipes.unlock(lock_filepath, path, loop_limit)
+        load_state()
+               
 
-                safety.lock(lock_filepath, path)
-
-                with open(path, "wb") as x:
-                    data.update(dictionary) #write the desired values
-                    x.seek(0)
-                    x.write(orjson.dumps(data))
-                    x.truncate()
-
-                safety.unlock(lock_filepath, path)
-                
-                load_state()
-                break #break the loop when the write has been successful
-            
-            except Exception: #If any of the above fails
-                if i < int(loop_limit):
-                    #print(err.full_stack())
-                    print(path + " write failed, trying again. If this persists, file is corrupted.")
-                    pass #continue the loop until write is successful or ceiling is hit
-                else:
-                    print("Tried to write "+ path + " max # of times. File is corrupted. Resetting...")
-                    reset_model.reset_config_path(path)
-                    
-                    safety.lock(lock_filepath, path)
-                    
-                    with open(path, "rb+") as x:
-                        data = orjson.loads(x.read())
-                        data.update(dictionary) #write the desired values
-                        x.seek(0)
-                        x.write(orjson.dumps(data))
-                        x.truncate()
-
-                    safety.unlock(lock_filepath, path)
-                    
-                    load_state()
-                    break
-        else:
-            if i < int(loop_limit):
-                print("Waiting for " + path + "...")
-                pass
-            else:
-                print("Tried to access "+ path + " max # of times. Lock is dead. Resetting...")
-                safety.unlock(lock_filepath, path)
-                
-                #Now write safely
-                safety.lock(lock_filepath, path)
-                
-                with open(path, "rb+") as x:
-                    data = orjson.loads(x.read())
-                    data.update(dictionary) #write the desired values
-                    x.seek(0)
-                    x.write(orjson.dumps(data))
-                    x.truncate()
-                
-                safety.unlock(lock_filepath, path)
-                
-                load_state()
-                break #break the loop when the write has been successful
-
-def write_nested_state(path: str, group: str, field: str, value: str, db_writer = None, loop_limit=2500): #listener needs this for patching hardware config
+def write_nested_state(path: str, group: str, field: str, value: str, db_writer = None, loop_limit=1000): #listener needs this for patching hardware config
+    
+    if not os.path.exists(path):
+        print(path + " does not exist. Have you run the setup scripts?")
+        return
+    
     if db_writer is not None: #Accepts(path, field, value, custom timeout, db_writer function); Modifies: path
         if structs["device_state"]["connected"] == "1": #write state to cloud
             try:
@@ -332,80 +238,27 @@ def write_nested_state(path: str, group: str, field: str, value: str, db_writer 
                 print(err.full_stack())
                 pass
             
+            
+    try: #try to safely execute a write
+        rusty_pipes.lock(lock_filepath, path, loop_limit)
+
+        with open(path, "rb+") as x:
+            data = orjson.loads(x.read())
+            data[group][field] = value #write the desired value
+            x.seek(0)
+            x.write(orjson.dumps(data))
+            x.truncate()
+    
+    finally:
+        rusty_pipes.unlock(lock_filepath, path, loop_limit)
+        load_state()
+                
+def write_nested_dict(path: str, group: str, dictionary: dict, db_writer = None, loop_limit=1000): #may even come in handy later, you never know
+    
     if not os.path.exists(path):
         print(path + " does not exist. Have you run the setup scripts?")
-        return
-
-    for i in list(range(int(loop_limit)+1)): #try to load, check if available, make unavailable if so, write state, make available 
-        load_locks() #get all the mutexes
-        if locks[path] == 0: #check is the file is available to be written   
-            
-            try: #try to safely execute a write
-                with open(path, "rb") as x: # can we load a valid json? #will fail if false
-                    data = orjson.loads(x.read()) # ie. lock is free, but another process saw it too and is already writing
-
-                safety.lock(lock_filepath, path) # lock the the file
-
-                with open(path, "wb") as x:
-                    data[group][field] = value #write the desired value
-                    x.seek(0)
-                    x.write(orjson.dumps(data))
-                    x.truncate()
-
-                safety.unlock(lock_filepath, path)
-                
-                load_state()
-                break #break the loop when the write has been successful
-            
-            except Exception:
-                if i < int(loop_limit): #Some error, try again some reasonable number of times
-                    #print(err.full_stack())
-                    print(path + " write failed, trying again...")
-                    pass #continue the loop until write is successful or ceiling is hit
-                else: #Ok, somethings seriously wrong. Reset the file.
-                    print(err.full_stack())
-                    print("Tried to write "+ path + " max # of times. File is corrupted. Resetting...")
-                    reset_model.reset_config_path(path)
-
-                    safety.lock(lock_filepath, path) # lock the the file
-
-                    with open(path, "rb+") as x:
-                        data = orjson.loads(x.read())
-                        data[group][field] = value #write the desired value
-                        x.seek(0)
-                        x.write(orjson.dumps(data))
-                        x.truncate()
-
-                    safety.unlock(lock_filepath, path)
-                    
-                    load_state()
-                    break #break the loop when the write has been successful
-
-        else:
-            if i < int(loop_limit): #pass while waiting for lock
-                print("Waiting for " + path + "...")
-                time.sleep(0.1)
-                pass 
-            else:                   #if starved of lock, reset the locks
-                print("Tried to access "+ path + " max # of times. Lock is dead. Resetting...")
-                safety.unlock(lock_filepath, path)
-
-                #Now write safely
-                safety.lock(lock_filepath, path)
-
-                with open(path, "rb+") as x:
-                    data = orjson.loads(x.read())
-                    data[group][field] = value #write the desired value
-                    x.seek(0)
-                    x.write(orjson.dumps(data))
-                    x.truncate()
-
-                safety.unlock(lock_filepath, path)
-                
-                load_state()
-                break #break the loop when the write has been successful
-
-def write_nested_dict(path: str, group: str, dictionary: dict, db_writer = None, loop_limit=2500): #may even come in handy later, you never know
+        return    
+    
     if db_writer is not None:
         #these will be loaded in by the listener, so best to make sure we represent the change in firebase too
         if structs["device_state"]["connected"] == "1": #write state to cloud
@@ -414,79 +267,26 @@ def write_nested_dict(path: str, group: str, dictionary: dict, db_writer = None,
             except Exception:
                 print(err.full_stack())
                 pass
+     
+    try:
+        rusty_pipes.lock(lock_filepath, path, loop_limit)
 
-    for i in list(range(int(loop_limit)+1)): #try to load, check if available, make unavailable if so, write state if so, write availabke if so
-        load_locks()    
-        if locks[path] == 0: #check is the file is available to be written
+        with open(path, "rb+") as x: # open the file.
+            data = orjson.loads(x.read()) # can we load a valid json?
+            data[group].update(dictionary) #write the desired values
+            x.seek(0)
+            x.write(orjson.dumps(data))
+            x.truncate()
+        
+    finally:
+        rusty_pipes.unlock(lock_filepath, path, loop_limit)
+        load_state()
             
-            try: #attempt to write safely
-                with open(path, "rb") as x: # open the file.
-                    data = orjson.loads(x.read()) # can we load a valid json?
-
-                safety.lock(lock_filepath, path)
-
-                with open(path, "wb") as x:
-                    data[group].update(dictionary) #write the desired values
-                    x.seek(0)
-                    x.write(orjson.dumps(data))
-                    x.truncate()
-
-                safety.unlock(lock_filepath, path)
-                
-                load_state()
-                break #break the loop when the write has been successful
-            
-            except Exception: #If any of the above fails
-                if i < int(loop_limit):
-                    #print(err.full_stack())
-                    print(path + " write failed, trying again...")
-                    pass #continue the loop until write is successful or ceiling is hit
-                else:
-                    print("Tried to write "+ path + " max # of times. File is corrupted. Resetting...")
-                    reset_model.reset_config_path(path)
-                    
-                    safety.lock(lock_filepath, path)
-                    
-                    with open(path, "rb+") as x:
-                        data = orjson.loads(x.read())
-                        data[group].update(dictionary) #write the desired values
-                        x.seek(0)
-                        x.write(orjson.dumps(data))
-                        x.truncate()
-
-                    safety.unlock(lock_filepath, path)
-                    
-                    load_state()
-                    break
-
-        else:
-            if i < int(loop_limit):
-                print("Waiting for " + path + "...")
-                pass
-            else:
-                print("Tried to access "+ path + " max # of times. Lock is dead. Resetting...")
-                safety.unlock(lock_filepath, path)
-                
-                #Now write safely
-                safety.lock(lock_filepath, path)
-                
-                with open(path, "rb+") as x:
-                    data = orjson.loads(x.read())
-                    data[group].update(dictionary) #write the desired values
-                    x.seek(0)
-                    x.write(orjson.dumps(data))
-                    x.truncate()
-                
-                safety.unlock(lock_filepath, path)
-                
-                load_state()
-                break #break the loop when the write has been successful
 
 #Higher-order device_state checker with reaction and alternative, no params
-def check_state(state, function, alt_function = None):# = None, args = None, kwargs = None, alt_args = None, alt_kwargs = None):
+def check_state(value, function, alt_function = None):# = None, args = None, kwargs = None, alt_args = None, alt_kwargs = None):
     load_state()
-    
-    if structs["device_state"][state] == "1":
+    if structs["device_state"][value] == "1":
         function()
     else:
         if alt_function is not None:
@@ -494,13 +294,14 @@ def check_state(state, function, alt_function = None):# = None, args = None, kwa
         else:
             pass
 
-def check_lock(resource):
+def check_lock(resource): #any program that calls this MUST unlock itself before exiting
     load_locks()
-    if locks[resource] == 1: #if resource is locked
+    y_lock_path = resource + "_y"
+    if locks[y_lock_path] is not 0: #if resource is locked
         print(resource + " is currently in use by another process.")
         sys.exit() #termiating for safety
     else:
-        safety.lock(lock_filepath, resource)
+        rusty_pipes.lock(lock_filepath, resource)
 
 def check_signal(resource: str, signal: str, reaction, loop_limit = 100):
     load_custom_signals()

@@ -47,4 +47,4 @@ if __name__ == '__main__':
         except:
             print(resource_name + " has no relay objects remaining.")
         
-        cs.safety.unlock(cs.lock_filepath, resource_name)
+        cs.rusty_pipes.unlock(cs.lock_filepath, resource_name, 1000)

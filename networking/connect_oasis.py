@@ -91,28 +91,29 @@ def save_creds_exit(email, password, wifi_name, wifi_pass, device_name, cmd = Fa
 
 if __name__ == '__main__':
 
-    default = ""
+        default = ""
 
-    st.title('Oasis Device Setup')
+        st.title('Oasis Device Setup')
 
-    email = st.text_input('Oasis Email', default)
+        email = st.text_input('Oasis Email', default)
 
-    password = st.text_input('Oasis Password', default, type="password")
+        password = st.text_input('Oasis Password', default, type="password")
 
-    wifi_name = st.text_input('Wifi Name', default)
+        wifi_name = st.text_input('Wifi Name', default)
 
-    wifi_pass = st.text_input('Wifi Password', default, type="password")
+        wifi_pass = st.text_input('Wifi Password', default, type="password")
 
-    device_name = st.text_input('Name this device:', default)
+        device_name = st.text_input('Name this device:', default)
 
-    #st.button('Launch', on_click=save_creds_exit, args=[email, password, wifi_name, wifi_pass, device_name]) #only for recent streamlit versions
+        #st.button('Launch', on_click=save_creds_exit, args=[email, password, wifi_name, wifi_pass, device_name]) #only for recent streamlit versions
 
-    if st.button("Launch"):
-        try:
-            save_creds_exit(email, password, wifi_name, wifi_pass, device_name)
-            time.sleep(5)
-        except:
-            print(err.full_stack())
-            sys.exit()
+        if st.button("Launch"):
+            try:
+                save_creds_exit(email, password, wifi_name, wifi_pass, device_name)
+                time.sleep(5)
+            except:
+                print(err.full_stack())
+                sys.exit()
 
-    slow_cs.check_signal("access_point", "terminated", slow_cs.wrapped_sys_exit)
+        slow_cs.check_signal("access_point", "terminated", slow_cs.wrapped_sys_exit)
+        
