@@ -90,10 +90,14 @@ def listen_active_sensors(): #Depends on 'serial', start_serial()
         print("Primary sensor minion not connected.") #then set the mapping from sensor reading -> env variable throught globals
         return 
     try:
-        print(minion.ser_in.readline()) #must pass a valid json in byte form
-        #print(type(minion.ser_in.readline())) #multiple minions can be used to assemble different sensor data
-        
+        #print(minion.ser_in.readline()) #must pass a valid json in byte form
+        #print(type(minion.ser_in.readline())) #multiple minions can be used to assemble different sensor data       
         sensor_data = orjson.loads(minion.ser_in.readline().strip(b'\n').strip(b'\r'))
+        for key in sensor_data:
+            if key == "water_low": #this is a bool represented as int, so no rounting required
+                pass
+            else:
+                sensor_data[key] = round(sensor_data[key], 2)
         print(sensor_data)
         
         minion.ser_in.reset_input_buffer()
