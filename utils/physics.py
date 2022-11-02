@@ -17,10 +17,10 @@ def vpd(temp: float, hum: float): #Temp in F, Hum in %
     vpd_pa = (1 - (rh/100)) * svp #vapor pressure deficit in pascals
     vpd = vpd_pa / 1000 #convert vpd to kilopascals
 
-    return vpd
+    return round(vpd, 3)
 
 def kwh(wattage: float, time_active): #time_active is an int or float, representing seconds
     
     kwh_used = (wattage/1000)*(time_active/3600)
     
-    return kwh_used
+    return round(kwh_used, 4)
