@@ -72,8 +72,8 @@ void loop() {
 
     // Read Measurement
     uint16_t co2;
-    float temperature;
-    float humidity;
+    double temperature;
+    double humidity;
     error = scd4x.readMeasurement(co2, temperature, humidity);
     if (error) {
         //Serial.print("Error trying to execute readMeasurement(): ");
