@@ -506,20 +506,28 @@ def run_camera(): #Depends on: 'subprocess'; Modifies: camera_process
 def regulate_active_equipment():
     # calculate feedback levels and update equipment in use
     if (cs.structs["feature_toggles"]["heater"] == "1") and (heat_process is None):
+        print("Turning on the heat...")
         run_heat()
     if (cs.structs["feature_toggles"]["humidifier"] == "1") and (humidity_process is None):
+        print("Turning on the humidifier...")
         run_hum()
     if (cs.structs["feature_toggles"]["dehumidifier"] == "1") and (dehumidify_process is None):
+        print("Turning on the dehumidifier...")
         run_dehum()
     if (cs.structs["feature_toggles"]["fan"] == "1") and (fan_process is None):
+        print("Turning on the vent...")
         run_fan()
     if (cs.structs["feature_toggles"]["water"] == "1") and (water_process is None):
+        print("Turning on the water...")
         run_water()
     if (cs.structs["feature_toggles"]["light"] == "1") and (light_process is None):
+        print("Turning on the lights...")
         run_light()
     if (cs.structs["feature_toggles"]["air"] == "1") and (air_process is None):
+        print("Turning on the water bubler...")
         run_air()
     if (cs.structs["feature_toggles"]["camera"] == "1") and (camera_process is None):
+        print("Activating camera...")
         run_camera()
 
 #unfinished

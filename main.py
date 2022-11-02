@@ -176,6 +176,8 @@ def update_minion_led(): #Depends on: cs.load_state(), 'datetime'; Modifies: ser
         if int(cs.structs["hardware_config"]["onboard_led_settings"]["time_start_led"]) < int(cs.structs["hardware_config"]["onboard_led_settings"]["time_stop_led"]):
             if HoD >= int(cs.structs["hardware_config"]["onboard_led_settings"]["time_start_led"]) and HoD < int(cs.structs["hardware_config"]["onboard_led_settings"]["time_stop_led"]):
                 minion.ser_out.write(bytes(str(cs.structs["device_state"]["led_status"]+"\n"), 'utf-8')) #write status
+                time.sleep(0.25)
+                minion.ser_out.reset_output_buffer()
             if HoD < int(cs.structs["hardware_config"]["onboard_led_settings"]["time_start_led"]) or HoD >= int(cs.structs["hardware_config"]["onboard_led_settings"]["time_stop_led"]):
                 minion.ser_out.write(bytes(str("off"+"\n"), 'utf-8')) #write off
         if int(cs.structs["hardware_config"]["onboard_led_settings"]["time_start_led"]) > int(cs.structs["hardware_config"]["onboard_led_settings"]["time_stop_led"]):
@@ -273,16 +275,20 @@ def main_loop(led_timer, connect_timer, power_timer):
         while True:
             cs.load_state()
 
-            if cs.structs["feature_toggles"]["onboard_led"] == "0":
+            if (time.time() - led_timer > 5) and (cs.structs["feature_toggles"]["onboard_led"] == "0"): #send data to LED every 5s
                 update_minion_led()
+                led_timer = time.time() #reset the timer
 
             if time.time() - connect_timer > 900: #check connection every 15 min (900s)
                 connect_firebase()
                 connect_timer = time.time()
+
+            if time.time() - power_timer > 3600: #send last hour power data to firebase
+                update_power_tracking()
+                power_timer = time.time() #reset the timer
             
             cs.check_state("connected", start_listener, stop_listener) #if connected, listen to database
             cs.check_state("running", start_core, stop_core) #if running, start the sensors and controllers
-            
             cs.check_state("awaiting_update", get_updates)
             cs.check_state("awaiting_deletion", firebase_manager.delete_device)
             cs.check_state("awaiting_clear_data_out", clear_data)
@@ -318,14 +324,6 @@ def main_loop(led_timer, connect_timer, power_timer):
                     if cs.structs["feature_toggles"]["action_camera"] == "1":
                         say_cheese = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/imaging/camera.py', "0"],"snapshot")
                         say_cheese.wait()
-            
-            if time.time() - led_timer > 5: #send data to LED every 5s
-                update_minion_led()
-                led_timer = time.time() #reset the timer
-
-            if time.time() - power_timer > 3600: #send last hour power data to firebase
-                update_power_tracking()
-                power_timer = time.time() #reset the timer
             
             time.sleep(0.25)
 
