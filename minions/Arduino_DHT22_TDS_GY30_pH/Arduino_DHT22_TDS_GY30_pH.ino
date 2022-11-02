@@ -14,7 +14,7 @@ BH1750 lightMeter;
 const int phanalogPin = A0; 
 int sensorValue = 0; 
 unsigned long int avgValue; 
-float b;
+double b;
 int buf[10],temp;
 
 //tds data
@@ -25,9 +25,9 @@ int analogBuffer[SCOUNT];     // store the analog value in the array, read from 
 int analogBufferTemp[SCOUNT];
 int analogBufferIndex = 0;
 int copyIndex = 0;
-float averageVoltage = 0;
-float tdsValue = 0;
-float liquid_temp = 25;       // current liquid_temp for compensation
+double averageVoltage = 0;
+double tdsValue = 0;
+double liquid_temp = 25;       // current liquid_temp for compensation
 
 // tds median filtering algorithm
 int getMedianNum(int bArray[], int iFilterLen){
@@ -69,10 +69,10 @@ void setup() {
 void loop() {
 
  //temperature & humidity read sensor values
- float air_temperature_c = dht.readTemperature();
- float relative_humidity = dht.readHumidity();
+ double air_temperature_c = dht.readTemperature();
+ double relative_humidity = dht.readHumidity();
 
- float lumen_per_sqm = lightMeter.readLightLevel();
+ double lumen_per_sqm = lightMeter.readLightLevel();
  
  //ph read analog pin for ph 10 times
  for(int i=0;i<10;i++) { 
@@ -96,8 +96,8 @@ void loop() {
 
  //ph calculate from average voltage
  //make sure to calibrate sensor
- float phVol=float(avgValue)*5.0/1024/6; 
- float phValue = -5.45 * phVol + 29.69; 
+ double phVol=double(avgValue)*5.0/1024/6; 
+ double phValue = -5.45 * phVol + 29.69; 
 
  //tds read voltages into buffer
  static unsigned long analogSampleTimepoint = millis();
@@ -117,11 +117,11 @@ void loop() {
     for(copyIndex=0; copyIndex<SCOUNT; copyIndex++){
       analogBufferTemp[copyIndex] = analogBuffer[copyIndex];
       // read the analog value more stable by the median filtering algorithm, and convert to voltage value
-      averageVoltage = getMedianNum(analogBufferTemp,SCOUNT) * (float)VREF / 1024.0;
+      averageVoltage = getMedianNum(analogBufferTemp,SCOUNT) * (double)VREF / 1024.0;
       //liquid_temp compensation formula: fFinalResult(25^C) = fFinalResult(current)/(1.0+0.02*(fTP-25.0)); 
-      float compensationCoefficient = 1.0+0.02*(liquid_temp-25.0);
+      double compensationCoefficient = 1.0+0.02*(liquid_temp-25.0);
       //liquid_temp compensation
-      float compensationVoltage=averageVoltage/compensationCoefficient;
+      double compensationVoltage=averageVoltage/compensationCoefficient;
       //convert voltage value to tds value
       tdsValue=(133.42*compensationVoltage*compensationVoltage*compensationVoltage - 255.86*compensationVoltage*compensationVoltage + 857.39*compensationVoltage)*0.5;
       
@@ -130,17 +130,17 @@ void loop() {
 
  
  //save data to known names
- float temperature = air_temperature_c;
- float humidity = relative_humidity;
- float lux = lumen_per_sqm;
- float ph = phValue;
- float tds = tdsValue;
+ double temperature = air_temperature_c;
+ double humidity = relative_humidity;
+ double lux = lumen_per_sqm;
+ double ph = phValue;
+ double tds = tdsValue;
 
  //print data to serial
  Serial.print("{"); //start the json
 
     Serial.print("\"temperature\":");
-    Serial.print(temperature*float(1.80)+float(32)); //convert c to f
+    Serial.print(temperature*double(1.80)+double(32)); //convert c to f
     Serial.print(", ");
     
     Serial.print("\"humidity\": ");
