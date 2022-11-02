@@ -414,11 +414,11 @@ def check_state(state, function, alt_function = None):# = None, args = None, kwa
 def check_lock(resource):
     load_locks()
     resource_y_lock = resource + "_y"
-    if locks[resource_y_lock] is not 0: #if resource is locked
+    if locks[resource_y_lock] != 0: #if resource is locked
         print(resource + " is currently in use by another process.")
         sys.exit() #termiating for safety
     else:
-        lock(lock_filepath,resource)
+        lock(lock_filepath, resource)
 
 def check_signal(resource: str, signal: str, reaction, loop_limit = 100):
     load_custom_signals()

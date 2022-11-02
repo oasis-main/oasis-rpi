@@ -297,7 +297,7 @@ def check_state(value, function, alt_function = None):# = None, args = None, kwa
 def check_lock(resource): #any program that calls this MUST unlock itself before exiting
     load_locks()
     y_lock_path = resource + "_y"
-    if locks[y_lock_path] is not 0: #if resource is locked
+    if locks[y_lock_path] != 0: #if resource is locked
         print(resource + " is currently in use by another process.")
         sys.exit() #termiating for safety
     else:
