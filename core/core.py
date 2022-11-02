@@ -99,7 +99,6 @@ def listen_active_sensors(): #Depends on 'serial', start_serial()
             else:
                 sensor_data[key] = round(sensor_data[key], 2)
         print(sensor_data)
-        
         minion.ser_in.reset_input_buffer()
         return
     except Exception:
@@ -506,21 +505,21 @@ def run_camera(): #Depends on: 'subprocess'; Modifies: camera_process
 
 def regulate_active_equipment():
     # calculate feedback levels and update equipment in use
-    if cs.structs["feature_toggles"]["heater"] == "1":
+    if (cs.structs["feature_toggles"]["heater"] == "1") and (heat_process is None):
         run_heat()
-    if cs.structs["feature_toggles"]["humidifier"] == "1":
+    if (cs.structs["feature_toggles"]["humidifier"] == "1") and (humidity_process is None):
         run_hum()
-    if cs.structs["feature_toggles"]["dehumidifier"] == "1":
+    if (cs.structs["feature_toggles"]["dehumidifier"] == "1") and (dehumidify_process is None):
         run_dehum()
-    if cs.structs["feature_toggles"]["fan"] == "1":
+    if (cs.structs["feature_toggles"]["fan"] == "1") and (fan_process is None):
         run_fan()
-    if cs.structs["feature_toggles"]["water"] == "1":
+    if (cs.structs["feature_toggles"]["water"] == "1") and (water_process is None):
         run_water()
-    if cs.structs["feature_toggles"]["light"] == "1":
+    if (cs.structs["feature_toggles"]["light"] == "1") and (light_process is None):
         run_light()
-    if cs.structs["feature_toggles"]["air"] == "1":
+    if (cs.structs["feature_toggles"]["air"] == "1") and (air_process is None):
         run_air()
-    if cs.structs["feature_toggles"]["camera"] == "1":
+    if (cs.structs["feature_toggles"]["camera"] == "1") and (camera_process is None):
         run_camera()
 
 #unfinished
@@ -635,27 +634,35 @@ def clean_up_processes():
     if (cs.structs["feature_toggles"]["heater"] == "1") and (heat_process is not None): #go through toggles and kill active processes
         heat_process.terminate()
         heat_process.wait()
+        heat_process = None
     if (cs.structs["feature_toggles"]["humidifier"] == "1") and (humidity_process is not None):
         humidity_process.terminate()
         humidity_process.wait()
+        humidity_process = None
     if (cs.structs["feature_toggles"]["dehumidifier"] == "1") and (dehumidify_process is not None):
         dehumidify_process.terminate()
         dehumidify_process.wait()
+        dehumidify_process = None
     if (cs.structs["feature_toggles"]["fan"] == "1") and (fan_process is not None):
         fan_process.terminate()
         fan_process.wait()
+        fan_process = None
     if (cs.structs["feature_toggles"]["water"] == "1") and (water_process is not None):
         water_process.terminate()
         water_process.wait()
+        water_process = None
     if (cs.structs["feature_toggles"]["light"] == "1") and (light_process is not None):
         light_process.terminate()
         light_process.wait()
+        light_process = None
     if (cs.structs["feature_toggles"]["air"] == "1") and (air_process is not None):
         air_process.terminate()
         air_process.wait()
+        air_process = None
     if (cs.structs["feature_toggles"]["camera"] == "1") and (camera_process is not None):
         camera_process.terminate()
         camera_process.wait()
+        camera_process = None
 
 #terminates the program and all running subprocesses
 def terminate_program(): #Depends on: cs.load_state(), 'sys', 'subprocess' #Modifies: heat_process, humidity_process, fan_process, light_process, camera_process, water_processs
