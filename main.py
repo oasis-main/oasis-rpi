@@ -104,7 +104,7 @@ def start_core():
     cs.load_state()
     cs.load_locks()
     
-    if (cs.locks["core"] == 0) & (core is None): #if it is free
+    if (cs.locks["core_y"] == 0) & (core is None): #if it is free
         #launch it
         core = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/core/core.py"],"core")
         print("Core process is running...")
@@ -121,7 +121,7 @@ def stop_core():
     cs.load_state()
     cs.load_locks()
     
-    if (cs.locks["core"] == 1) & (core is not None): #if it is running
+    if (cs.locks["core_y"] == 1) & (core is not None): #if it is running
         #kill it
         core.terminate()
         core.wait()
@@ -159,7 +159,7 @@ def stop_onboard_led():
     cs.load_state()
     cs.load_locks()
 
-    if (cs.locks["led"] == 1) & (core is not None):
+    if (cs.locks["led_y"] == 1) & (core is not None):
         led.terminate("/home/pi/oasis-grow/configs/signals.json")
         led.wait()
 
@@ -308,7 +308,7 @@ def main_loop(led_timer, connect_timer, power_timer):
                 if abutton_state == 0:
                     if cs.structs["feature_toggles"]["action_water"] == "1":
                         cs.load_locks()
-                        if cs.locks["water_pump"] == 0:
+                        if cs.locks["water_pump_y"] == 0:
                             cs.rusty_pipes.lock(cs.lock_filepath, "water_pump")
                             water_GPIO = int(cs.structs["hardware_config"]["equipment_gpio_map"]["water_relay"]) #bcm pin # pulls from config file
                             pin = rusty_pins.GpioOut(water_GPIO)

@@ -418,7 +418,7 @@ def check_lock(resource):
         print(resource + " is currently in use by another process.")
         sys.exit() #termiating for safety
     else:
-        lock(lock_filepath)
+        lock(lock_filepath,resource)
 
 def check_signal(resource: str, signal: str, reaction, loop_limit = 100):
     load_custom_signals()

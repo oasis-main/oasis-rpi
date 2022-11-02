@@ -439,64 +439,64 @@ def run_heat():
     global heat_process
     resource_name =  "heater"
     cs.load_locks()
-    if cs.locks[resource_name] == 0:
-        heat_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/heater.py'],"heater") #If process not free, then skips.
+    if cs.locks[resource_name+"_y"] == 0:
+        heat_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/heater.py'], "heater") #If process not free, then skips.
 
 #poll humidityf subprocess if applicable and relaunch/update equipment
 def run_hum():
     global humidity_process
     resource_name =  "humidifier"
     cs.load_locks()
-    if cs.locks[resource_name] == 0:
-        humidity_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/humidifier.py'],"humidifier")
+    if cs.locks[resource_name+"_y"] == 0:
+        humidity_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/humidifier.py'], "humidifier")
     
 #poll dehumidify subprocess if applicable and relaunch/update equipment
 def run_dehum():
     global dehumidify_process
     resource_name =  "dehumidifier"
     cs.load_locks()
-    if cs.locks[resource_name] == 0:
-        dehumidify_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/dehumidifier.py'],"dehumidifier")
+    if cs.locks[resource_name+"_y"] == 0:
+        dehumidify_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/dehumidifier.py'], "dehumidifier")
 
 #poll fan subprocess if applicable and relaunch/update equipment
 def run_fan(): #Depends on: 'subprocess'; Modifies: humidity_process
     global fan_process
     resource_name =  "fan"
     cs.load_locks()
-    if cs.locks[resource_name] == 0:
-        fan_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/fan.py'],"fan")
+    if cs.locks[resource_name+"_y"] == 0:
+        fan_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/fan.py'], "fan")
 
 #poll water subprocess if applicable and relaunch/update equipment
 def run_water(): #Depends on: 'subprocess'; Modifies: water_process
     global water_process
     resource_name =  "water_pump"
     cs.load_locks()
-    if cs.locks[resource_name] == 0:
-        water_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/water_pump.py'],"water_pump") #If running, then skips. If idle then restarts.
+    if cs.locks[resource_name+"_y"] == 0:
+        water_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/water_pump.py'], "water_pump") #If running, then skips. If idle then restarts.
     
 #poll light subprocess if applicable and relaunch/update equipment
 def run_light():
     global light_process
     resource_name =  "lights"
     cs.load_locks()
-    if cs.locks[resource_name] == 0:
-        light_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/lights.py'],"lights") #If running, then skips. If free then restarts.
+    if cs.locks[resource_name+"_y"] == 0:
+        light_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/lights.py'], "lights") #If running, then skips. If free then restarts.
    
 #poll air subprocess if applicable and relaunch/update equipment
 def run_air():
     global air_process
     resource_name =  "air_pump"
     cs.load_locks()
-    if cs.locks[resource_name] == 0:
-        air_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/air_pump.py'],"air_pump") #If running, then skips. If idle then restarts.
+    if cs.locks[resource_name+"_y"] == 0:
+        air_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/air_pump.py'], "air_pump") #If running, then skips. If idle then restarts.
     
 #poll camera subprocess if applicable and relaunch/update equipment
 def run_camera(): #Depends on: 'subprocess'; Modifies: camera_process
     global camera_process
     resource_name =  "camera"
     cs.load_locks()
-    if cs.locks[resource_name] == 0:
-        camera_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/imaging/camera.py'],"camera") #If running, then skips. If idle then restarts.
+    if cs.locks[resource_name+"_y"] == 0:
+        camera_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/imaging/camera.py'], "camera") #If running, then skips. If idle then restarts.
 
 def regulate_active_equipment():
     # calculate feedback levels and update equipment in use
