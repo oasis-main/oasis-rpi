@@ -151,7 +151,7 @@ def send_csv(path, cloud_name):
     #tell firebase that there is a new time series
     dbt.patch_firebase(cs.structs["access_config"], "csv_sent", "1")
     dbt.patch_firebase(cs.structs["access_config"], "csv_filename", cloud_name)
-    print("Firebase has a time-series in waiting")
+    print("Firebase has a csv in waiting")
 
 #connects system to firebase
 def connect_to_firebase(): #depends on: cs.load_state(), cs.write_state(), dbt.patch_firebase(), 'requests'; Modifies: access_config.json, device_state.json

@@ -37,16 +37,16 @@ def save_to_feed(image_path):
     save_most_recent = rusty_pipes.Open(["cp", str(image_path), "/home/pi/oasis-grow/data_out/image_feed/image_at_" + str(timestamp)+'.jpg'],"cp")
     save_most_recent.wait()
 
-def send_image(path):
+def send_image(path, image_filename):
     #send new image to firebase
     cs.load_state()
     user, db, storage = dbt.initialize_user(cs.structs["access_config"]["refresh_token"])
-    dbt.store_file(user, storage, path, cs.structs["access_config"]["device_name"], "image.jpg")
+    dbt.store_file(user, storage, path, cs.structs["access_config"]["device_name"], image_filename)
     print("Sent image")
 
     #tell firebase that there is a new image
     dbt.patch_firebase(cs.structs["access_config"], "image_sent", "1")
-    dbt.patch_firebase(cs.structs["access_config"], "image_filename", "image.jpg")
+    dbt.patch_firebase(cs.structs["access_config"], "image_filename", image_filename)
     print("Firebase has an image in waiting")
 
 #define a function to actuate element

@@ -85,8 +85,10 @@ if __name__ == "__main__":
     try:
         cs.load_state()
         user, db, storage = dbt.initialize_user(cs.structs["access_config"]["refresh_token"])
+        
         #fetch all the most recent data from the database
         dbt.fetch_device_data(cs.structs["access_config"])
+        
         #actual section that launches the listener
         detect_field_events(user, db)
         

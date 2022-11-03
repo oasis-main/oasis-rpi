@@ -159,9 +159,10 @@ def stop_onboard_led():
     cs.load_state()
     cs.load_locks()
 
-    if (cs.locks["led_y"] == 1) & (core is not None):
+    if (cs.locks["led_y"] == 1) & (led is not None):
         led.terminate("/home/pi/oasis-grow/configs/signals.json")
         led.wait()
+        led = None
 
 #updates the state of the LED, serial must be set up,
 def update_minion_led(): #Depends on: cs.load_state(), 'datetime'; Modifies: ser_out
