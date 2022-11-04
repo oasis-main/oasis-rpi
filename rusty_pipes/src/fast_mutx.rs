@@ -253,6 +253,7 @@ pub fn lock(lock_filepath: String, resource_key: String, loop_limit: Option<u64>
             return
         }
     }
+    return
 }
 
 /// unlock(lock_filepath, resource_key, /)
@@ -293,7 +294,7 @@ pub fn unlock(lock_filepath: String, resource_key: String, loop_limit: Option<u6
                     match serde_json::to_string_pretty(&locks){   
                         Ok(json) => {
                             match std::fs::write(&lock_filepath, json) {
-                                Ok(()) => break, //If write successful, break the loop
+                                Ok(()) => return, //If write successful, break the loop
                                 Err(_) => continue // Otherwise, try the next iteration
                             }
                         }
