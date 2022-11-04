@@ -719,7 +719,7 @@ def main_loop():
             regulate_active_equipment()
             console_log()
             data_out()
-            time.sleep(2.5)
+            time.sleep(5)
     except SystemExit:
         print("Core was terminated.")
     except KeyboardInterrupt:
