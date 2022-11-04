@@ -43,7 +43,7 @@ def act_on_event(field, new_data):
     elif field in hardware_config_groups:
         config_path = "/home/pi/oasis-grow/configs/hardware_config.json"
 
-    debug_act = False
+    debug_act = True
     
     if debug_act:
         print("Config filepath:")
@@ -68,7 +68,7 @@ def act_on_event(field, new_data):
     else: #the following are writes made to the database by the dashboard
         
         key = list(new_data.keys())[0]
-        val = list(new_data.keys())[0]
+        val = list(new_data.values())[0]
 
         if key in device_state_fields:
             config_path = "/home/pi/oasis-grow/configs/device_state.json"
