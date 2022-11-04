@@ -49,15 +49,33 @@ def act_on_event(field, new_data):
     print("Config struct field:")
     print(field)
 
-    print("New Data")
+    print("New Data:")
     print(new_data)
 
     #open data config file
     #edit appropriate spot
-    if config_path is not None:
+    if config_path is not None: #these are writes made directly to firebase as the admin
         
         if config_path not in hardware_config_groups:
             cs.write_state(config_path, field, new_data, db_writer = None)
+        else:
+            group = field #the "field" is actually the root of our nested json
+            cs.write_nested_dict(config_path, group, new_data, db_writer = None) #so we path that field (nested json group ) with a new data ()
+    
+    else: #the following are writes made to the database by the dashboard
+        
+        key = list(new_data.keys())[0]
+        val = list(new_data.keys())[0]
+
+        if key in device_state_fields:
+            config_path = "/home/pi/oasis-grow/configs/device_state.json"
+        elif key in control_params_fields:
+            config_path = "/home/pi/oasis-grow/configs/control_params.json"
+        elif key in hardware_config_groups:
+            config_path = "/home/pi/oasis-grow/configs/hardware_config.json"
+
+        if key not in hardware_config_groups:
+            cs.write_state(config_path, key, val, db_writer = None)
         else:
             group = field #the "field" is actually the root of our nested json
             cs.write_nested_dict(config_path, group, new_data, db_writer = None) #so we path that field (nested json group ) with a new data ()
