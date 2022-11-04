@@ -48,7 +48,7 @@ signals = {}
 signal_filepath = "/home/pi/oasis-grow/configs/signals.json"
 
 #gets the mutex
-def load_locks(loop_limit = 10000): #leave this alone since it's the python bridge to ramport locks
+def load_locks(loop_limit = 100): #leave this alone since it's the python bridge to ramport locks
     global locks
             
     if not os.path.exists(lock_filepath):
@@ -74,6 +74,7 @@ def load_locks(loop_limit = 10000): #leave this alone since it's the python brid
             if i >= int(loop_limit):
                 print("Tried to load locks max number of times. File is corrupted. Resetting locks...")
                 reset_locks(lock_filepath)
+                print(err.full_stack())
             else:
                 print("Waiting on lockfile...")
                 time.sleep(0.01)

@@ -206,7 +206,7 @@ pub fn lock(lock_filepath: String, resource_key: String, loop_limit: Option<u64>
                             if locks[&resource_lock_x].as_i64().unwrap() == x_write { //If no other process has written x
                                 break 'outer //proceed, allow the function to return 
                             } else {
-                                thread::sleep(Duration::from_millis(250)); //DELAY!
+                                thread::sleep(Duration::from_millis(1000)); //Now wait just a gosh darn second!
                                 
                                 for x in 0..limit+1{
                                     if x < limit {
@@ -321,7 +321,7 @@ pub fn reset_locks(lock_filepath: String,loop_limit: Option<u64>) {
     
     let limit = if let Some(i) = loop_limit {i} else {1000};
 
-    for x in 0..limit{ //start attempting to load & write the lock
+    for x in 0..limit+1{ //start attempting to load & write the lock
         if x < limit {
 
             //load the lock file into json
@@ -364,6 +364,8 @@ pub fn reset_locks(lock_filepath: String,loop_limit: Option<u64>) {
                 }
             }
 
+        } else {
+            println!("Failed to reset locks")
         }
     }
 
