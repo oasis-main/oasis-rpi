@@ -4,11 +4,11 @@
                     "connect_internet_button": "27",
                     "action_button": "22"
                     },
-"onboard_led_settings":{
-                        "num_leds": "12",
-                        "time_start_led": "0",
-                        "time_stop_led": "0"
-                        },
+"led_settings":{
+                "num_leds": "12",
+                "time_start_led": "0",
+                "time_stop_led": "0"
+                },
 "camera_settings":{
                     "picture_frequency": "60",
                     "awb_mode": "on",

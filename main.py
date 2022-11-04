@@ -174,19 +174,19 @@ def update_minion_led(): #Depends on: cs.load_state(), 'datetime'; Modifies: ser
     HoD = now.hour
 
     if minion.ser_out is not None:
-        if int(cs.structs["hardware_config"]["onboard_led_settings"]["time_start_led"]) < int(cs.structs["hardware_config"]["onboard_led_settings"]["time_stop_led"]):
-            if HoD >= int(cs.structs["hardware_config"]["onboard_led_settings"]["time_start_led"]) and HoD < int(cs.structs["hardware_config"]["onboard_led_settings"]["time_stop_led"]):
+        if int(cs.structs["hardware_config"]["led_settings"]["time_start_led"]) < int(cs.structs["hardware_config"]["led_settings"]["time_stop_led"]):
+            if HoD >= int(cs.structs["hardware_config"]["led_settings"]["time_start_led"]) and HoD < int(cs.structs["hardware_config"]["led_settings"]["time_stop_led"]):
                 minion.ser_out.write(bytes(str(cs.structs["device_state"]["led_status"]+"\n"), 'utf-8')) #write status
                 time.sleep(0.25)
                 minion.ser_out.reset_output_buffer()
-            if HoD < int(cs.structs["hardware_config"]["onboard_led_settings"]["time_start_led"]) or HoD >= int(cs.structs["hardware_config"]["onboard_led_settings"]["time_stop_led"]):
+            if HoD < int(cs.structs["hardware_config"]["led_settings"]["time_start_led"]) or HoD >= int(cs.structs["hardware_config"]["led_settings"]["time_stop_led"]):
                 minion.ser_out.write(bytes(str("off"+"\n"), 'utf-8')) #write off
-        if int(cs.structs["hardware_config"]["onboard_led_settings"]["time_start_led"]) > int(cs.structs["hardware_config"]["onboard_led_settings"]["time_stop_led"]):
-            if HoD >=  int(cs.structs["hardware_config"]["onboard_led_settings"]["time_start_led"]) or HoD < int(cs.structs["hardware_config"]["onboard_led_settings"]["time_stop_led"]):
+        if int(cs.structs["hardware_config"]["led_settings"]["time_start_led"]) > int(cs.structs["hardware_config"]["led_settings"]["time_stop_led"]):
+            if HoD >=  int(cs.structs["hardware_config"]["led_settings"]["time_start_led"]) or HoD < int(cs.structs["hardware_config"]["led_settings"]["time_stop_led"]):
                 minion.ser_out.write(bytes(str(cs.structs["device_state"]["led_status"]+"\n"), 'utf-8')) #write status
-            if HoD < int(cs.structs["hardware_config"]["onboard_led_settings"]["time_start_led"]) and  HoD >= int(cs.structs["hardware_config"]["onboard_led_settings"]["time_stop_led"]):
+            if HoD < int(cs.structs["hardware_config"]["led_settings"]["time_start_led"]) and  HoD >= int(cs.structs["hardware_config"]["led_settings"]["time_stop_led"]):
                 minion.ser_out.write(bytes(str("off"+"\n"), 'utf-8')) #write off
-        if int(cs.structs["hardware_config"]["onboard_led_settings"]["time_start_led"]) == int(cs.structs["hardware_config"]["onboard_led_settings"]["time_stop_led"]):
+        if int(cs.structs["hardware_config"]["led_settings"]["time_start_led"]) == int(cs.structs["hardware_config"]["led_settings"]["time_stop_led"]):
                 minion.ser_out.write(bytes(str(cs.structs["device_state"]["led_status"]+"\n"), 'utf-8')) #write status
     else:
         #print("no serial connection, cannot update LED view")
