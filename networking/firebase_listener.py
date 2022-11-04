@@ -43,14 +43,17 @@ def act_on_event(field, new_data):
     elif field in hardware_config_groups:
         config_path = "/home/pi/oasis-grow/configs/hardware_config.json"
 
-    print("Config filepath:")
-    print(config_path)
+    debug_act = False
     
-    print("Config struct field:")
-    print(field)
+    if debug_act:
+        print("Config filepath:")
+        print(config_path)
+        
+        print("Config struct field:")
+        print(field)
 
-    print("New Data:")
-    print(new_data)
+        print("New Data:")
+        print(new_data)
 
     #open data config file
     #edit appropriate spot
@@ -76,15 +79,17 @@ def act_on_event(field, new_data):
 
         if key not in hardware_config_groups:
             cs.write_state(config_path, key, val, db_writer = None)
-        else:
+        elif key in set(control_params_fields) + set(device_state_fields):
             group = field #the "field" is actually the root of our nested json
             cs.write_nested_dict(config_path, group, new_data, db_writer = None) #so we path that field (nested json group ) with a new data ()
+        else:
+            return
 
 def stream_handler(m):
     #some kind of update
     #might be from start up or might be user changed it
     if m['event']=='put' or m['event']=='patch' or m['event']=='post':
-        print(m)
+        print(m) #raw event streaming data coming from firebase
         path = m['path']
         key = path[1:len(path)]
         value = m['data']
