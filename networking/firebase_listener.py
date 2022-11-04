@@ -43,7 +43,7 @@ def act_on_event(field, new_data):
     elif field in hardware_config_groups:
         config_path = "/home/pi/oasis-grow/configs/hardware_config.json"
 
-    debug_act = True
+    debug_act = False
     
     if debug_act:
         print("Config filepath:")
