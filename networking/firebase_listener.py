@@ -34,28 +34,33 @@ def act_on_event(field, new_data):
     control_params_fields = list(cs.structs["control_params"].keys())
     hardware_config_groups = list(cs.structs["hardware_config"].keys())
 
-    path = None
+    config_path = None
 
     if field in device_state_fields:
-        path = "/home/pi/oasis-grow/configs/device_state.json"
-    if field in control_params_fields:
-        path = "/home/pi/oasis-grow/configs/control_params.json"
-    if field in hardware_config_groups:
-        path = "/home/pi/oasis-grow/configs/hardware_config.json"
+        config_path = "/home/pi/oasis-grow/configs/device_state.json"
+    elif field in control_params_fields:
+        config_path = "/home/pi/oasis-grow/configs/control_params.json"
+    elif field in hardware_config_groups:
+        config_path = "/home/pi/oasis-grow/configs/hardware_config.json"
 
-    print(path)
+    print("Config filepath:")
+    print(config_path)
+    
+    print("Config struct field:")
     print(field)
+
+    print("New Data")
     print(new_data)
 
     #open data config file
     #edit appropriate spot
-    if path is not None:
+    if config_path is not None:
         
-        if path not in hardware_config_groups:
-            cs.write_state(path, field, new_data, db_writer = None)
+        if config_path not in hardware_config_groups:
+            cs.write_state(config_path, field, new_data, db_writer = None)
         else:
             group = field #the "field" is actually the root of our nested json
-            cs.write_nested_dict(path, field, new_data) #so we pathc that field (nested json group ) with a new data ()
+            cs.write_nested_dict(config_path, group, new_data, db_writer = None) #so we path that field (nested json group ) with a new data ()
 
 def stream_handler(m):
     #some kind of update
