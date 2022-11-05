@@ -77,12 +77,14 @@ def act_on_event(field, new_data):
         elif key in hardware_config_groups:
             config_path = "/home/pi/oasis-grow/configs/hardware_config.json"
 
-        if key not in hardware_config_groups:
+        if key in (set(control_params_fields)+set(device_state_fields)):
             cs.write_state(config_path, key, val, db_writer = None)
-        else:
+        elif key in hardware_config_groups:
             group = key #the "field" is actually the root of our nested json
             json = val
             cs.write_nested_dict(config_path, group, json, db_writer = None) #so we path that field (nested json group ) with a new data ()
+        else:
+            return
 
 
 def stream_handler(m):
