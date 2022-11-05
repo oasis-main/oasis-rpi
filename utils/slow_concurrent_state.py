@@ -77,7 +77,7 @@ def load_locks(loop_limit = 100): #leave this alone since it's the python bridge
                 print(err.full_stack())
             else:
                 print("Waiting on lockfile...")
-                time.sleep(0.01)
+                time.sleep(0.5)
                 pass
 
 '''
