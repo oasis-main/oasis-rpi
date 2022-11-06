@@ -77,7 +77,7 @@ def act_on_event(field, new_data):
         elif key in hardware_config_groups:
             config_path = "/home/pi/oasis-grow/configs/hardware_config.json"
 
-        if key in (set(control_params_fields)+set(device_state_fields)):
+        if key in (control_params_fields+device_state_fields):
             cs.write_state(config_path, key, val, db_writer = None)
         elif key in hardware_config_groups:
             group = key #the "field" is actually the root of our nested json
