@@ -27,9 +27,6 @@ def sync_state():
 #make change to config file
 def act_on_event(field, new_data):
     #get data and field info
-
-    #checks if file exists and makes a blank one if not
-    #the path has to be set for box
     device_state_fields = list(cs.structs["device_state"].keys())
     control_params_fields = list(cs.structs["control_params"].keys())
     hardware_config_groups = list(cs.structs["hardware_config"].keys())
@@ -43,7 +40,7 @@ def act_on_event(field, new_data):
     elif field in hardware_config_groups:
         config_path = "/home/pi/oasis-grow/configs/hardware_config.json"
 
-    debug_act = False
+    debug_act = True
     
     if debug_act:
         print("Config filepath:")
@@ -118,9 +115,25 @@ if __name__ == "__main__":
         
         #fetch all the most recent data from the database & patch the listener
         cloud_device = dbt.fetch_device_data(cs.structs["access_config"])
-        for k,v in cloud_device.items():
-            act_on_event(k,v)
+        
+        device_state_fields = list(cs.structs["device_state"].keys())
+        control_params_fields = list(cs.structs["control_params"].keys())
+        hardware_config_groups = list(cs.structs["hardware_config"].keys())
 
+        for k,v in cloud_device.items():
+            if k in device_state_fields:
+                start_path = "/home/pi/oasis-grow/configs/device_state.json"
+            elif k in control_params_fields:
+                start_path = "/home/pi/oasis-grow/configs/control_params.json"
+            elif k in hardware_config_groups:
+                start_path = "/home/pi/oasis-grow/configs/hardware_config.json"
+
+            if start_path not in hardware_config_groups:
+                cs.write_state(start_path, k, v, db_writer = None)
+            else:
+                cs.write_nested_dict(start_path, k, v, db_writer = None) #so we path that field (nested json group ) with a new data ()
+
+        #ok, now that we got the startup values...
         #actual section that launches the listener
         detect_field_events(user, db)
         
