@@ -354,7 +354,7 @@ def main_loop(led_timer, connect_timer, power_timer):
         stop_core()
         stop_listener()
         stop_onboard_led()
-        time.sleep(5)
+        time.sleep(1)
         
 if __name__ == '__main__':
     led_timer, connect_timer, power_timer = main_setup()
