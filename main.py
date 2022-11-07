@@ -122,7 +122,7 @@ def stop_core():
     cs.load_state()
     cs.load_locks()
 
-    if (cs.locks["core_y"] == 1) & (core is not None): #if it is running
+    if (cs.locks["core_y"] != 0) & (core is not None): #if it is running
         #kill it
         core.terminate()
         core.wait()
@@ -344,6 +344,7 @@ def main_loop(led_timer, connect_timer, power_timer):
         stop_core()
         stop_listener()
         stop_onboard_led()
+        time.sleep(5)
         
 if __name__ == '__main__':
     led_timer, connect_timer, power_timer = main_setup()
