@@ -84,6 +84,7 @@ if __name__ == '__main__':
         while True:
             cs.load_state()
             actuate(int(cs.structs["hardware_config"]["camera_settings"]["picture_frequency"]))
+            time.sleep(1)
     except SystemExit:
         print("Camera was terminated.")
     except KeyboardInterrupt:

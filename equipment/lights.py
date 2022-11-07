@@ -5,6 +5,7 @@
 #import shell modules
 import sys
 import signal
+import time
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
@@ -29,6 +30,7 @@ if __name__ == '__main__':
             print("Turning lights on at " + cs.structs["control_params"]["time_start_light"] + ":00 and off at " + cs.structs["control_params"]["time_stop_light"] + ":00, refreshing every " + cs.structs["control_params"]["lighting_interval"] + " minutes...")
             pin = relays.actuate_time_hod(pin, int(cs.structs["control_params"]["time_start_light"]), int(cs.structs["control_params"]["time_stop_light"]), int(cs.structs["control_params"]["lighting_interval"]), interval_units = "minutes", wattage=cs.structs["hardware_config"]["equipment_wattage"]["lights"], log="lights_kwh")
             cs.load_state()
+            time.sleep(1)
     except SystemExit:
         print("Lights were terminated.")
     except KeyboardInterrupt:

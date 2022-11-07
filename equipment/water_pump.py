@@ -4,6 +4,7 @@
 #import OS modules
 import sys
 import signal
+import time
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
@@ -32,6 +33,7 @@ if __name__ == "__main__":
                 print("Running water pump for " + cs.structs["control_params"]["watering_duration"] + " second(s) every " + cs.structs["control_params"]["watering_interval"] + " day(s)...")
                 relays.actuate_interval_sleep(pin, duration = float(cs.structs["control_params"]["watering_duration"]), sleep = float(cs.structs["control_params"]["watering_interval"]), duration_units="seconds", sleep_units="days", wattage=cs.structs["hardware_config"]["equipment_wattage"]["water_pump"], log="water_pump_kwh")
             cs.load_state()
+            time.sleep(1)
     except KeyboardInterrupt:
         print("Water pump was interrupted")
     except Exception:

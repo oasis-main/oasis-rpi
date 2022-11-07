@@ -93,6 +93,7 @@ def run():
         slow_cs.check_signal("led","terminated", clean_up) #the custom termination signal must ALWAYS be acknowledged otherwise we will get repeat behavior
         check_led_status()
         slow_cs.load_state()
+        time.sleep(1)
 
 if __name__ == '__main__':
     try:

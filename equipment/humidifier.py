@@ -4,6 +4,7 @@
 #import shell modules
 import sys
 import signal
+import time
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
@@ -32,6 +33,7 @@ if __name__ == '__main__':
                 print("Running humidifier for " + cs.structs["control_params"]["humidifier_duration"] + " minute(s) on, " + cs.structs["control_params"]["humidifier_interval"] + " minute(s) off...")
                 relays.actuate_interval_sleep(pin, float(cs.structs["control_params"]["humidifier_duration"]), float(cs.structs["control_params"]["humidifier_interval"]), duration_units= "minutes", sleep_units="minutes", wattage=cs.structs["hardware_config"]["equipment_wattage"]["humidifier"], log="humidifier_kwh")
             cs.load_state()
+            time.sleep(1)
     except SystemExit:
         print("Humidifier was terminated.")
     except KeyboardInterrupt:

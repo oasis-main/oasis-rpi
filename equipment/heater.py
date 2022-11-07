@@ -5,6 +5,7 @@
 #import shell modules
 import sys
 import signal
+import time
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
@@ -33,6 +34,7 @@ if __name__ == '__main__':
                 print("Heater on for " + cs.structs["control_params"]["heater_duration"] + " minute(s), off for " + cs.structs["control_params"]["heater_interval"] + " minute(s)...")
                 relays.actuate_interval_sleep(pin, float(cs.structs["control_params"]["heater_duration"]), float(cs.structs["control_params"]["heater_interval"]), duration_units= "minutes", sleep_units="minutes", wattage=cs.structs["hardware_config"]["equipment_wattage"]["heater"], log="heater_kwh")
             cs.load_state()
+            time.sleep(1)
     except SystemExit:
         print("Heater was terminated.")
     except KeyboardInterrupt:

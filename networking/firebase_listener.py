@@ -148,10 +148,9 @@ if __name__ == "__main__":
         detect_field_events(user, db)
         
         while True:
-            pass
             #debugging
             #print("Listener is active...")
-            #time.sleep(1)
+            time.sleep(1)
             #we're going to hang this one infinitely until terminated from above
     
     except SystemExit:
