@@ -127,6 +127,7 @@ def write_power_csv(filename, dict): #Depends on: "os" "csv"
         writer = csv.DictWriter(csvfile, delimiter=',', lineterminator='\n',fieldnames=headers)
 
         if not file_exists: 
+            print("Creating headers for new file...")
             writer.writeheader()  # file doesn't exist yet, write a header
 
         variables = {}

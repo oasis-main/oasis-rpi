@@ -125,7 +125,8 @@ if __name__ == "__main__":
         hardware_config_groups = list(cs.structs["hardware_config"].keys())
 
         for k,v in cloud_device.items():
-            print("Startup: writing " + str(v) + " to " + str(k))
+            #for debug
+            #print("Startup: writing " + str(v) + " to " + str(k))
             if k in device_state_fields:
                 start_path = "/home/pi/oasis-grow/configs/device_state.json"
             elif k in control_params_fields:
