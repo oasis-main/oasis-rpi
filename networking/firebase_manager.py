@@ -107,7 +107,7 @@ def write_power_csv(filename, dict): #Depends on: "os" "csv"
     with open (filename, 'a') as csvfile:
         headers = ["time"]
         
-        headers.append["boards_kwh"]
+        headers.append("boards_kwh")
 
         if cs.structs["feature_toggles"]["heater"] == "1":
             headers.append("heater_kwh")

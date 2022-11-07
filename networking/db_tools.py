@@ -31,10 +31,6 @@ def initialize_user(RefreshToken):
 
     return user, db, storage
 
-#get all user data
-def get_user_data(user, db):
-    return  db.child(user['userId']).get(user['idToken']).val()
-
 #modifies a firebase variable, now asynchroous
 def patch_firebase(access_config,field,value): #Depends on: load_state(),'requests','json'; Modifies: database['field'], state variables
     data = orjson.dumps({field: value})

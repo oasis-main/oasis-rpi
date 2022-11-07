@@ -43,7 +43,7 @@ def act_on_event(field, new_data):
     elif field in hardware_config_groups:
         config_path = "/home/pi/oasis-grow/configs/hardware_config.json"
 
-    debug_act = True
+    debug_act = False
     
     if debug_act:
         print("Config filepath:")
@@ -116,9 +116,11 @@ if __name__ == "__main__":
         cs.load_state()
         user, db, storage = dbt.initialize_user(cs.structs["access_config"]["refresh_token"])
         
-        #fetch all the most recent data from the database
-        dbt.fetch_device_data(cs.structs["access_config"])
-        
+        #fetch all the most recent data from the database & patch the listener
+        cloud_device = dbt.fetch_device_data(cs.structs["access_config"])
+        for k,v in cloud_device.items():
+            act_on_event(k,v)
+
         #actual section that launches the listener
         detect_field_events(user, db)
         
