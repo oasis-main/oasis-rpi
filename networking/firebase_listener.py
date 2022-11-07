@@ -146,7 +146,7 @@ if __name__ == "__main__":
         while True:
             print("Listener is active...")
             time.sleep(1)
-            continue #we're going to hang this one infinitely until terminated from above
+            #we're going to hang this one infinitely until terminated from above
     
     except SystemExit:
         print("Terminating listener...")
