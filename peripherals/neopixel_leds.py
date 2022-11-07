@@ -86,8 +86,7 @@ def clean_up(): #signal is not used to terminate this, rather a flag is set from
         time.sleep(0.04)   
     
     slow_cs.unlock(slow_cs.lock_filepath, resource_name) #free the leds for system
-    
-    sys.exit()
+    slow_cs.wrapped_sys_exit()
 
 def run():
     while True:

@@ -41,7 +41,7 @@ def act_on_event(field, new_data):
     elif field in hardware_config_groups:
         config_path = "/home/pi/oasis-grow/configs/hardware_config.json"
 
-    debug_act = True
+    debug_act = False
     
     if debug_act:
         print("Config filepath:")
@@ -147,8 +147,10 @@ if __name__ == "__main__":
         detect_field_events(user, db)
         
         while True:
-            print("Listener is active...")
-            time.sleep(1)
+            pass
+            #debugging
+            #print("Listener is active...")
+            #time.sleep(1)
             #we're going to hang this one infinitely until terminated from above
     
     except SystemExit:
