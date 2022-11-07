@@ -273,7 +273,7 @@ def write_nested_dict(path: str, group: str, dictionary: dict, db_writer = None,
 
         with open(path, "rb+") as x: # open the file.
             data = orjson.loads(x.read()) # can we load a valid json?
-            data[group].update(dictionary) #write the desired values
+            data[group] = dictionary #write the desired values
             x.seek(0)
             x.write(orjson.dumps(data))
             x.truncate()
