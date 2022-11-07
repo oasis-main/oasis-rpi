@@ -104,6 +104,8 @@ def start_core():
     cs.load_state()
     cs.load_locks()
     
+    cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","1",db_writer = dbt.patch_firebase)
+
     if (cs.locks["core_y"] == 0) & (core is None): #if it is free
         #launch it
         core = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/core/core.py"],"core")
@@ -121,6 +123,8 @@ def stop_core():
     cs.load_state()
     cs.load_locks()
     
+    cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","0",db_writer = dbt.patch_firebase)
+
     if (cs.locks["core_y"] == 1) & (core is not None): #if it is running
         #kill it
         core.terminate()
