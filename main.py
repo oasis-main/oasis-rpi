@@ -227,9 +227,9 @@ def get_updates(): #depends on: cs.load_state(),'subproceess', update.py; modifi
     cs.load_state()
     
     if cs.structs["device_state"]["running"] == "0": #replicated in the main loop
-        #kill listener
+        #just kill listener
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = dbt.patch_firebase) #make sure the cloud does not update main code, kill listener
-        dbt.kill_listener()
+        stop_listener()
         #launch update.py and wait to complete
         update_process = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/utils/update.py"],"update")
         update_process.wait()
@@ -237,11 +237,11 @@ def get_updates(): #depends on: cs.load_state(),'subproceess', update.py; modifi
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","1", db_writer = dbt.patch_firebase)#restore listener
     
     if cs.structs["device_state"]["running"] == "1": #replicated in the main loop
-        #flip running to 0        
-        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","0", db_writer = dbt.patch_firebase)
-        #kill listener
+        #kill core
+        stop_core()
+        #also kill listener
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = dbt.patch_firebase) #make sure the cloud does not update main code, kill listener
-        dbt.kill_listener()
+        stop_listener()
         #launch update.py and wait to complete
         update_process = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/utils/update.py"],"update")
         update_process.wait()

@@ -21,7 +21,7 @@ def git_pull():
     gitpull = rusty_pipes.Open(["git", "pull"],"git_pull") #should be whatever branch the code was installed from
     gitpull.wait()
 
-    print("Pulled most recent code changes from repository.")
+    print("Pulled most recent code changes from repository (you stayed on the original branch, defaults to the master)")
 
 #save existing data into temps
 def save_old_configs():
