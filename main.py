@@ -89,12 +89,16 @@ def connect_firebase():
 
 def start_listener():
     global listener
-    if listener is None:
+    cs.load_state()
+    cs.load_locks()
+    if (cs.locks["listener_y"] == 0) & (listener is None):
         listener = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/networking/firebase_listener.py"],"listener")
 
 def stop_listener():
     global listener
-    if listener is not None:
+    cs.load_state()
+    cs.load_locks()
+    if (cs.locks["listener_y"] != 0) & (listener is not None):
         listener.terminate()
         listener.wait()
         listener = None
@@ -154,14 +158,20 @@ def switch_core_running(): #Depends on: cs.load_state(), cs.write_state(), dbt.p
 
 def start_onboard_led():
     global led
-    led = rusty_pipes.Open(["sudo", "python3", "/home/pi/oasis-grow/peripherals/neopixel_leds.py"],"led")
+    
+    cs.load_state()
+    cs.load_locks()
+    
+    if (cs.locks["led_y"] == 0) & (led is None):
+        led = rusty_pipes.Open(["sudo", "python3", "/home/pi/oasis-grow/peripherals/neopixel_leds.py"],"led")
 
 def stop_onboard_led():
     global led
+    
     cs.load_state()
     cs.load_locks()
 
-    if (cs.locks["led_y"] == 1) & (led is not None):
+    if (cs.locks["led_y"] != 0) & (led is not None):
         led.terminate("/home/pi/oasis-grow/configs/signals.json")
         led.wait()
         led = None
