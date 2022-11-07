@@ -138,7 +138,7 @@ if __name__ == "__main__":
         detect_field_events(user, db)
         
         while True:
-            pass #we're going to hang this one infinitely until terminated from above
+            continue #we're going to hang this one infinitely until terminated from above
     
     except SystemExit:
         print("Terminating listener...")

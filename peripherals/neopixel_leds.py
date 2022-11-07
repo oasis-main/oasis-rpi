@@ -91,7 +91,7 @@ def clean_up(): #signal is not used to terminate this, rather a flag is set from
 
 def run():
     while True:
-        slow_cs.check_signal("led","terminated", clean_up)
+        slow_cs.check_signal("led","terminated", clean_up) #the custom termination signal must ALWAYS be acknowledged otherwise we will get repeat behavior
         check_led_status()
         slow_cs.load_state()
 
@@ -102,6 +102,7 @@ if __name__ == '__main__':
         print("LED was terminated.")
     except KeyboardInterrupt:
         print("Shutting down LED...")
+        slow_cs.write_state("/home/pi/oasis-grow/configs/signals.json","led","acknowleged")
         clean_up()
     except Exception:
         print("LED encountered an error!")
