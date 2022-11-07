@@ -57,11 +57,14 @@ def act_on_event(field, new_data):
     #edit appropriate spot
     if config_path is not None: #these are writes made directly to firebase as the admin
         
-        if config_path not in hardware_config_groups:
+        if field in (control_params_fields+device_state_fields) & (field != "connected"):
             cs.write_state(config_path, field, new_data, db_writer = None)
-        else:
+        elif field in hardware_config_groups:
             group = field #the "field" is actually the root of our nested json
-            cs.write_nested_dict(config_path, group, new_data, db_writer = None) #so we path that field (nested json group ) with a new data ()
+            json = new_data
+            cs.write_nested_dict(config_path, group, json, db_writer = None) #so we path that field (nested json group ) with a new data ()
+        else:
+            pass
     
     else: #the following are writes made to the database by the dashboard
         
@@ -75,7 +78,7 @@ def act_on_event(field, new_data):
         elif key in hardware_config_groups:
             config_path = "/home/pi/oasis-grow/configs/hardware_config.json"
 
-        if key in (control_params_fields+device_state_fields):
+        if key in (control_params_fields+device_state_fields) & (key != "connected"):
             cs.write_state(config_path, key, val, db_writer = None)
         elif key in hardware_config_groups:
             group = key #the "field" is actually the root of our nested json
@@ -130,7 +133,7 @@ if __name__ == "__main__":
             elif k in hardware_config_groups:
                 start_path = "/home/pi/oasis-grow/configs/hardware_config.json"
 
-            if k in (device_state_fields+control_params_fields):
+            if k in (device_state_fields+control_params_fields) & (k != "connected"):
                 cs.write_state(start_path, k, v, db_writer = None)
             elif k in hardware_config_groups:
                 cs.write_nested_dict(start_path, k, v, db_writer = None) #so we path that field (nested json group ) with a new data ()
