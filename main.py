@@ -103,8 +103,6 @@ def start_core():
     global core
     cs.load_state()
     cs.load_locks()
-    
-    cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","1",db_writer = dbt.patch_firebase)
 
     if (cs.locks["core_y"] == 0) & (core is None): #if it is free
         #launch it
@@ -113,6 +111,7 @@ def start_core():
 
         if cs.structs["device_state"]["connected"] == "1": #if connected
             #send LEDmode = "connected_running"
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","1",db_writer = dbt.patch_firebase)
             cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","connected_running", db_writer = dbt.patch_firebase)
         else: #if not connected
             #send LEDmode = "offline_running"
@@ -122,8 +121,6 @@ def stop_core():
     global core
     cs.load_state()
     cs.load_locks()
-    
-    cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","0",db_writer = dbt.patch_firebase)
 
     if (cs.locks["core_y"] == 1) & (core is not None): #if it is running
         #kill it
@@ -133,10 +130,11 @@ def stop_core():
 
         print("Core process is idle...")
         if cs.structs["device_state"]["connected"] == "1": #if connected
-            #send LEDmode = "connected_idle"
+            #send running = "1", led_mode = "connected_idle"
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","0",db_writer = dbt.patch_firebase)
             cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","connected_idle", db_writer = dbt.patch_firebase)
         else: #if not connected
-            #send LEDmode = "offline_idle"
+            #store led_mode = "offline_idle"
             cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","offline_idle", db_writer = dbt.patch_firebase)
 
 
@@ -335,7 +333,7 @@ def main_loop(led_timer, connect_timer, power_timer):
 
     except(KeyboardInterrupt):
         print("   <----- Exiting program...")
-        reset_model.reset_device_state() #This is for testing purposes, to keep behavior the same between debugs
+        #reset_model.reset_device_state() #This is for testing purposes, to keep behavior the same between debugs
 
     except Exception as e:
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "error", db_writer = dbt.patch_firebase)

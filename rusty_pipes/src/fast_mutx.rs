@@ -250,8 +250,12 @@ pub fn lock(lock_filepath: String, resource_key: String, loop_limit: Option<u64>
 
         } else {
             println!("Loop limit expired: lock(). Was not able to acquire {}.", &resource_key);
+            reset_locks(String::from("/home/pi/oasis-grow/configs/locks.json"), None);
             return
         }
+
+        thread::sleep(Duration::from_millis(100)) //delay before the next iteration to give us some breathing room. rust loops fast
+
     }
     return
 }
@@ -307,9 +311,16 @@ pub fn unlock(lock_filepath: String, resource_key: String, loop_limit: Option<u6
                     continue // If parse failed, continue to next iteration
                 }
             }
+        
+            
+        
         } else {
-            println!("Loop limit expired: unlock(). Was not able to free {}", &resource_key)
+            println!("Loop limit expired: unlock(). Was not able to free {}", &resource_key);
+            reset_locks(String::from("/home/pi/oasis-grow/configs/locks.json"), None);
         }
+    
+        thread::sleep(Duration::from_millis(100)); //delay before the next iteration to give us some breathing room. rust loops fast
+
     }
 }
 
@@ -366,8 +377,11 @@ pub fn reset_locks(lock_filepath: String,loop_limit: Option<u64>) {
             }
 
         } else {
-            println!("Failed to reset locks")
+            println!("Failed to reset locks.")
         }
+
+        thread::sleep(Duration::from_millis(100)); //delay before the next iteration to give us some breathing room. rust loops fast
+
     }
 
         
