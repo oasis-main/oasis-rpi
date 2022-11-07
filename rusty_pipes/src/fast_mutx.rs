@@ -83,7 +83,8 @@ pub fn lock(lock_filepath: String, resource_key: String, loop_limit: Option<u64>
                         match text {
                             Ok(json) => {// Parse the string into a dynamically-typed JSON structure.
                                 serde_json::from_str::<Value>(&json)},
-                            Err(_) => {continue;}
+                            Err(_) => {thread::sleep(Duration::from_millis(100));
+                                        continue;}
                         }
                     };
 
@@ -97,15 +98,18 @@ pub fn lock(lock_filepath: String, resource_key: String, loop_limit: Option<u64>
                                     x_write = locks[&resource_lock_x].as_i64().unwrap();
                                     break
                                 },
-                                Err(_) => continue
+                                Err(_) => {thread::sleep(Duration::from_millis(100));
+                                            continue;}
                             }
                         },
                         Err(_) => {
-                            continue
+                            thread::sleep(Duration::from_millis(100));
+                            continue;
                         }
                     }
                 } else {
                     println!("Error in fast mutex Stage 0");
+                    thread::sleep(Duration::from_millis(250));
                     return
                 }    
             }
@@ -124,7 +128,8 @@ pub fn lock(lock_filepath: String, resource_key: String, loop_limit: Option<u64>
                         match text {
                             Ok(json) => {// Parse the string into a dynamically-typed JSON structure.
                                 serde_json::from_str::<Value>(&json)},
-                            Err(_) => {continue;}
+                            Err(_) => {thread::sleep(Duration::from_millis(100));
+                                        continue;}
                         }
                     };
 
@@ -135,11 +140,13 @@ pub fn lock(lock_filepath: String, resource_key: String, loop_limit: Option<u64>
                             if locks[&resource_lock_y].as_i64().unwrap() == 0 {break} else {continue 'outer};
                         },
                         Err(_) => {
-                            continue
+                            thread::sleep(Duration::from_millis(100));
+                            continue;
                         }
                     }
                 } else {
                     println!("Error in fast mutex Stage 1");
+                    thread::sleep(Duration::from_millis(250));
                     return
                 }
             }
@@ -157,7 +164,8 @@ pub fn lock(lock_filepath: String, resource_key: String, loop_limit: Option<u64>
                         match text {
                             Ok(json) => {// Parse the string into a dynamically-typed JSON structure.
                                 serde_json::from_str::<Value>(&json)},
-                            Err(_) => {continue;}
+                            Err(_) => {thread::sleep(Duration::from_millis(100));
+                                        continue;}
                         }
                     };
 
@@ -171,14 +179,17 @@ pub fn lock(lock_filepath: String, resource_key: String, loop_limit: Option<u64>
                                     y_write = locks[&resource_lock_y].as_i64().unwrap();
                                     break
                                 },
-                                Err(_) => continue
+                                Err(_) => {thread::sleep(Duration::from_millis(100));
+                                            continue;}
                             }
                         },
-                        Err(_) => continue
+                        Err(_) => {thread::sleep(Duration::from_millis(100));
+                                    continue;}
                     }
 
                 } else {
                     println!("Error in fast mutex Stage 2");
+                    thread::sleep(Duration::from_millis(250)); 
                     return
                 }
             }
@@ -195,7 +206,8 @@ pub fn lock(lock_filepath: String, resource_key: String, loop_limit: Option<u64>
                         match text {
                             Ok(json) => {// Parse the string into a dynamically-typed JSON structure.
                                 serde_json::from_str::<Value>(&json)},
-                            Err(_) => {continue;}
+                            Err(_) => {thread::sleep(Duration::from_millis(100));
+                                        continue;}
                         }
                     };
 
@@ -206,7 +218,7 @@ pub fn lock(lock_filepath: String, resource_key: String, loop_limit: Option<u64>
                             if locks[&resource_lock_x].as_i64().unwrap() == x_write { //If no other process has written x
                                 break 'outer //proceed, allow the function to return 
                             } else {
-                                thread::sleep(Duration::from_millis(2000)); //Now wait just a gosh darn second!
+                                thread::sleep(Duration::from_millis(2000)); //ALGORITHM MAIN DELAY: Now wait just a gosh darn second!
                                 
                                 for x in 0..limit+1{
                                     if x < limit {
@@ -218,7 +230,8 @@ pub fn lock(lock_filepath: String, resource_key: String, loop_limit: Option<u64>
                                             match text {
                                                 Ok(json) => {// Parse the string into a dynamically-typed JSON structure.
                                                     serde_json::from_str::<Value>(&json)},
-                                                Err(_) => {continue;}
+                                                Err(_) => {thread::sleep(Duration::from_millis(100));
+                                                            continue;}
                                             }
                                         };
                             
@@ -229,21 +242,25 @@ pub fn lock(lock_filepath: String, resource_key: String, loop_limit: Option<u64>
                                                 if locks[&resource_lock_y].as_i64().unwrap() == y_write {break 'outer} else {continue 'outer};
                                             },
                                             Err(_) => {
-                                                continue
+                                                thread::sleep(Duration::from_millis(100));
+                                                continue;
                                             }
                                         }
                                     } else {
                                         println!("Error in fast mutex Stage 3B");
+                                        thread::sleep(Duration::from_millis(250)); 
                                     }
                                 }
                             };
                         },
                         Err(_) => {
-                            continue
+                            thread::sleep(Duration::from_millis(100));
+                            continue;
                         }
                     }
                 } else {
                     println!("Error in fast mutex Stage 4");
+                    thread::sleep(Duration::from_millis(250)); 
                     return
                 }
             }   
@@ -254,7 +271,7 @@ pub fn lock(lock_filepath: String, resource_key: String, loop_limit: Option<u64>
             return
         }
 
-        thread::sleep(Duration::from_millis(500)) //delay before the next iteration to give us some breathing room. rust loops fast
+        thread::sleep(Duration::from_millis(500)); //delay before the next iteration to give us some breathing room. rust loops fast
 
     }
     return
@@ -285,7 +302,8 @@ pub fn unlock(lock_filepath: String, resource_key: String, loop_limit: Option<u6
                     Ok(json) => { // If read to string successful
                         serde_json::from_str::<Value>(&json) // Try parse string into JSON & return result.
                     },
-                    Err(_) => continue // If read failed, continue to next iteration
+                    Err(_) => {thread::sleep(Duration::from_millis(100));
+                                continue;} // If read failed, continue to next iteration
                 }
 
             };
@@ -299,16 +317,18 @@ pub fn unlock(lock_filepath: String, resource_key: String, loop_limit: Option<u6
                         Ok(json) => {
                             match std::fs::write(&lock_filepath, json) {
                                 Ok(()) => return, //If write successful, break the loop
-                                Err(_) => continue // Otherwise, try the next iteration
+                                Err(_) => {thread::sleep(Duration::from_millis(100));
+                                            continue;} // Otherwise, try the next iteration
                             }
                         }
 
-                        Err(_) => continue 
+                        Err(_) => {thread::sleep(Duration::from_millis(100));
+                                    continue;} 
                     }
                 },
                 
-                Err(_) => {
-                    continue // If parse failed, continue to next iteration
+                Err(_) => {thread::sleep(Duration::from_millis(100));
+                            continue; // If parse failed, continue to next iteration
                 }
             }
         
@@ -344,7 +364,8 @@ pub fn reset_locks(lock_filepath: String,loop_limit: Option<u64>) {
                 match text {
                     Ok(json) => {// Parse the string into a dynamically-typed JSON structure.
                         serde_json::from_str::<Value>(&json)},
-                    Err(_) => {continue}
+                    Err(_) => {thread::sleep(Duration::from_millis(100));
+                                continue;}
                 }
             };
             
@@ -367,12 +388,14 @@ pub fn reset_locks(lock_filepath: String,loop_limit: Option<u64>) {
                     // Save the JSON structure into the other file.
                     match std::fs::write(&lock_filepath, contents) {
                         Ok(()) => break,
-                        Err(_) => continue
+                        Err(_) => {thread::sleep(Duration::from_millis(100));
+                                    continue;}
                     }
                 },
 
                 Err(_) => {
-                    continue
+                    thread::sleep(Duration::from_millis(100));
+                    continue;
                 }
             }
 
