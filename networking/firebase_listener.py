@@ -1,4 +1,5 @@
 import sys
+import time
 import signal
 
 #set custom module path
@@ -121,6 +122,7 @@ if __name__ == "__main__":
         hardware_config_groups = list(cs.structs["hardware_config"].keys())
 
         for k,v in cloud_device.items():
+            print("Startup: writing " + str(v) + " to " + str(k))
             if k in device_state_fields:
                 start_path = "/home/pi/oasis-grow/configs/device_state.json"
             elif k in control_params_fields:
@@ -128,16 +130,22 @@ if __name__ == "__main__":
             elif k in hardware_config_groups:
                 start_path = "/home/pi/oasis-grow/configs/hardware_config.json"
 
-            if start_path not in hardware_config_groups:
+            if k in (device_state_fields+control_params_fields):
                 cs.write_state(start_path, k, v, db_writer = None)
-            else:
+            elif k in hardware_config_groups:
                 cs.write_nested_dict(start_path, k, v, db_writer = None) #so we path that field (nested json group ) with a new data ()
+            else:
+                pass
+
+            time.sleep(0.1)
 
         #ok, now that we got the startup values...
         #actual section that launches the listener
         detect_field_events(user, db)
         
         while True:
+            print("Listener is active...")
+            time.sleep(1)
             continue #we're going to hang this one infinitely until terminated from above
     
     except SystemExit:
