@@ -202,7 +202,7 @@ def get_water_level():
     global water_low
     
     try:
-        water_low = int(sensor_data["water_low"])
+        water_low = int(sensor_data["water_low"]) #this is a boolean, so we won't discard it on the graph
     except Exception:
         print("Got faulty reading for water level. Discarding...")
         #print(err.full_stack())
