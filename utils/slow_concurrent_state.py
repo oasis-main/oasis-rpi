@@ -253,7 +253,7 @@ def wrapped_sys_exit(*args):
     sys.exit()
 
 #gets the signals which cannot be process with signals.signal(SIGTERM, some_func)
-def load_custom_signals(loop_limit = 10000): #leave this alone since it's the python bridge to ramport locks
+def load_custom_signals(loop_limit = 1000): #leave this alone since it's the python bridge to ramport locks
     global signals
 
     if not os.path.exists(signal_filepath):

@@ -206,7 +206,7 @@ pub fn lock(lock_filepath: String, resource_key: String, loop_limit: Option<u64>
                             if locks[&resource_lock_x].as_i64().unwrap() == x_write { //If no other process has written x
                                 break 'outer //proceed, allow the function to return 
                             } else {
-                                thread::sleep(Duration::from_millis(1000)); //Now wait just a gosh darn second!
+                                thread::sleep(Duration::from_millis(2000)); //Now wait just a gosh darn second!
                                 
                                 for x in 0..limit+1{
                                     if x < limit {
@@ -254,7 +254,7 @@ pub fn lock(lock_filepath: String, resource_key: String, loop_limit: Option<u64>
             return
         }
 
-        thread::sleep(Duration::from_millis(100)) //delay before the next iteration to give us some breathing room. rust loops fast
+        thread::sleep(Duration::from_millis(500)) //delay before the next iteration to give us some breathing room. rust loops fast
 
     }
     return
@@ -319,7 +319,7 @@ pub fn unlock(lock_filepath: String, resource_key: String, loop_limit: Option<u6
             reset_locks(String::from("/home/pi/oasis-grow/configs/locks.json"), None);
         }
     
-        thread::sleep(Duration::from_millis(100)); //delay before the next iteration to give us some breathing room. rust loops fast
+        thread::sleep(Duration::from_millis(500)); //delay before the next iteration to give us some breathing room. rust loops fast
 
     }
 }
@@ -380,7 +380,7 @@ pub fn reset_locks(lock_filepath: String,loop_limit: Option<u64>) {
             println!("Failed to reset locks.")
         }
 
-        thread::sleep(Duration::from_millis(100)); //delay before the next iteration to give us some breathing room. rust loops fast
+        thread::sleep(Duration::from_millis(500)); //delay before the next iteration to give us some breathing room. rust loops fast
 
     }
 

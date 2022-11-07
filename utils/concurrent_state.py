@@ -57,7 +57,7 @@ lock_filepath = "/home/pi/oasis-grow/configs/locks.json"
 signals = {}
 signal_filepath = "/home/pi/oasis-grow/configs/signals.json"
 
-def load_state(loop_limit = 100): 
+def load_state(loop_limit = 1000): 
     global structs
 
     for struct in structs: #now we're going to load an populate the data    
@@ -95,7 +95,7 @@ def load_state(loop_limit = 100):
                     pass
 
 #gets the mutex
-def load_locks(loop_limit = 100): #leave this alone since it's the python bridge to ramport locks
+def load_locks(loop_limit = 1000): #leave this alone since it's the python bridge to ramport locks
     global locks
             
     if not os.path.exists(lock_filepath):
@@ -132,7 +132,7 @@ def wrapped_sys_exit(*args):
     sys.exit()
 
 #gets the signals which cannot be process with signals.signal(SIGTERM, some_func)
-def load_custom_signals(loop_limit = 100): #leave this alone since it's the python bridge to ramport locks
+def load_custom_signals(loop_limit = 1000): #leave this alone since it's the python bridge to ramport locks
     global signals
 
     if not os.path.exists(signal_filepath):
@@ -164,7 +164,7 @@ def load_custom_signals(loop_limit = 100): #leave this alone since it's the pyth
                 reset_model.reset_signals()
 
 #save key values to .json
-def write_state(path, field, value, db_writer = None, loop_limit = 100): #Depends on: load_state()
+def write_state(path, field, value, db_writer = None, loop_limit = 1000): #Depends on: load_state()
     
     if not os.path.exists(path):
         print(path + " does not exist. Have you run the setup scripts?")
@@ -194,7 +194,7 @@ def write_state(path, field, value, db_writer = None, loop_limit = 100): #Depend
 
             
 #save key values to .json
-def write_dict(path, dictionary, db_writer = None, loop_limit = 100): #Depends on: load_state(), dbt.patch_firebase, 'json'; Modifies: path
+def write_dict(path, dictionary, db_writer = None, loop_limit = 1000): #Depends on: load_state(), dbt.patch_firebase, 'json'; Modifies: path
 
     if not os.path.exists(path):
         print(path + " does not exist. Have you run the setup scripts?")
@@ -253,7 +253,7 @@ def write_nested_state(path: str, group: str, field: str, value: str, db_writer 
         rusty_pipes.unlock(lock_filepath, path, loop_limit)
         load_state()
                 
-def write_nested_dict(path: str, group: str, dictionary: dict, db_writer = None, loop_limit = 100): #may even come in handy later, you never know
+def write_nested_dict(path: str, group: str, dictionary: dict, db_writer = None, loop_limit = 1000): #may even come in handy later, you never know
     
     if not os.path.exists(path):
         print(path + " does not exist. Have you run the setup scripts?")
@@ -303,7 +303,7 @@ def check_lock(resource): #any program that calls this MUST unlock itself before
     else:
         rusty_pipes.lock(lock_filepath, resource)
 
-def check_signal(resource: str, signal: str, reaction, loop_limit = 100):
+def check_signal(resource: str, signal: str, reaction, loop_limit = 1000):
     load_custom_signals()
     if signals[resource] == signal:
         
