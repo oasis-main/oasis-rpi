@@ -2,6 +2,7 @@
 
 #import shell modules
 import sys
+from tkinter import S
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
@@ -199,8 +200,19 @@ def update_power_tracking():
     
     if cs.structs["feature_toggles"]["save_power"] == "1": #should mimic how the core handles sensor data
         payload = cs.structs["power_data"]
-        timestamp = {"time": str(datetime.datetime.now())} #add a timestamp
+        
+        total = 0.00 #set kwh total to 0
+        for kwh_log in payload: #loop through readings
+            total = total + float(payload[kwh_log]) #increment with forward recursion
+        kwh_total = {"total_kwh": str(total)}
+        payload.update(kwh_total)
+
+        now = datetime.datetime.now()
+        format = '%Y-%m-%d %H:%M:%S.%f'
+        present_time = now.strftime(format)
+        timestamp = {"time": present_time} #add a timestamp
         payload.update(timestamp)
+
         firebase_manager.write_power_csv('/home/pi/oasis-grow/data_out/resource_use/power_data.csv', payload)
         firebase_manager.send_csv('/home/pi/oasis-grow/data_out/resource_use/power_data.csv', "power_data.csv")
 
