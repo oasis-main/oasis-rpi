@@ -103,7 +103,7 @@ def listen_active_sensors(): #Depends on 'serial', start_serial()
         return
     except Exception:
         print("Waiting on a valid sensor reading...")
-        print(err.full_stack()) #uncomment to debug listener
+        #print(err.full_stack()) #uncomment to debug listener
         return
 
 def get_temperature():
@@ -612,7 +612,10 @@ def data_out():
         try:
             cs.load_state()
             payload = cs.structs["sensor_data"]
-            timestamp = {"time": str(datetime.datetime.now())}
+            now = datetime.datetime.now()
+            format = '%Y-%m-%d %H:%M:%S.%f'
+            present_time = now.strftime(format)
+            timestamp = {"time": present_time}
             payload.update(timestamp)
 
             if cs.structs["feature_toggles"]["save_data"] == "1":

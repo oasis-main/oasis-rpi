@@ -75,7 +75,7 @@ def reset_data_out():
     clear_sensor_feed.wait()
     clear_power_data = rusty_pipes.Open(["rm", "-rf", "/home/pi/oasis-grow/data_out/resource_use"],"rm")
     clear_power_data.wait()
-    clear_dir = rusty_pipes.Open(["rm", "-rf", "/home/pi/oasis-grow/data_out"],"cp")
+    clear_dir = rusty_pipes.Open(["rm", "-rf", "/home/pi/oasis-grow/data_out"],"rm")
     clear_dir.wait()
     
     new_dir = rusty_pipes.Open(["mkdir", "/home/pi/oasis-grow/data_out"],"mkdir")
