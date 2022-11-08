@@ -109,17 +109,17 @@ def test_led():
     
     print("connected_running")
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "connected_running", dbt.patch_firebase)
-    cs.check_state("onboard_led", main.launch_onboard_led, main.update_minion_led)
+    cs.check_state("onboard_led", main.start_onboard_led, main.update_minion_led)
     time.sleep(5)
 
     print("error")
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "error", dbt.patch_firebase)
-    cs.check_state("onboard_led", main.update_onboard_led, main.update_minion_led)
+    cs.check_state("onboard_led", None, main.update_minion_led)
     time.sleep(5)
     
     print("offline_idle")
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "offline_idle", dbt.patch_firebase)
-    cs.check_state("onboard_led", main.update_onboard_led, main.update_minion_led)
+    cs.check_state("onboard_led", None, main.update_minion_led)
     time.sleep(5)
 
     print("Are the leds behaving as expected?")

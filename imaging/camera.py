@@ -46,7 +46,6 @@ def send_image(path, image_filename):
 
     #tell firebase that there is a new image
     dbt.patch_firebase(cs.structs["access_config"], "image_sent", "1")
-    dbt.patch_firebase(cs.structs["access_config"], "image_filename", image_filename)
     print("Firebase has an image in waiting")
 
 #define a function to actuate element

@@ -37,19 +37,6 @@ core = None
 led = None
 listener = None
 
-#checks in the the core process has been called from the command line, or explicitly deactivated
-def cmd_line_args():
-    try:
-        if sys.argv[1] == "run":
-            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","1", db_writer = dbt.patch_firebase)
-            print("Command line set core to run. Launching device engine...")
-        if sys.argv[1] == "idle":
-            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","0", db_writer = dbt.patch_firebase)
-            print("Command line set core to idle. Device engine is on standby.")
-    except Exception as e: #if no arguments are given, the above will fail
-        print("No command line arguments were given.")
-        print("Defaulting to last saved mode or default if new.")
-
 #checks whether system is booting in Access Point Mode, launches connection script if so
 def launch_access_point(): 
     global minion
@@ -84,14 +71,16 @@ def launch_access_point():
                 wifi.enable_wifi()
                 time.sleep(1)
 
-def connect_firebase():
+def connect_firebase(sync = False):
     connect_firebase = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/networking/firebase_manager.py"],"firebase_manager")
+    if sync:
+        connect_firebase.wait()
 
 def start_listener():
     global listener
     cs.load_state()
     cs.load_locks()
-    if (cs.locks["listener_y"] == 0) & (listener is None):
+    if (cs.locks["listener_y"] == 0) & ((listener is None) or listener.exited()):
         listener = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/networking/firebase_listener.py"],"listener")
 
 def stop_listener():
@@ -205,14 +194,14 @@ def update_minion_led(): #Depends on: cs.load_state(), 'datetime'; Modifies: ser
         pass
 
 def update_power_tracking():
-    cs.write_state("/home/pi/oasis-grow/configs/power_data.json","boards_kwh", physics.kwh(float(cs.structs["hardware_config"]["equipment_wattage"]["boards"]), 5.00))
+    cs.write_state("/home/pi/oasis-grow/configs/power_data.json","boards_kwh", physics.kwh(float(cs.structs["hardware_config"]["equipment_wattage"]["boards"]), 900.00))
     dbt.patch_firebase_dict(cs.structs["access_config"], cs.structs["power_data"])
     
     if cs.structs["feature_toggles"]["save_power"] == "1": #should mimic how the core handles sensor data
         payload = cs.structs["power_data"]
         timestamp = {"time": str(datetime.datetime.now())} #add a timestamp
         payload.update(timestamp)
-        firebase_manager.write_power_csv('/home/pi/oasis-grow/data_out/resource_use/power_data.csv',payload)
+        firebase_manager.write_power_csv('/home/pi/oasis-grow/data_out/resource_use/power_data.csv', payload)
         firebase_manager.send_csv('/home/pi/oasis-grow/data_out/resource_use/power_data.csv', "power_data.csv")
 
     reset_dict = {} #clear the power data over last hour, save to state
@@ -271,9 +260,10 @@ def main_setup():
                                                         #should block if so
 
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = None) #set to 0 so listener launches
-    connect_firebase() #listener will not be re-called unless a connection fails at some point
+    connect_firebase(sync = True) #listener will not be re-called unless a connection fails at some point
+    cs.check_state("connected", start_listener) #if connected, listen to database
 
-    cmd_line_args() #Check command line flags for special instructions
+    cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","1", db_writer = dbt.patch_firebase)
 
     buttons.setup_button_interface(cs.structs["hardware_config"]) #Setup on-device interface for interacting with device using buttons
 
@@ -281,13 +271,19 @@ def main_setup():
     led_timer = time.time()
     connect_timer = time.time()
     power_timer = time.time()
+    listener_timer = time.time()
+    reboot_timer = time.time()
 
-    return led_timer, connect_timer, power_timer
+    return led_timer, connect_timer, power_timer, listener_timer, reboot_timer
 
-def main_loop(led_timer, connect_timer, power_timer):
+def main_loop(led_timer, connect_timer, power_timer, listener_timer, reboot_timer):
     try:
         while True:
             cs.load_state()
+
+            if (time.time() - reboot_timer) > (3600*24):
+                reboot = rusty_pipes.Open(["sudo", "reboot"], "daily_reboot")
+                reboot.wait()
 
             if (time.time() - led_timer > 5) and (cs.structs["feature_toggles"]["onboard_led"] == "0"): #send data to LED every 5s
                 update_minion_led()
@@ -297,11 +293,16 @@ def main_loop(led_timer, connect_timer, power_timer):
                 connect_firebase()
                 connect_timer = time.time()
 
-            if time.time() - power_timer > 5: #send last hour power data to firebase
+            if time.time() - power_timer > 900: #send last hour power data to firebase
                 update_power_tracking()
                 power_timer = time.time() #reset the timer
-            
-            cs.check_state("connected", start_listener, stop_listener) #if connected, listen to database
+
+            if time.time() - listener_timer > 600:
+                stop_listener()
+                time.sleep(5)
+                start_listener()
+                time.sleep(5)
+
             cs.check_state("running", start_core, stop_core) #if running, start the sensors and controllers
             cs.check_state("awaiting_update", get_updates)
             cs.check_state("awaiting_deletion", firebase_manager.delete_device)
@@ -357,5 +358,5 @@ def main_loop(led_timer, connect_timer, power_timer):
         time.sleep(1)
         
 if __name__ == '__main__':
-    led_timer, connect_timer, power_timer = main_setup()
-    main_loop(led_timer, connect_timer, power_timer)
+    led_timer, connect_timer, power_timer, listener_timer, reboot_timer = main_setup()
+    main_loop(led_timer, connect_timer, power_timer, listener_timer, reboot_timer)
