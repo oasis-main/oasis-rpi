@@ -124,6 +124,8 @@ def write_power_csv(filename, dict): #Depends on: "os" "csv"
         if cs.structs["feature_toggles"]["air"] == "1":
             headers.append("air_pump_kwh")
 
+        headers.append("total_kwh") #always remember to add headers for any csv field
+
         writer = csv.DictWriter(csvfile, delimiter=',', lineterminator='\n',fieldnames=headers)
 
         if not file_exists: 
