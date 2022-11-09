@@ -213,7 +213,10 @@ def update_power_tracking():
         payload.update(timestamp)
 
         firebase_manager.write_power_csv('/home/pi/oasis-grow/data_out/resource_use/power_data.csv', payload)
-        firebase_manager.send_csv('/home/pi/oasis-grow/data_out/resource_use/power_data.csv', "power_data.csv")
+        
+        if cs.structs["device_state"]["connected"]:
+            dbt.patch_firebase_dict(cs.structs["access_config"], kwh_total)
+            firebase_manager.send_csv('/home/pi/oasis-grow/data_out/resource_use/power_data.csv', "power_data.csv")
 
     reset_dict = {} #clear the power data over last hour, save to state
     for key in cs.structs["power_data"]:
@@ -293,6 +296,7 @@ def main_loop(led_timer, connect_timer, power_timer, listener_timer, reboot_time
             cs.load_state()
 
             if (time.time() - reboot_timer) > (3600*24):
+                reboot_timer = time.time()
                 reboot = rusty_pipes.Open(["sudo", "reboot"], "daily_reboot")
                 reboot.wait()
 
@@ -313,6 +317,7 @@ def main_loop(led_timer, connect_timer, power_timer, listener_timer, reboot_time
                 time.sleep(5)
                 start_listener()
                 time.sleep(5)
+                listener_timer = time.time()
 
             cs.check_state("running", start_core, stop_core) #if running, start the sensors and controllers
             cs.check_state("awaiting_update", get_updates)

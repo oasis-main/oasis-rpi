@@ -680,6 +680,7 @@ def terminate_program(): #Depends on: cs.load_state(), 'sys', 'subprocess' #Modi
     print("Cleaning up processes...")
     clean_up_processes()
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "0", db_writer = dbt.patch_firebase) #flip "running" to 0
+    cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","connected_idle", db_writer = dbt.patch_firebase)
     time.sleep(1)
     cs.rusty_pipes.unlock(cs.lock_filepath,resource_name) #free the resource
     sys.exit()
