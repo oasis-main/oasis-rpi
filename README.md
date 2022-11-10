@@ -13,7 +13,7 @@ The active system is controllable via web interface at https://dashboard.oasis-x
 Alternatively, all oasis-grow instances can be managed asynchronously through the importable python API.
 
 Breaking changes may be merged into master until the official 1.0.0 release
-Users who deploy and connect oasis-grow can get "over-the-air" updates through dashboard
+Connect your devices to oasis-network view data remotely, control connected appliances, and get over-the-air updates. 
 
 ## Raspberry Pi Quick-Start
 
