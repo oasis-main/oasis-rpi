@@ -284,13 +284,12 @@ def main_setup():
     #start the clock for  refresh
     led_timer = time.time()
     connect_timer = time.time()
-    power_timer = time.time() - 300
-    listener_timer = time.time()
+    power_timer = time.time() - 3600
     reboot_timer = time.time()
 
-    return led_timer, connect_timer, power_timer, listener_timer, reboot_timer
+    return led_timer, connect_timer, power_timer, reboot_timer
 
-def main_loop(led_timer, connect_timer, power_timer, listener_timer, reboot_timer):
+def main_loop(led_timer, connect_timer, power_timer, reboot_timer):
     try:
         while True:
             cs.load_state()
@@ -308,18 +307,12 @@ def main_loop(led_timer, connect_timer, power_timer, listener_timer, reboot_time
                 connect_firebase()
                 connect_timer = time.time()
 
-            if time.time() - power_timer > 300: #send last hour power data to firebase
+            if time.time() - power_timer > 3600: #send last hour power data to firebase
                 update_power_tracking()
                 power_timer = time.time() #reset the timer
 
-            if time.time() - listener_timer > 600:
-                stop_listener()
-                time.sleep(5)
-                start_listener()
-                time.sleep(5)
-                listener_timer = time.time()
-
             cs.check_state("running", start_core, stop_core) #if running, start the sensors and controllers
+            cs.check_state("connected", start_listener, stop_listener)
             cs.check_state("awaiting_update", get_updates)
             cs.check_state("awaiting_deletion", firebase_manager.delete_device)
             cs.check_state("awaiting_clear_data_out", clear_data)
@@ -374,5 +367,5 @@ def main_loop(led_timer, connect_timer, power_timer, listener_timer, reboot_time
         time.sleep(1)
         
 if __name__ == '__main__':
-    led_timer, connect_timer, power_timer, listener_timer, reboot_timer = main_setup()
-    main_loop(led_timer, connect_timer, power_timer, listener_timer, reboot_timer)
+    led_timer, connect_timer, power_timer, reboot_timer = main_setup()
+    main_loop(led_timer, connect_timer, power_timer, reboot_timer)
