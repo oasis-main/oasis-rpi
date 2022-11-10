@@ -35,9 +35,6 @@ python3 -m venv /home/pi/oasis-grow/oasis_venv_pi #uncomment to build env from s
 /usr/bin/env python3 -m pip install -r /home/pi/oasis-grow/requirements.txt #uncomment to build env from source
 
 echo "Installing Rust Modules..."
-cd /home/pi/oasis-grow/rusty_locks
-cargo build
-maturin build --release
 cd ..
 cd /home/pi/oasis-grow/rusty_pins
 cargo build
