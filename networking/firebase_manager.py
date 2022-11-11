@@ -50,7 +50,9 @@ def delete_device(exists = True):
     print("Removing device from Oasis Network...")
     
     if exists:
-        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = dbt.patch_firebase) #make sure it doesn't write anything to the cloud
+        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = dbt.patch_firebase) 
+    else:
+        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0")
 
     print("Database monitoring deactivated")
     reset_model.reset_nonhw_configs()
