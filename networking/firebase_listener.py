@@ -55,6 +55,8 @@ def update_synced_fields():
 
         time.sleep(0.1)
 
+    print("Synced state with cloud")
+
 if __name__ == "__main__":
     cs.check_lock(resource_name)
     signal.signal(signal.SIGTERM, cs.wrapped_sys_exit)
@@ -64,9 +66,14 @@ if __name__ == "__main__":
         #sign the user in
         user, db, storage = dbt.initialize_user(cs.structs["access_config"]["refresh_token"])
         #fetch all the most recent data from the database & patch the listener
+        
+        listener_timer = time.time()-30
+        
         while True:
-            time.sleep(60)
-            update_synced_fields()
+            if (time.time() - listener_timer) > 30:
+                update_synced_fields()
+            else:
+                time.sleep(1)
     except SystemExit:
         print("Terminating listener...")
     except KeyboardInterrupt:

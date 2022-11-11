@@ -284,7 +284,7 @@ def main_setup():
     #start the clock for  refresh
     led_timer = time.time()
     connect_timer = time.time()
-    power_timer = time.time() - 3600
+    power_timer = time.time()-3600
     reboot_timer = time.time()
 
     return led_timer, connect_timer, power_timer, reboot_timer
