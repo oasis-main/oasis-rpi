@@ -64,9 +64,9 @@ def reset_signals():
 
 def reset_nonhw_configs():
     reset_device_state()
-    reset_control_params()
-    reset_sensor_data()
-    reset_access_config()
+    #reset_control_params() #Why don't we keep these?
+    #reset_sensor_data() #Users need this stuff locally.
+    reset_access_config() 
 
 def reset_data_out():
     clear_image_feed = rusty_pipes.Open(["rm", "-rf", "/home/pi/oasis-grow/data_out/image_feed"],"rm")

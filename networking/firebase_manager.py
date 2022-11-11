@@ -46,9 +46,11 @@ def add_new_device():
         print("Failed to add new device")
 
 #deletes a box if the cloud is indicating that it should do so
-def delete_device():    
+def delete_device(exists = True):    
     print("Removing device from Oasis Network...")
-    cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = dbt.patch_firebase) #make sure it doesn't write anything to the cloud
+    
+    if exists:
+        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = dbt.patch_firebase) #make sure it doesn't write anything to the cloud
 
     print("Database monitoring deactivated")
     reset_model.reset_nonhw_configs()
@@ -189,13 +191,17 @@ def connect_to_firebase(): #depends on: cs.load_state(), cs.write_state(), dbt.p
         #launch new_device check at network startup
         cs.check_state("new_device", add_new_device)
 
-        #start listener to bring in db changes on startup
-        #Main setup always sets 'connected' == "0"
-        cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"connected","1", db_writer = dbt.patch_firebase)
-    
-        #update the device state to "connected"
-        print("Device is connected over HTTPS to the Oasis Network")
-        
+        #now check the database to make sure it hasn't been deleted
+        if dbt.fetch_device_data(cs.structs["access_config"]) is not None:
+            #start listener to bring in db changes on startup
+            #Main setup always sets 'connected' == "0"
+            cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"connected","1", db_writer = dbt.patch_firebase)
+            #update the device state to "connected"
+            print("Device is connected over HTTPS to the Oasis Network") 
+        else:
+            delete_device(exists=False)
+
+
     except Exception as e:
         #print(err.full_stack()) #display error
         #write state as not connected
