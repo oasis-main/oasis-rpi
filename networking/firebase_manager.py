@@ -41,9 +41,9 @@ def add_new_device():
     
     if patch_request.ok:
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","new_device","0", db_writer = dbt.patch_firebase)
-        print("New device added to firebase")
+        print("New device added to firebase.")
     else:
-        print("Failed to add new device")
+        print("Failed to add new device.")
 
 #deletes a box if the cloud is indicating that it should do so
 def delete_device(exists = True):    
@@ -54,12 +54,12 @@ def delete_device(exists = True):
     else:
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0")
 
-    print("Database monitoring deactivated")
+    print("Disconnected from remote database & cloud authentication.")
     reset_model.reset_nonhw_configs()
     
-    print("Device has been reset to default configuration")
-    systemctl_reboot = rusty_pipes.Open(["sudo", "systemctl", "reboot"],"reboot")
-    systemctl_reboot.wait()
+    #print("Device has been reset to default configuration")
+    #systemctl_reboot = rusty_pipes.Open(["sudo", "systemctl", "reboot"],"reboot")
+    #systemctl_reboot.wait()
 
 #write some data to a .csv, takes a dictionary and a path
 def write_sensor_csv(filename, dict): #Depends on: "os" "csv"

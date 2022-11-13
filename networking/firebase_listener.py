@@ -11,20 +11,6 @@ from utils import error_handler as err
 
 resource_name = "listener"
 
-#sync local configuration with 
-def sync_state():
-    cloud_data = dbt.fetch_device_data()
-    for key_value_pair in list(cloud_data.items()):
-        if key_value_pair[0] in list(cs.structs["device_state"].keys()):
-            #print("Updating device_state")
-            cs.write_state("/home/pi/oasis-grow/configs/device_state.json", key_value_pair[0], key_value_pair[1], db_writer = None)
-        elif key_value_pair[0] in list(cs.structs["control_params"].keys()):
-            #print("Updating control_params")
-            cs.write_state("/home/pi/oasis-grow/configs/control_params.json", key_value_pair[0], key_value_pair[1], db_writer = None)    
-        else:
-            #print("Not working")
-            pass
-
 def update_synced_fields():
     cloud_device = dbt.fetch_device_data(cs.structs["access_config"])
 
@@ -32,30 +18,37 @@ def update_synced_fields():
     control_params_fields = list(cs.structs["control_params"].keys())
     hardware_config_groups = list(cs.structs["hardware_config"].keys())
 
+    device_state_dict = {} #dict of keys and values
+    control_params_dict = {} #dict of keys and values
+    hardware_config_dicts= {} #dict of dicts with groups, keys, and values
+
     #loop through all device data
     for k,v in cloud_device.items():
-        print("Listener: writing " + str(v) + " to " + str(k))
-        
-        #get path for each key we decide should be litened to
-        if k in device_state_fields:
-            start_path = "/home/pi/oasis-grow/configs/device_state.json"
-        elif k in control_params_fields:
-            start_path = "/home/pi/oasis-grow/configs/control_params.json"
-        elif k in hardware_config_groups:
-            start_path = "/home/pi/oasis-grow/configs/hardware_config.json"
-        else:
-            continue
+        #print("Listener: writing " + str(v) + " to " + str(k))
 
-        if (k in (device_state_fields+control_params_fields)) & (k != "connected"):
-            cs.write_state(start_path, k, v, db_writer = None)
+        payload = {k: v}
+
+        if (k in device_state_fields) & (k != "connected"):
+            payload = {k: v} #add a timestamp
+            device_state_dict.update(payload)
+        elif k in control_params_fields:
+            payload = {k: v} #add a timestamp
+            control_params_dict.update(payload)
         elif k in hardware_config_groups:
-            cs.write_nested_dict(start_path, k, v, db_writer = None) #so we path that field (nested json group ) with a new data ()
+            payload = {k: v} #add a timestamp
+            hardware_config_dicts.update(payload)
         else:
             continue
 
         time.sleep(0.1)
 
-    print("Synced state with cloud")
+    #write the assembled dicts to memory, outside of the loop
+    cs.write_dict("/home/pi/oasis-grow/configs/device_state.json", device_state_dict)
+    cs.write_dict("/home/pi/oasis-grow/configs/control_params.json", control_params_dict)
+    for group, dictionary in hardware_config_dicts.items():
+        cs.write_nested_dict("/home/pi/oasis-grow/configs/hardware_config.json", group, dictionary)
+
+    print("Successfully synced state with cloud!")
 
 if __name__ == "__main__":
     cs.check_lock(resource_name)
