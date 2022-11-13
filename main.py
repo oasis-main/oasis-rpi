@@ -211,11 +211,16 @@ def update_power_tracking():
         timestamp = {"time": present_time} #add a timestamp
         payload.update(timestamp)
 
+        #desn't touch the cloud
         firebase_manager.write_power_csv('/home/pi/oasis-grow/data_out/resource_use/power_data.csv', payload)
         
-        if cs.structs["device_state"]["connected"]:
+
+        if cs.structs["device_state"]["connected"] == "1":
             dbt.patch_firebase_dict(cs.structs["access_config"], kwh_total)
             firebase_manager.send_csv('/home/pi/oasis-grow/data_out/resource_use/power_data.csv', "power_data.csv")
+            return
+        else:
+            return
 
     reset_dict = {} #clear the power data over last hour, save to state
     for key in cs.structs["power_data"]:
