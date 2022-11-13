@@ -66,7 +66,7 @@ def get_refresh_token(wak,email,password): #Depends on: 'requests', 'json'; Modi
     return data["refreshToken"]
 
 #get local_id and id_token from firebase
-def get_local_credentials(wak,refresh_token): #Depends on: cs.load_state(), 'requests'; Modifies: state variables,  cs.structs["access_config"].json
+def get_local_credentials(wak,refresh_token): #Depends on: , 'requests'; Modifies: state variables,  cs.structs["access_config"].json
     print("Fetching local credentials...")
     refresh_url = "https://securetoken.googleapis.com/v1/token?key=" + wak
     refresh_payload = '{"grant_type": "refresh_token", "refresh_token": "%s"}' % refresh_token

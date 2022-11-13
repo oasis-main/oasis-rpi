@@ -70,7 +70,6 @@ def tl_make(image_folder):
 
 def send_timelapse(path):
     #send new image to firebase
-	cs.load_state()
 	user, db, storage = dbt.initialize_user(cs.structs["access_config"]["refresh_token"])
 	dbt.store_file(user, storage, path, cs.structs["access_config"]["device_name"], "timelapse.avi")
 	print("Sent timelapse")
@@ -81,6 +80,8 @@ def send_timelapse(path):
 
 if __name__ == '__main__':
 	
+	cs.load_state()
+
 	#dir where images are stored
 	image_folder = '/home/pi/oasis-grow/data_out/image_feed'
 

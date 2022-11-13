@@ -52,7 +52,7 @@ def launch_access_point():
     if minion.ser_out is not None:
         #set led_status = "connectWifi"
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","accepting_wifi_connection", db_writer = dbt.patch_firebase)
-        cs.load_state()
+        
         #write LED state to seriaL
         while True: #place the "exit button" here to leave connection mode
             minion.ser_out.write(bytes(str(cs.structs["device_state"]["led_status"]+"\n"), "utf-8"))
@@ -78,14 +78,14 @@ def connect_firebase(sync = False):
 
 def start_listener():
     global listener
-    cs.load_state()
+    
     cs.load_locks()
     if (cs.locks["listener_y"] == 0) & ((listener is None) or listener.exited()):
         listener = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/networking/firebase_listener.py"],"listener")
 
 def stop_listener():
     global listener
-    cs.load_state()
+    
     cs.load_locks()
     if (cs.locks["listener_y"] != 0) & (listener is not None):
         listener.terminate()
@@ -94,7 +94,7 @@ def stop_listener():
 
 def start_core():
     global core
-    cs.load_state()
+    
     cs.load_locks()
 
     if (cs.locks["core_y"] == 0) & (core is None): #if it is free
@@ -112,7 +112,7 @@ def start_core():
 
 def stop_core():
     global core
-    cs.load_state()
+    
     cs.load_locks()
 
     if (cs.locks["core_y"] != 0) & (core is not None): #if it is running
@@ -132,8 +132,7 @@ def stop_core():
 
 
 #checks if core is running, kills it if so, starts it otherwise
-def switch_core_running(): #Depends on: cs.load_state(), cs.write_state(), dbt.patch_firebase(), 'subprocess'; Modifies: device_state.json, state_variables
-    cs.load_state()
+def switch_core_running(): #Depends on: , cs.write_state(), dbt.patch_firebase(), 'subprocess'; Modifies: device_state.json, state_variables
 
     #if the device is set to running
     if cs.structs["device_state"]["running"] == "1":
@@ -148,7 +147,7 @@ def switch_core_running(): #Depends on: cs.load_state(), cs.write_state(), dbt.p
 def start_onboard_led():
     global led
     
-    cs.load_state()
+    
     cs.load_locks()
     
     if (cs.locks["led_y"] == 0) & (led is None):
@@ -157,7 +156,7 @@ def start_onboard_led():
 def stop_onboard_led():
     global led
     
-    cs.load_state()
+    
     cs.load_locks()
 
     if (cs.locks["led_y"] != 0) & (led is not None):
@@ -166,9 +165,9 @@ def stop_onboard_led():
         led = None
 
 #updates the state of the LED, serial must be set up,
-def update_minion_led(): #Depends on: cs.load_state(), 'datetime'; Modifies: ser_out
+def update_minion_led(): #Depends on: , 'datetime'; Modifies: ser_out
     global minion
-    cs.load_state()
+    
 
     #write "off" or write status depending on ToD + settings
     now = datetime.datetime.now()
@@ -225,9 +224,8 @@ def update_power_tracking():
     cs.write_dict("/home/pi/oasis-grow/configs/power_data.json",reset_dict)
 
 #Executes update if connected & idle, waits for completion
-def get_updates(): #depends on: cs.load_state(),'subproceess', update.py; modifies: system code, state variables
+def get_updates(): #depends on: ,'subproceess', update.py; modifies: system code, state variables
     print("Fetching over-the-air updates")
-    cs.load_state()
     
     if cs.structs["device_state"]["running"] == "0": #replicated in the main loop
         #just kill listener

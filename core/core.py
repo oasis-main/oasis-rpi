@@ -610,7 +610,7 @@ def data_out():
     if time.time() - data_timer > 300:
 
         try:
-            cs.load_state()
+            
             payload = cs.structs["sensor_data"]
             now = datetime.datetime.now()
             format = '%Y-%m-%d %H:%M:%S.%f'
@@ -640,7 +640,7 @@ def clean_up_processes():
     global heat_process, humidity_process, dehumidify_process, fan_process, light_process, camera_process, water_process, air_process        
 
     #clean up all processes
-    cs.load_state()
+    
 
     if (cs.structs["feature_toggles"]["heater"] == "1") and (heat_process is not None): #go through toggles and kill active processes
         heat_process.terminate()
@@ -676,7 +676,7 @@ def clean_up_processes():
         camera_process = None
 
 #terminates the program and all running subprocesses
-def terminate_program(): #Depends on: cs.load_state(), 'sys', 'subprocess' #Modifies: heat_process, humidity_process, fan_process, light_process, camera_process, water_processs
+def terminate_program(): #Depends on: , 'sys', 'subprocess' #Modifies: heat_process, humidity_process, fan_process, light_process, camera_process, water_processs
     print("Cleaning up processes...")
     clean_up_processes()
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "0", db_writer = dbt.patch_firebase) #flip "running" to 0

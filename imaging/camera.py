@@ -39,7 +39,7 @@ def save_to_feed(image_path):
 
 def send_image(path, image_filename):
     #send new image to firebase
-    cs.load_state()
+    
     user, db, storage = dbt.initialize_user(cs.structs["access_config"]["refresh_token"])
     dbt.store_file(user, storage, path, cs.structs["access_config"]["device_name"], image_filename)
     print("Sent image")
@@ -50,7 +50,7 @@ def send_image(path, image_filename):
 
 #define a function to actuate element
 def actuate(interval: int, nosleep = False): #interval is amount of time between shots in minutes, nosleep skips the wait
-    cs.load_state()
+    
 
     exit_status = take_picture('/home/pi/oasis-grow/data_out/image.jpg')
     
