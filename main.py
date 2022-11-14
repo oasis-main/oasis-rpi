@@ -289,9 +289,9 @@ def main_setup():
     connect_timer = time.time()
     reboot_timer = time.time()
 
-    return led_timer, connect_timer, power_timer, reboot_timer
+    return led_timer, connect_timer, reboot_timer
 
-def main_loop(led_timer, connect_timer, power_timer, reboot_timer):
+def main_loop(led_timer, connect_timer, reboot_timer):
     try:
         while True:
             cs.load_state()
@@ -369,5 +369,5 @@ def main_loop(led_timer, connect_timer, power_timer, reboot_timer):
         time.sleep(1)
         
 if __name__ == '__main__':
-    led_timer, connect_timer, power_timer, reboot_timer = main_setup()
-    main_loop(led_timer, connect_timer, power_timer, reboot_timer)
+    led_timer, connect_timer, reboot_timer = main_setup() #reboot-resistant timers are logged in the filesystem (cs.write -> configs/json -> cs.structs) instead of the Python heap
+    main_loop(led_timer, connect_timer, reboot_timer)
