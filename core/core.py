@@ -607,10 +607,11 @@ def data_out():
     global data_timer
     
     #write data and send to server after set time elapses
-    if time.time() - data_timer > 300:
+    if time.time() - float(cs.structs["control_params"]["last_sensor_log_time"]) > 300:
+        #we log the last run time BEFORE any waiting or expensive comps
+        cs.write_state("/home/pi/oasis-grow/configs/control_params", "last_sensor_log_time", str(time.time())) 
 
         try:
-            
             payload = cs.structs["sensor_data"]
             now = datetime.datetime.now()
             format = '%Y-%m-%d %H:%M:%S.%f'
@@ -629,12 +630,9 @@ def data_out():
 
                     #send new time-series to firebase
                     firebase_manager.send_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv', 'sensor_data.csv')
-
-            data_timer = time.time()
-
+        
         except Exception as e:
             print(err.full_stack())
-            data_timer = time.time()
 
 def clean_up_processes():
     global heat_process, humidity_process, dehumidify_process, fan_process, light_process, camera_process, water_process, air_process        

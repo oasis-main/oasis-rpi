@@ -9,7 +9,7 @@ import time
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
-
+ 
 import rusty_pins
 from peripherals import relays
 from utils import concurrent_state as cs
@@ -29,7 +29,7 @@ if __name__ == '__main__':
         while True:
             print("Turning lights on at " + cs.structs["control_params"]["time_start_light"] + ":00 and off at " + cs.structs["control_params"]["time_stop_light"] + ":00, refreshing every " + cs.structs["control_params"]["lighting_interval"] + " minutes...")
             pin = relays.actuate_time_hod(pin, int(cs.structs["control_params"]["time_start_light"]), int(cs.structs["control_params"]["time_stop_light"]), int(cs.structs["control_params"]["lighting_interval"]), interval_units = "minutes", wattage=cs.structs["hardware_config"]["equipment_wattage"]["lights"], log="lights_kwh")
-            cs.load_state()
+            cs.load_state() #no time logging since we're just working with hours of the day here
             time.sleep(1)
     except SystemExit:
         print("Lights were terminated.")

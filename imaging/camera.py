@@ -50,7 +50,6 @@ def send_image(path, image_filename):
 
 #define a function to actuate element
 def actuate(interval: int, nosleep = False): #interval is amount of time between shots in minutes, nosleep skips the wait
-    
 
     exit_status = take_picture('/home/pi/oasis-grow/data_out/image.jpg')
     
@@ -82,8 +81,11 @@ if __name__ == '__main__':
     try:    
         while True:
             cs.load_state()
-            actuate(int(cs.structs["hardware_config"]["camera_settings"]["picture_frequency"]))
-            time.sleep(1)
+            if (time.time() - float(cs.structs["hardware_config"]["camera_settings"]["last_picture_time"])) > (float(cs.structs["hardware_config"]["camera_settings"]["picture_frequency"])*60): #convert setting (minutes) to base units (seconds)
+                cs.write_nested_state("/home/pi/oasis-grow/configs/hardware_config", "camera_settings" ,"last_picture_time", str(time.time())) #we MUST ALWAYS write before sleeping, otherwise the program will double-count the wait period!
+                actuate(int(cs.structs["hardware_config"]["camera_settings"]["picture_frequency"]))
+            else:
+                time.sleep(1)
     except SystemExit:
         print("Camera was terminated.")
     except KeyboardInterrupt:

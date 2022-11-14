@@ -5,7 +5,7 @@
 import sys
 import signal
 import time
-
+ 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
 
@@ -31,7 +31,9 @@ if __name__ == '__main__':
                 relays.actuate_slow_pwm(pin, float(cs.structs["control_params"]["dehum_feedback"]), wattage=cs.structs["hardware_config"]["equipment_wattage"]["dehumidifier"], log="dehumidifier_kwh") #trigger appropriate response
             else:
                 print("Running dehumidifier for " + cs.structs["control_params"]["dehumidifier_duration"] + " minute(s) on, " + cs.structs["control_params"]["dehumidifier_interval"] + " minute(s) off...")
-                relays.actuate_interval_sleep(pin, float(cs.structs["control_params"]["dehumidifier_duration"]), float(cs.structs["control_params"]["dehumidifier_interval"]), duration_units= "minutes", sleep_units="minutes", wattage=cs.structs["hardware_config"]["equipment_wattage"]["dehumidifier"], log="dehumidifier_kwh")
+                if (time.time() - float(cs.structs["control_params"]["last_dehumidifier_run_time"])) > (float(cs.structs["control_params"]["dehumidifier_interval"])*60): #convert setting units (minutes) to base (seconds)
+                    cs.write_state("/home/pi/oasis-grow/configs/control_params", "last_dehumidifier_run_time", str(time.time()))
+                    relays.actuate_interval_sleep(pin, float(cs.structs["control_params"]["dehumidifier_duration"]), float(cs.structs["control_params"]["dehumidifier_interval"]), duration_units= "minutes", sleep_units="minutes", wattage=cs.structs["hardware_config"]["equipment_wattage"]["dehumidifier"], log="dehumidifier_kwh")
             cs.load_state()
             time.sleep(1)
     except SystemExit:

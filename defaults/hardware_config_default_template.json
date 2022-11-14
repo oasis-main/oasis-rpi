@@ -11,6 +11,7 @@
                 },
 "camera_settings":{
                     "picture_frequency": "60",
+                    "last_picture_time": "0",
                     "awb_mode": "on",
                     "awb_red": "0.8",
                     "awb_blue": "1.5"

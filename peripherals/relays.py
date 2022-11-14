@@ -15,7 +15,7 @@ from utils import physics
 #import rusty_pins and initialize GPIO pin from calling process
 #pass in the rust pin object for scoping & resource management
 
-def turn_on(output, switch_mode = "momentary", normal_state = "open", pulse_width = 1):
+def turn_on(output, switch_mode = "momentary", normal_state = "open", latch_pulse_width = 1):
     if switch_mode == "momentary":
         if normal_state == "open":
             output.set_high()
@@ -23,10 +23,10 @@ def turn_on(output, switch_mode = "momentary", normal_state = "open", pulse_widt
             output.set_low()
     if switch_mode == "latching": #this is going to be the same whether our switch is NO or NC
         output.set_high() #assumes the latch itself is NO
-        time.sleep(pulse_width)
+        time.sleep(latch_pulse_width)
         output.set_low()
 
-def turn_off(output, switch_mode = "momentary", normal_state = "open", pulse_width = 1):
+def turn_off(output, switch_mode = "momentary", normal_state = "open", latch_pulse_width = 1):
     if switch_mode == "momentary":
         if normal_state == "open":
             output.set_low()
@@ -34,7 +34,7 @@ def turn_off(output, switch_mode = "momentary", normal_state = "open", pulse_wid
             output.set_high()
     if switch_mode == "latching":
         output.set_high()
-        time.sleep(pulse_width)
+        time.sleep(latch_pulse_width)
         output.set_low()
 
 def actuate_time_hod(output, time_on = 0, time_off = 0, interval = 1, interval_units = "minutes", wattage = "0", log = None): #updates every 20 minutes by default 

@@ -284,10 +284,9 @@ def main_setup():
 
     buttons.setup_button_interface(cs.structs["hardware_config"]) #Setup on-device interface for interacting with device using buttons
 
-    #start the clock for  refresh
+    #start the clock for non reboot-tolerant timers
     led_timer = time.time()
     connect_timer = time.time()
-    power_timer = time.time()-3600
     reboot_timer = time.time()
 
     return led_timer, connect_timer, power_timer, reboot_timer
@@ -310,9 +309,9 @@ def main_loop(led_timer, connect_timer, power_timer, reboot_timer):
                 connect_firebase()
                 connect_timer = time.time()
 
-            if time.time() - power_timer > 3600: #send last hour power data to firebase
+            if time.time() - float(cs.structs["control_params"]["last_power_log_time"]) > 3600: #send last hour power data to firebase
+                cs.write_state("/home/pi/oasis-grow/configs/control_params", "last_power_log_time", str(time.time())) #reset the timer, always BEFORE any waiting or expensive comps
                 update_power_tracking()
-                power_timer = time.time() #reset the timer
 
             cs.check_state("running", start_core, stop_core) #if running, start the sensors and controllers
             cs.check_state("connected", start_listener, stop_listener)

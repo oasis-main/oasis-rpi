@@ -9,7 +9,7 @@ import time
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
-
+ 
 import rusty_pins
 from peripherals import relays
 from utils import concurrent_state as cs
@@ -32,7 +32,9 @@ if __name__ == '__main__':
                 relays.actuate_slow_pwm(pin, float(cs.structs["control_params"]["heat_feedback"]), wattage=cs.structs["hardware_config"]["equipment_wattage"]["heater"], log="heater_kwh") #trigger appropriate response
             else:
                 print("Heater on for " + cs.structs["control_params"]["heater_duration"] + " minute(s), off for " + cs.structs["control_params"]["heater_interval"] + " minute(s)...")
-                relays.actuate_interval_sleep(pin, float(cs.structs["control_params"]["heater_duration"]), float(cs.structs["control_params"]["heater_interval"]), duration_units= "minutes", sleep_units="minutes", wattage=cs.structs["hardware_config"]["equipment_wattage"]["heater"], log="heater_kwh")
+                if (time.time() - float(cs.structs["control_params"]["last_heater_run_time"])) > (float(cs.structs["control_params"]["heater_interval"])*60): #convert setting units (minutes) to base (seconds)
+                    cs.write_state("/home/pi/oasis-grow/configs/control_params", "last_heater_run_time", str(time.time()))
+                    relays.actuate_interval_sleep(pin, float(cs.structs["control_params"]["heater_duration"]), float(cs.structs["control_params"]["heater_interval"]), duration_units= "minutes", sleep_units="minutes", wattage=cs.structs["hardware_config"]["equipment_wattage"]["heater"], log="heater_kwh")
             cs.load_state()
             time.sleep(1)
     except SystemExit:

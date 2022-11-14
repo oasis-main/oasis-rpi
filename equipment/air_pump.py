@@ -6,7 +6,7 @@
 import sys
 import signal
 import time
-
+ 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
 
@@ -29,7 +29,7 @@ if __name__ == '__main__':
         while True:
             print("Turning air pump on at " + cs.structs["control_params"]["time_start_air"] + ":00 and off at " + cs.structs["control_params"]["time_stop_air"] + ":00, refreshing every " + cs.structs["control_params"]["air_interval"] + " minutes...")
             relays.actuate_time_hod(pin, int(cs.structs["control_params"]["time_start_air"]), int(cs.structs["control_params"]["time_stop_air"]), int(cs.structs["control_params"]["air_interval"]), interval_units = "minutes", wattage=cs.structs["hardware_config"]["equipment_wattage"]["air_pump"], log="air_pump_kwh")
-            cs.load_state()
+            cs.load_state() #no time recorded here because it is not on an interval
             time.sleep(1)
     except SystemExit: #This is handled by the relay as well when terminated from main
         print("Air pump was terminated.")
