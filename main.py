@@ -310,7 +310,7 @@ def main_loop(led_timer, connect_timer, reboot_timer):
                 connect_timer = time.time()
 
             if time.time() - float(cs.structs["control_params"]["last_power_log_time"]) > 3600: #send last hour power data to firebase
-                cs.write_state("/home/pi/oasis-grow/configs/control_params", "last_power_log_time", str(time.time())) #reset the timer, always BEFORE any waiting or expensive comps
+                cs.write_state("/home/pi/oasis-grow/configs/control_params.json", "last_power_log_time", str(time.time())) #reset the timer, always BEFORE any waiting or expensive comps
                 update_power_tracking()
 
             cs.check_state("running", start_core, stop_core) #if running, start the sensors and controllers

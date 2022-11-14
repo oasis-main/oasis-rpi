@@ -609,7 +609,7 @@ def data_out():
     #write data and send to server after set time elapses
     if time.time() - float(cs.structs["control_params"]["last_sensor_log_time"]) > 300:
         #we log the last run time BEFORE any waiting or expensive comps
-        cs.write_state("/home/pi/oasis-grow/configs/control_params", "last_sensor_log_time", str(time.time())) 
+        cs.write_state("/home/pi/oasis-grow/configs/control_params.json", "last_sensor_log_time", str(time.time())) 
 
         try:
             payload = cs.structs["sensor_data"]

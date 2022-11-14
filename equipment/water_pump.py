@@ -32,7 +32,7 @@ if __name__ == "__main__":
             else:
                 print("Running water pump for " + cs.structs["control_params"]["watering_duration"] + " second(s) every " + cs.structs["control_params"]["watering_interval"] + " day(s)...")
                 if (time.time() - float(cs.structs["control_params"]["last_watering_run_time"])) > (float(cs.structs["control_params"]["watering_interval"])*60*60*24): #convert setting (days) to base units (seconds): days*(60*60*24)
-                    cs.write_state("/home/pi/oasis-grow/configs/control_params", "last_watering_run_time", str(time.time()))
+                    cs.write_state("/home/pi/oasis-grow/configs/control_params.json", "last_watering_run_time", str(time.time()))
                     relays.actuate_interval_sleep(pin, duration = float(cs.structs["control_params"]["watering_duration"]), sleep = float(cs.structs["control_params"]["watering_interval"]), duration_units="seconds", sleep_units="days", wattage=cs.structs["hardware_config"]["equipment_wattage"]["water_pump"], log="water_pump_kwh")
             cs.load_state()
             time.sleep(1)
