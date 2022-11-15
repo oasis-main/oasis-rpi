@@ -40,7 +40,7 @@ def update_synced_fields():
         else:
             continue
 
-        time.sleep(0.1)
+        #time.sleep(0.1) #just do this as quickly as possible
 
     #write the assembled dicts to memory, outside of the loop
     cs.write_dict("/home/pi/oasis-grow/configs/device_state.json", device_state_dict)

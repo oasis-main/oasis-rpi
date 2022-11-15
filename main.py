@@ -108,7 +108,7 @@ def start_core():
             cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","connected_running", db_writer = dbt.patch_firebase)
         else: #if not connected
             #send LEDmode = "offline_running"
-            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","offline_running", db_writer = dbt.patch_firebase)
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","offline_running")
 
 def stop_core():
     global core
@@ -128,7 +128,7 @@ def stop_core():
             cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","connected_idle", db_writer = dbt.patch_firebase)
         else: #if not connected
             #store led_mode = "offline_idle"
-            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","offline_idle", db_writer = dbt.patch_firebase)
+            cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","offline_idle")
 
 
 #checks if core is running, kills it if so, starts it otherwise
@@ -217,6 +217,7 @@ def update_power_tracking():
 
         if cs.structs["device_state"]["connected"] == "1":
             dbt.patch_firebase_dict(cs.structs["access_config"], kwh_total)
+            dbt.patch_firebase_dict(cs.structs["access_config"], timestamp)
             firebase_manager.send_csv('/home/pi/oasis-grow/data_out/resource_use/power_data.csv', "power_data.csv")
             return
         else:
@@ -310,7 +311,7 @@ def main_loop(led_timer, connect_timer, reboot_timer):
                 connect_timer = time.time()
 
             if time.time() - float(cs.structs["control_params"]["last_power_log_time"]) > 3600: #send last hour power data to firebase
-                cs.write_state("/home/pi/oasis-grow/configs/control_params.json", "last_power_log_time", str(time.time())) #reset the timer, always BEFORE any waiting or expensive comps
+                cs.write_state("/home/pi/oasis-grow/configs/control_params.json", "last_power_log_time", str(time.time()), db_writer=dbt.patch_firebase) #reset the timer, always BEFORE any waiting or expensive comps
                 update_power_tracking()
 
             cs.check_state("running", start_core, stop_core) #if running, start the sensors and controllers
