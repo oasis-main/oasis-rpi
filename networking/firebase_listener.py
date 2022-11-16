@@ -17,6 +17,7 @@ def update_synced_fields():
     device_state_fields = list(cs.structs["device_state"].keys())
     control_params_fields = list(cs.structs["control_params"].keys())
     hardware_config_groups = list(cs.structs["hardware_config"].keys())
+    #note: we do not log feaure toggles, as these are updated by the cloud in a controlled interval   
 
     device_state_dict = {} #dict of keys and values
     control_params_dict = {} #dict of keys and values

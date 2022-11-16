@@ -235,26 +235,24 @@ def get_updates(): #depends on: ,'subproceess', update.py; modifies: system code
     
     if cs.structs["device_state"]["running"] == "0": #replicated in the main loop
         #just kill listener
-        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = dbt.patch_firebase) #make sure the cloud does not update main code, kill listener
         stop_listener()
         #launch update.py and wait to complete
         update_process = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/utils/update.py"],"update")
         update_process.wait()
         
-        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","1", db_writer = dbt.patch_firebase)#restore listener
+        start_listener()#restore listener
     
     if cs.structs["device_state"]["running"] == "1": #replicated in the main loop
         #kill core
         stop_core()
         #also kill listener
-        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = dbt.patch_firebase) #make sure the cloud does not update main code, kill listener
         stop_listener()
         #launch update.py and wait to complete
         update_process = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/utils/update.py"],"update")
         update_process.wait()
         
-        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","1", db_writer = dbt.patch_firebase) #restore running
-        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","1", db_writer = dbt.patch_firebase)#restore listener
+        start_core() #restore running
+        start_listener() #restore listener
 
 def export_timelapse():
     export_tl = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/imaging/make_timelapse.py"])
@@ -262,6 +260,28 @@ def export_timelapse():
 def clear_data():
     reset_model.reset_data_out()
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "awaiting_clear_data_out", "0", db_writer = dbt.patch_firebase)
+
+def get_new_features():
+    stop_core()
+    modified_device = dbt.fetch_device_data(cs.structs["access_config"])
+    feature_toggles_fields = list(cs.structs["feature_toggles"].keys())
+    feature_toggles_dict = {} #dict of keys and values
+
+    #loop through all device data and just get the feature toggles
+    for k,v in modified_device.items():
+        print("Writing a value of " + str(v) + " to feature " + str(k))
+        payload = {k: v}
+        if (k in feature_toggles_fields):
+            payload = {k: v} #add a timestamp
+            feature_toggles_dict.update(payload)
+        else:
+            continue
+    
+    #write the assembled dicts to memory, outside of the loop
+    cs.write_dict("/home/pi/oasis-grow/configs/feature_toggles.json", feature_toggles_dict)
+    clear_data()
+    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "awaiting_feature_change", "0", db_writer = dbt.patch_firebase)
+    start_core()
 
 def main_setup():
     #Initialize Oasis-Grow:
@@ -320,6 +340,7 @@ def main_loop(led_timer, connect_timer, reboot_timer):
             cs.check_state("awaiting_deletion", firebase_manager.delete_device)
             cs.check_state("awaiting_clear_data_out", clear_data)
             cs.check_state("awaiting_timelapse", export_timelapse)
+            cs.check_state("awaiting_feature_change", get_new_features)
 
             sbutton_state = buttons.get_button_state(buttons.start_stop_button) #Start Button
             if sbutton_state == 0:

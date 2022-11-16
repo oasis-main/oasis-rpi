@@ -18,12 +18,19 @@
                     },
 "sensor_calibration":{
                     "temperature_offset": "0",
+                    "temperature_drift": "1",
                     "humidity_offset": "0",
+                    "humidity_drift": "1",
                     "co2_offset": "0", 
+                    "co2_drift": "1", 
+                    "lux_drift": "1",
                     "lux_offset": "0",
                     "ph_offset": "0",
+                    "ph_drift": "1",
                     "substrate_moisture_offset": "0",
-                    "tds_offset": "0"
+                    "substrate_moisture_drift": "1",
+                    "tds_offset": "0",
+                    "tds_drift": "1"
                     },
 "equipment_gpio_map": {
                    "heat_relay": "14",
