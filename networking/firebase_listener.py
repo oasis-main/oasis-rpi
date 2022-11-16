@@ -66,6 +66,7 @@ if __name__ == "__main__":
         while True:
             if (time.time() - listener_timer) > 30:
                 update_synced_fields()
+                listener_timer = time.time()
             else:
                 time.sleep(1)
     except SystemExit:
