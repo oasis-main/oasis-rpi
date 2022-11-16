@@ -101,8 +101,8 @@ def get_update(test=False):
     transfer_compatible_configs('/home/pi/oasis-grow/configs/access_config.json', '/home/pi/oasis-grow/configs/access_config_temp.json')
     transfer_compatible_configs('/home/pi/oasis-grow/configs/device_state.json', '/home/pi/oasis-grow/configs/device_state_temp.json')
     transfer_compatible_configs('/home/pi/oasis-grow/configs/control_params.json', '/home/pi/oasis-grow/configs/control_params_temp.json')
-    transfer_compatible_configs('/home/pi/oasis-grow/configs/sensor_data.json', '/home/pi/oasis-grow/data_out/sensor_data_temp.json')
-    transfer_compatible_configs('/home/pi/oasis-grow/configs/power_data.json', '/home/pi/oasis-grow/data_out/power_data_temp.json')
+    transfer_compatible_configs('/home/pi/oasis-grow/configs/sensor_data.json', '/home/pi/oasis-grow/configs/sensor_data_temp.json')
+    transfer_compatible_configs('/home/pi/oasis-grow/configs/power_data.json', '/home/pi/oasis-grow/configs/power_data_temp.json')
     print("Transfered compatible state & configs, removing temporary files")
 
     #run external update commands
