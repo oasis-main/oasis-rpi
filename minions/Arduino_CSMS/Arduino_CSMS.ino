@@ -8,7 +8,6 @@ void setup() {
 }
  
 void loop() {
- 
   MoistureLevel = analogRead(A0);  //update based on the analog Pin selected
   SoilMoisturePercentage = map(MoistureLevel, OpenAirReading, WaterReading, 0, 100); //map translates raw reading from voltage to moisture
  
