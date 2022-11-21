@@ -14,7 +14,7 @@ DHT dht(DHTPIN, DHTTYPE);
 CRGB leds[NUMOFLEDS];
 String led_mode = "off";
 
-float temperature, humidity;
+double temperature, humidity;
 int water_low = 0;
 
 void setup() {
@@ -46,7 +46,7 @@ void loop() {
   Serial.print("{"); //start the json
 
   Serial.print("\"temperature\":");
-  Serial.print(temperature*float(1.80)+float(32)); //convert c to f
+  Serial.print(temperature*double(1.80)+double(32)); //convert c to f
   Serial.print(", ");
     
   Serial.print("\"humidity\": ");

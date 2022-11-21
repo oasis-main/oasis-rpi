@@ -1,18 +1,55 @@
 {
-  "/home/pi/oasis-grow/configs/access_config.json": 0,
-  "/home/pi/oasis-grow/configs/device_params.json": 0,
-  "/home/pi/oasis-grow/configs/device_state.json": 0,
-  "/home/pi/oasis-grow/configs/feature_toggles.json": 0,
-  "/home/pi/oasis-grow/configs/hardware_config.json": 0,
-  "/home/pi/oasis-grow/data_out/sensor_info.json": 0,
-  "air_pump": 0,
-  "camera": 0,
-  "core": 0,
-  "dehumidifier": 0,
-  "fan": 0,
-  "heater": 0,
-  "humidifier": 0,
-  "lights": 0,
-  "listener": 0,
-  "water_pump": 0
+  "/home/pi/oasis-grow/configs/access_config.json_x": 0,
+  "/home/pi/oasis-grow/configs/access_config.json_y": 0,
+  
+  "/home/pi/oasis-grow/configs/control_params.json_x": 0,
+  "/home/pi/oasis-grow/configs/control_params.json_y": 0,
+  
+  "/home/pi/oasis-grow/configs/device_state.json_x": 0,
+  "/home/pi/oasis-grow/configs/device_state.json_y": 0,
+  
+  "/home/pi/oasis-grow/configs/feature_toggles.json_x": 0,
+  "/home/pi/oasis-grow/configs/feature_toggles.json_y": 0,  
+  
+  "/home/pi/oasis-grow/configs/hardware_config.json_x": 0,
+  "/home/pi/oasis-grow/configs/hardware_config.json_y": 0,
+  
+  "/home/pi/oasis-grow/configs/sensor_data.json_x": 0,
+  "/home/pi/oasis-grow/configs/sensor_data.json_y": 0,
+
+  "/home/pi/oasis-grow/configs/power_data.json_x": 0,
+  "/home/pi/oasis-grow/configs/power_data.json_y": 0,
+  
+  "heater_x": 0,
+  "heater_y": 0,
+  
+  "humidifier_x": 0,
+  "humidifier_y": 0,
+  
+  "dehumidifier_x": 0,
+  "dehumidifier_y": 0,
+  
+  "fan_x": 0,
+  "fan_y": 0,
+  
+  "lights_x": 0,
+  "lights_y": 0,
+  
+  "air_pump_x": 0,
+  "air_pump_y": 0,
+  
+  "water_pump_x": 0,
+  "water_pump_y": 0,
+  
+  "core_x": 0,
+  "core_y": 0,
+  
+  "listener_x": 0,
+  "listener_y": 0,
+  
+  "camera_x": 0,
+  "camera_y": 0,
+  
+  "led_x": 0,
+  "led_y": 0
 }

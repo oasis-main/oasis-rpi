@@ -17,7 +17,7 @@ int water_level_pin = 2;
 CRGB leds[NUMOFLEDS];
 String led_mode = "off";
 
-float temperature, humidity;
+double temperature, humidity;
 int water_low = 0;
 int waterSig4 = 0;
 int waterSig3 = 0;

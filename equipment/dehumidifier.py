@@ -3,115 +3,52 @@
 #---------------------------------------------------------------------------------------
 #import shell modules
 import sys
-
+import signal
+import time
+ 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
 
-import RPi.GPIO as GPIO
-import time
-
+import rusty_pins
+from peripherals import relays
 from utils import concurrent_state as cs
+from utils import error_handler as err
+from networking import db_tools as dbt
+
+resource_name = "dehumidifier"
+cs.check_lock(resource_name)
 
 #get hardware config
 cs.load_state()
-
-#setup GPIO
-GPIO.setmode(GPIO.BCM) #GPIO Numbers instead of board numbers
-Dehum_GPIO = cs.structs["hardware_config"]["equipment_gpio_map"]["dehumidifier_relay"] #heater pin pulls from config file
-GPIO.setup(Dehum_GPIO, GPIO.OUT) #GPIO setup
-GPIO.output(Dehum_GPIO, GPIO.LOW) #relay open = GPIO.HIGH, closed = GPIO.LOW
-
-#define a function making PID discrete & actuate element accordingly
-def actuate_pid(dehum_ctrl):
-    if (dehum_ctrl >= 0) and (dehum_ctrl < 1):
-        #print("level 0")
-        GPIO.output(Dehum_GPIO, GPIO.LOW) #off
-        time.sleep(20)
-
-    if (dehum_ctrl >= 1) and (dehum_ctrl < 10):
-        #print("level 1")
-        GPIO.output(Dehum_GPIO, GPIO.HIGH)
-        time.sleep(2) #on
-        GPIO.output(Dehum_GPIO, GPIO.LOW)
-        time.sleep(18) #off
-
-    if (dehum_ctrl >= 10) and (dehum_ctrl < 20):
-        #print("level 2")
-        GPIO.output(Dehum_GPIO, GPIO.HIGH)
-        time.sleep(4) #on
-        GPIO.output(Dehum_GPIO, GPIO.LOW)
-        time.sleep(16) #off
-
-
-    if (dehum_ctrl >= 20) and (dehum_ctrl < 30):
-        #print("level 3")
-        GPIO.output(Dehum_GPIO, GPIO.HIGH)
-        time.sleep(6) #on
-        GPIO.output(Dehum_GPIO, GPIO.LOW)
-        time.sleep(16) #off
-
-    if (dehum_ctrl >= 30) and (dehum_ctrl < 40):
-        #print("level 4")
-        GPIO.output(Dehum_GPIO, GPIO.HIGH)
-        time.sleep(8) #on
-        GPIO.output(Dehum_GPIO, GPIO.LOW)
-        time.sleep(12) #off
-
-    if (dehum_ctrl >= 40) and (dehum_ctrl < 50):
-        #print("level 5")
-        GPIO.output(Dehum_GPIO, GPIO.HIGH)
-        time.sleep(10) #on
-        GPIO.output(Dehum_GPIO, GPIO.LOW)
-        time.sleep(10) #off
-
-    if (dehum_ctrl >= 50) and (dehum_ctrl < 60):
-        #print("level 6")
-        GPIO.output(Dehum_GPIO, GPIO.HIGH)
-        time.sleep(12) #on
-        GPIO.output(Dehum_GPIO, GPIO.LOW)
-        time.sleep(8) #off
-
-    if (dehum_ctrl >= 60) and (dehum_ctrl < 70):
-        #print("level 7")
-        GPIO.output(Dehum_GPIO, GPIO.HIGH)
-        time.sleep(14) #on
-        GPIO.output(Dehum_GPIO, GPIO.LOW)
-        time.sleep(6) #off
-
-    if (dehum_ctrl >= 70) and (dehum_ctrl < 80):
-        #print("level 8")
-        GPIO.output(Dehum_GPIO, GPIO.HIGH)
-        time.sleep(16) #on
-        GPIO.output(Dehum_GPIO, GPIO.LOW)
-        time.sleep(4) #off
-
-    if (dehum_ctrl >= 80) and (dehum_ctrl < 90):
-        #print("level 9")
-        GPIO.output(Dehum_GPIO, GPIO.HIGH)
-        time.sleep(18) #on
-        GPIO.output(Dehum_GPIO, GPIO.LOW)
-        time.sleep(2) #off
-
-    if (dehum_ctrl >= 90) and (dehum_ctrl <= 100):
-        #print("level 10")
-        GPIO.output(Dehum_GPIO, GPIO.HIGH)
-        time.sleep(20) #on
-        GPIO.output(Dehum_GPIO, GPIO.LOW)
-        time.sleep(0) #off
-
-def actuate_interval(duration = 15, interval = 45): #amount of time between humidifier runs (seconds, seconds)
-    GPIO.output(Dehum_GPIO, GPIO.HIGH)
-    time.sleep(float(duration))
-    GPIO.output(Dehum_GPIO, GPIO.LOW)
-    time.sleep(float(interval))
+dehum_GPIO = int(cs.structs["hardware_config"]["equipment_gpio_map"]["dehumidifier_relay"]) #dehumidifier pin pulls from config file
+pin = rusty_pins.GpioOut(dehum_GPIO)
 
 if __name__ == '__main__':
+    signal.signal(signal.SIGTERM, cs.wrapped_sys_exit)
     try:
-        if cs.structs["feature_toggles"]["dehum_pid"] == "1":
-            actuate_pid(float(sys.argv[1])) #trigger appropriate response
-        else:
-            actuate_interval(float(sys.argv[1]),float(sys.argv[2]))
+        while True:
+            if cs.structs["feature_toggles"]["dehum_pid"] == "1":
+                print("Running dehumidifier in pulse mode with " + cs.structs["control_params"]["dehum_feedback"] + "%" + " power...")
+                relays.actuate_slow_pwm(pin, float(cs.structs["control_params"]["dehum_feedback"]), wattage=cs.structs["hardware_config"]["equipment_wattage"]["dehumidifier"], log="dehumidifier_kwh") #trigger appropriate response
+            else:
+                print("Running dehumidifier for " + cs.structs["control_params"]["dehumidifier_duration"] + " minute(s) on, " + cs.structs["control_params"]["dehumidifier_interval"] + " minute(s) off...")
+                if (time.time() - float(cs.structs["control_params"]["last_dehumidifier_run_time"])) > (float(cs.structs["control_params"]["dehumidifier_interval"])*60): #convert setting units (minutes) to base (seconds)
+                    cs.write_state("/home/pi/oasis-grow/configs/control_params.json", "last_dehumidifier_run_time", str(time.time()), db_writer = dbt.patch_firebase)
+                    relays.actuate_interval_sleep(pin, float(cs.structs["control_params"]["dehumidifier_duration"]), float(cs.structs["control_params"]["dehumidifier_interval"]), duration_units= "minutes", sleep_units="minutes", wattage=cs.structs["hardware_config"]["equipment_wattage"]["dehumidifier"], log="dehumidifier_kwh")
+            cs.load_state()
+            time.sleep(1)
+    except SystemExit:
+        print("Dehumidifier was terminated.")
     except KeyboardInterrupt:
-        print("Interrupted")
-    finally:    
-        GPIO.cleanup()
+        print("Dehumidifier was interrupted.")
+    except Exception:    
+        print("Dehumidifier encountered an error!")
+        print(err.full_stack())
+    finally:
+        print("Shutting down dehumidifier...")
+        try:
+            relays.turn_off(pin)
+        except:
+            print(resource_name + " has no relay objects remaining.")
+        
+        cs.rusty_pipes.unlock(cs.lock_filepath, resource_name)

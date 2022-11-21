@@ -1,118 +1,54 @@
 #---------------------------------------------------------------------------------------
 #Manages Hardware for Humidity
-#TODO:
-#	(possible) define one function to handle various behavior
 #---------------------------------------------------------------------------------------
 #import shell modules
 import sys
+import signal
+import time
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
-
-
-import RPi.GPIO as GPIO
-import time
+ 
+import rusty_pins
+from peripherals import relays
 from utils import concurrent_state as cs
+from utils import error_handler as err
+from networking import db_tools as dbt
 
-#get hardware config
-cs.load_state()
+resource_name = "humidifier"
+cs.check_lock(resource_name)
 
 #setup GPIO
-GPIO.setmode(GPIO.BCM) #GPIO Numbers instead of board numbers
-Hum_GPIO = cs.structs["hardware_config"]["equipment_gpio_map"]["dehumidifier_relay"] #heater pin pulls from config file
-GPIO.setup(Hum_GPIO, GPIO.OUT) #GPIO setup
-GPIO.output(Hum_GPIO, GPIO.LOW) #relay open = GPIO.HIGH, closed = GPIO.LOW
-
-#define a function making PID discrete & actuate element accordingly
-def actuate_pid(hum_ctrl):
-    if (hum_ctrl >= 0) and (hum_ctrl < 1):
-        #print("level 0")
-        GPIO.output(Hum_GPIO, GPIO.LOW) #off
-        time.sleep(20)
-
-    if (hum_ctrl >= 1) and (hum_ctrl < 10):
-        #print("level 1")
-        GPIO.output(Hum_GPIO, GPIO.HIGH)
-        time.sleep(2) #on
-        GPIO.output(Hum_GPIO, GPIO.LOW)
-        time.sleep(18) #off
-
-    if (hum_ctrl >= 10) and (hum_ctrl < 20):
-        #print("level 2")
-        GPIO.output(Hum_GPIO, GPIO.HIGH)
-        time.sleep(4) #on
-        GPIO.output(Hum_GPIO, GPIO.LOW)
-        time.sleep(16) #off
-
-    if (hum_ctrl >= 20) and (hum_ctrl < 30):
-        #print("level 3")
-        GPIO.output(Hum_GPIO, GPIO.HIGH)
-        time.sleep(6) #on
-        GPIO.output(Hum_GPIO, GPIO.LOW)
-        time.sleep(16) #off
-
-    if (hum_ctrl >= 30) and (hum_ctrl < 40):
-        #print("level 4")
-        GPIO.output(Hum_GPIO, GPIO.HIGH)
-        time.sleep(8) #on
-        GPIO.output(Hum_GPIO, GPIO.LOW)
-        time.sleep(12) #off
-
-    if (hum_ctrl >= 40) and (hum_ctrl < 50):
-        #print("level 5")
-        GPIO.output(Hum_GPIO, GPIO.HIGH)
-        time.sleep(10) #on
-        GPIO.output(Hum_GPIO, GPIO.LOW)
-        time.sleep(10) #off
-
-    if (hum_ctrl >= 50) and (hum_ctrl < 60):
-        #print("level 6")
-        GPIO.output(Hum_GPIO, GPIO.HIGH)
-        time.sleep(12) #on
-        GPIO.output(Hum_GPIO, GPIO.LOW)
-        time.sleep(8) #off
-
-    if (hum_ctrl >= 60) and (hum_ctrl < 70):
-        #print("level 7")
-        GPIO.output(Hum_GPIO, GPIO.HIGH)
-        time.sleep(14) #on
-        GPIO.output(Hum_GPIO, GPIO.LOW)
-        time.sleep(6) #off
-
-    if (hum_ctrl >= 70) and (hum_ctrl < 80):
-        #print("level 8")
-        GPIO.output(Hum_GPIO, GPIO.HIGH)
-        time.sleep(16) #on
-        GPIO.output(Hum_GPIO, GPIO.LOW)
-        time.sleep(4) #off
-
-    if (hum_ctrl >= 80) and (hum_ctrl < 90):
-        #print("level 9")
-        GPIO.output(Hum_GPIO, GPIO.HIGH)
-        time.sleep(18) #on
-        GPIO.output(Hum_GPIO, GPIO.LOW)
-        time.sleep(2) #off
-
-    if (hum_ctrl >= 90) and (hum_ctrl <= 100):
-        #print("level 10")
-        GPIO.output(Hum_GPIO, GPIO.HIGH)
-        time.sleep(20) #on
-        GPIO.output(Hum_GPIO, GPIO.LOW)
-        time.sleep(0) #off
-
-def actuate_interval(duration = 15, interval = 45): #amount of time between humidifier runs (seconds, seconds)
-    GPIO.output(Hum_GPIO, GPIO.HIGH)
-    time.sleep(float(duration))
-    GPIO.output(Hum_GPIO, GPIO.LOW)
-    time.sleep(float(interval))
+cs.load_state() #get configs
+hum_GPIO = int(cs.structs["hardware_config"]["equipment_gpio_map"]["humidifier_relay"]) #heater pin pulls from config file
+pin = rusty_pins.GpioOut(hum_GPIO)
 
 if __name__ == '__main__':
+    signal.signal(signal.SIGTERM, cs.wrapped_sys_exit)
     try:
-        if cs.structs["feature_toggles"]["hum_pid"] == "1":
-            actuate_pid(float(sys.argv[1])) #trigger appropriate response
-        else:
-            actuate_interval(float(sys.argv[1]),float(sys.argv[2]))
+        while True:
+            if cs.structs["feature_toggles"]["hum_pid"] == "1":
+                print("Running humidifier in pulse mode with " + cs.structs["control_params"]["hum_feedback"] + "%" + " power...")
+                relays.actuate_slow_pwm(pin, float(cs.structs["control_params"]["hum_feedback"]), wattage=cs.structs["hardware_config"]["equipment_wattage"]["humidifier"], log="humidifier_kwh") #trigger appropriate response
+            else:
+                print("Running humidifier for " + cs.structs["control_params"]["humidifier_duration"] + " minute(s) on, " + cs.structs["control_params"]["humidifier_interval"] + " minute(s) off...")
+                if (time.time() - float(cs.structs["control_params"]["last_humidifier_run_time"])) > (float(cs.structs["control_params"]["humidifier_interval"])*60): #convert setting units (minutes) to base (seconds)
+                    cs.write_state("/home/pi/oasis-grow/configs/control_params.json", "last_humidifier_run_time", str(time.time()), db_writer = dbt.patch_firebase)
+                    relays.actuate_interval_sleep(pin, float(cs.structs["control_params"]["humidifier_duration"]), float(cs.structs["control_params"]["humidifier_interval"]), duration_units= "minutes", sleep_units="minutes", wattage=cs.structs["hardware_config"]["equipment_wattage"]["humidifier"], log="humidifier_kwh")
+            cs.load_state()
+            time.sleep(1)
+    except SystemExit:
+        print("Humidifier was terminated.")
     except KeyboardInterrupt:
-        print("Interrupted")
+        print("Humidifier was interrupted.")
+    except Exception:    
+        print("Humidifier ncountered an error!")
+        print(err.full_stack())
     finally:
-        GPIO.cleanup()
+        print("Shutting down humidifier...")
+        try:
+            relays.turn_off(pin)
+        except:
+            print(resource_name + " has no relay objects remaining.")
+        
+        cs.rusty_pipes.unlock(cs.lock_filepath, resource_name)

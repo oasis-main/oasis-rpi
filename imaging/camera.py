@@ -2,47 +2,46 @@
 #Manages Camera Timing & Image transmission
 #---------------------------------------------------------------------------------------
 import sys
+import signal
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
 
 #import libraries
 import time
-from subprocess import PIPE, Popen
 from imaging import noir_ndvi
+
+import rusty_pipes
 from utils import concurrent_state as cs
 from utils import error_handler as err
 from networking import db_tools as dbt
 
 resource_name = "camera"
 
-def take_picture(image_path, device_params):
-    
-    cs.check_lock(resource_name)
-    cs.safety.lock(cs.lock_filepath, resource_name)
-
-    if device_params["awb_mode"] == "on":
+def take_picture(image_path):
+    if cs.structs["hardware_config"]["camera_settings"]["awb_mode"] == "on":
         #take picture and save to standard location: libcamera-still -e png -o test.png
-        still = Popen(["raspistill", "-e", "jpg",  "-o", str(image_path)]) #snap: call the camera. "-w", "1920", "-h", "1080",
-        still.communicate()
+        still = rusty_pipes.Open(["raspistill", "-e", "jpg",  "-o", str(image_path)],"raspistill") #snap: call the camera. "-w", "1920", "-h", "1080",
+        still.wait()
     else:
-        still = Popen(["raspistill", "-e", "jpg",  "-o", str(image_path), "-awb", "off", "-awbg", device_params["awb_red"] + "," + device_params["awb_blue"]]) #snap: call the camera. "-w", "1920", "-h", "1080",
-        still.communicate()
-
-    cs.safety.unlock(cs.lock_filepath, resource_name)
+        still = rusty_pipes.Open(["raspistill", "-e", "jpg",  "-o", str(image_path), "-awb", "off", "-awbg", cs.structs["hardware_config"]["camera_settings"]["awb_red"] + "," + cs.structs["hardware_config"]["camera_settings"]["awb_blue"]],"raspistill") #snap: call the camera. "-w", "1920", "-h", "1080",
+        still.wait()
+    
+    exit_status = still.exit_code()
+    return exit_status
 
 def save_to_feed(image_path):
     #timestamp image
     timestamp = time.time()
     #move timestamped image into feed
-    save_most_recent = Popen(["cp", str(image_path), "/home/pi/oasis-grow/data_out/image_feed/image_at_" + str(timestamp)+'.jpg'])
-    save_most_recent.communicate()
+    save_most_recent = rusty_pipes.Open(["cp", str(image_path), "/home/pi/oasis-grow/data_out/image_feed/image_at_" + str(timestamp)+'.jpg'],"cp")
+    save_most_recent.wait()
 
-def send_image(path):
+def send_image(path, image_filename):
     #send new image to firebase
-    cs.load_state()
+    
     user, db, storage = dbt.initialize_user(cs.structs["access_config"]["refresh_token"])
-    dbt.store_file(user, storage, path, cs.structs["access_config"]["device_name"], "image.jpg")
+    dbt.store_file(user, storage, path, cs.structs["access_config"]["device_name"], image_filename)
     print("Sent image")
 
     #tell firebase that there is a new image
@@ -50,37 +49,57 @@ def send_image(path):
     print("Firebase has an image in waiting")
 
 #define a function to actuate element
-def actuate(interval, nosleep = False): #amount of time between shots in minutes
-    cs.load_state()
+def actuate(interval: int, nosleep = False): #interval is amount of time between shots in minutes, nosleep skips the wait
 
-    take_picture('/home/pi/oasis-grow/data_out/image.jpg', cs.structs["device_params"])
+    exit_status = take_picture('/home/pi/oasis-grow/data_out/image.jpg')
+    
+    if exit_status == 0:
 
-    if cs.structs["feature_toggles"]["ndvi"] == "1":
-        noir_ndvi.convert_image('/home/pi/oasis-grow/data_out/image.jpg')
+        if cs.structs["feature_toggles"]["ndvi"] == "1":
+            noir_ndvi.convert_image('/home/pi/oasis-grow/data_out/image.jpg')
 
-    if cs.structs["feature_toggles"]["save_images"] == "1":
-        save_to_feed('/home/pi/oasis-grow/data_out/image.jpg')
+        if cs.structs["feature_toggles"]["save_images"] == "1":
+            save_to_feed('/home/pi/oasis-grow/data_out/image.jpg')
 
-    if cs.structs["device_state"]["connected"] == "1":
-        #send new image to firebase
-        send_image('/home/pi/oasis-grow/data_out/image.jpg')
+        if cs.structs["device_state"]["connected"] == "1":
+            #send new image to firebase
+            send_image('/home/pi/oasis-grow/data_out/image.jpg')
 
-    if nosleep == True:
-        return
+        if nosleep == True:
+            return
+        else:
+            time.sleep(interval*60) #once the physical resource itself is done being used, we can free it
+                                        #not a big deal if someone actuates again while the main spawn is waiting
+                                        #so long as they aren't doing so with malicious intent (would need DB or root access, make sure to turn off SSH or change your password)
     else:
-        time.sleep(float(interval)*60) #once the physical resource itself is done being used, we can free it
-                                       #not a big deal if someone actuates again while the main spawn is waiting
-                                       #so long as they aren't doing so with malicious intent (would need DB or root access, make sure to turn off SSH or change your password)
+        print("Was not able to take picture!")
+        time.sleep(5)
 
 if __name__ == '__main__':
+    cs.check_lock(resource_name) #no hardware acquisition happens on import
+    signal.signal(signal.SIGTERM, cs.wrapped_sys_exit) #so we can check for the lock in __main__
     try:    
-        actuate(str(sys.argv[1]))
+        while True:
+            cs.load_state()
+            if (time.time() - float(cs.structs["hardware_config"]["camera_settings"]["last_picture_time"])) > (float(cs.structs["hardware_config"]["camera_settings"]["picture_frequency"])*60): #convert setting (minutes) to base units (seconds)
+                cs.write_nested_state("/home/pi/oasis-grow/configs/hardware_config", "camera_settings" ,"last_picture_time", str(time.time()), db_writer = dbt.patch_firebase) #we MUST ALWAYS write before sleeping, otherwise the program will double-count the wait period!
+                actuate(int(cs.structs["hardware_config"]["camera_settings"]["picture_frequency"]))
+            else:
+                time.sleep(1)
+    except SystemExit:
+        print("Camera was terminated.")
     except KeyboardInterrupt:
-        print("Interrupted")
-        cs.safety.unlock(cs.lock_filepath, resource_name)
-    except:
+        print("Camera was interrupted.")
+    except TypeError:
+        print("Tried do image stuff without an image. Is your camera properly set up?")
+        time.sleep(10)
+    except Exception:
+        print("Camera encountered an error!")
         print(err.full_stack())
-        cs.safety.unlock(cs.lock_filepath, resource_name)
+    finally:
+        print("Shutting down camera...")
+        cs.rusty_pipes.unlock(cs.lock_filepath, resource_name)
+
         
 
 

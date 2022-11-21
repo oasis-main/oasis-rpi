@@ -10,17 +10,6 @@ DHT dht(DHTPIN, DHTTYPE);
 //lux sensor intialize as lightMeter
 BH1750 lightMeter;
 
-//digital pin for water_low
-int water_level_pin = 2;
-
-//water_low data
-int water_low = 0;
-int waterSig4 = 0;
-int waterSig3 = 0;
-int waterSig2 = 0;
-int waterSig1 = 0;
-int waterSig0 = 0;
-
 //ph data
 const int phanalogPin = A0; 
 int sensorValue = 0; 
@@ -29,7 +18,7 @@ double b;
 int buf[10],temp;
 
 //tds data
-#define tdsanalogPin A0
+#define tdsanalogPin A1
 #define VREF 5.0              // analog reference voltage(Volt) of the ADC
 #define SCOUNT  30            // sum of sample point
 int analogBuffer[SCOUNT];     // store the analog value in the array, read from ADC
@@ -67,7 +56,6 @@ int getMedianNum(int bArray[], int iFilterLen){
 void setup() {
  Serial.begin(9600); //start serial
 
- pinMode(water_level_pin, INPUT_PULLUP); //start digital pins
  dht.begin();
  
  pinMode(tdsanalogPin,INPUT); //start analog pins
@@ -140,33 +128,6 @@ void loop() {
     }
   }
 
-  //water_low read sensor 11into buffer
-  if (digitalRead(water_level_pin) == HIGH)
-  {
-    waterSig0 = waterSig1;
-    waterSig1 = waterSig2;
-    waterSig2 = waterSig3;
-    waterSig3 = waterSig4;
-    waterSig4 = 1;
-  }
-  else
-  {
-    waterSig0 = waterSig1;
-    waterSig1 = waterSig2;
-    waterSig2 = waterSig3;
-    waterSig3 = waterSig4;
-    waterSig4 = 0;
-  }
-
-  //water_low true if last 5 sensor readings were all positive
-  if (waterSig4 == 1 || waterSig3 == 1 || waterSig2 == 1 || waterSig1 == 1 || waterSig0 == 1)
-  {
-    water_low = 1;
-  }
-  else
-  {
-    water_low = 0;
-  }
  
  //save data to known names
  double temperature = air_temperature_c;
@@ -174,7 +135,6 @@ void loop() {
  double lux = lumen_per_sqm;
  double ph = phValue;
  double tds = tdsValue;
- int water_low = water_low;
 
  //print data to serial
  Serial.print("{"); //start the json
@@ -197,10 +157,6 @@ void loop() {
 
     Serial.print("\"tds\": ");
     Serial.print(tds);
-    Serial.print(", ");
-
-    Serial.print("\"water_low\": ");
-    Serial.print(water_low);
     //Serial.print(", "); //no trailing comma, this is the last json field
     
     Serial.print("}"); //close the json and issue new line

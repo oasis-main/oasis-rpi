@@ -1,6 +1,6 @@
 //Other people's hard work
 use pyo3::prelude::*;
-use rppal::gpio::Gpio;
+use rppal::gpio::*;
 
 //We're only doing outputs this way, as peripheral reads in rust are unsafe
 //The python implementation for hardware peripheral reads is actually better for raspi
@@ -27,6 +27,13 @@ impl GpioOut {
         self.output.set_low();
     }
 
+    fn is_high(&mut self){
+        self.output.is_set_high();
+    }
+
+    fn is_low(&mut self){
+        self.output.is_set_low();
+    }
 }
 
 // A Python-ready GPIO I/O module

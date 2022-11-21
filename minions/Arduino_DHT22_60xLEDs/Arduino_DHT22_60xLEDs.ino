@@ -17,7 +17,7 @@ DHT dht(DHTPIN, DHTTYPE);
 CRGB leds[NUMOFLEDS];
 String led_mode = "off";\
 
-float temperature, humidity;
+double temperature, humidity;
 int water_low = 0;
 
 void setup() {

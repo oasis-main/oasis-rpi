@@ -4,56 +4,46 @@
 
 #import shell modules
 import sys
+import signal
+import time
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
-
-
-#import libraries
-import RPi.GPIO as GPIO
-import time
-import datetime
-
+ 
+import rusty_pins
+from peripherals import relays
 from utils import concurrent_state as cs
+from utils import error_handler as err
+
+resource_name = "lights"
+cs.check_lock(resource_name)
 
 #get configs
 cs.load_state()
-
-#setup GPIO
-GPIO.setmode(GPIO.BCM) #GPIO Numbers instead of board numbers
-Light_GPIO = cs.structs["hardware_config"]["equipment_gpio_map"]["light_relay"] #heater pin pulls from config file
-GPIO.setup(Light_GPIO, GPIO.OUT) #GPIO setup relay open = GPIO.HIGH, closed = GPIO.LOW
-GPIO.output(Light_GPIO, GPIO.LOW) #relay open = GPIO.HIGH, closed = GPIO.LOW
-
-#define a function to actuate element
-def actuate_hod(time_on = 8, time_off = 20, interval = 15): #arguments = hour of day(int, 8), hour of day(int, 20), minutes (int, 15)
-
-    now = datetime.datetime.now()
-    HoD = now.hour
-
-    if time_on < time_off:
-        if HoD >= time_on and HoD < time_off:
-            GPIO.output(Light_GPIO, GPIO.HIGH) #light on (relay closed)
-            time.sleep(float(interval)*60)
-        if HoD < time_on or HoD >= time_off:
-            GPIO.output(Light_GPIO, GPIO.LOW)
-            time.sleep(float(interval)*60)
-    if time_on > time_off:
-        if HoD >=  time_on or HoD < time_off:
-            GPIO.output(Light_GPIO, GPIO.HIGH) #light on (relay closed)
-            time.sleep(float(interval)*60)
-        if HoD < time_on and  HoD >= time_off:
-            GPIO.output(Light_GPIO, GPIO.LOW) #light on (relay closed)
-            time.sleep(float(interval)*60)
-    if time_on == time_off:
-        GPIO.output(Light_GPIO, GPIO.HIGH)
-        time.sleep(float(interval)*60)
+light_GPIO = int(cs.structs["hardware_config"]["equipment_gpio_map"]["light_relay"]) #lights pin pulls from config file
+pin = rusty_pins.GpioOut(light_GPIO)
 
 if __name__ == '__main__':
+    signal.signal(signal.SIGTERM, cs.wrapped_sys_exit)
     try:
-        actuate_hod(int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]))
+        while True:
+            print("Turning lights on at " + cs.structs["control_params"]["time_start_light"] + ":00 and off at " + cs.structs["control_params"]["time_stop_light"] + ":00, refreshing every " + cs.structs["control_params"]["lighting_interval"] + " minutes...")
+            pin = relays.actuate_time_hod(pin, int(cs.structs["control_params"]["time_start_light"]), int(cs.structs["control_params"]["time_stop_light"]), int(cs.structs["control_params"]["lighting_interval"]), interval_units = "minutes", wattage=cs.structs["hardware_config"]["equipment_wattage"]["lights"], log="lights_kwh")
+            cs.load_state() #no time logging since we're just working with hours of the day here
+            time.sleep(1)
+    except SystemExit:
+        print("Lights were terminated.")
     except KeyboardInterrupt:
-        print("Interrupted")
+        print("Lights were interrupted.")
+    except Exception:
+        print("Lights encountered an error!")
+        print(err.full_stack())
     finally:
-        GPIO.cleanup()
+        print("Shutting down lights...")
+        try:
+            relays.turn_off(pin)
+        except:
+            print(resource_name + " has no relay objects remaining.")
+        
+        cs.rusty_pipes.unlock(cs.lock_filepath, resource_name)
 

@@ -5,35 +5,35 @@ import sys
 sys.path.append('/home/pi/oasis-grow')
 sys.path.append('/home/pi/oasis-grow/utils')
 
-from subprocess import Popen
+import rusty_pipes
 from utils import concurrent_state as cs
 
 #reconfigures network interface, tells system to boot with Access Point, restarts
-def enable_AP(db_writer = None): #Depends on: cs.write_state(), 'subprocess'; Modifies: device_state.json, configuration files
+def enable_access_point(db_writer = None): #Depends on: cs.write_state(), 'subprocess'; Modifies: device_state.json, configuration files
     #tell system that the access point should be launched on next controller startup
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json","access_point","1", db_writer)
 
     #disable WiFi, enable AP, reboot
-    config_ap_dhcpcd = Popen(["sudo", "cp", "/etc/dhcpcd_AP.conf", "/etc/dhcpcd.conf"])
+    config_ap_dhcpcd = rusty_pipes.Open(["sudo", "cp", "/etc/dhcpcd_access_point.conf", "/etc/dhcpcd.conf"],"cp")
     config_ap_dhcpcd.wait()
-    config_ap_dns = Popen(["sudo", "cp", "/etc/dnsmasq_AP.conf", "/etc/dnsmasq.conf"])
+    config_ap_dns = rusty_pipes.Open(["sudo", "cp", "/etc/dnsmasq_access_point.conf", "/etc/dnsmasq.conf"],"cp")
     config_ap_dns.wait()
-    enable_hostapd = Popen(["sudo", "systemctl", "enable", "hostapd"])
+    enable_hostapd = rusty_pipes.Open(["sudo", "systemctl", "enable", "hostapd"],"cp")
     enable_hostapd.wait()
-    systemctl_reboot = Popen(["sudo", "systemctl", "reboot"])
+    systemctl_reboot = rusty_pipes.Open(["sudo", "systemctl", "reboot"],"cp")
     systemctl_reboot.wait()
 
 #reconfigures network interface, tells system to boot with WiF, restarts
-def enable_WiFi(): #Depends on: cs.write_state(), 'subprocess'; Modifies: device_state.json, configuration files
+def enable_wifi(): #Depends on: cs.write_state(), 'subprocess'; Modifies: device_state.json, configuration files
     #tell system that the access point should not be launched on next controller startup
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json","access_point","0", db_writer = None)
 
     #disable WiFi, enable AP, reboot
-    config_wifi_dchpcd = Popen(["sudo", "cp", "/etc/dhcpcd_WiFi.conf", "/etc/dhcpcd.conf"])
+    config_wifi_dchpcd = rusty_pipes.Open(["sudo", "cp", "/etc/dhcpcd_wifi.conf", "/etc/dhcpcd.conf"],"cp")
     config_wifi_dchpcd.wait()
-    config_wifi_dns = Popen(["sudo", "cp", "/etc/dnsmasq_WiFi.conf", "/etc/dnsmasq.conf"])
+    config_wifi_dns = rusty_pipes.Open(["sudo", "cp", "/etc/dnsmasq_wifi.conf", "/etc/dnsmasq.conf"],"cp")
     config_wifi_dns.wait()
-    disable_hostapd = Popen(["sudo", "systemctl", "disable", "hostapd"])
+    disable_hostapd = rusty_pipes.Open(["sudo", "systemctl", "disable", "hostapd"],"cp")
     disable_hostapd.wait()
-    systemctl_reboot = Popen(["sudo", "systemctl", "reboot"])
+    systemctl_reboot = rusty_pipes.Open(["sudo", "systemctl", "reboot"],"cp")
     systemctl_reboot.wait()

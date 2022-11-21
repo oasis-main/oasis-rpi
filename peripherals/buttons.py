@@ -12,7 +12,7 @@ connect_internet_button = None #holds GPIO object for connecting device to inter
 action_button = None #holds GPIO object for triggering the desired action
 
 #setup buttons for the main program interface
-def setup_button_interface(hardware_config): #depends on: cs.load_state(), 'RPi.GPIO'; modifies: start_stop_button, connect_internet_button, run_action_button, state variables
+def setup_button_interface(hardware_config): #depends on: , 'RPi.GPIO'; modifies: start_stop_button, connect_internet_button, run_action_button, state variables
     global start_stop_button, connect_internet_button, action_button
     
     print("Setting up button interface...")
@@ -21,9 +21,9 @@ def setup_button_interface(hardware_config): #depends on: cs.load_state(), 'RPi.
     GPIO.setmode(GPIO.BCM)
 
     #set button pins
-    start_stop_button = hardware_config["button_gpio_map"]["start_stop_button"]
-    connect_internet_button = hardware_config["button_gpio_map"]["connect_internet_button"]
-    action_button = hardware_config["button_gpio_map"]["action_button"]
+    start_stop_button = int(hardware_config["button_gpio_map"]["start_stop_button"])
+    connect_internet_button = int(hardware_config["button_gpio_map"]["connect_internet_button"])
+    action_button = int(hardware_config["button_gpio_map"]["action_button"])
 
     #Setup buttons
     GPIO.setup(start_stop_button, GPIO.IN, pull_up_down=GPIO.PUD_UP)

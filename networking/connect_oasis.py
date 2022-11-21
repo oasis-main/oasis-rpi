@@ -5,18 +5,30 @@ import sys
 sys.path.append('/home/pi/oasis-grow')
 
 #data handling
-import json
 import re
 import time
 
 #import custom modules
-from utils import reset_model
+import subprocess
 from utils import slow_concurrent_state as slow_cs
 from utils import error_handler as err
-from networking import wifi
 
 #create a password-protected lan interface for accepting credentials
 import streamlit as st
+
+def enable_wifi(): #we're going to use subprocess here because the regular one uses rusty_piped, which is not availabe to root
+#tell system that the access point should not be launched on next controller startup
+    slow_cs.write_state("/home/pi/oasis-grow/configs/device_state.json","access_point","0", db_writer = None)
+
+    #disable WiFi, enable AP, reboot
+    config_wifi_dchpcd = subprocess.Popen(["sudo", "cp", "/etc/dhcpcd_wifi.conf", "/etc/dhcpcd.conf"])
+    config_wifi_dchpcd.wait()
+    config_wifi_dns = subprocess.Popen(["sudo", "cp", "/etc/dnsmasq_wifi.conf", "/etc/dnsmasq.conf"])
+    config_wifi_dns.wait()
+    disable_hostapd = subprocess.Popen(["sudo", "systemctl", "disable", "hostapd"])
+    disable_hostapd.wait()
+    systemctl_reboot = subprocess.Popen(["sudo", "systemctl", "reboot"])
+    systemctl_reboot.wait()
 
 #update wpa_supplicant.conf
 def modWiFiConfig(SSID, password):
@@ -60,6 +72,7 @@ def modAccessConfig(name, e, p):
 def save_creds_exit(email, password, wifi_name, wifi_pass, device_name, cmd = False):
     
     device_name = re.sub('[^a-zA-Z0-9\n\.]', ' ', device_name) #sub all non-alphaneumeric characters with spaces
+    device_name = device_name.replace(" ","-") #sub all spaces with dashes
 
     #place credentials in proper locations
     modWiFiConfig(wifi_name, wifi_pass)
@@ -68,39 +81,39 @@ def save_creds_exit(email, password, wifi_name, wifi_pass, device_name, cmd = Fa
     print("Access creds added")
     
     st.success("Added WiFi & access credentials to device. Please reconnect computer to internet, leave this page, and log back into https://dashboard.oasis-gardens.io. If successful, you will see the device name appear under 'Your Fleet.'")
-    
-    #reset_box
-    reset_model.reset_device_state()
 
     #set new_device to "1" before rebooting
     slow_cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "new_device", "1", db_writer = None)
 
     if cmd == False: #pass this argument as true to save creds without rebooting
         #stand up wifi and reboot
-        wifi.enable_WiFi()
+        enable_wifi() #turns off the access point flag, no need to do it here.
 
 if __name__ == '__main__':
 
-    default = ""
+        default = ""
 
-    st.title('Oasis Device Setup')
+        st.title('Oasis Device Setup')
 
-    email = st.text_input('Oasis Email', default)
+        email = st.text_input('Oasis Email', default)
 
-    password = st.text_input('Oasis Password', default, type="password")
+        password = st.text_input('Oasis Password', default, type="password")
 
-    wifi_name = st.text_input('Wifi Name', default)
+        wifi_name = st.text_input('Wifi Name', default)
 
-    wifi_pass = st.text_input('Wifi Password', default, type="password")
+        wifi_pass = st.text_input('Wifi Password', default, type="password")
 
-    device_name = st.text_input('Name this device:', default)
+        device_name = st.text_input('Name this device:', default)
 
-    #st.button('Launch', on_click=save_creds_exit, args=[email, password, wifi_name, wifi_pass, device_name]) #only for recent streamlit versions
+        #st.button('Launch', on_click=save_creds_exit, args=[email, password, wifi_name, wifi_pass, device_name]) #only for recent streamlit versions
 
-    if st.button("Launch"):
-        try:
-            save_creds_exit(email, password, wifi_name, wifi_pass, device_name)
-            time.sleep(1)
-        except:
-            print(err.full_stack())
-            sys.exit()
+        if st.button("Launch"):
+            try:
+                save_creds_exit(email, password, wifi_name, wifi_pass, device_name)
+                time.sleep(5)
+            except:
+                print(err.full_stack())
+                sys.exit()
+
+        slow_cs.check_signal("access_point", "terminated", slow_cs.wrapped_sys_exit)
+        

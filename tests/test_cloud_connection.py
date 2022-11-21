@@ -24,17 +24,20 @@ def test_rtdb_patch():
     dbt.patch_firebase(cs.structs["access_config"], data)
     dbt.patch_firebase(cs.structs["access_config"], "device_error", "Test Field,Value Patch: Success")
 
+'''
 def send_image_test():
     print("Testing image transfer...")
     cam.send_image("/home/pi/oasis-grow/tests/test.jpg")
 
 def send_csv_test():
     print("Testing csv transfer...")
-    core.send_csv("/home/pi/oasis-grow/tests/test.csv")
+    core.send_csv("/home/pi/oasis-grow/tests/test.csv", "test_csv.csv")
 
 def send_timelapse_test():
     print("Testing video transfer...")
     make_timelapse.send_timelapse("/home/pi/oasis-grow/tests/test.avi")
+
+'''
 
 def test_update():
     print("Testing update functionality...")
@@ -43,8 +46,8 @@ def test_update():
 if __name__ == '__main__':  
     test_connect()
     test_rtdb_patch()
-    send_image_test()
-    send_csv_test()
-    send_timelapse_test()
+    #send_image_test()
+    #send_csv_test()
+    #send_timelapse_test()
     test_update()
   

@@ -1,6 +1,6 @@
 #import shell modules
 import sys
-import os
+
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
@@ -10,18 +10,21 @@ import neopixel
 import time
 
 from utils import slow_concurrent_state as slow_cs
+from utils import error_handler as err
+
+resource_name = "led"
+slow_cs.check_lock(resource_name) #anything GPIO-touching should check the lock before the object is declared
 
 #get hardware config & device state
 slow_cs.load_state()
-num_leds = slow_cs.structs["hardware_config"]["onboard_led_config"]["num_leds"]
-pixels = neopixel.NeoPixel(board.D21, num_leds)
+num_leds = int(slow_cs.structs["hardware_config"]["led_settings"]["num_leds"])
+pixels = neopixel.NeoPixel(board.D21, num_leds) #NeoPixels must be connected to GPIO10, GPIO12, GPIO18 or GPIO21 to work!
 
 def check_led_status():
-    slow_cs.load_state()
+
     if slow_cs.structs["device_state"]["led_status"] == "off":
         for x in range(0, num_leds):
             pixels[x] = (0, 0, 0)
-        return
 
     #Connected, Running (green, looping)
     if slow_cs.structs["device_state"]["led_status"] == "connected_running":
@@ -74,12 +77,33 @@ def check_led_status():
             time.sleep(0.04)   
         return
 
+def clean_up(): #signal is not used to terminate this, rather a flag is set from the outside
+    for x in range(0, num_leds): #kill the neopixels (turn all off)
+        pixels[x] = (0, 0, 10)
+        time.sleep(0.04)
+    for x in range(0, num_leds):
+        pixels[x] = (0, 0, 5)
+        time.sleep(0.04)   
+    
+    slow_cs.unlock(slow_cs.lock_filepath, resource_name) #free the leds for system
+    slow_cs.wrapped_sys_exit()
+
 def run():
     while True:
+        slow_cs.check_signal("led","terminated", clean_up) #the custom termination signal must ALWAYS be acknowledged otherwise we will get repeat behavior
         check_led_status()
+        slow_cs.load_state()
+        time.sleep(1)
 
 if __name__ == '__main__':
-    run()
-
-
-    
+    try:
+        run()
+    except SystemExit:
+        print("LED was terminated.")
+    except KeyboardInterrupt:
+        print("Shutting down LED...")
+        slow_cs.write_state("/home/pi/oasis-grow/configs/signals.json","led","acknowleged")
+        clean_up()
+    except Exception:
+        print("LED encountered an error!")
+        print(err.full_stack())

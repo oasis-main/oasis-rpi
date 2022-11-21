@@ -4,112 +4,53 @@
 
 #import shell modules
 import sys
+import signal
+import time
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
-
-import RPi.GPIO as GPIO
-import time
+ 
+import rusty_pins
+from peripherals import relays
 from utils import concurrent_state as cs
+from utils import error_handler as err
+from networking import db_tools as dbt
 
-#get hardware config
-cs.load_state()
+resource_name = "fan"
+cs.check_lock(resource_name)
 
 #setup GPIO
-GPIO.setmode(GPIO.BCM) #GPIO Numbers instead of board numbers
-Fan_GPIO = cs.structs["hardware_config"]["equipment_gpio_map"]["fan_relay"] #heater pin pulls from config file
-GPIO.setup(Fan_GPIO, GPIO.OUT) #GPIO setup
-GPIO.output(Fan_GPIO, GPIO.LOW)
-
-#define a function making PID discrete & actuate element accordingly
-def actuate_pid(fan_ctrl):
-    if (fan_ctrl >= 0) and (fan_ctrl < 1):
-        #print("level 0")
-        GPIO.output(Fan_GPIO,GPIO.LOW)
-        time.sleep(1)
-
-    if (fan_ctrl >= 1) and (fan_ctrl < 10):
-        #print("level 1")
-        GPIO.output(Fan_GPIO,GPIO.HIGH)
-        time.sleep(1) #on for 1
-        GPIO.output(Fan_GPIO,GPIO.LOW)
-        time.sleep(1) #off for 1
-
-    if (fan_ctrl >= 10) and (fan_ctrl < 20):
-        #print("level 2")
-        GPIO.output(Fan_GPIO,GPIO.HIGH)
-        time.sleep(2) #on for 2
-        GPIO.output(Fan_GPIO,GPIO.LOW)
-        time.sleep(1) #off for 1
-
-    if (fan_ctrl >= 20) and (fan_ctrl < 30):
-        #print("level 3")
-        GPIO.output(Fan_GPIO,GPIO.HIGH)
-        time.sleep(3) #on for 3
-        GPIO.output(Fan_GPIO,GPIO.LOW)
-        time.sleep(1) #off for 1
-
-    if (fan_ctrl >= 30) and (fan_ctrl < 40):
-        #print("level 4")
-        GPIO.output(Fan_GPIO,GPIO.LOW)
-        time.sleep(4) #on for 4
-        GPIO.output(Fan_GPIO,GPIO.HIGH)
-        time.sleep(1) #off for 1
-
-    if (fan_ctrl >= 40) and (fan_ctrl < 50):
-        #print("level 5")
-        GPIO.output(Fan_GPIO,GPIO.HIGH)
-        time.sleep(5) #on for 5
-        GPIO.output(Fan_GPIO,GPIO.LOW)
-        time.sleep(1) #off for 1
-
-    if (fan_ctrl >= 50) and (fan_ctrl < 60):
-        #print("level 6")
-        GPIO.output(Fan_GPIO,GPIO.HIGH)
-        time.sleep(6) #on for 6
-        GPIO.output(Fan_GPIO,GPIO.LOW)
-        time.sleep(1) #off for 1
-
-    if (fan_ctrl >= 60) and (fan_ctrl < 70):
-        #print("level 7")
-        GPIO.output(Fan_GPIO,GPIO.HIGH)
-        time.sleep(7) #on for 7
-        GPIO.output(Fan_GPIO,GPIO.LOW)
-        time.sleep(1) #off for 1
-
-    if (fan_ctrl >= 70) and (fan_ctrl < 80):
-        #print("level 8")
-        GPIO.output(Fan_GPIO,GPIO.HIGH)
-        time.sleep(8) #on for 8
-        GPIO.output(Fan_GPIO,GPIO.LOW)
-        time.sleep(1) #off for 1
-
-    if (fan_ctrl >= 80) and (fan_ctrl < 90):
-        #print("level 9")
-        GPIO.output(Fan_GPIO, GPIO.HIGH)
-        time.sleep(9) #on for 9
-        GPIO.output(Fan_GPIO,GPIO.LOW)
-        time.sleep(1) #off for 1
-
-    if (fan_ctrl >= 90) and (fan_ctrl <= 100):
-        #print("level 10")
-        GPIO.output(Fan_GPIO,GPIO.HIGH)
-        time.sleep(10) #on for 10
-
-def actuate_interval(duration = 1, interval = 59): #amount of time between fan runs (minutes, minutes)
-    GPIO.output(Fan_GPIO, GPIO.HIGH)
-    time.sleep(float(duration))
-    GPIO.output(Fan_GPIO, GPIO.LOW)
-    time.sleep(float(interval)*60)
+cs.load_state()
+fan_GPIO = int(cs.structs["hardware_config"]["equipment_gpio_map"]["fan_relay"]) #fan pin pulls from config file
+pin = rusty_pins.GpioOut(fan_GPIO)
 
 if __name__ == '__main__':
+    signal.signal(signal.SIGTERM, cs.wrapped_sys_exit)
     try:
-        if cs.structs["feature_toggles"]["fan_pid"] == "1":
-            actuate_pid(float(sys.argv[1])) #trigger appropriate feedback response
-        else:
-            actuate_interval(float(sys.argv[1]), float(sys.argv[2])) #this uses the timer instead
+        while True:
+            if cs.structs["feature_toggles"]["fan_pid"] == "1":
+                print("Ventilating in pulse mode with " + cs.structs["control_params"]["fan_feedback"] + "%" + " power...")
+                relays.actuate_slow_pwm(pin, float(cs.structs["control_params"]["fan_feedback"]), wattage=cs.structs["hardware_config"]["equipment_wattage"]["fan"], log="fan_kwh") #trigger appropriate response
+            else:
+                print("Fans on for " + cs.structs["control_params"]["fan_duration"] + " minute(s), off for " + cs.structs["control_params"]["fan_interval"] + " minute(s)...")
+                if (time.time() - float(cs.structs["control_params"]["last_fan_run_time"])) > (float(cs.structs["control_params"]["fan_interval"])*60): #convert setting units (minutes) to base (seconds)
+                    cs.write_state("/home/pi/oasis-grow/configs/control_params.json", "last_fan_run_time", str(time.time()), db_writer = dbt.patch_firebase)
+                    relays.actuate_interval_sleep(pin, float(cs.structs["control_params"]["fan_duration"]), float(cs.structs["control_params"]["fan_interval"]), duration_units= "minutes", sleep_units="minutes", wattage=cs.structs["hardware_config"]["equipment_wattage"]["fan"], log="fan_kwh")
+            cs.load_state()
+            time.sleep(1)
+    except SystemExit:
+        print("Fan was terminated.")
     except KeyboardInterrupt:
-        print("Interrupted")
+        print("Fan was interrupted.")
+    except Exception:    
+        print("Fan encountered an error!")
+        print(err.full_stack())
     finally:
-        GPIO.cleanup()
+        print("Shutting down fans...")
+        try:
+            relays.turn_off(pin)
+        except:
+            print(resource_name + " has no relay objects remaining.")
+        
+        cs.rusty_pipes.unlock(cs.lock_filepath, resource_name)
         

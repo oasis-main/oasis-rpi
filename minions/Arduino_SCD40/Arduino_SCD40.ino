@@ -72,8 +72,8 @@ void loop() {
 
     // Read Measurement
     uint16_t co2;
-    float temperature;
-    float humidity;
+    double temperature;
+    double humidity;
     error = scd4x.readMeasurement(co2, temperature, humidity);
     if (error) {
         //Serial.print("Error trying to execute readMeasurement(): ");
@@ -82,6 +82,7 @@ void loop() {
     } else if (co2 == 0) {
         //Serial.println("Invalid sample detected, skipping.");
     } else {
+        Serial.print("{");//must pass a valid json byteobj
         Serial.print("\"temperature\":");
         Serial.print((double(temperature)*double(1.8))+double(32));
         Serial.print(", ");

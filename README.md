@@ -13,7 +13,7 @@ The active system is controllable via web interface at https://dashboard.oasis-x
 Alternatively, all oasis-grow instances can be managed asynchronously through the importable python API.
 
 Breaking changes may be merged into master until the official 1.0.0 release
-Users who deploy and connect oasis-grow can get "over-the-air" updates through dashboard
+Connect your devices to oasis-network view data remotely, control connected appliances, and get over-the-air updates. 
 
 ## Raspberry Pi Quick-Start
 
@@ -136,11 +136,11 @@ For example:
 "co2": "0",
 "lux": "0",
 "ph": "0",
-"soil_moisture": "0",
+"substrate_moisture": "0",
 "tds": "0"}
 '''
 
-is a valid data format for the arduino to output. It can alo take a command from the RPi to control Neopixel LEDs as the headless status indicator. All valid measurement types can be found in the "sensor_info.json" file that was created in the "configs" folder on install.
+is a valid data format for the arduino to output. It can alo take a command from the RPi to control Neopixel LEDs as the headless status indicator. All valid measurement types can be found in the "sensor_data.json" file that was created in the "configs" folder on install.
 
 You can configure all of this yourself, or follow these instructions and use one of our example programs in the 'minions' folder.
 1. Download the Arduino IDE (on your personal computer) from the [official download site](www.arduino.cc/en/software).
@@ -186,7 +186,7 @@ Finally, edit "feature_toggles.json" in 'configs' to tell the system what capabi
 "lux_sensor": "1",
 "ph_sensor": "0",
 "tds_sensor": "0",
-"soil_moisture_sensor": "0",
+"substrate_moisture_sensor": "0",
 "heater": "1",
 "heat_pid": "1",
 "humidifier": "1",

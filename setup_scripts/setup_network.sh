@@ -47,7 +47,7 @@ rsn_pairwise=CCMP
 " | sudo tee /etc/hostapd/hostapd.conf
 
 echo "Staging config files for network mode switching..."
-sudo cp /etc/dhcpcd.conf /etc/dhcpcd_AP.conf
-sudo cp /etc/dhcpcd_backup.conf /etc/dhcpcd_WiFi.conf
-sudo cp /etc/dnsmasq.conf /etc/dnsmasq_AP.conf
-sudo cp /etc/dnsmasq_backup.conf /etc/dnsmasq_WiFi.conf
+sudo cp /etc/dhcpcd.conf /etc/dhcpcd_access_point.conf
+sudo cp /etc/dhcpcd_backup.conf /etc/dhcpcd_wifi.conf
+sudo cp /etc/dnsmasq.conf /etc/dnsmasq_access_point.conf
+sudo cp /etc/dnsmasq_backup.conf /etc/dnsmasq_wifi.conf

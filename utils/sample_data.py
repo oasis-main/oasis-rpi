@@ -16,7 +16,7 @@ def write_csv(filename, dict): #Depends on: "os" "csv"
 
         headers.append("co2")
 
-        headers.append("soil_moisture")
+        headers.append("substrate_moisture")
 
         headers.append("vpd")
 
@@ -77,7 +77,7 @@ if __name__ == '__main__':
                     "co2": sim_co2,
                     "lux": sim_lux,
                     "ph": sim_ph,
-                    "soil_moisture": sim_moisture,
+                    "substrate_moisture": sim_moisture,
                     "tds": sim_tds}
         
         write_csv("sensor_data.csv",payload)

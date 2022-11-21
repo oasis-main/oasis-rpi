@@ -8,7 +8,6 @@ sys.path.append('/home/pi/oasis-grow')
 import main
 import api
 from core import core
-from networking import connect_oasis
 from networking import db_tools as dbt
 from imaging import camera
 from utils import update, reset_model
@@ -25,10 +24,6 @@ def test_state_handlers():
     core.cs.load_state()
     core.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"), dbt.patch_firebase)
     core.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"), dbt.patch_firebase)
-
-    connect_oasis.slow_cs.load_state()
-    connect_oasis.slow_cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"), dbt.patch_firebase)
-    connect_oasis.slow_cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("0"), dbt.patch_firebase)
 
     camera.cs.load_state()
     camera.cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", str("1"), dbt.patch_firebase)
@@ -57,7 +52,7 @@ def test_listen():
     print("Testing listener...")
     core.smart_listener()
     print("Listening for data from Arduino")
-    print(str(core.sensor_info))
+    print(str(core.sensor_data))
 
 def test_save_csv():
     print("Testing csv writer...")
@@ -65,7 +60,7 @@ def test_save_csv():
     temperature = str(70)
     humidity = str(50)
     water_low = str(0)
-    core.write_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv', {"time": tod, "temperature": temperature, "humidity": humidity, "water_low": water_low})
+    core.write_sensor_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv', {"time": tod, "temperature": temperature, "humidity": humidity, "water_low": water_low})
     reset_model.reset_data_out()
     print("wrote data to csv")
 
@@ -114,17 +109,17 @@ def test_led():
     
     print("connected_running")
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "connected_running", dbt.patch_firebase)
-    cs.check_state("onboard_led", main.launch_onboard_led, main.update_minion_led)
+    cs.check_state("onboard_led", main.start_onboard_led, main.update_minion_led)
     time.sleep(5)
 
     print("error")
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "error", dbt.patch_firebase)
-    cs.check_state("onboard_led", main.update_onboard_led, main.update_minion_led)
+    cs.check_state("onboard_led", None, main.update_minion_led)
     time.sleep(5)
     
     print("offline_idle")
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "led_status", "offline_idle", dbt.patch_firebase)
-    cs.check_state("onboard_led", main.update_onboard_led, main.update_minion_led)
+    cs.check_state("onboard_led", None, main.update_minion_led)
     time.sleep(5)
 
     print("Are the leds behaving as expected?")
