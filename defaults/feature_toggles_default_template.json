@@ -12,7 +12,7 @@
 "lux_sensor": "1",
 "ph_sensor": "1",
 "tds_sensor": "1",
-"substrate_moisture_sensor": "0",
+"substrate_moisture_sensor": "1",
 "save_data": "1",
 
 "camera": "1",

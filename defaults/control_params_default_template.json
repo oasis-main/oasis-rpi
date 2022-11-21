@@ -42,6 +42,11 @@
 "watering_interval": "7",
 "last_watering_run_time": "0", 
 
+"target_ph": "0",
+"target_tds": "0",
+"target_lux": "0",
+"target_vpd": "0",
+
 "time_start_light": "8", 
 "time_stop_light": "20", 
 "lighting_interval": "1", 

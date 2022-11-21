@@ -111,7 +111,7 @@ def get_temperature():
     last_temperature = temperature
     
     try:
-        temperature = float(sensor_data["temperature"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["temperature_offset"])
+        temperature = float(cs.structs["hardware_config"]["sensor_calibration"]["temperature_drift"]) * float(sensor_data["temperature"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["temperature_offset"])
     except Exception:
         print("Got faulty reading for temperature. Discarding...")
         #print(err.full_stack())
@@ -123,7 +123,7 @@ def get_humidity():
     last_humidity = humidity
     
     try:
-        humidity = float(sensor_data["humidity"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["humidity_offset"])
+        humidity = float(cs.structs["hardware_config"]["sensor_calibration"]["humidity_drift"]) * float(sensor_data["humidity"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["humidity_offset"])
     except Exception:
         print("Got faulty reading for relative humidity. Discarding...")
         #print(err.full_stack())
@@ -135,7 +135,7 @@ def get_co2():
     last_co2 = co2
     
     try:
-        co2 = float(sensor_data["co2"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["co2_offset"])
+        co2 = float(cs.structs["hardware_config"]["sensor_calibration"]["co2_drift"]) * float(sensor_data["co2"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["co2_offset"])
     except Exception:
         print("Got faulty reading for co2. Discarding...")
         #print(err.full_stack())
@@ -147,7 +147,7 @@ def get_substrate_moisture():
     last_substrate_moisture = substrate_moisture
     
     try:
-        substrate_moisture = float(sensor_data["substrate_moisture"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["substrate_moisture_offset"])
+        substrate_moisture = float(cs.structs["hardware_config"]["sensor_calibration"]["substrate_moisture_drift"]) * float(sensor_data["substrate_moisture"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["substrate_moisture_offset"])
     except Exception:
         print("Got faulty reading for substrate moisture. Discarding...")
         #print(err.full_stack())
@@ -158,7 +158,7 @@ def get_lux():
     global lux
     
     try:
-        lux = float(sensor_data["lux"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["lux_offset"])
+        lux = float(cs.structs["hardware_config"]["sensor_calibration"]["lux_drift"]) * float(sensor_data["lux"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["lux_offset"])
     except Exception:
         print("Got faulty reading for lux. Discarding...")
         #print(err.full_stack())
@@ -169,7 +169,7 @@ def get_ph():
     global ph
     
     try:
-        ph = float(sensor_data["ph"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["ph_offset"])
+        ph = float(cs.structs["hardware_config"]["sensor_calibration"]["ph_drift"]) * float(sensor_data["ph"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["ph_offset"])
     except Exception:
         print("Got faulty reading for pH. Discarding...")
         #print(err.full_stack())
@@ -180,7 +180,7 @@ def get_tds():
     global tds
     
     try:
-        tds = float(sensor_data["tds"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["tds_offset"])
+        tds = float(cs.structs["hardware_config"]["sensor_calibration"]["tds_drift"]) * float(sensor_data["tds"]) + float(cs.structs["hardware_config"]["sensor_calibration"]["tds_offset"])
     except Exception:
         print("Got faulty reading for total disolved solids. Discarding...")
         #print(err.full_stack())
