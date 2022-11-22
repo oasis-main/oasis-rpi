@@ -82,7 +82,7 @@ if __name__ == '__main__':
         while True:
             cs.load_state()
             if (time.time() - float(cs.structs["hardware_config"]["camera_settings"]["last_picture_time"])) > (float(cs.structs["hardware_config"]["camera_settings"]["picture_frequency"])*60): #convert setting (minutes) to base units (seconds)
-                cs.write_nested_state("/home/pi/oasis-grow/configs/hardware_config", "camera_settings" ,"last_picture_time", str(time.time()), db_writer = dbt.patch_firebase) #we MUST ALWAYS write before sleeping, otherwise the program will double-count the wait period!
+                cs.write_nested_state("/home/pi/oasis-grow/configs/hardware_config.json", "camera_settings" ,"last_picture_time", str(time.time()), db_writer = dbt.patch_firebase) #we MUST ALWAYS write before sleeping, otherwise the program will double-count the wait period!
                 actuate(int(cs.structs["hardware_config"]["camera_settings"]["picture_frequency"]))
             else:
                 time.sleep(1)
