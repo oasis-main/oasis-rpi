@@ -2,7 +2,7 @@ use pyo3::prelude::*;
 use serde_json::*;
 use std::time::Duration;
 use std::thread;
-use subprocess::{Popen,PopenConfig,ExitStatus};
+use subprocess::{Popen,PopenConfig};
 
 //Rust implementation of Lamport's fast mutual exclusion agorithm for system-level resources
 //
