@@ -2,6 +2,7 @@ use pyo3::prelude::*;
 use serde_json::*;
 use std::time::Duration;
 use std::thread;
+use subprocess::{Popen,PopenConfig};
 
 //Rust implementation of Lamport's fast mutual exclusion agorithm for system-level resources
 //
@@ -267,7 +268,8 @@ pub fn lock(lock_filepath: String, resource_key: String, loop_limit: Option<u64>
 
         } else {
             println!("Loop limit expired: lock(). Was not able to acquire {}.", &resource_key);
-            reset_locks(String::from("/home/pi/oasis-grow/configs/locks.json"), None);
+            let default_filepath = String::from("/home/pi/oasis-grow/defaults/locks_default_template.json");
+            reset_locks(lock_filepath,default_filepath);
             return
         }
 
@@ -305,7 +307,6 @@ pub fn unlock(lock_filepath: String, resource_key: String, loop_limit: Option<u6
                     Err(_) => {thread::sleep(Duration::from_millis(100));
                                 continue;} // If read failed, continue to next iteration
                 }
-
             };
             
             match lock_obj { //examine the parse attempt
@@ -331,85 +332,30 @@ pub fn unlock(lock_filepath: String, resource_key: String, loop_limit: Option<u6
                             continue; // If parse failed, continue to next iteration
                 }
             }
-        
             
-        
         } else {
             println!("Loop limit expired: unlock(). Was not able to free {}", &resource_key);
-            reset_locks(String::from("/home/pi/oasis-grow/configs/locks.json"), None);
+            let default_filepath = String::from("/home/pi/oasis-grow/defaults/locks_default_template.json");
+            reset_locks(lock_filepath,default_filepath);
+            return
         }
-    
-        thread::sleep(Duration::from_millis(500)); //delay before the next iteration to give us some breathing room. rust loops fast
 
     }
+    return
 }
 
 /// reset_locks(lock_filepath, /)
 /// --
 ///
-/// Reset all locks
+/// Reset all locks:  This fails because the reset cannot load a valid json (too safe, go figure...)
 #[pyfunction]
-pub fn reset_locks(lock_filepath: String,loop_limit: Option<u64>) {
-    
-    let limit = if let Some(i) = loop_limit {i} else {1000};
+pub fn reset_locks(lock_filepath: String, default_filepath: String) {
+    let cp = String::from("cp");
+    let arg_list= vec!(&cp, &default_filepath, &lock_filepath);
+    let mut sub_proc = Popen::create(&arg_list[..], PopenConfig::default()).unwrap();
+    sub_proc.detach();
 
-    for x in 0..limit+1{ //start attempting to load & write the lock
-        if x < limit {
-
-            //load the lock file into json
-            let lock_obj = {
-                // Load the first file into a string.
-                let text = std::fs::read_to_string(&lock_filepath);
-
-                match text {
-                    Ok(json) => {// Parse the string into a dynamically-typed JSON structure.
-                        serde_json::from_str::<Value>(&json)},
-                    Err(_) => {thread::sleep(Duration::from_millis(100));
-                                continue;}
-                }
-            };
-            
-            match lock_obj {
-                
-                Ok(mut locks) => {//lock this resource in the JSON structure
-                    
-                    // Get the number of elements in the lock object.
-                    let elements = {
-                        locks.as_object_mut().unwrap()
-                    };
-
-                    for element in elements{
-                        //reset all elements in the JSON structure
-                        *element.1 = Value::Number(Number::from(0));  
-                    }
-
-                    let contents = serde_json::to_string_pretty(&locks).unwrap();
-
-                    // Save the JSON structure into the other file.
-                    match std::fs::write(&lock_filepath, contents) {
-                        Ok(()) => break,
-                        Err(_) => {thread::sleep(Duration::from_millis(100));
-                                    continue;}
-                    }
-                },
-
-                Err(_) => {
-                    thread::sleep(Duration::from_millis(100));
-                    continue;
-                }
-            }
-
-        } else {
-            println!("Failed to reset locks.")
-        }
-
-        thread::sleep(Duration::from_millis(500)); //delay before the next iteration to give us some breathing room. rust loops fast
-
-    }
-
-        
 }
-
 /// create_lock(lock_filepath, resource_key, /)
 /// --
 ///
