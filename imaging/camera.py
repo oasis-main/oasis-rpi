@@ -63,7 +63,7 @@ def actuate(interval: int, nosleep = False): #interval is amount of time between
 
         if cs.structs["device_state"]["connected"] == "1":
             #send new image to firebase
-            send_image('/home/pi/oasis-grow/data_out/image.jpg')
+            send_image('/home/pi/oasis-grow/data_out/image.jpg', image_filename="image.jpg")
 
         if nosleep == True:
             return
