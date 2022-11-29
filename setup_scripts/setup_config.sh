@@ -28,3 +28,6 @@ cp /home/pi/oasis-grow/defaults/signals_default_template.json /home/pi/oasis-gro
 #Deprecated
 #echo "Creating placeholder image..."
 #cp /home/pi/oasis-grow/defaults/default_placeholder_image.jpg /home/pi/oasis-grow/data_out/image.jpg
+
+#Permissions for writing
+sudo chmod 777 -R /home/pi/oasis-grow/data_out
