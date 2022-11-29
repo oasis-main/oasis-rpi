@@ -92,6 +92,7 @@ if __name__ == '__main__':
         print("Camera was interrupted.")
     except TypeError:
         print("Tried do image stuff without an image. Is your camera properly set up?")
+        print(err.full_stack())
         time.sleep(10)
     except Exception:
         print("Camera encountered an error!")
