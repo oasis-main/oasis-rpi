@@ -6,7 +6,7 @@ import sys
 sys.path.append('/home/pi/oasis-grow')
 
 #concurrency
-import rusty_pipes
+
 from utils import concurrent_state as cs
 
 #networking
@@ -16,7 +16,6 @@ from networking import db_tools as dbt
 import csv
 
 #housekeeping
-from utils import error_handler as err
 from utils import reset_model
 
 #check if the device is waiting to be added to firebase, if it is then add it, otherwise skip

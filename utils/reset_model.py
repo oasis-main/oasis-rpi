@@ -95,16 +95,14 @@ def reset_image_feed():
     
 #function that runs all the other functions
 def reset_all():
-    reset_device_state()
-    reset_feature_toggles()
-    reset_control_params()
-    reset_access_config()
-    reset_hardware_config()
-    reset_feature_toggles()
-    reset_data_out()
-    reset_sensor_data()
-    reset_power_data()
-    reset_image_feed()
+    clear_data_dir = rusty_pipes.Open(["rm", "-rf", "/home/pi/oasis-grow/data_out"],"rm data")
+    clear_data_dir.wait()
+
+    clear_configs_dir = rusty_pipes.Open(["rm", "-rf", "/home/pi/oasis-grow/data_out"],"rm configs")
+    clear_configs_dir.wait()
+
+    clear_configs_dir = rusty_pipes.Open([".", "/home/pi/oasis-grow/setup_scripts"], "reset_configs")
+    clear_configs_dir.wait()
 
 if __name__ == '__main__':
     reset_all()

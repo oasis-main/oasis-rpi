@@ -1,5 +1,4 @@
 #File for all database functions
-import os
 import sys
 
 #set proper path for modules
@@ -31,30 +30,6 @@ def initialize_user(RefreshToken):
 
     return user, db, storage
 
-#modifies a firebase variable, now asynchroous
-def patch_firebase(access_config,field,value): #Depends on: load_state(),'requests','json'; Modifies: database['field'], state variables
-    data = orjson.dumps({field: value})
-    url = "https://oasis-state-af548-default-rtdb.firebaseio.com/"+str(access_config["local_id"])+"/"+str(access_config["device_name"])+".json?auth="+str(access_config["id_token"])
-    result = requests.patch(url,data)
-    return result
-
-def firebase_add_device(access_config,data): #Depends on: load_state(),'requests','json'; Modifies: database['field'], state variables
-    data = orjson.dumps(data)
-    url = "https://oasis-state-af548-default-rtdb.firebaseio.com/"+str(access_config["local_id"])+".json?auth="+str(access_config["id_token"])
-    result = requests.patch(url,data)
-    return result
-
-#modifies a firebase variable, now asynchroous
-def patch_firebase_dict(access_config, data): #Depends on: load_state(),'requests','json'; Modifies: database['field'], state variables
-    data = orjson.dumps(data)
-    url = "https://oasis-state-af548-default-rtdb.firebaseio.com/"+str(access_config["local_id"])+"/"+str(access_config["device_name"])+".json?auth="+str(access_config["id_token"])
-    result = requests.patch(url,data)
-    return result
-
-#stores a file in firebase storage
-def store_file(user, storage, path, device_name, filename):
-    storage.child(user['userId'] + "/" + device_name + "/" + filename).put(path, user['idToken'])
-
 #gets new refresh token from firebase
 def get_refresh_token(wak,email,password): #Depends on: 'requests', 'json'; Modifies: None
     print("Requesting refresh token...")
@@ -81,3 +56,28 @@ def fetch_device_data(access_config):
     result = requests.get(url)
     cloud_data = orjson.loads(result.content)
     return cloud_data
+
+#modifies a firebase variable, now asynchroous
+def patch_firebase(access_config,field,value): #Depends on: load_state(),'requests','json'; Modifies: database['field'], state variables
+    data = orjson.dumps({field: value})
+    url = "https://oasis-state-af548-default-rtdb.firebaseio.com/"+str(access_config["local_id"])+"/"+str(access_config["device_name"])+".json?auth="+str(access_config["id_token"])
+    result = requests.patch(url,data)
+    return result
+
+def firebase_add_device(access_config,data): #Depends on: load_state(),'requests','json'; Modifies: database['field'], state variables
+    data = orjson.dumps(data)
+    url = "https://oasis-state-af548-default-rtdb.firebaseio.com/"+str(access_config["local_id"])+".json?auth="+str(access_config["id_token"])
+    result = requests.patch(url,data)
+    return result
+
+#modifies a firebase variable, now asynchroous
+def patch_firebase_dict(access_config, data): #Depends on: load_state(),'requests','json'; Modifies: database['field'], state variables
+    data = orjson.dumps(data)
+    url = "https://oasis-state-af548-default-rtdb.firebaseio.com/"+str(access_config["local_id"])+"/"+str(access_config["device_name"])+".json?auth="+str(access_config["id_token"])
+    result = requests.patch(url,data)
+    return result
+
+#stores a file in firebase storage
+def store_file(user, storage, path, device_name, filename):
+    storage.child(user['userId'] + "/" + device_name + "/" + filename).put(path, user['idToken'])
+
