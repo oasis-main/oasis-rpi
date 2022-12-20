@@ -38,10 +38,12 @@ echo "Installing Rust Modules..."
 cd ..
 cd /home/pi/oasis-grow/rusty_pins
 cargo build
+maturin develop
 maturin build --release
 cd ..
 cd /home/pi/oasis-grow/rusty_pipes
 cargo build
+maturin develop
 maturin build --release
 
 echo "Installing Python3 Root Dependencies for OS..."
