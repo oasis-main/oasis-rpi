@@ -201,8 +201,9 @@ def update_power_tracking():
         
         total = 0.00 #set kwh total to 0
         for kwh_log in payload: #loop through readings
+            payload[key] = round(payload[key],4)
             total = total + float(payload[kwh_log]) #increment with forward recursion
-        kwh_total = {"total_kwh": str(total)}
+        kwh_total = {"total_kwh": str(round(total,4))}
         payload.update(kwh_total)
 
         now = datetime.datetime.now()
