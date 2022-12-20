@@ -32,42 +32,51 @@ def enable_wifi(): #we're going to use subprocess here because the regular one u
 
 #update wpa_supplicant.conf
 def modWiFiConfig(SSID, password):
-    config_lines = [
-    'ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev',
-    'update_config=1',
-    'country=US',
-    '\n',
-    'network={',
-    '\tssid="{}"'.format(SSID),
-    '\tpsk="{}"'.format(password),
-    '\tkey_mgmt=WPA-PSK',
-    '}'
-    ]
+    if (SSID == "") or (password == ""):
+        print("No wifi creds given, not touching the config file.")
+        pass
+    else:
+        config_lines = [
+        'ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev',
+        'update_config=1',
+        'country=US',
+        '\n',
+        'network={',
+        '\tssid="{}"'.format(SSID),
+        '\tpsk="{}"'.format(password),
+        '\tkey_mgmt=WPA-PSK',
+        '}'
+        ]
 
-    config = '\n'.join(config_lines)
-    #print(config)
+        config = '\n'.join(config_lines)
+        #print(config)
 
-    with open("/etc/wpa_supplicant/wpa_supplicant.conf", "r+") as w:
-        w.seek(0)
-        w.write(config)
-        w.truncate()
+        with open("/etc/wpa_supplicant/wpa_supplicant.conf", "r+") as w:
+            w.seek(0)
+            w.write(config)
+            w.truncate()
 
-    print("WiFi configs added")
+        print("WiFi configs added")
 
 #update access_config.json
 def modAccessConfig(name, e, p):
-    slow_cs.structs["access_config"] = {}
-    slow_cs.structs["access_config"]["device_name"] = str(name)
-    slow_cs.structs["access_config"]["wak"] = "AIzaSyBPuJwU--0ZlvsbDV9LmKJdYIljwNwzmVk"
-    slow_cs.structs["access_config"]["e"] = str(e)
-    slow_cs.structs["access_config"]["p"] = str(p)
-    slow_cs.structs["access_config"]["refresh_token"] = " "
-    slow_cs.structs["access_config"]["id_token"] = " "
-    slow_cs.structs["access_config"]["local_id"] = " "
+    if (name == "") or (e == "") or (p == ""):
+        print("No access creds given, not touching the config file.")
+        pass
+    else:
+        slow_cs.structs["access_config"] = {}
+        slow_cs.structs["access_config"]["device_name"] = str(name)
+        slow_cs.structs["access_config"]["wak"] = "AIzaSyBPuJwU--0ZlvsbDV9LmKJdYIljwNwzmVk"
+        slow_cs.structs["access_config"]["e"] = str(e)
+        slow_cs.structs["access_config"]["p"] = str(p)
+        slow_cs.structs["access_config"]["refresh_token"] = ""
+        slow_cs.structs["access_config"]["id_token"] = ""
+        slow_cs.structs["access_config"]["local_id"] = ""
 
-    slow_cs.write_dict("/home/pi/oasis-grow/configs/access_config.json", slow_cs.structs["access_config"], db_writer = None)
+        slow_cs.write_dict("/home/pi/oasis-grow/configs/access_config.json", slow_cs.structs["access_config"], db_writer = None)
 
-    print("Access configs added")
+        print("Access configs added")
+
 
 def save_creds_exit(email, password, wifi_name, wifi_pass, device_name, cmd = False):
     
@@ -80,10 +89,12 @@ def save_creds_exit(email, password, wifi_name, wifi_pass, device_name, cmd = Fa
     modAccessConfig(device_name, email, password)
     print("Access creds added")
     
-    st.success("Added WiFi & access credentials to device. Please reconnect computer to internet, leave this page, and log back into https://dashboard.oasis-gardens.io. If successful, you will see the device name appear under 'Your Fleet.'")
-
-    #set new_device to "1" before rebooting
-    slow_cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "new_device", "1", db_writer = None)
+    if (email == "") or (password == "") or (wifi_name == "") or (wifi_pass == "") or ( device_name == ""):
+        st.warning("You missed some information! Wait until the device reboots, place it back in access point mode, and try again.")
+    else:
+        st.success("Added WiFi & access credentials to device. Please reconnect computer to internet, leave this page, and log back into https://dashboard.oasis-gardens.io. If successful, you will see the device name appear under 'Your Fleet.'")
+        #set new_device to "1" before rebooting
+        slow_cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "new_device", "1", db_writer = None)
 
     if cmd == False: #pass this argument as true to save creds without rebooting
         #stand up wifi and reboot
@@ -91,7 +102,7 @@ def save_creds_exit(email, password, wifi_name, wifi_pass, device_name, cmd = Fa
 
 if __name__ == '__main__':
 
-        default = ""
+        default = "" #empty string
 
         st.title('Oasis Device Setup')
 
