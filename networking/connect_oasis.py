@@ -62,7 +62,7 @@ def modWiFiConfig(SSID, password):
 def modAccessConfig(name, e, p):
     if (name == "") or (e == "") or (p == ""):
         print("No access creds given, not touching the config file.")
-        pass
+        return
     else:
         slow_cs.structs["access_config"] = {}
         slow_cs.structs["access_config"]["device_name"] = str(name)
@@ -91,6 +91,7 @@ def save_creds_exit(email, password, wifi_name, wifi_pass, device_name, cmd = Fa
     
     if (email == "") or (password == "") or (wifi_name == "") or (wifi_pass == "") or ( device_name == ""):
         st.warning("You missed some information! Wait until the device reboots, place it back in access point mode, and try again.")
+        return
     else:
         st.success("Added WiFi & access credentials to device. Please reconnect computer to internet, leave this page, and log back into https://dashboard.oasis-gardens.io. If successful, you will see the device name appear under 'Your Fleet.'")
         #set new_device to "1" before rebooting
