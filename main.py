@@ -200,9 +200,12 @@ def update_power_tracking():
         payload = cs.structs["power_data"]
         
         total = 0.00 #set kwh total to 0
+        
+        #Clean and sum it up
         for kwh_log in payload: #loop through values in the dictionary
             payload[kwh_log] = round(payload[kwh_log],4) #round the values
             total = total + float(payload[kwh_log]) #add each one to the total
+        
         kwh_total = {"total_kwh": str(round(total,4))} #output the total kwh
         payload.update(kwh_total) #
 
@@ -214,7 +217,6 @@ def update_power_tracking():
 
         #desn't touch the cloud
         firebase_manager.write_power_csv('/home/pi/oasis-grow/data_out/resource_use/power_data.csv', payload)
-        
 
         if cs.structs["device_state"]["connected"] == "1":
             dbt.patch_firebase_dict(cs.structs["access_config"], kwh_total)
