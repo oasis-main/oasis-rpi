@@ -203,11 +203,13 @@ def update_power_tracking():
         
         #Clean and sum it up
         for kwh_log in payload: #loop through values in the dictionary
-            payload[kwh_log] = round(payload[kwh_log],4) #round the values
-            total = total + float(payload[kwh_log]) #add each one to the total
+            payload[kwh_log] = round(float(payload[kwh_log]),4) #round the values
+            total = total + payload[kwh_log] #add each one to the total
         
-        kwh_total = {"total_kwh": str(round(total,4))} #output the total kwh
-        payload.update(kwh_total) #
+        kwh_total = {"total_kwh": round(total,4)} #output the total kwh
+        payload.update(kwh_total)
+        for kwh_log in payload:
+            payload[kwh_log] = str(payload[kwh_log])
 
         now = datetime.datetime.now()
         format = '%Y-%m-%d %H:%M:%S.%f'
