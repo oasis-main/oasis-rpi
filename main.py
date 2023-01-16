@@ -200,11 +200,11 @@ def update_power_tracking():
         payload = cs.structs["power_data"]
         
         total = 0.00 #set kwh total to 0
-        for kwh_log in payload: #loop through readings
-            payload[key] = round(payload[key],4)
-            total = total + float(payload[kwh_log]) #increment with forward recursion
-        kwh_total = {"total_kwh": str(round(total,4))}
-        payload.update(kwh_total)
+        for kwh_log in payload: #loop through values in the dictionary
+            payload[kwh_log] = round(payload[kwh_log],4) #round the values
+            total = total + float(payload[kwh_log]) #add each one to the total
+        kwh_total = {"total_kwh": str(round(total,4))} #output the total kwh
+        payload.update(kwh_total) #
 
         now = datetime.datetime.now()
         format = '%Y-%m-%d %H:%M:%S.%f'

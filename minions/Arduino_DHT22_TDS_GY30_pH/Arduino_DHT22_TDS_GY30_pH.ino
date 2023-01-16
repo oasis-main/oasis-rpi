@@ -1,6 +1,7 @@
-#include <Wire.h>
-#include <BH1750.h>
-#include <DHT.h>
+//dependencies
+#include <Wire.h> //i2c
+#include <BH1750.h> //lux
+#include <DHT.h> //temp & hum
 
 //temperature & humidity intiialize sensor
 #define DHTTYPE DHT22   // DHT 22  (AM2302)
@@ -72,6 +73,7 @@ void loop() {
  double air_temperature_c = dht.readTemperature();
  double relative_humidity = dht.readHumidity();
 
+//lux levels read sensor values
  double lumen_per_sqm = lightMeter.readLightLevel();
  
  //ph read analog pin for ph 10 times
@@ -128,7 +130,6 @@ void loop() {
     }
   }
 
- 
  //save data to known names
  double temperature = air_temperature_c;
  double humidity = relative_humidity;
