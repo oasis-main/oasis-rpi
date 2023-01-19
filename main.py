@@ -168,7 +168,6 @@ def stop_onboard_led():
 def update_minion_led(): #Depends on: , 'datetime'; Modifies: ser_out
     global minion
     
-
     #write "off" or write status depending on ToD + settings
     now = datetime.datetime.now()
     HoD = now.hour
@@ -208,6 +207,7 @@ def update_power_tracking():
         
         kwh_total = {"total_kwh": round(total,4)} #output the total kwh
         payload.update(kwh_total)
+        
         for kwh_log in payload:
             payload[kwh_log] = str(payload[kwh_log])
 
@@ -221,7 +221,7 @@ def update_power_tracking():
         firebase_manager.write_power_csv('/home/pi/oasis-grow/data_out/resource_use/power_data.csv', payload)
 
         if cs.structs["device_state"]["connected"] == "1":
-            dbt.patch_firebase_dict(cs.structs["access_config"], kwh_total)
+            dbt.patch_firebase_dict(cs.structs["access_config"], payload)
             dbt.patch_firebase_dict(cs.structs["access_config"], timestamp)
             firebase_manager.send_csv('/home/pi/oasis-grow/data_out/resource_use/power_data.csv', "power_data.csv")
             return
