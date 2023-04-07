@@ -198,11 +198,11 @@ def connect_to_firebase(): #depends on: cs.load_state(), cs.write_state(), dbt.p
             #Main setup always sets 'connected' == "0"
             cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"connected","1", db_writer = dbt.patch_firebase)
             #update the device state to "connected"
-            print("Device is connected over HTTPS to the Oasis Network") 
+            print("Device is connected over HTTPS to the Oasis Network")
+            return True 
         else:
             delete_device(exists=False)
-
-        return True
+            return False
 
     except Exception as e:
         #print(err.full_stack()) #display error

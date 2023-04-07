@@ -301,12 +301,14 @@ def main_setup():
                                                         #should block if so
 
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = None) #set to 0 so listener launches
-    firebase_manager.connect_to_firebase() #listener will not be re-called unless a connection fails at some point
-    if cs.structs["hardware_config"]["network_settings"]["must_connect"] == "1":
-        cs.check_state("connected", start_listener, wifi.enable_access_point()) #if connected, listen to database, otherwise reboot into access point mode to get new credentials
-        time.sleep(60)
+    connected = firebase_manager.connect_to_firebase() #listener will not be re-called unless a connection fails at some point
+    if connected:
+        start_listener() #if connected, listen to database
     else:
-        cs.check_state("connected", start_listener) #if connected, listen to database, otherwise do nothing and proceed
+        if cs.structs["hardware_config"]["network_settings"]["must_connect"] == "1":
+            wifi.enable_access_point() #reboot into access point mode to get new credentials
+        else:
+            pass #or just continue if offline operation is allowed
 
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","1", db_writer = dbt.patch_firebase)
 
