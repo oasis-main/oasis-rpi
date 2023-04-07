@@ -90,8 +90,8 @@ def listen_active_sensors(): #Depends on 'serial', start_serial()
         print("Primary sensor minion not connected.") #then set the mapping from sensor reading -> env variable throught globals
         return 
     try:
-        #print(minion.ser_in.readline()) #must pass a valid json in byte form
-        #print(type(minion.ser_in.readline())) #multiple minions can be used to assemble different sensor data       
+        print(minion.ser_in.readline()) #must pass a valid json in byte form
+        print(type(minion.ser_in.readline())) #multiple minions can be used to assemble different sensor data       
         sensor_data = orjson.loads(minion.ser_in.readline().strip(b'\n').strip(b'\r'))
         for key in sensor_data:
             if key == "water_low": #this is a bool represented as int, so no rounting required
@@ -103,7 +103,7 @@ def listen_active_sensors(): #Depends on 'serial', start_serial()
         return
     except Exception:
         print("Waiting on a valid sensor reading...")
-        #print(err.full_stack()) #uncomment to debug listener
+        print(err.full_stack()) #uncomment to debug listener
         return
 
 def get_temperature():
@@ -713,10 +713,15 @@ def main_loop():
         print("Begin environmental data collection and control")
         print("-----------------------------------------------------")
         while True:
+            print("1")
             update_derivative_banks() #this occurs in near-realtime, as opposed to storage and exchange every 5 min
+            print("2")
             cs.load_state() 
+            print("3")
             listen_active_sensors()
+            print("4")
             collect_environmental_data()
+            print("5")
             update_pid_controllers()
             regulate_active_equipment()
             console_log()
