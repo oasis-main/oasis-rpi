@@ -71,10 +71,8 @@ def launch_access_point():
                 wifi.enable_wifi()
                 time.sleep(1)
 
-def connect_firebase(sync = False):
+def async_connect_firebase():
     connect_firebase = rusty_pipes.Open(["python3", "/home/pi/oasis-grow/networking/firebase_manager.py"],"firebase_manager")
-    if sync:
-        connect_firebase.wait()
 
 def start_listener():
     global listener
@@ -303,8 +301,11 @@ def main_setup():
                                                         #should block if so
 
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = None) #set to 0 so listener launches
-    connect_firebase(sync = True) #listener will not be re-called unless a connection fails at some point
-    cs.check_state("connected", start_listener) #if connected, listen to database
+    firebase_manager.connect_to_firebase() #listener will not be re-called unless a connection fails at some point
+    if cs.structs["hardware_config"]["network_settings"]["must_connect"] == "1":
+        cs.check_state("connected", start_listener, wifi.enable_access_point()) #if connected, listen to database, otherwise reboot into access point mode to get new credentials
+    else:
+        cs.check_state("connected", start_listener) #if connected, listen to database, otherwise do nothing and proceed
 
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","1", db_writer = dbt.patch_firebase)
 
@@ -332,7 +333,7 @@ def main_loop(led_timer, connect_timer, reboot_timer):
                 led_timer = time.time() #reset the timer
 
             if time.time() - connect_timer > 900: #check connection every 15 min (900s)
-                connect_firebase()
+                async_connect_firebase()
                 connect_timer = time.time()
 
             if time.time() - float(cs.structs["control_params"]["last_power_log_time"]) > 3600: #send last hour power data to firebase

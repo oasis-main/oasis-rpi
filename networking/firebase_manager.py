@@ -202,12 +202,14 @@ def connect_to_firebase(): #depends on: cs.load_state(), cs.write_state(), dbt.p
         else:
             delete_device(exists=False)
 
+        return True
 
     except Exception as e:
         #print(err.full_stack()) #display error
         #write state as not connected
         cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = dbt.patch_firebase)
         print("Could not establish an HTTPS connection to Oasis Network")
+        return False
 
 if __name__ == "__main__":
     connect_to_firebase()
