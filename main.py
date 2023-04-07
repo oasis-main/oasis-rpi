@@ -307,6 +307,7 @@ def main_setup():
     else:
         if cs.structs["hardware_config"]["network_settings"]["must_connect"] == "1":
             wifi.enable_access_point() #reboot into access point mode to get new credentials
+            time.sleep(60)
         else:
             pass #or just continue if offline operation is allowed
 
