@@ -304,6 +304,7 @@ def main_setup():
     firebase_manager.connect_to_firebase() #listener will not be re-called unless a connection fails at some point
     if cs.structs["hardware_config"]["network_settings"]["must_connect"] == "1":
         cs.check_state("connected", start_listener, wifi.enable_access_point()) #if connected, listen to database, otherwise reboot into access point mode to get new credentials
+        time.sleep(60)
     else:
         cs.check_state("connected", start_listener) #if connected, listen to database, otherwise do nothing and proceed
 

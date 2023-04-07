@@ -403,7 +403,6 @@ def write_nested_dict(path: str, group: str, dictionary: dict, db_writer = None,
 #Higher-order device_state checker with reaction and alternative, no params
 def check_state(state, function, alt_function = None):# = None, args = None, kwargs = None, alt_args = None, alt_kwargs = None):
     load_state()
-    
     if structs["device_state"][state] == "1":
         function()
     else:

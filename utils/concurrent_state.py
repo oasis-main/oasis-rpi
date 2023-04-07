@@ -285,6 +285,7 @@ def write_nested_dict(path: str, group: str, dictionary: dict, db_writer = None,
 
 #Higher-order device_state checker with reaction and alternative, no params
 def check_state(value, function = None, alt_function = None):# = None, args = None, kwargs = None, alt_args = None, alt_kwargs = None):
+    load_state()
     if (function is not None) and (structs["device_state"][value] == "1"):
         function()
     else:
