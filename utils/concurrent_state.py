@@ -8,7 +8,6 @@
 ##detect_db_events(offline only)
 
 #import modules
-print("Let's")
 import os
 import sys
 import time
@@ -17,11 +16,9 @@ import time
 sys.path.append('/home/pi/oasis-grow')
 
 #rust modules
-print("see")
 import orjson #fast data interchange / and json parsing (read and write byte file objects)
-print("where")
 import rusty_pipes #rust concurrency modules (fast mutual exclusion for arbitrarily named resources) 
-print("the problem is")
+
 #oasis utilities
 from utils import reset_model
 from utils import error_handler as err
