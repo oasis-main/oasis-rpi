@@ -1,40 +1,38 @@
 #This is the program root, main.py. Run this file from the command line, in cron, through systemd, or in rc.local
 
-print("import shell modules")
+#import shell modules
 import sys
 
-print("set proper path for modules")
+#set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
 sys.path.append('/home/pi/oasis-grow/core')
 sys.path.append('/home/pi/oasis-grow/utils')
 
-print("time")
+#time
 import time
 import datetime
 
-print("concurrency")
-print('rust pipes:')
+#concurrency
 import rusty_pipes
-print('concurrent state')
 from utils import concurrent_state as cs
 
-print("connectivity")
+#connectivity
 from networking import db_tools as dbt
 from networking import firebase_manager
 from networking import wifi
 
-print("hardware")
+#hardware
 import rusty_pins
 from utils import physics
 from peripherals import buttons
 from peripherals import relays
 from peripherals import microcontroller_manager as minion
 
-print("housekeeping")
+#housekeeping
 from utils import reset_model
 from utils import error_handler as err
 
-print("declare subprocess management variables")
+#declare subprocess management variables
 core = None
 led = None
 listener = None
