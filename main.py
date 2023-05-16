@@ -13,7 +13,9 @@ import time
 import datetime
 
 print("concurrency")
+print('rust pipes:')
 import rusty_pipes
+print('concurrent state')
 from utils import concurrent_state as cs
 
 print("connectivity")
