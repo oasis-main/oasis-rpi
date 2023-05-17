@@ -73,7 +73,7 @@ def actuate(interval: int, nosleep = False): #interval is amount of time between
 
         print("New Height:" + str(new_height))
         print("New Width:" + str(new_width))
-        resized_image = noir_ndvi.cv2.resize(image, (new_width, new_height), interpolation=noir_ndvi.INTER_AREA)
+        resized_image = noir_ndvi.cv2.resize(image, (new_width, new_height), interpolation=noir_ndvi.cv2.INTER_AREA)
         noir_ndvi.cv2.im_write('/home/pi/oasis-grow/data_out/image.jpg' ,resized_image)
 
         #Get NDVI if active
