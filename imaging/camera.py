@@ -55,12 +55,36 @@ def actuate(interval: int, nosleep = False): #interval is amount of time between
     
     if exit_status == 0:
 
+        #Load, resize, and save image:
+        image = noir_ndvi.cv2.imread('/home/pi/oasis-grow/data_out/image.jpg')
+        height, width = image.shape[:2]
+        print("Original Height:" + str(height))
+        print("Original Width:" + str(width))
+        
+        max_dimension = 2500
+        existing_aspect_ratio = int(width) / int(height)
+
+        if width > height:
+            new_width = max_dimension
+            new_height = int(new_width / existing_aspect_ratio)
+        else:
+            new_height = max_dimension
+            new_width = int(new_height * existing_aspect_ratio)
+
+        print("New Height:" + str(new_height))
+        print("New Width:" + str(new_width))
+        resized_image = noir_ndvi.cv2.resize(image, (new_width, new_height), interpolation=noir_ndvi.INTER_AREA)
+        noir_ndvi.cv2.im_write('/home/pi/oasis-grow/data_out/image.jpg' ,resized_image)
+
+        #Get NDVI if active
         if cs.structs["feature_toggles"]["ndvi"] == "1":
             noir_ndvi.convert_image('/home/pi/oasis-grow/data_out/image.jpg')
 
+        #Save to feed if active
         if cs.structs["feature_toggles"]["save_images"] == "1":
             save_to_feed('/home/pi/oasis-grow/data_out/image.jpg')
 
+        #Sent to cloud if connected
         if cs.structs["device_state"]["connected"] == "1":
             #send new image to firebase
             send_image('/home/pi/oasis-grow/data_out/image.jpg', image_filename="image.jpg")

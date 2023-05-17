@@ -43,7 +43,6 @@ def contrast_stretch(im):
 #calculate NDVI
 def calc_ndvi(image):
     print("Calculating NDVI...")
-    
     b, g, r = cv2.split(image)
     bottom = (r.astype(float) + b.astype(float))
     bottom[bottom==0] = 0.01
@@ -57,7 +56,7 @@ def convert_image(image_path):
 
     contrasted = contrast_stretch(original) #apply contrast to the image
     cv2.imwrite('/home/pi/oasis-grow/data_out/contrasted.jpg', contrasted) #save contrasted image
-    
+
     ndvi = calc_ndvi(contrasted) #calculate image ndvi
     ndvi_contrasted = contrast_stretch(ndvi) #apply stretch the contrast a second time
     cv2.imwrite('/home/pi/oasis-grow/data_out/ndvi.jpg', ndvi_contrasted) #save ndvi image

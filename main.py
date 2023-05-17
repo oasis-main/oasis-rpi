@@ -329,8 +329,7 @@ def main_loop(led_timer, connect_timer, reboot_timer):
 
             if (time.time() - reboot_timer) > (3600*24):
                 reboot_timer = time.time()
-                reboot = rusty_pipes.Open(["sudo", "reboot"], "daily_reboot")
-                reboot.wait()
+                wifi.enable_wifi()
 
             if (time.time() - led_timer > 5) and (cs.structs["feature_toggles"]["onboard_led"] == "0"): #send data to LED every 5s
                 update_minion_led()
