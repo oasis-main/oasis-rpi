@@ -44,9 +44,9 @@ def contrast_stretch(im):
 def calc_ndvi(image):
     print("Calculating NDVI...")
     b, g, r = cv2.split(image)
-    bottom = (r.astype(float) + b.astype(float))
-    bottom[bottom==0] = 0.01
-    ndvi = (r.astype(float) - b) / bottom # THIS IS THE CHANGED LINE
+    bottom = r.astype(float) + b.astype(float)
+    np.seterr(divide='ignore', invalid='ignore')  # Ignore division by zero warning
+    ndvi = np.divide(np.subtract(r, b), bottom, out=np.zeros_like(bottom), where=bottom!=0)
     return ndvi
 
 #take the raw file from 
