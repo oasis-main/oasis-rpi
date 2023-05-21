@@ -1,6 +1,8 @@
 pyserial
+protobuf==3.20.*
+jwt
 python-jwt>=3.3.4
-requests>=2.20.0
+requests<=2.20.0
 Pyrebase
 pickle5
 Pillow

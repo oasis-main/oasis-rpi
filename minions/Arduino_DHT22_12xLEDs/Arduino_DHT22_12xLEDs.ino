@@ -140,7 +140,7 @@ void loop() {
     }
   }
 
-  //Serial.println(led_mode);  
+  Serial.println(led_mode);  
   
   delay(20);
 }
