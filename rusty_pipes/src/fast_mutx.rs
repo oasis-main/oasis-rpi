@@ -36,7 +36,7 @@ use subprocess::{Popen,PopenConfig};
 //then j will either enter the second then clause or else execute the critical section and reset y to zero before i finishes executing the delay statement. 
 //  (This delay is allowed because it is executed only if there is contention.)
 
-/// lock(lock_filepath, resource_key, /)
+/// Lock
 /// --
 ///
 /// Obtain lock for a resource
@@ -279,7 +279,7 @@ pub fn lock(lock_filepath: String, resource_key: String, loop_limit: Option<u64>
     return
 }
 
-/// unlock(lock_filepath, resource_key, /)
+/// Unlock
 /// --
 ///
 /// Obtain lock for a resource, should fail if lock is not held
@@ -344,7 +344,7 @@ pub fn unlock(lock_filepath: String, resource_key: String, loop_limit: Option<u6
     return
 }
 
-/// reset_locks(lock_filepath, /)
+/// reset_locks
 /// --
 ///
 /// Reset all locks:  This fails because the reset cannot load a valid json (too safe, go figure...)
@@ -356,7 +356,7 @@ pub fn reset_locks(lock_filepath: String, default_filepath: String) {
     sub_proc.detach();
 
 }
-/// create_lock(lock_filepath, resource_key, /)
+/// create_lock
 /// --
 ///
 /// Obtain lock for a resource

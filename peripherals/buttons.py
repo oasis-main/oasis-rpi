@@ -6,6 +6,8 @@ import RPi.GPIO as GPIO
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
 
+from utils import concurrent_state as cs
+
 #declare UI variables
 start_stop_button = None #holds GPIO object for starting and stopping core process
 connect_internet_button = None #holds GPIO object for connecting device to internet
@@ -21,9 +23,9 @@ def setup_button_interface(hardware_config): #depends on: , 'RPi.GPIO'; modifies
     GPIO.setmode(GPIO.BCM)
 
     #set button pins
-    start_stop_button = int(hardware_config["button_gpio_map"]["start_stop_button"])
-    connect_internet_button = int(hardware_config["button_gpio_map"]["connect_internet_button"])
-    action_button = int(hardware_config["button_gpio_map"]["action_button"])
+    start_stop_button = int(cs.hardware_config["button_gpio_map"]["start_stop_button"])
+    connect_internet_button = int(cs.hardware_config["button_gpio_map"]["connect_internet_button"])
+    action_button = int(cs.hardware_config["button_gpio_map"]["action_button"])
 
     #Setup buttons
     GPIO.setup(start_stop_button, GPIO.IN, pull_up_down=GPIO.PUD_UP)
@@ -37,7 +39,6 @@ def get_button_state(button): #Depends on: RPi.GPIO; Modifies: None
 
 if __name__ == "__main__":
     print("This is a unit test for buttons.")
-    from utils import concurrent_state as cs
     import time
     cs.load_state()
     setup_button_interface(cs.structs["hardware_config"])

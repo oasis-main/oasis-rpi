@@ -155,7 +155,7 @@ def lock(lock_filepath: str, resource_key: str, loop_limit = 1000): #quick & dir
                     if locks[x_lock_path] == x_copy: #read and compare the desired value
                         return
                     else:
-                        time.sleep(0.25)
+                        time.sleep(2.5)
                         for i in list(range(int(loop_limit)+1)):
                             try:
                                 with open(lock_filepath, "r") as x:
