@@ -37,9 +37,8 @@ def get_button_state(button): #Depends on: RPi.GPIO; Modifies: None
     state = GPIO.input(button)
     return state
 
-if __name__ == "__main__":
+def test():
     print("This is a unit test for buttons.")
-    import time
     cs.load_state()
     setup_button_interface()
     while True:
@@ -57,4 +56,5 @@ if __name__ == "__main__":
             print("Action (water OR camera) button is not pressed...")
         if get_button_state(action_button) == 0:
             print("Action (water OR camera) button pressed!")
+
     
