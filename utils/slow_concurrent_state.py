@@ -166,6 +166,7 @@ def lock(lock_filepath: str, resource_key: str, loop_limit = 1000): #quick & dir
                                         go_to_start = True
                                         break
                             except:
+                                print(err.full_stack())
                                 pass
                 break    
             except:
@@ -299,8 +300,10 @@ def write_state(path, field, value, db_writer = None, loop_limit=2500): #Depends
                 pass
             
     #Now write safely
+    print("Locking...")
     lock(lock_filepath, path)
 
+    print("Writing...")
     with open(path, "r+") as x:
         data = json.load(x)
         data[field] = value #write the desired value
@@ -308,6 +311,7 @@ def write_state(path, field, value, db_writer = None, loop_limit=2500): #Depends
         json.dump(data,x)
         x.truncate()
 
+    print("Unlocking...")
     unlock(lock_filepath, path)
     
     load_state()

@@ -89,8 +89,11 @@ def clean_up(): #signal is not used to terminate this, rather a flag is set from
 
 def run():
     while True:
+        print("Checking signal...")
         slow_cs.check_signal("led","terminated", clean_up) #the custom termination signal must ALWAYS be acknowledged otherwise we will get repeat behavior
+        print("Adjustibg led to status...")
         check_led_status()
+        print("Loading concurrent state (slow)...")
         slow_cs.load_state()
         time.sleep(1)
 
