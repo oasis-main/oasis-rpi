@@ -47,7 +47,7 @@ def launch_access_point():
 
     time.sleep(3)
 
-    buttons.setup_button_interface(cs.structs["hardware_config"])
+    buttons.setup_button_interface()
 
     if minion.ser_out is not None:
         #set led_status = "connectWifi"
@@ -313,7 +313,7 @@ def main_setup():
 
     cs.write_state("/home/pi/oasis-grow/configs/device_state.json","running","1", db_writer = dbt.patch_firebase)
 
-    buttons.setup_button_interface(cs.structs["hardware_config"]) #Setup on-device interface for interacting with device using buttons
+    buttons.setup_button_interface() #Setup on-device interface for interacting with device using buttons
 
     #start the clock for non reboot-tolerant timers
     led_timer = time.time()

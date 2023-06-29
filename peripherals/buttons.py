@@ -41,7 +41,7 @@ if __name__ == "__main__":
     print("This is a unit test for buttons.")
     import time
     cs.load_state()
-    setup_button_interface(cs.structs["hardware_config"])
+    setup_button_interface()
     while True:
         if get_button_state(start_stop_button) == 1:
             print("Core process start/stop button is not pressed...")
