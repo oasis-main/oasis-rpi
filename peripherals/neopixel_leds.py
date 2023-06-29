@@ -76,7 +76,7 @@ def check_led_status():
             time.sleep(0.04)   
         return
 
-def clean_up(): #signal is not used to terminate this, rather a flag is set from the outside
+def clean_up(final = True): #signal is not used to terminate this, rather a flag is set from the outside
     for x in range(0, num_leds): #kill the neopixels (turn all off)
         pixels[x] = (0, 0, 10)
         time.sleep(0.04)
@@ -85,7 +85,9 @@ def clean_up(): #signal is not used to terminate this, rather a flag is set from
         time.sleep(0.04)   
     
     slow_cs.unlock(slow_cs.lock_filepath, resource_name) #free the leds for system
-    slow_cs.wrapped_sys_exit()
+    
+    if final:
+        slow_cs.wrapped_sys_exit()
 
 def run():
     while True:
@@ -104,8 +106,8 @@ if __name__ == '__main__':
         print("LED was terminated.")
     except KeyboardInterrupt:
         print("Shutting down LED...")
+        clean_up(final=False)
         slow_cs.write_state("/home/pi/oasis-grow/configs/signals.json","led","acknowleged")
-        clean_up()
     except Exception:
         print("LED encountered an error!")
         print(err.full_stack())
