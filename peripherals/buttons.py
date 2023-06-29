@@ -14,7 +14,7 @@ connect_internet_button = None #holds GPIO object for connecting device to inter
 action_button = None #holds GPIO object for triggering the desired action
 
 #setup buttons for the main program interface
-def setup_button_interface(hardware_config): #depends on: , 'RPi.GPIO'; modifies: start_stop_button, connect_internet_button, run_action_button, state variables
+def setup_button_interface(): #depends on: , 'RPi.GPIO'; modifies: start_stop_button, connect_internet_button, run_action_button, state variables
     global start_stop_button, connect_internet_button, action_button
     
     print("Setting up button interface...")
@@ -42,10 +42,19 @@ if __name__ == "__main__":
     import time
     cs.load_state()
     setup_button_interface(cs.structs["hardware_config"])
-    if get_button_state(connect_internet_button) == 1:
-        print("Button was initialized!")
-    print("Ok, now press the button and hold it there for 5 seconds.")
-    time.sleep(5)
-    if get_button_state(connect_internet_button) == 0:
-        print("Button press detected!")
+    while True:
+        if get_button_state(start_stop_button) == 1:
+            print("Core process start/stop button is not pressed...")
+        if get_button_state(start_stop_button) == 0:
+            print("Core process start/stop button pressed!")
+        
+        if get_button_state(connect_internet_button) == 1:
+            print("Connect internet button is not pressed...")
+        if get_button_state(connect_internet_button) == 0:
+            print("Connect internet button pressed!")
+
+        if get_button_state(action_button) == 1:
+            print("Action (water OR camera) button is not pressed...")
+        if get_button_state(action_button) == 0:
+            print("Action (water OR camera) button pressed!")
     
