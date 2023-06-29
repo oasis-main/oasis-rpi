@@ -5,6 +5,8 @@ import RPi.GPIO as GPIO
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
+sys.path.append('/home/pi/oasis-grow/core')
+sys.path.append('/home/pi/oasis-grow/utils')
 
 from utils import concurrent_state as cs
 
