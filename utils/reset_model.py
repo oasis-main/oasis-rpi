@@ -1,6 +1,7 @@
 import os
 import sys
 import rusty_pipes
+from subprocess import Popen
 
 #set proper path for modules
 sys.path.append('/home/pi/oasis-grow')
@@ -59,7 +60,7 @@ def reset_locks():
 
 #will be deprecated for rust implementation    
 def reset_signals():
-    reset_sigz = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/defaults/singals_default_template.json", "/home/pi/oasis-grow/configs/signals.json"],"cp")
+    reset_sigz = Popen(["cp", "/home/pi/oasis-grow/defaults/signals_default_template.json", "/home/pi/oasis-grow/configs/signals.json"])
     reset_sigz.wait()
 
 def reset_nonhw_configs():
