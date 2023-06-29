@@ -1,4 +1,4 @@
-{"network_settings": {"must_connect": "1"},
+{"network_settings": {"must_connect": "0"},
 
  "button_gpio_map":{
                     "start_stop_button": "5",
