@@ -1,8 +1,8 @@
 import sys
-import smbus
+import smbus2
 
 # Create a new SMBus instance on line 2
-bus = smbus.SMBus(2)  
+bus = smbus2.SMBus(2)  
 
 if __name__ == "__main__":
 
