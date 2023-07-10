@@ -7,6 +7,7 @@ bus = smbus2.SMBus(1)
 if __name__ == "__main__":
 
     if sys.argv[1] == "set_rtcm":
+        
         # Device i2c write address
         device_address = 0x51
 
