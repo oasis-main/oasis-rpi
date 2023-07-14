@@ -1,6 +1,6 @@
 #include <Wire.h>
 #include <Adafruit_BMP3XX.h>
-//#include <ArduinoModbus.h>
+#include <ArduinoModbus.h>
 
 #define BMP_SDA A4 // BMP390 sensor SDA pin
 #define BMP_SCL A5 // BMP390 sensor SCL pin
@@ -19,9 +19,9 @@ void setup() {
 
   pinMode(PIR_PIN, INPUT);
 
-  //if (!ModbusRTUClient.begin(9600)) {
-  //Serial.println("Failed to start Modbus RTU Client!");
-  //}
+  if (!ModbusRTUClient.begin(9600)) {
+  Serial.println("Failed to start Modbus RTU Client!");
+  }
 }
 
 void loop() {
@@ -49,12 +49,12 @@ void loop() {
   Serial.print("Soil Moisture = ");
   Serial.println(moistureValue);
 
-  // Modbus communication
-  //uint8_t serverId = 1;
-  //uint16_t address = 0;
-  //uint16_t value = 1234; // example data
+  //Modbus communication
+  uint8_t serverId = 1;
+  uint16_t address = 0;
+  uint16_t value = 1234; // example data
   
-  //ModbusRTUClient.holdingRegisterWrite(serverId, address, value);
+  ModbusRTUClient.holdingRegisterWrite(serverId, address, value);
 
   delay(1000);
 }
