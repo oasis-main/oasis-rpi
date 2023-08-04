@@ -3,7 +3,7 @@ import time
 import signal
 
 #set custom module path
-sys.path.append('/home/pi/oasis-grow')
+sys.path.append('/home/pi/oasis-cpu')
 
 from utils import concurrent_state as cs
 from networking import db_tools as dbt
@@ -44,10 +44,10 @@ def update_synced_fields():
         #time.sleep(0.1) #just do this as quickly as possible
 
     #write the assembled dicts to memory, outside of the loop
-    cs.write_dict("/home/pi/oasis-grow/configs/device_state.json", device_state_dict)
-    cs.write_dict("/home/pi/oasis-grow/configs/control_params.json", control_params_dict)
+    cs.write_dict("/home/pi/oasis-cpu/configs/device_state.json", device_state_dict)
+    cs.write_dict("/home/pi/oasis-cpu/configs/control_params.json", control_params_dict)
     for group, dictionary in hardware_config_dicts.items():
-        cs.write_nested_dict("/home/pi/oasis-grow/configs/hardware_config.json", group, dictionary)
+        cs.write_nested_dict("/home/pi/oasis-cpu/configs/hardware_config.json", group, dictionary)
 
     print("Successfully synced state with cloud!")
 

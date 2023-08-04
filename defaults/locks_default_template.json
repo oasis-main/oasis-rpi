@@ -1,24 +1,24 @@
 {
-  "/home/pi/oasis-grow/configs/access_config.json_x": 0,
-  "/home/pi/oasis-grow/configs/access_config.json_y": 0,
+  "/home/pi/oasis-cpu/configs/access_config.json_x": 0,
+  "/home/pi/oasis-cpu/configs/access_config.json_y": 0,
   
-  "/home/pi/oasis-grow/configs/control_params.json_x": 0,
-  "/home/pi/oasis-grow/configs/control_params.json_y": 0,
+  "/home/pi/oasis-cpu/configs/control_params.json_x": 0,
+  "/home/pi/oasis-cpu/configs/control_params.json_y": 0,
   
-  "/home/pi/oasis-grow/configs/device_state.json_x": 0,
-  "/home/pi/oasis-grow/configs/device_state.json_y": 0,
+  "/home/pi/oasis-cpu/configs/device_state.json_x": 0,
+  "/home/pi/oasis-cpu/configs/device_state.json_y": 0,
   
-  "/home/pi/oasis-grow/configs/feature_toggles.json_x": 0,
-  "/home/pi/oasis-grow/configs/feature_toggles.json_y": 0,  
+  "/home/pi/oasis-cpu/configs/feature_toggles.json_x": 0,
+  "/home/pi/oasis-cpu/configs/feature_toggles.json_y": 0,  
   
-  "/home/pi/oasis-grow/configs/hardware_config.json_x": 0,
-  "/home/pi/oasis-grow/configs/hardware_config.json_y": 0,
+  "/home/pi/oasis-cpu/configs/hardware_config.json_x": 0,
+  "/home/pi/oasis-cpu/configs/hardware_config.json_y": 0,
   
-  "/home/pi/oasis-grow/configs/sensor_data.json_x": 0,
-  "/home/pi/oasis-grow/configs/sensor_data.json_y": 0,
+  "/home/pi/oasis-cpu/configs/sensor_data.json_x": 0,
+  "/home/pi/oasis-cpu/configs/sensor_data.json_y": 0,
 
-  "/home/pi/oasis-grow/configs/power_data.json_x": 0,
-  "/home/pi/oasis-grow/configs/power_data.json_y": 0,
+  "/home/pi/oasis-cpu/configs/power_data.json_x": 0,
+  "/home/pi/oasis-cpu/configs/power_data.json_y": 0,
   
   "heater_x": 0,
   "heater_y": 0,

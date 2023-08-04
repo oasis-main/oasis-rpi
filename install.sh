@@ -1,10 +1,10 @@
 #!/bin/sh -e
 
-sudo chmod +x /home/pi/oasis-grow/setup_scripts
+sudo chmod +x /home/pi/oasis-cpu/setup_scripts
 
-. /home/pi/oasis-grow/setup_scripts/setup_env.sh
-. /home/pi/oasis-grow/setup_scripts/setup_config.sh
-. /home/pi/oasis-grow/setup_scripts/setup_network.sh
+. /home/pi/oasis-cpu/setup_scripts/setup_env.sh
+. /home/pi/oasis-cpu/setup_scripts/setup_config.sh
+. /home/pi/oasis-cpu/setup_scripts/setup_network.sh
 
 echo "Returning to WiFi mode..."
 sudo cp /etc/dhcpcd_wifi.conf /etc/dhcpcd.conf

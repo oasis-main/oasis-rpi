@@ -2,7 +2,7 @@ from cgi import test
 import sys
 
 #set proper path for modules
-sys.path.append('/home/pi/oasis-grow')
+sys.path.append('/home/pi/oasis-cpu')
 
 import main
 from core import core
@@ -27,15 +27,15 @@ def test_rtdb_patch():
 '''
 def send_image_test():
     print("Testing image transfer...")
-    cam.send_image("/home/pi/oasis-grow/tests/test.jpg")
+    cam.send_image("/home/pi/oasis-cpu/tests/test.jpg")
 
 def send_csv_test():
     print("Testing csv transfer...")
-    core.send_csv("/home/pi/oasis-grow/tests/test.csv", "test_csv.csv")
+    core.send_csv("/home/pi/oasis-cpu/tests/test.csv", "test_csv.csv")
 
 def send_timelapse_test():
     print("Testing video transfer...")
-    make_timelapse.send_timelapse("/home/pi/oasis-grow/tests/test.avi")
+    make_timelapse.send_timelapse("/home/pi/oasis-cpu/tests/test.avi")
 
 '''
 

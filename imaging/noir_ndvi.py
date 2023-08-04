@@ -52,16 +52,16 @@ def calc_ndvi(image):
 #take the raw file from 
 def convert_image(image_path):
     #create and configure camera object 
-    original = cv2.imread('/home/pi/oasis-grow/data_out/image.jpg') #save contrasted image
+    original = cv2.imread('/home/pi/oasis-cpu/data_out/image.jpg') #save contrasted image
     contrasted = contrast_stretch(original) #apply contrast to the image
-    cv2.imwrite('/home/pi/oasis-grow/data_out/contrasted.jpg', contrasted) #save contrasted image
+    cv2.imwrite('/home/pi/oasis-cpu/data_out/contrasted.jpg', contrasted) #save contrasted image
 
-    ndvi = calc_ndvi(cv2.imread('/home/pi/oasis-grow/data_out/contrasted.jpg')) #calculate image ndvi
+    ndvi = calc_ndvi(cv2.imread('/home/pi/oasis-cpu/data_out/contrasted.jpg')) #calculate image ndvi
     ndvi_contrasted = contrast_stretch(ndvi) #apply stretch the contrast a second time
-    cv2.imwrite('/home/pi/oasis-grow/data_out/ndvi_pre_cm.jpg', ndvi_contrasted) #save ndvi image
+    cv2.imwrite('/home/pi/oasis-cpu/data_out/ndvi_pre_cm.jpg', ndvi_contrasted) #save ndvi image
 
     print("Applying color map...")
-    color_map_prep = cv2.imread('/home/pi/oasis-grow/data_out/ndvi_pre_cm.jpg').astype(np.uint8) #prep colour mapping
+    color_map_prep = cv2.imread('/home/pi/oasis-cpu/data_out/ndvi_pre_cm.jpg').astype(np.uint8) #prep colour mapping
     color_mapped_image = cv2.applyColorMap(color_map_prep, fastiecm.fastiecm) #apply colour mapping
     cv2.imwrite(image_path, color_mapped_image) #save cm'd image
 

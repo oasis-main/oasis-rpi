@@ -3,20 +3,20 @@
 echo "Creating systemd unit file..."
 printf "
 [Unit]
-Description= Oasis-Grow Firmware
+Description= oasis-cpu Firmware
 
 [Service]
-ExecStart= /bin/sh /home/pi/oasis-grow/start.sh  #in this line specify the path to the script.
+ExecStart= /bin/sh /home/pi/oasis-cpu/start.sh  #in this line specify the path to the script.
 StandardOutput=journal+console
 StandardError=inherit
 
 [Install]
 WantedBy=multi-user.target
-" | sudo tee /etc/systemd/system/oasis-grow.service
+" | sudo tee /etc/systemd/system/oasis-cpu.service
 
-sudo systemctl enable oasis-grow
-sudo systemctl start oasis-grow
-sudo systemctl status oasis-grow
+sudo systemctl enable oasis-cpu
+sudo systemctl start oasis-cpu
+sudo systemctl status oasis-cpu
 
 #References
 #https://stackoverflow.com/questions/37585758/how-to-redirect-output-of-systemd-service-to-a-file

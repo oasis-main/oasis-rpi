@@ -3,7 +3,7 @@ import os
 import sys
 
 #set custom module path
-sys.path.append('/home/pi/oasis-grow')
+sys.path.append('/home/pi/oasis-cpu')
 
 #concurrency
 
@@ -39,7 +39,7 @@ def add_new_device():
     patch_request = dbt.firebase_add_device(cs.structs["access_config"],my_data) #this is really just a dict patch 
     
     if patch_request.ok:
-        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","new_device","0", db_writer = dbt.patch_firebase)
+        cs.write_state("/home/pi/oasis-cpu/configs/device_state.json","new_device","0", db_writer = dbt.patch_firebase)
         print("New device added to firebase.")
     else:
         print("Failed to add new device.")
@@ -49,9 +49,9 @@ def delete_device(exists = True):
     print("Removing device from Oasis Network...")
     
     if exists:
-        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = dbt.patch_firebase) 
+        cs.write_state("/home/pi/oasis-cpu/configs/device_state.json","connected","0", db_writer = dbt.patch_firebase) 
     else:
-        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0")
+        cs.write_state("/home/pi/oasis-cpu/configs/device_state.json","connected","0")
 
     print("Disconnected from remote database & cloud authentication.")
     reset_model.reset_nonhw_configs()
@@ -175,7 +175,7 @@ def connect_to_firebase(): #depends on: cs.load_state(), cs.write_state(), dbt.p
         #fetch refresh token
         refresh_token = dbt.get_refresh_token(wak, email, password)
         #fetch refresh token and save to access_config
-        cs.write_state("/home/pi/oasis-grow/configs/access_config.json","refresh_token", refresh_token, db_writer = None)
+        cs.write_state("/home/pi/oasis-cpu/configs/access_config.json","refresh_token", refresh_token, db_writer = None)
 
         #bring in the refresh token for use further down
         cs.load_state()
@@ -185,8 +185,8 @@ def connect_to_firebase(): #depends on: cs.load_state(), cs.write_state(), dbt.p
         #fetch a new id_token & local_id
         id_token, user_id = dbt.get_local_credentials(wak, refresh_token)
         #write local credentials to access config
-        cs.write_state("/home/pi/oasis-grow/configs/access_config.json","id_token", id_token, db_writer = None)
-        cs.write_state("/home/pi/oasis-grow/configs/access_config.json","local_id", user_id, db_writer = None)
+        cs.write_state("/home/pi/oasis-cpu/configs/access_config.json","id_token", id_token, db_writer = None)
+        cs.write_state("/home/pi/oasis-cpu/configs/access_config.json","local_id", user_id, db_writer = None)
         print("Devie authorized with local credentials.")
 
         #launch new_device check at network startup
@@ -196,7 +196,7 @@ def connect_to_firebase(): #depends on: cs.load_state(), cs.write_state(), dbt.p
         if dbt.fetch_device_data(cs.structs["access_config"]) is not None:
             #start listener to bring in db changes on startup
             #Main setup always sets 'connected' == "0"
-            cs.write_state('/home/pi/oasis-grow/configs/device_state.json',"connected","1", db_writer = dbt.patch_firebase)
+            cs.write_state('/home/pi/oasis-cpu/configs/device_state.json',"connected","1", db_writer = dbt.patch_firebase)
             #update the device state to "connected"
             print("Device is connected over HTTPS to the Oasis Network")
             return True 
@@ -207,7 +207,7 @@ def connect_to_firebase(): #depends on: cs.load_state(), cs.write_state(), dbt.p
     except Exception as e:
         #print(err.full_stack()) #display error
         #write state as not connected
-        cs.write_state("/home/pi/oasis-grow/configs/device_state.json","connected","0", db_writer = dbt.patch_firebase)
+        cs.write_state("/home/pi/oasis-cpu/configs/device_state.json","connected","0", db_writer = dbt.patch_firebase)
         print("Could not establish an HTTPS connection to Oasis Network")
         return False
 

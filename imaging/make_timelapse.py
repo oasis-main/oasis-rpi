@@ -9,8 +9,8 @@ import os.path
 import sys
 
 #set proper path for modules
-sys.path.append('/home/pi/oasis-grow')
-sys.path.append('/home/pi/oasis-grow/utils')
+sys.path.append('/home/pi/oasis-cpu')
+sys.path.append('/home/pi/oasis-cpu/utils')
 
 #main dependency
 import cv2
@@ -23,7 +23,7 @@ def tl_make(image_folder):
 
 	#name of output timelapse
 	#.avi = audio visual imput, not being conceited this time ;)
-	video_name = "/home/pi/oasis-grow/data_out/timelapse.avi"
+	video_name = "/home/pi/oasis-cpu/data_out/timelapse.avi"
 
 	#loops throught the directory to get file names
 	images = [img for img in os.listdir(image_folder) if img.endswith(".jpg")]
@@ -83,10 +83,10 @@ if __name__ == '__main__':
 	cs.load_state()
 
 	#dir where images are stored
-	image_folder = '/home/pi/oasis-grow/data_out/image_feed'
+	image_folder = '/home/pi/oasis-cpu/data_out/image_feed'
 
 	#make timelapses
 	tl_make(image_folder)
 
 	#send new timelapse to firebase
-	send_timelapse("/home/pi/oasis-grow/data_out/timelapse.avi")
+	send_timelapse("/home/pi/oasis-cpu/data_out/timelapse.avi")

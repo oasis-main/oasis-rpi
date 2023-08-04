@@ -1,7 +1,7 @@
 #[Development] For Building the Libcamera OS if using Debian RPi OS Buster or Earlier 
 
 #Activate the python virtual environment
-. /home/pi/oasis-grow/oasis_venv_pi/bin/activate
+. /home/pi/oasis-cpu/oasis_venv_pi/bin/activate
 
 #Install dependencies to operating system
 pip3 install meson
