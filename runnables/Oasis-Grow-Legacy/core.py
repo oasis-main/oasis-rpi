@@ -28,7 +28,7 @@ from utils import physics
 from utils import error_handler as err
 from networking import db_tools as dbt
 from networking import firebase_manager
-from peripherals import microcontroller_manager as minion
+from peripherals import serial_arduinos as minion
 
 resource_name = "core"
 

@@ -11,7 +11,7 @@ import time
 sys.path.append('/home/pi/oasis-cpu')
 
 import rusty_pins
-from peripherals import relays
+from peripherals import digital_relays
 from utils import concurrent_state as cs
 from utils import error_handler as err
 
@@ -28,7 +28,7 @@ if __name__ == '__main__':
     try:
         while True:
             print("Turning air pump on at " + cs.structs["control_params"]["time_start_air"] + ":00 and off at " + cs.structs["control_params"]["time_stop_air"] + ":00, refreshing every " + cs.structs["control_params"]["air_interval"] + " minutes...")
-            relays.actuate_time_hod(pin, int(cs.structs["control_params"]["time_start_air"]), int(cs.structs["control_params"]["time_stop_air"]), int(cs.structs["control_params"]["air_interval"]), interval_units = "minutes", wattage=cs.structs["hardware_config"]["equipment_wattage"]["air_pump"], log="air_pump_kwh")
+            digital_relays.actuate_time_hod(pin, int(cs.structs["control_params"]["time_start_air"]), int(cs.structs["control_params"]["time_stop_air"]), int(cs.structs["control_params"]["air_interval"]), interval_units = "minutes", wattage=cs.structs["hardware_config"]["equipment_wattage"]["air_pump"], log="air_pump_kwh")
             cs.load_state() #no time recorded here because it is not on an interval
             time.sleep(1)
     except SystemExit: #This is handled by the relay as well when terminated from main
@@ -41,7 +41,7 @@ if __name__ == '__main__':
     finally:
         print("Shutting down air pump...")
         try:
-            relays.turn_off(pin)
+            digital_relays.turn_off(pin)
         except:
             print(resource_name + " has no relay objects remaining.")
         

@@ -24,9 +24,9 @@ from networking import wifi
 #hardware
 import rusty_pins
 from utils import physics
-from peripherals import buttons
-from peripherals import relays
-from peripherals import microcontroller_manager as minion
+from peripherals import digital_buttons
+from peripherals import digital_relays
+from peripherals import serial_arduinos as minion
 
 #housekeeping
 from utils import reset_model
@@ -47,7 +47,7 @@ def launch_access_point():
 
     time.sleep(3)
 
-    buttons.setup_button_interface()
+    digital_buttons.setup_button_interface()
 
     if minion.ser_out is not None:
         #set led_status = "connectWifi"
@@ -56,7 +56,7 @@ def launch_access_point():
         #write LED state to seriaL
         while True: #place the "exit button" here to leave connection mode
             minion.ser_out.write(bytes(str(cs.structs["device_state"]["led_status"]+"\n"), "utf-8"))
-            cbutton_state = buttons.get_button_state(buttons.connect_internet_button)
+            cbutton_state = digital_buttons.get_button_state(digital_buttons.connect_internet_button)
             if cbutton_state == 0:
                 cs.write_state("/home/pi/oasis-cpu/configs/device_state.json","led_status","offline_idle", db_writer = dbt.patch_firebase)
                 minion.ser_out.write(bytes(str(cs.structs["device_state"]["led_status"]+"\n"), "utf-8"))
@@ -65,7 +65,7 @@ def launch_access_point():
                 time.sleep(1)
     else:
         while True:
-            cbutton_state = buttons.get_button_state(buttons.connect_internet_button)
+            cbutton_state = digital_buttons.get_button_state(digital_buttons.connect_internet_button)
             if cbutton_state == 0:
                 server_process.terminate("/home/pi/oasis-cpu/configs/signals.json")
                 wifi.enable_wifi()
@@ -313,7 +313,7 @@ def main_setup():
 
     cs.write_state("/home/pi/oasis-cpu/configs/device_state.json","running","1", db_writer = dbt.patch_firebase)
 
-    buttons.setup_button_interface() #Setup on-device interface for interacting with device using buttons
+    digital_buttons.setup_button_interface() #Setup on-device interface for interacting with device using buttons
 
     #start the clock for non reboot-tolerant timers
     led_timer = time.time()
@@ -351,13 +351,13 @@ def main_loop(led_timer, connect_timer, reboot_timer):
             cs.check_state("awaiting_timelapse", export_timelapse)
             cs.check_state("awaiting_feature_change", get_new_features)
 
-            sbutton_state = buttons.get_button_state(buttons.start_stop_button) #Start Button
+            sbutton_state = digital_buttons.get_button_state(digital_buttons.start_stop_button) #Start Button
             if sbutton_state == 0:
                 print("User pressed the start/stop button")
                 switch_core_running() #turn core on/off
                 time.sleep(1)
 
-            cbutton_state = buttons.get_button_state(buttons.connect_internet_button) #Connect Button
+            cbutton_state = digital_buttons.get_button_state(digital_buttons.connect_internet_button) #Connect Button
             if cbutton_state == 0:
                 print("User pressed the connect button")
                 if cs.structs["device_state"]["connected"] == "1":
@@ -367,7 +367,7 @@ def main_loop(led_timer, connect_timer, reboot_timer):
                 time.sleep(1)
 
             if cs.structs["feature_toggles"]["action_button"] == "1":
-                abutton_state = buttons.get_button_state(buttons.action_button) #Water Button
+                abutton_state = digital_buttons.get_button_state(digital_buttons.action_button) #Water Button
                 if abutton_state == 0:
                     if cs.structs["feature_toggles"]["action_water"] == "1":
                         cs.load_locks()
@@ -375,7 +375,7 @@ def main_loop(led_timer, connect_timer, reboot_timer):
                             cs.rusty_pipes.lock(cs.lock_filepath, "water_pump")
                             water_GPIO = int(cs.structs["hardware_config"]["equipment_gpio_map"]["water_relay"]) #bcm pin # pulls from config file
                             pin = rusty_pins.GpioOut(water_GPIO)
-                            relays.actuate_interval_sleep(pin, duration = float(cs.structs["control_params"]["watering_duration"]), sleep = float(cs.structs["control_params"]["watering_interval"]), duration_units="seconds", sleep_units="days", wattage=cs.structs["hardware_config"]["equipment_wattage"]["water_pump"], log="water_pump_kwh")
+                            digital_relays.actuate_interval_sleep(pin, duration = float(cs.structs["control_params"]["watering_duration"]), sleep = float(cs.structs["control_params"]["watering_interval"]), duration_units="seconds", sleep_units="days", wattage=cs.structs["hardware_config"]["equipment_wattage"]["water_pump"], log="water_pump_kwh")
                             pin = None
                             cs.rusty_pipes.unlock(cs.lock_filepath, "water_pump")
                     if cs.structs["feature_toggles"]["action_camera"] == "1":

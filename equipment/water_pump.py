@@ -11,7 +11,7 @@ sys.path.append('/home/pi/oasis-cpu')
 
 #import libraries
 import rusty_pins
-from peripherals import relays
+from peripherals import digital_relays
 from utils import concurrent_state as cs
 from utils import error_handler as err
 from networking import db_tools as dbt
@@ -29,12 +29,12 @@ if __name__ == "__main__":
         while True:
             if cs.structs["feature_toggles"]["water_pid"] == "1":
                 print("Running water pump in pulse mode with " + cs.structs["control_params"]["moisture_feedback"] + "%" + " power...")
-                relays.actuate_slow_pwm(pin, intensity = float(cs.structs["control_params"]["moisture_feedback"]), wattage=cs.structs["hardware_config"]["equipment_wattage"]["water_pump"], log="water_pump_kwh") #trigger appropriate response
+                digital_relays.actuate_slow_pwm(pin, intensity = float(cs.structs["control_params"]["moisture_feedback"]), wattage=cs.structs["hardware_config"]["equipment_wattage"]["water_pump"], log="water_pump_kwh") #trigger appropriate response
             else:
                 print("Running water pump for " + cs.structs["control_params"]["watering_duration"] + " minute(s) every " + cs.structs["control_params"]["watering_interval"] + " day(s)...")
                 if (time.time() - float(cs.structs["control_params"]["last_watering_run_time"])) > (float(cs.structs["control_params"]["watering_interval"])*60*60*24): #convert setting (days) to base units (seconds): days*(60*60*24)
                     cs.write_state("/home/pi/oasis-cpu/configs/control_params.json", "last_watering_run_time", str(time.time()), db_writer = dbt.patch_firebase)
-                    relays.actuate_interval_sleep(pin, duration = float(cs.structs["control_params"]["watering_duration"]), sleep = float(cs.structs["control_params"]["watering_interval"]), duration_units="minutes", sleep_units="days", wattage=cs.structs["hardware_config"]["equipment_wattage"]["water_pump"], log="water_pump_kwh")
+                    digital_relays.actuate_interval_sleep(pin, duration = float(cs.structs["control_params"]["watering_duration"]), sleep = float(cs.structs["control_params"]["watering_interval"]), duration_units="minutes", sleep_units="days", wattage=cs.structs["hardware_config"]["equipment_wattage"]["water_pump"], log="water_pump_kwh")
             cs.load_state()
             time.sleep(1)
     except KeyboardInterrupt:
@@ -45,7 +45,7 @@ if __name__ == "__main__":
     finally:
         print("Shutting down water pump...")
         try:
-            relays.turn_off(pin)
+            digital_relays.turn_off(pin)
         except:
             print(resource_name + " has no relay objects remaining.")
         

@@ -30,6 +30,36 @@ def take_picture(image_path):
     exit_status = still.exit_code()
     return exit_status
 
+def take_video(video_path, duration):
+    """
+    Captures a video using the Raspberry Pi camera.
+    
+    Args:
+    - video_path (str): Path to save the captured video.
+    - duration (int): Length of the video capture in seconds.
+    
+    Returns:
+    - int: Exit status of the raspivid command.
+    """
+    # Convert duration from seconds to milliseconds
+    duration_millis = duration * 1000
+    
+    if cs.structs["hardware_config"]["camera_settings"]["awb_mode"] == "on":
+        # Take video and save to specified path
+        video_cmd = ["raspivid", "-e", "h264", "-o", str(video_path), "-t", str(duration_millis)]
+        video_process = rusty_pipes.Open(video_cmd, "raspivid")
+        video_process.wait()
+    else:
+        awb_values = "{},{}".format(cs.structs["hardware_config"]["camera_settings"]["awb_red"], 
+                                    cs.structs["hardware_config"]["camera_settings"]["awb_blue"])
+        video_cmd = ["raspivid", "-e", "h264", "-o", str(video_path), "-t", str(duration_millis), 
+                     "-awb", "off", "-awbg", awb_values]
+        video_process = rusty_pipes.Open(video_cmd, "raspivid")
+        video_process.wait()
+    
+    exit_status = video_process.exit_code()
+    return exit_status
+
 def save_to_feed(image_path):
     #timestamp image
     timestamp = time.time()

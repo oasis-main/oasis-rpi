@@ -11,7 +11,7 @@ import time
 sys.path.append('/home/pi/oasis-cpu')
  
 import rusty_pins
-from peripherals import relays
+from peripherals import digital_relays
 from utils import concurrent_state as cs
 from utils import error_handler as err
 from networking import db_tools as dbt
@@ -30,12 +30,12 @@ if __name__ == '__main__':
         while True:
             if cs.structs["feature_toggles"]["fan_pid"] == "1":
                 print("Ventilating in pulse mode with " + cs.structs["control_params"]["fan_feedback"] + "%" + " power...")
-                relays.actuate_slow_pwm(pin, float(cs.structs["control_params"]["fan_feedback"]), wattage=cs.structs["hardware_config"]["equipment_wattage"]["fan"], log="fan_kwh") #trigger appropriate response
+                digital_relays.actuate_slow_pwm(pin, float(cs.structs["control_params"]["fan_feedback"]), wattage=cs.structs["hardware_config"]["equipment_wattage"]["fan"], log="fan_kwh") #trigger appropriate response
             else:
                 print("Fans on for " + cs.structs["control_params"]["fan_duration"] + " minute(s), off for " + cs.structs["control_params"]["fan_interval"] + " minute(s)...")
                 if (time.time() - float(cs.structs["control_params"]["last_fan_run_time"])) > (float(cs.structs["control_params"]["fan_interval"])*60): #convert setting units (minutes) to base (seconds)
                     cs.write_state("/home/pi/oasis-cpu/configs/control_params.json", "last_fan_run_time", str(time.time()), db_writer = dbt.patch_firebase)
-                    relays.actuate_interval_sleep(pin, float(cs.structs["control_params"]["fan_duration"]), float(cs.structs["control_params"]["fan_interval"]), duration_units= "minutes", sleep_units="minutes", wattage=cs.structs["hardware_config"]["equipment_wattage"]["fan"], log="fan_kwh")
+                    digital_relays.actuate_interval_sleep(pin, float(cs.structs["control_params"]["fan_duration"]), float(cs.structs["control_params"]["fan_interval"]), duration_units= "minutes", sleep_units="minutes", wattage=cs.structs["hardware_config"]["equipment_wattage"]["fan"], log="fan_kwh")
             cs.load_state()
             time.sleep(1)
     except SystemExit:
@@ -48,7 +48,7 @@ if __name__ == '__main__':
     finally:
         print("Shutting down fans...")
         try:
-            relays.turn_off(pin)
+            digital_relays.turn_off(pin)
         except:
             print(resource_name + " has no relay objects remaining.")
         
