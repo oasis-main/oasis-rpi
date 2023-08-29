@@ -1,6 +1,6 @@
 ## Overview
 
-Oasis-Grow is an open-source toolkit for IoT applications that aims to get your hardware online faster. It is suitable for precision agriculture, climate research, and biology, providing sensing, data collection, environmental control, equipment automation, and remote monitoring functionality. 
+Oasis-Cpu is an open-source toolkit for IoT applications on single board computers. It is suitable for home, hobby, field, and lab use, providing sensing, data collection, environmental control, equipment automation, and remote monitoring functionality. 
 
 This toolkit can be deployed using a RaspberryPi (for scheduling, PID control, data & networking management) + an Arduino (for real-time analog & digital sensors). 
 
