@@ -42,7 +42,7 @@ if __name__ == "__main__":
 			camera.take_video(filepath, 15) #Start 15s video
 			if connected:
 				user, db, storage = dbt.initialize_user(cs.structs["access_config"]["refresh_token"])
-				dbt.store_file(user, storage, filepath, cs.structs["access_config"]["device_name"], filename) #Post to cloud when done under filename with datetime
+			dbt.store_file(user, storage, filepath, cs.structs["access_config"]["device_name"], filename) #Post to cloud when done under filename with datetime
 
 		if time.time()-connect_timer >= 3600:
 			connect_timer = time.time()
