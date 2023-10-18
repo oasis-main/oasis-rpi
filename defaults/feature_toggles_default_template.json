@@ -1,4 +1,4 @@
-{"device_type": "oasis-grow",
+{"device_type": "oasis-rpi",
 "onboard_led": "1",
 "action_button": "1",
 "action_water": "0",

@@ -2,7 +2,7 @@
 import sys
 
 #set proper path for modules
-sys.path.append('/home/pi/oasis-grow')
+sys.path.append('/home/pi/oasis-rpi')
 
 import requests
 import orjson

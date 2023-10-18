@@ -6,7 +6,7 @@ import time
 import datetime
 
 #set proper path for modules
-sys.path.append('/home/pi/oasis-grow')
+sys.path.append('/home/pi/oasis-rpi')
 
 from utils import concurrent_state as cs
 from utils import error_handler as err
@@ -58,7 +58,7 @@ def actuate_time_hod(output, time_on = 0, time_off = 0, interval = 1, interval_u
             turn_on(output) #light on (relay closed)
             time.sleep(time_active)
             if log is not None:
-                cs.write_state("/home/pi/oasis-grow/configs/power_data.json", log, str(float(cs.structs["power_data"][log])+ physics.kwh(float(wattage),float(time_active))))
+                cs.write_state("/home/pi/oasis-rpi/configs/power_data.json", log, str(float(cs.structs["power_data"][log])+ physics.kwh(float(wattage),float(time_active))))
         if HoD < time_on or HoD >= time_off:
             turn_off(output)
             time.sleep(time_inactive)
@@ -67,7 +67,7 @@ def actuate_time_hod(output, time_on = 0, time_off = 0, interval = 1, interval_u
             turn_on(output) #light on (relay closed)
             time.sleep(time_active)
             if log is not None:
-                cs.write_state("/home/pi/oasis-grow/configs/power_data.json", log, str(float(cs.structs["power_data"][log])+ physics.kwh(float(wattage),float(time_active))))
+                cs.write_state("/home/pi/oasis-rpi/configs/power_data.json", log, str(float(cs.structs["power_data"][log])+ physics.kwh(float(wattage),float(time_active))))
         if HoD < time_on and  HoD >= time_off:
             turn_off(output) #light on (relay closed)
             time.sleep(time_inactive)
@@ -75,7 +75,7 @@ def actuate_time_hod(output, time_on = 0, time_off = 0, interval = 1, interval_u
         turn_on(output)
         time.sleep(time_active)
         if log is not None:
-            cs.write_state("/home/pi/oasis-grow/configs/power_data.json", log, str(float(cs.structs["power_data"][log])+ physics.kwh(float(wattage),float(time_active))))
+            cs.write_state("/home/pi/oasis-rpi/configs/power_data.json", log, str(float(cs.structs["power_data"][log])+ physics.kwh(float(wattage),float(time_active))))
 
 def actuate_interval_sleep(output, duration = 15, sleep = 45, duration_units = "seconds", sleep_units = "seconds", wattage = "0", log = None):
     
@@ -100,7 +100,7 @@ def actuate_interval_sleep(output, duration = 15, sleep = 45, duration_units = "
     turn_on(output)
     time.sleep(time_active) #set seconds to minutes
     if log is not None:
-            cs.write_state("/home/pi/oasis-grow/configs/power_data.json", log, str(physics.kwh(float(wattage),float(time_active))))
+            cs.write_state("/home/pi/oasis-rpi/configs/power_data.json", log, str(physics.kwh(float(wattage),float(time_active))))
     
     turn_off(output)
     time.sleep(time_sleep)
@@ -117,7 +117,7 @@ def actuate_slow_pwm(output, intensity: int, pulse_domain = 10.0, wattage = "0",
         turn_on(output)
         time.sleep(time_active) #on
         if log is not None:
-            cs.write_state("/home/pi/oasis-grow/configs/power_data.json", log, str(physics.kwh(float(wattage),float(time_active))))
+            cs.write_state("/home/pi/oasis-rpi/configs/power_data.json", log, str(physics.kwh(float(wattage),float(time_active))))
         turn_off(output)
         time.sleep(time_off) #off
 
@@ -125,7 +125,7 @@ def actuate_slow_pwm(output, intensity: int, pulse_domain = 10.0, wattage = "0",
         turn_on(output)
         time.sleep(time_active) #on
         if log is not None:
-            cs.write_state("/home/pi/oasis-grow/configs/power_data.json", log, str(physics.kwh(float(wattage),float(time_active)))) 
+            cs.write_state("/home/pi/oasis-rpi/configs/power_data.json", log, str(physics.kwh(float(wattage),float(time_active)))) 
 
 if __name__ == "__main__":
     print("This is a unit test for relays physical I/O.")

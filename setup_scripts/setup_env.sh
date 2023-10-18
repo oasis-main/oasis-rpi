@@ -26,22 +26,22 @@ sudo apt install python3-pip -y
 sudo apt-get install python3-venv -y
 
 echo "Installing Rust Compiler..."
-. /home/pi/oasis-grow/setup_scripts/install_rust.sh
+. /home/pi/oasis-rpi/setup_scripts/install_rust.sh
 
 echo "Installing Python Modules..."
-python3 -m venv /home/pi/oasis-grow/oasis_venv_pi #uncomment to build env from source
-. /home/pi/oasis-grow/oasis_venv_pi/bin/activate
+python3 -m venv /home/pi/oasis-rpi/oasis_venv_pi #uncomment to build env from source
+. /home/pi/oasis-rpi/oasis_venv_pi/bin/activate
 /usr/bin/env python3 -m pip install --upgrade pip #uncomment to build env from source
-/usr/bin/env python3 -m pip install -r /home/pi/oasis-grow/requirements.txt #uncomment to build env from source
+/usr/bin/env python3 -m pip install -r /home/pi/oasis-rpi/requirements.txt #uncomment to build env from source
 
 echo "Installing Rust Modules..."
 cd ..
-cd /home/pi/oasis-grow/rusty_pins
+cd /home/pi/oasis-rpi/rusty_pins
 cargo build
 maturin develop
 maturin build --release
 cd ..
-cd /home/pi/oasis-grow/rusty_pipes
+cd /home/pi/oasis-rpi/rusty_pipes
 cargo build
 maturin develop
 maturin build --release

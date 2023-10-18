@@ -2,7 +2,7 @@
 import sys
 
 #set proper path for modules
-sys.path.append('/home/pi/oasis-grow')
+sys.path.append('/home/pi/oasis-rpi')
 
 import board
 import neopixel
@@ -107,7 +107,7 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print("Shutting down LED...")
         clean_up(final=False)
-        slow_cs.write_state("/home/pi/oasis-grow/configs/signals.json","led","acknowleged")
+        slow_cs.write_state("/home/pi/oasis-rpi/configs/signals.json","led","acknowleged")
     except Exception:
         print("LED encountered an error!")
         print(err.full_stack())

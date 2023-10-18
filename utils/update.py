@@ -10,7 +10,7 @@ import json
 import rusty_pipes
 
 #set proper path for modules
-sys.path.append('/home/pi/oasis-grow')
+sys.path.append('/home/pi/oasis-rpi')
 
 from utils import reset_model
 from utils import concurrent_state as cs
@@ -25,25 +25,25 @@ def git_pull():
 
 #save existing data into temps
 def save_old_configs():
-    savefeatures = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/configs/feature_toggles.json", "/home/pi/oasis-grow/configs/feature_toggles_temp.json"],"cp")
+    savefeatures = rusty_pipes.Open(["cp", "/home/pi/oasis-rpi/configs/feature_toggles.json", "/home/pi/oasis-rpi/configs/feature_toggles_temp.json"],"cp")
     savefeatures.wait()
     
-    savehardware = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/configs/hardware_config.json", "/home/pi/oasis-grow/configs/hardware_config_temp.json"],"cp")
+    savehardware = rusty_pipes.Open(["cp", "/home/pi/oasis-rpi/configs/hardware_config.json", "/home/pi/oasis-rpi/configs/hardware_config_temp.json"],"cp")
     savehardware.wait()
 
-    saveaccess = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/configs/access_config.json", "/home/pi/oasis-grow/configs/access_config_temp.json"],"cp")
+    saveaccess = rusty_pipes.Open(["cp", "/home/pi/oasis-rpi/configs/access_config.json", "/home/pi/oasis-rpi/configs/access_config_temp.json"],"cp")
     saveaccess.wait()
 
-    savestate = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/configs/device_state.json", "/home/pi/oasis-grow/configs/device_state_temp.json"],"cp")
+    savestate = rusty_pipes.Open(["cp", "/home/pi/oasis-rpi/configs/device_state.json", "/home/pi/oasis-rpi/configs/device_state_temp.json"],"cp")
     savestate.wait()
 
-    saveparams = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/configs/control_params.json", "/home/pi/oasis-grow/configs/control_params_temp.json"],"cp")
+    saveparams = rusty_pipes.Open(["cp", "/home/pi/oasis-rpi/configs/control_params.json", "/home/pi/oasis-rpi/configs/control_params_temp.json"],"cp")
     saveparams.wait()
 
-    savesensors = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/configs/sensor_data.json", "/home/pi/oasis-grow/configs/sensor_data_temp.json"],"cp")
+    savesensors = rusty_pipes.Open(["cp", "/home/pi/oasis-rpi/configs/sensor_data.json", "/home/pi/oasis-rpi/configs/sensor_data_temp.json"],"cp")
     savesensors.wait()
 
-    savepower = rusty_pipes.Open(["cp", "/home/pi/oasis-grow/configs/power_data.json", "/home/pi/oasis-grow/configs/power_data_temp.json"],"cp")
+    savepower = rusty_pipes.Open(["cp", "/home/pi/oasis-rpi/configs/power_data.json", "/home/pi/oasis-rpi/configs/power_data_temp.json"],"cp")
     savepower.wait()
 
     print("Saved existing configs to temporary files")
@@ -96,27 +96,27 @@ def get_update(test=False):
     reset_model.reset_sensor_data()
     reset_model.reset_power_data()
 
-    transfer_compatible_configs('/home/pi/oasis-grow/configs/feature_toggles.json', '/home/pi/oasis-grow/configs/feature_toggles_temp.json')
-    transfer_compatible_configs('/home/pi/oasis-grow/configs/hardware_config.json', '/home/pi/oasis-grow/configs/hardware_config_temp.json')
-    transfer_compatible_configs('/home/pi/oasis-grow/configs/access_config.json', '/home/pi/oasis-grow/configs/access_config_temp.json')
-    transfer_compatible_configs('/home/pi/oasis-grow/configs/device_state.json', '/home/pi/oasis-grow/configs/device_state_temp.json')
-    transfer_compatible_configs('/home/pi/oasis-grow/configs/control_params.json', '/home/pi/oasis-grow/configs/control_params_temp.json')
-    transfer_compatible_configs('/home/pi/oasis-grow/configs/sensor_data.json', '/home/pi/oasis-grow/configs/sensor_data_temp.json')
-    transfer_compatible_configs('/home/pi/oasis-grow/configs/power_data.json', '/home/pi/oasis-grow/configs/power_data_temp.json')
+    transfer_compatible_configs('/home/pi/oasis-rpi/configs/feature_toggles.json', '/home/pi/oasis-rpi/configs/feature_toggles_temp.json')
+    transfer_compatible_configs('/home/pi/oasis-rpi/configs/hardware_config.json', '/home/pi/oasis-rpi/configs/hardware_config_temp.json')
+    transfer_compatible_configs('/home/pi/oasis-rpi/configs/access_config.json', '/home/pi/oasis-rpi/configs/access_config_temp.json')
+    transfer_compatible_configs('/home/pi/oasis-rpi/configs/device_state.json', '/home/pi/oasis-rpi/configs/device_state_temp.json')
+    transfer_compatible_configs('/home/pi/oasis-rpi/configs/control_params.json', '/home/pi/oasis-rpi/configs/control_params_temp.json')
+    transfer_compatible_configs('/home/pi/oasis-rpi/configs/sensor_data.json', '/home/pi/oasis-rpi/configs/sensor_data_temp.json')
+    transfer_compatible_configs('/home/pi/oasis-rpi/configs/power_data.json', '/home/pi/oasis-rpi/configs/power_data_temp.json')
     print("Transfered compatible state & configs, removing temporary files")
 
     #run external update commands
-    sh_stage = rusty_pipes.Open(["sudo", "chmod" ,"+x", "/home/pi/oasis-grow/setup_scripts/update_patch.sh"],"chmod")
+    sh_stage = rusty_pipes.Open(["sudo", "chmod" ,"+x", "/home/pi/oasis-rpi/setup_scripts/update_patch.sh"],"chmod")
     sh_stage.wait()
 
-    sh_patch = rusty_pipes.Open(["sudo", "/home/pi/oasis-grow/setup_scripts/update_patch.sh"],"patch")
+    sh_patch = rusty_pipes.Open(["sudo", "/home/pi/oasis-rpi/setup_scripts/update_patch.sh"],"patch")
     sh_patch.wait()
 
     #load state to get configs & state
     cs.load_state()
 
     #change awaiting_update to "O" in firebase and locally
-    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "awaiting_update", "0", db_writer = dbt.patch_firebase)
+    cs.write_state("/home/pi/oasis-rpi/configs/device_state.json", "awaiting_update", "0", db_writer = dbt.patch_firebase)
 
     print("Update complete.")
 

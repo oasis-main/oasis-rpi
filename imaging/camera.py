@@ -5,7 +5,7 @@ import sys
 import signal
 
 #set proper path for modules
-sys.path.append('/home/pi/oasis-grow')
+sys.path.append('/home/pi/oasis-rpi')
 
 #import libraries
 import time
@@ -30,11 +30,41 @@ def take_picture(image_path):
     exit_status = still.exit_code()
     return exit_status
 
+def take_video(video_path, duration):
+    """
+    Captures a video using the Raspberry Pi camera.
+    
+    Args:
+    - video_path (str): Path to save the captured video.
+    - duration (int): Length of the video capture in seconds.
+    
+    Returns:
+    - int: Exit status of the raspivid command.
+    """
+    # Convert duration from seconds to milliseconds
+    duration_millis = duration * 1000
+    
+    if cs.structs["hardware_config"]["camera_settings"]["awb_mode"] == "on":
+        # Take video and save to specified path
+        video_cmd = ["raspivid", "-e", "h264", "-o", str(video_path), "-t", str(duration_millis)]
+        video_process = rusty_pipes.Open(video_cmd, "raspivid")
+        video_process.wait()
+    else:
+        awb_values = "{},{}".format(cs.structs["hardware_config"]["camera_settings"]["awb_red"], 
+                                    cs.structs["hardware_config"]["camera_settings"]["awb_blue"])
+        video_cmd = ["raspivid", "-e", "h264", "-o", str(video_path), "-t", str(duration_millis), 
+                     "-awb", "off", "-awbg", awb_values]
+        video_process = rusty_pipes.Open(video_cmd, "raspivid")
+        video_process.wait()
+    
+    exit_status = video_process.exit_code()
+    return exit_status
+
 def save_to_feed(image_path):
     #timestamp image
     timestamp = time.time()
     #move timestamped image into feed
-    save_most_recent = rusty_pipes.Open(["cp", str(image_path), "/home/pi/oasis-grow/data_out/image_feed/image_at_" + str(timestamp)+'.jpg'],"cp")
+    save_most_recent = rusty_pipes.Open(["cp", str(image_path), "/home/pi/oasis-rpi/data_out/image_feed/image_at_" + str(timestamp)+'.jpg'],"cp")
     save_most_recent.wait()
 
 def send_image(path, image_filename):
@@ -51,12 +81,12 @@ def send_image(path, image_filename):
 #define a function to actuate element
 def actuate(interval: int, nosleep = False): #interval is amount of time between shots in minutes, nosleep skips the wait
 
-    exit_status = take_picture('/home/pi/oasis-grow/data_out/image.jpg')
+    exit_status = take_picture('/home/pi/oasis-rpi/data_out/image.jpg')
     
     if exit_status == 0:
 
         #Load, resize, and save image:
-        image = noir_ndvi.cv2.imread('/home/pi/oasis-grow/data_out/image.jpg')
+        image = noir_ndvi.cv2.imread('/home/pi/oasis-rpi/data_out/image.jpg')
         height, width = image.shape[:2]
         print("Original Height:" + str(height))
         print("Original Width:" + str(width))
@@ -74,20 +104,20 @@ def actuate(interval: int, nosleep = False): #interval is amount of time between
         print("New Height:" + str(new_height))
         print("New Width:" + str(new_width))
         resized_image = noir_ndvi.cv2.resize(image, (new_width, new_height), interpolation=noir_ndvi.cv2.INTER_AREA)
-        noir_ndvi.cv2.imwrite('/home/pi/oasis-grow/data_out/image.jpg' ,resized_image)
+        noir_ndvi.cv2.imwrite('/home/pi/oasis-rpi/data_out/image.jpg' ,resized_image)
 
         #Get NDVI if active
         if cs.structs["feature_toggles"]["ndvi"] == "1":
-            noir_ndvi.convert_image('/home/pi/oasis-grow/data_out/image.jpg')
+            noir_ndvi.convert_image('/home/pi/oasis-rpi/data_out/image.jpg')
 
         #Save to feed if active
         if cs.structs["feature_toggles"]["save_images"] == "1":
-            save_to_feed('/home/pi/oasis-grow/data_out/image.jpg')
+            save_to_feed('/home/pi/oasis-rpi/data_out/image.jpg')
 
         #Sent to cloud if connected
         if cs.structs["device_state"]["connected"] == "1":
             #send new image to firebase
-            send_image('/home/pi/oasis-grow/data_out/image.jpg', image_filename="image.jpg")
+            send_image('/home/pi/oasis-rpi/data_out/image.jpg', image_filename="image.jpg")
 
         if nosleep == True:
             return
@@ -106,7 +136,7 @@ if __name__ == '__main__':
         while True:
             cs.load_state()
             if (time.time() - float(cs.structs["hardware_config"]["camera_settings"]["last_picture_time"])) > (float(cs.structs["hardware_config"]["camera_settings"]["picture_frequency"])*60): #convert setting (minutes) to base units (seconds)
-                cs.write_nested_state("/home/pi/oasis-grow/configs/hardware_config.json", "camera_settings" ,"last_picture_time", str(time.time()), db_writer = dbt.patch_firebase) #we MUST ALWAYS write before sleeping, otherwise the program will double-count the wait period!
+                cs.write_nested_state("/home/pi/oasis-rpi/configs/hardware_config.json", "camera_settings" ,"last_picture_time", str(time.time()), db_writer = dbt.patch_firebase) #we MUST ALWAYS write before sleeping, otherwise the program will double-count the wait period!
                 actuate(int(cs.structs["hardware_config"]["camera_settings"]["picture_frequency"]))
             else:
                 time.sleep(1)

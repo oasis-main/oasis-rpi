@@ -9,7 +9,7 @@ import sys
 import signal
 
 #set proper path for modules
-sys.path.append('/home/pi/oasis-grow')
+sys.path.append('/home/pi/oasis-rpi')
 
 #Process management
 import rusty_pipes
@@ -28,7 +28,7 @@ from utils import physics
 from utils import error_handler as err
 from networking import db_tools as dbt
 from networking import firebase_manager
-from peripherals import microcontroller_manager as minion
+from peripherals import serial_arduinos as minion
 
 resource_name = "core"
 
@@ -116,7 +116,7 @@ def get_temperature():
         print("Got faulty reading for temperature. Discarding...")
         #print(err.full_stack())
 
-    cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "temperature", str(temperature), db_writer = None)      
+    cs.write_state("/home/pi/oasis-rpi/configs/sensor_data.json", "temperature", str(temperature), db_writer = None)      
 
 def get_humidity():
     global humidity, last_humidity
@@ -128,7 +128,7 @@ def get_humidity():
         print("Got faulty reading for relative humidity. Discarding...")
         #print(err.full_stack())
 
-    cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "humidity", str(humidity), db_writer = None)
+    cs.write_state("/home/pi/oasis-rpi/configs/sensor_data.json", "humidity", str(humidity), db_writer = None)
 
 def get_co2():
     global co2, last_co2
@@ -140,7 +140,7 @@ def get_co2():
         print("Got faulty reading for co2. Discarding...")
         #print(err.full_stack())
 
-    cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "co2", str(co2), db_writer = None)
+    cs.write_state("/home/pi/oasis-rpi/configs/sensor_data.json", "co2", str(co2), db_writer = None)
 
 def get_substrate_moisture():
     global substrate_moisture, last_substrate_moisture
@@ -152,7 +152,7 @@ def get_substrate_moisture():
         print("Got faulty reading for substrate moisture. Discarding...")
         #print(err.full_stack())
 
-    cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "substrate_moisture", str(substrate_moisture), db_writer = None)
+    cs.write_state("/home/pi/oasis-rpi/configs/sensor_data.json", "substrate_moisture", str(substrate_moisture), db_writer = None)
 
 def get_lux():
     global lux
@@ -163,7 +163,7 @@ def get_lux():
         print("Got faulty reading for lux. Discarding...")
         #print(err.full_stack())
 
-    cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "lux", str(lux), db_writer = None)
+    cs.write_state("/home/pi/oasis-rpi/configs/sensor_data.json", "lux", str(lux), db_writer = None)
 
 def get_ph():
     global ph
@@ -174,7 +174,7 @@ def get_ph():
         print("Got faulty reading for pH. Discarding...")
         #print(err.full_stack())
 
-    cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "ph", str(ph), db_writer = None)
+    cs.write_state("/home/pi/oasis-rpi/configs/sensor_data.json", "ph", str(ph), db_writer = None)
 
 def get_tds():
     global tds
@@ -185,7 +185,7 @@ def get_tds():
         print("Got faulty reading for total disolved solids. Discarding...")
         #print(err.full_stack())
 
-    cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "tds", str(tds), db_writer = None)
+    cs.write_state("/home/pi/oasis-rpi/configs/sensor_data.json", "tds", str(tds), db_writer = None)
 
 def get_vpd():
     global vpd
@@ -196,7 +196,7 @@ def get_vpd():
         print("Got error calculating vapor pressure deficit. Discarding...")
         #print(err.full_stack())
 
-    cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "vpd", str(vpd), db_writer = None)
+    cs.write_state("/home/pi/oasis-rpi/configs/sensor_data.json", "vpd", str(vpd), db_writer = None)
 
 def get_water_level():
     global water_low
@@ -207,7 +207,7 @@ def get_water_level():
         print("Got faulty reading for water level. Discarding...")
         #print(err.full_stack())
 
-    cs.write_state("/home/pi/oasis-grow/configs/sensor_data.json", "water_low", str(water_low), db_writer = None)
+    cs.write_state("/home/pi/oasis-rpi/configs/sensor_data.json", "water_low", str(water_low), db_writer = None)
 
 def collect_environmental_data():
     if cs.structs["feature_toggles"]["temperature_sensor"] == "1":
@@ -383,7 +383,7 @@ def update_pid_controllers(): #these should come with an accompanying option in 
                                         int(cs.structs["control_params"]["I_heat"]),
                                         int(cs.structs["control_params"]["D_heat"])))
 
-        cs.write_state("/home/pi/oasis-grow/configs/control_params.json", "heat_feedback", str(heat_feedback), db_writer = None)
+        cs.write_state("/home/pi/oasis-rpi/configs/control_params.json", "heat_feedback", str(heat_feedback), db_writer = None)
 
     if cs.structs["feature_toggles"]["hum_pid"] == "1":
         hum_feedback = int(hum_pid(humidity,
@@ -394,7 +394,7 @@ def update_pid_controllers(): #these should come with an accompanying option in 
                                     int(cs.structs["control_params"]["I_hum"]),
                                     int(cs.structs["control_params"]["D_hum"])))
 
-        cs.write_state("/home/pi/oasis-grow/configs/control_params.json", "hum_feedback", str(hum_feedback), db_writer = None)
+        cs.write_state("/home/pi/oasis-rpi/configs/control_params.json", "hum_feedback", str(hum_feedback), db_writer = None)
 
     if cs.structs["feature_toggles"]["dehum_pid"] == "1":
         dehum_feedback = int(dehum_pid(humidity,
@@ -405,7 +405,7 @@ def update_pid_controllers(): #these should come with an accompanying option in 
                                         int(cs.structs["control_params"]["I_dehum"]),
                                         int(cs.structs["control_params"]["D_dehum"])))
 
-        cs.write_state("/home/pi/oasis-grow/configs/control_params.json", "dehum_feedback", str(dehum_feedback), db_writer = None)
+        cs.write_state("/home/pi/oasis-rpi/configs/control_params.json", "dehum_feedback", str(dehum_feedback), db_writer = None)
 
     if cs.structs["feature_toggles"]["fan_pid"] == "1":
         fan_feedback = int(fan_pid(temperature , humidity, co2,
@@ -416,14 +416,14 @@ def update_pid_controllers(): #these should come with an accompanying option in 
                 int(cs.structs["control_params"]["Ph_fan"]), int(cs.structs["control_params"]["Ih_fan"]), int(cs.structs["control_params"]["Dh_fan"]),
                 int(cs.structs["control_params"]["Pc_fan"]), int(cs.structs["control_params"]["Ic_fan"]), int(cs.structs["control_params"]["Dc_fan"])))
 
-        cs.write_state("/home/pi/oasis-grow/configs/control_params.json", "fan_feedback", str(fan_feedback), db_writer = None)
+        cs.write_state("/home/pi/oasis-rpi/configs/control_params.json", "fan_feedback", str(fan_feedback), db_writer = None)
 
     if cs.structs["feature_toggles"]["water_pid"] == "1":
         moisture_feedback = int(water_pid(substrate_moisture, int(cs.structs["control_params"]["target_substrate_moisture"]),
                             last_substrate_moisture, last_target_substrate_moisture,
                             int(cs.structs["control_params"]["P_moisture"]), int(cs.structs["control_params"]["I_moisture"]), int(cs.structs["control_params"]["D_moisture"])))
         
-        cs.write_state("/home/pi/oasis-grow/configs/control_params.json", "moisture_feedback", str(moisture_feedback), db_writer = None)
+        cs.write_state("/home/pi/oasis-rpi/configs/control_params.json", "moisture_feedback", str(moisture_feedback), db_writer = None)
 
 #Concurrency Hell:
 #
@@ -445,7 +445,7 @@ def run_heat():
     resource_name =  "heater"
     cs.load_locks()
     if cs.locks[resource_name+"_y"] == 0:
-        heat_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/heater.py'], "heater") #If process not free, then skips.
+        heat_process = rusty_pipes.Open(['python3', '/home/pi/oasis-rpi/equipment/heater.py'], "heater") #If process not free, then skips.
 
 #poll humidityf subprocess if applicable and relaunch/update equipment
 def run_hum():
@@ -453,7 +453,7 @@ def run_hum():
     resource_name =  "humidifier"
     cs.load_locks()
     if cs.locks[resource_name+"_y"] == 0:
-        humidity_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/humidifier.py'], "humidifier")
+        humidity_process = rusty_pipes.Open(['python3', '/home/pi/oasis-rpi/equipment/humidifier.py'], "humidifier")
     
 #poll dehumidify subprocess if applicable and relaunch/update equipment
 def run_dehum():
@@ -461,7 +461,7 @@ def run_dehum():
     resource_name =  "dehumidifier"
     cs.load_locks()
     if cs.locks[resource_name+"_y"] == 0:
-        dehumidify_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/dehumidifier.py'], "dehumidifier")
+        dehumidify_process = rusty_pipes.Open(['python3', '/home/pi/oasis-rpi/equipment/dehumidifier.py'], "dehumidifier")
 
 #poll fan subprocess if applicable and relaunch/update equipment
 def run_fan(): #Depends on: 'subprocess'; Modifies: humidity_process
@@ -469,7 +469,7 @@ def run_fan(): #Depends on: 'subprocess'; Modifies: humidity_process
     resource_name =  "fan"
     cs.load_locks()
     if cs.locks[resource_name+"_y"] == 0:
-        fan_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/fan.py'], "fan")
+        fan_process = rusty_pipes.Open(['python3', '/home/pi/oasis-rpi/equipment/fan.py'], "fan")
 
 #poll water subprocess if applicable and relaunch/update equipment
 def run_water(): #Depends on: 'subprocess'; Modifies: water_process
@@ -477,7 +477,7 @@ def run_water(): #Depends on: 'subprocess'; Modifies: water_process
     resource_name =  "water_pump"
     cs.load_locks()
     if cs.locks[resource_name+"_y"] == 0:
-        water_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/water_pump.py'], "water_pump") #If running, then skips. If idle then restarts.
+        water_process = rusty_pipes.Open(['python3', '/home/pi/oasis-rpi/equipment/water_pump.py'], "water_pump") #If running, then skips. If idle then restarts.
     
 #poll light subprocess if applicable and relaunch/update equipment
 def run_light():
@@ -485,7 +485,7 @@ def run_light():
     resource_name =  "lights"
     cs.load_locks()
     if cs.locks[resource_name+"_y"] == 0:
-        light_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/lights.py'], "lights") #If running, then skips. If free then restarts.
+        light_process = rusty_pipes.Open(['python3', '/home/pi/oasis-rpi/equipment/lights.py'], "lights") #If running, then skips. If free then restarts.
    
 #poll air subprocess if applicable and relaunch/update equipment
 def run_air():
@@ -493,7 +493,7 @@ def run_air():
     resource_name =  "air_pump"
     cs.load_locks()
     if cs.locks[resource_name+"_y"] == 0:
-        air_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/equipment/air_pump.py'], "air_pump") #If running, then skips. If idle then restarts.
+        air_process = rusty_pipes.Open(['python3', '/home/pi/oasis-rpi/equipment/air_pump.py'], "air_pump") #If running, then skips. If idle then restarts.
     
 #poll camera subprocess if applicable and relaunch/update equipment
 def run_camera(): #Depends on: 'subprocess'; Modifies: camera_process
@@ -501,7 +501,7 @@ def run_camera(): #Depends on: 'subprocess'; Modifies: camera_process
     resource_name =  "camera"
     cs.load_locks()
     if cs.locks[resource_name+"_y"] == 0:
-        camera_process = rusty_pipes.Open(['python3', '/home/pi/oasis-grow/imaging/camera.py'], "camera") #If running, then skips. If idle then restarts.
+        camera_process = rusty_pipes.Open(['python3', '/home/pi/oasis-rpi/imaging/camera.py'], "camera") #If running, then skips. If idle then restarts.
 
 def regulate_active_equipment():
     # calculate feedback levels and update equipment in use
@@ -609,7 +609,7 @@ def data_out():
     #write data and send to server after set time elapses
     if time.time() - float(cs.structs["control_params"]["last_sensor_log_time"]) > 300:
         #we log the last run time BEFORE any waiting or expensive comps
-        cs.write_state("/home/pi/oasis-grow/configs/control_params.json", "last_sensor_log_time", str(time.time()), db_writer = dbt.patch_firebase) 
+        cs.write_state("/home/pi/oasis-rpi/configs/control_params.json", "last_sensor_log_time", str(time.time()), db_writer = dbt.patch_firebase) 
 
         try:
             payload = cs.structs["sensor_data"]
@@ -622,14 +622,14 @@ def data_out():
             if cs.structs["feature_toggles"]["save_data"] == "1":
                 #save data to .csv
                 print("Writing to csv")
-                firebase_manager.write_sensor_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv', payload)
+                firebase_manager.write_sensor_csv('/home/pi/oasis-rpi/data_out/sensor_feed/sensor_data.csv', payload)
 
                 if cs.structs["device_state"]["connected"] == "1":
                     #write data to disk and exchange with cloud if connected
                     dbt.patch_firebase_dict(cs.structs["access_config"],payload)
 
                     #send new time-series to firebase
-                    firebase_manager.send_csv('/home/pi/oasis-grow/data_out/sensor_feed/sensor_data.csv', 'sensor_data.csv')
+                    firebase_manager.send_csv('/home/pi/oasis-rpi/data_out/sensor_feed/sensor_data.csv', 'sensor_data.csv')
         
         except Exception as e:
             print(err.full_stack())
@@ -677,8 +677,8 @@ def clean_up_processes():
 def terminate_program(): #Depends on: , 'sys', 'subprocess' #Modifies: heat_process, humidity_process, fan_process, light_process, camera_process, water_processs
     print("Cleaning up processes...")
     clean_up_processes()
-    cs.write_state("/home/pi/oasis-grow/configs/device_state.json", "running", "0", db_writer = dbt.patch_firebase) #flip "running" to 0
-    cs.write_state("/home/pi/oasis-grow/configs/device_state.json","led_status","connected_idle", db_writer = dbt.patch_firebase)
+    cs.write_state("/home/pi/oasis-rpi/configs/device_state.json", "running", "0", db_writer = dbt.patch_firebase) #flip "running" to 0
+    cs.write_state("/home/pi/oasis-rpi/configs/device_state.json","led_status","connected_idle", db_writer = dbt.patch_firebase)
     time.sleep(1)
     cs.rusty_pipes.unlock(cs.lock_filepath,resource_name) #free the resource
     sys.exit()
