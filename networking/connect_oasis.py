@@ -2,7 +2,7 @@
 import sys
 
 #set proper path for modules
-sys.path.append('/home/pi/oasis-cpu')
+sys.path.append('/home/pi/oasis-rpi')
 
 #data handling
 import re
@@ -18,7 +18,7 @@ import streamlit as st
 
 def enable_wifi(): #we're going to use subprocess here because the regular one uses rusty_piped, which is not availabe to root
 #tell system that the access point should not be launched on next controller startup
-    slow_cs.write_state("/home/pi/oasis-cpuconfigs/device_state.json","access_point","0", db_writer = None)
+    slow_cs.write_state("/home/pi/oasis-rpiconfigs/device_state.json","access_point","0", db_writer = None)
 
     #disable WiFi, enable AP, reboot
     config_wifi_dchpcd = subprocess.Popen(["sudo", "cp", "/etc/dhcpcd_wifi.conf", "/etc/dhcpcd.conf"])
@@ -73,7 +73,7 @@ def modAccessConfig(name, e, p):
         slow_cs.structs["access_config"]["id_token"] = ""
         slow_cs.structs["access_config"]["local_id"] = ""
 
-        slow_cs.write_dict("/home/pi/oasis-cpu/configs/access_config.json", slow_cs.structs["access_config"], db_writer = None)
+        slow_cs.write_dict("/home/pi/oasis-rpi/configs/access_config.json", slow_cs.structs["access_config"], db_writer = None)
 
         print("Access configs added")
 
@@ -95,7 +95,7 @@ def save_creds_exit(email, password, wifi_name, wifi_pass, device_name, cmd = Fa
     else:
         st.success("Added WiFi & access credentials to device. Please reconnect computer to internet, leave this page, and log back into https://dashboard.oasis-x.io. If successful, you will see the device name appear under 'Your Fleet.'")
         #set new_device to "1" before rebooting
-        slow_cs.write_state("/home/pi/oasis-cpu/configs/device_state.json", "new_device", "1", db_writer = None)
+        slow_cs.write_state("/home/pi/oasis-rpi/configs/device_state.json", "new_device", "1", db_writer = None)
 
     if cmd == False: #pass this argument as true to save creds without rebooting
         #stand up wifi and reboot

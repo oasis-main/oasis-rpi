@@ -7,7 +7,7 @@ import signal
 import time
  
 #set proper path for modules
-sys.path.append('/home/pi/oasis-cpu')
+sys.path.append('/home/pi/oasis-rpi')
 
 import rusty_pins
 from peripherals import digital_relays
@@ -33,7 +33,7 @@ if __name__ == '__main__':
             else:
                 print("Running dehumidifier for " + cs.structs["control_params"]["dehumidifier_duration"] + " minute(s) on, " + cs.structs["control_params"]["dehumidifier_interval"] + " minute(s) off...")
                 if (time.time() - float(cs.structs["control_params"]["last_dehumidifier_run_time"])) > (float(cs.structs["control_params"]["dehumidifier_interval"])*60): #convert setting units (minutes) to base (seconds)
-                    cs.write_state("/home/pi/oasis-cpu/configs/control_params.json", "last_dehumidifier_run_time", str(time.time()), db_writer = dbt.patch_firebase)
+                    cs.write_state("/home/pi/oasis-rpi/configs/control_params.json", "last_dehumidifier_run_time", str(time.time()), db_writer = dbt.patch_firebase)
                     digital_relays.actuate_interval_sleep(pin, float(cs.structs["control_params"]["dehumidifier_duration"]), float(cs.structs["control_params"]["dehumidifier_interval"]), duration_units= "minutes", sleep_units="minutes", wattage=cs.structs["hardware_config"]["equipment_wattage"]["dehumidifier"], log="dehumidifier_kwh")
             cs.load_state()
             time.sleep(1)

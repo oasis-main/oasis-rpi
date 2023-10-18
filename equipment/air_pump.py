@@ -8,7 +8,7 @@ import signal
 import time
  
 #set proper path for modules
-sys.path.append('/home/pi/oasis-cpu')
+sys.path.append('/home/pi/oasis-rpi')
 
 import rusty_pins
 from peripherals import digital_relays

@@ -1,7 +1,7 @@
 import traceback, sys
 
 #set proper path for modules
-sys.path.append('/home/pi/oasis-cpu')
+sys.path.append('/home/pi/oasis-rpi')
 
 def full_stack():
     exc = sys.exc_info()[0]
@@ -22,18 +22,18 @@ def Error_Handler(func):
             func(*args, **kwargs)
         except KeyboardInterrupt as k:
             print("Keyboard Interrupt") #Shame! Replace the following with a propper error logger
-            #cs.write_state("/home/pi/oasis-cpu/configs/device_state.json", "device_error", "Interrupted", db_writer = None)
+            #cs.write_state("/home/pi/oasis-rpi/configs/device_state.json", "device_error", "Interrupted", db_writer = None)
         
         except TypeError as t:
             print(f"{func.__name__} wrong data types.")
             print(full_stack()) #Shame! Replace the following with a propper error logger
-            #cs.write_state("/home/pi/oasis-cpu/configs/device_state.json", "device_error", str(full_stack()), db_writer = None)
-            #cs.write_state("/home/pi/oasis-cpu/configs/device_state.json", "led_status", "error", db_writer = None)
+            #cs.write_state("/home/pi/oasis-rpi/configs/device_state.json", "device_error", str(full_stack()), db_writer = None)
+            #cs.write_state("/home/pi/oasis-rpi/configs/device_state.json", "led_status", "error", db_writer = None)
         
         except Exception as e:
             print(full_stack()) #Shame! Replace the following with a propper error loggers
-            #cs.write_state("/home/pi/oasis-cpu/configs/device_state.json", "device_error", str(full_stack()), db_writer = None)
-            #cs.write_state("/home/pi/oasis-cpu/configs/device_state.json", "led_status", "error", db_writer = None)
+            #cs.write_state("/home/pi/oasis-rpi/configs/device_state.json", "device_error", str(full_stack()), db_writer = None)
+            #cs.write_state("/home/pi/oasis-rpi/configs/device_state.json", "led_status", "error", db_writer = None)
     
     return Inner_Function
 

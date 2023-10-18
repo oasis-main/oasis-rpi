@@ -4,7 +4,7 @@ import sys
 import time
 
 #set proper path for modules
-sys.path.append('/home/pi/oasis-cpu')
+sys.path.append('/home/pi/oasis-rpi')
 
 #rust modules
 import json #data interchange / and json parsing (can read and write standard file handler objects)
@@ -41,11 +41,11 @@ structs = {"device_state": {}, #any struct holding shared state
 
 #declare state locking varibles
 locks = {}
-lock_filepath = "/home/pi/oasis-cpu/configs/locks.json"
+lock_filepath = "/home/pi/oasis-rpi/configs/locks.json"
 
 #declare process signaling variables for those than need root & cannot terminate with SIGTERM
 signals = {}
-signal_filepath = "/home/pi/oasis-cpu/configs/signals.json"
+signal_filepath = "/home/pi/oasis-rpi/configs/signals.json"
 
 #gets the mutex
 def load_locks(loop_limit = 100): #leave this alone since it's the python bridge to ramport locks
@@ -218,7 +218,7 @@ def load_state(loop_limit=1000):
     for struct in structs: #now we're going to load an populate the data    
         for i in list(range(int(loop_limit)+1)): #attempt to load, pass and try again if fails
             try:
-                config_filepath = "/home/pi/oasis-cpu/configs/" + struct + ".json"
+                config_filepath = "/home/pi/oasis-rpi/configs/" + struct + ".json"
 
                 if not os.path.exists(config_filepath):
                     print(config_filepath + " does not exist. Have you run the setup scripts?")
@@ -451,10 +451,10 @@ if __name__ == '__main__':
     load_state()
     load_locks()
     load_custom_signals()
-    write_state("/home/pi/oasis-cpu/configs/device_state.json", "running", "1")
-    write_dict("/home/pi/oasis-cpu/configs/device_state.json", {"running": "1"})
-    write_nested_state("/home/pi/oasis-cpu/configs/hardware_config.json", "sensor_calibration", "temperature_offset", "1")
-    write_nested_dict("/home/pi/oasis-cpu/configs/hardware_config.json", "sensor_calibration", {"tds_offset": "1"})
+    write_state("/home/pi/oasis-rpi/configs/device_state.json", "running", "1")
+    write_dict("/home/pi/oasis-rpi/configs/device_state.json", {"running": "1"})
+    write_nested_state("/home/pi/oasis-rpi/configs/hardware_config.json", "sensor_calibration", "temperature_offset", "1")
+    write_nested_dict("/home/pi/oasis-rpi/configs/hardware_config.json", "sensor_calibration", {"tds_offset": "1"})
     
     def test():
         print("Hello World")
@@ -464,6 +464,6 @@ if __name__ == '__main__':
 
     if str(sys.argv[1]) == "online":
         from networking import db_tools as dbt
-        write_state("/home/pi/oasis-cpu/configs/device_state.json", "running", "1", db_writer = dbt.patch_firebase)
-        write_dict("/home/pi/oasis-cpu/configs/device_state.json", {"running": "1"}, db_writer = dbt.patch_firebase_dict)
+        write_state("/home/pi/oasis-rpi/configs/device_state.json", "running", "1", db_writer = dbt.patch_firebase)
+        write_dict("/home/pi/oasis-rpi/configs/device_state.json", {"running": "1"}, db_writer = dbt.patch_firebase_dict)
 

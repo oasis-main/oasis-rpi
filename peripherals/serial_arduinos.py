@@ -4,9 +4,9 @@ import sys
 import os
 
 #set proper path for modules
-sys.path.append('/home/pi/oasis-cpu')
-sys.path.append('/home/pi/oasis-cpu/core')
-sys.path.append('/home/pi/oasis-cpu/utils')
+sys.path.append('/home/pi/oasis-rpi')
+sys.path.append('/home/pi/oasis-rpi/core')
+sys.path.append('/home/pi/oasis-rpi/utils')
 
 import serial
 

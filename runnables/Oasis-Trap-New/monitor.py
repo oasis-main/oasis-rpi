@@ -3,7 +3,7 @@
 import time
 import sys
 
-sys.path.append("/home/pi/oasis-cpu/")
+sys.path.append("/home/pi/oasis-rpi/")
 
 import rusty_pipes
 
@@ -15,7 +15,7 @@ from utils import concurrent_state as cs
 
 def launch_access_point(): 
     #launch server subprocess to accept credentials over Oasis wifi network, does not wait
-    server_process = rusty_pipes.Open(["sudo", "streamlit", "run", "/home/pi/oasis-cpu/networking/connect_oasis.py", "--server.headless=true", "--server.port=80", "--server.address=192.168.4.1", "--server.enableCORS=false", "--server.enableWebsocketCompression=false"],"access_point")
+    server_process = rusty_pipes.Open(["sudo", "streamlit", "run", "/home/pi/oasis-rpi/networking/connect_oasis.py", "--server.headless=true", "--server.port=80", "--server.address=192.168.4.1", "--server.enableCORS=false", "--server.enableWebsocketCompression=false"],"access_point")
     print("Access Point Mode enabled")
 
 if __name__ == "__main__":
@@ -37,7 +37,7 @@ if __name__ == "__main__":
 	while True: #While true: (there should be minimal loop lag here to interfere with polling)
 		if pir.read(): #If PIR is activated
 			filename = "motion_captured_at_" + str(time.time()) + ".avi"
-			path = "/home/pi/oasis-cpu/data_out/"
+			path = "/home/pi/oasis-rpi/data_out/"
 			filepath = filename+path
 			camera.take_video(filepath, 15) #Start 15s video
 			if connected:

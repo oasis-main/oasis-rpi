@@ -1,6 +1,6 @@
 ## Introduction
 
-oasis-cpu, developed by Oasis-X, is an open-source toolkit for IoT applications in precision agriculture, climate research, and biology. It is a configurable nervous system that provides sensing, data collection, environmental control, equipment automation, and remote monitoring functionality. This codebase is maintained with the goal to offer these capabilities to everyone. Users are encouraged to contribute data, projects, and technical expertise. See [Contributing](#contributing) for details. Note: this software is currently under active development.
+oasis-rpi, developed by Oasis-X, is an open-source toolkit for IoT applications. It is a configurable nervous system that provides sensing, data collection, environmental control, equipment automation, and remote monitoring functionality. This codebase is maintained with the goal to offer these capabilities to everyone. Users are encouraged to contribute data, projects, and technical expertise. See [Contributing](#contributing) for details. Note: this software is currently under active development.
 All functions can be deployed with a RaspberryPi (scheduling, PID control, data & networking management) + an Arduino (real-time analog & digital sensors).
 
 This repository contains:
@@ -10,7 +10,7 @@ This repository contains:
 4. Shell setup_scripts for installing and configuring necessary packages
 
 The active system is controllable via web interface at https://dashboard.oasis-x.io, where we offer additional cloud tools.
-Alternatively, all oasis-cpu instances can be managed asynchronously through the importable python API.
+Alternatively, all oasis-rpi instances can be managed asynchronously through the importable python API.
 
 Breaking changes may be merged into master until the official 1.0.0 release
 Connect your devices to oasis-network view data remotely, control connected appliances, and get over-the-air updates. 
@@ -31,15 +31,15 @@ sudo raspi-config
 ```
 sudo apt-get update -y
 sudo apt-get install git -y
-git clone https://github.com/oasis-main/oasis-cpu.git 
-cd oasis-cpu
+git clone https://github.com/oasis-main/oasis-rpi.git 
+cd oasis-rpi
 . install.sh
 ```
 
 To validate everything went smoothly, start the virtual env and test the main process with:
 
 ```
-cd oasis-cpu
+cd oasis-rpi
 . start.sh
 ```
 
@@ -102,22 +102,22 @@ sudo raspi-config
 - (opional) on-device peripherals: Interface Options -> I2C  -> Yes  
 - (opional) on-device peripherals: Interface Options -> SPI  -> Yes  
 
-**2. Install oasis-cpu**
+**2. Install oasis-rpi**
 
 Open a terminal on the pi and run, in order:
 
 ```
 sudo apt-get update -y
 sudo apt-get install git -y
-git clone https://github.com/oasis-main/oasis-cpu.git 
-cd oasis-cpu
+git clone https://github.com/oasis-main/oasis-rpi.git 
+cd oasis-rpi
 . install.sh
 ```
 
 To validate everything went smoothly, start the virtual env and test the main process with:
 
 ```
-cd oasis-cpu
+cd oasis-rpi
 . start.sh
 ```
 
@@ -149,7 +149,7 @@ You can configure all of this yourself, or follow these instructions and use one
 4. Install the required libraries using Arduino IDE or your tool of choice, the compile upload your sketch onto the board.
 5. Plug the Arduino into the Pi via USB. The Pi will automatically establish a connection and communicate with the arduino on program startup.
 
-The oasis-cpu software is configured to use GPIO Pins for interfacing with relays and push buttons. The pin mapping is given in hardware_config.json:
+The oasis-rpi software is configured to use GPIO Pins for interfacing with relays and push buttons. The pin mapping is given in hardware_config.json:
 
 '''
 {"equipment_gpio_map": {
@@ -173,7 +173,7 @@ Capable makers can wire this up themselves as described in the [prototype wiring
 
 Note: We focus on integrating a faily standard set of popular AC relays for powering high-power electronic appliances. Assemble the AC Relay & Power Circuit at your own risk. Wiring up alternating current from power mains is extremely dangerous, so much that a single mistake can lead to serious injury or even death! Because of this, we recommend doing the AC part of this project only if you are an INTERMEDIATE to ADVANCED engineer only. If you or someone on your team does not have experience working with high voltage, please consult a professional electrician before doing so. You can also sub out any normally-closed DC relay which will take a digital, or simply deploy the camera and sensor modules separately for data collection without power control. You can choose what you use!
 
-oasis-cpu comes with imaging capabilities that make us of the Raspberry Pi's built-in camera stack. You can view these utilities in the "imaging" folder, and toggle the NDVI in feature_toggles,json(more on this next), which is an image analysis technique that can be used to diagnose plant health in the near-infrared using the Pi Noir Camera. 
+oasis-rpi comes with imaging capabilities that make us of the Raspberry Pi's built-in camera stack. You can view these utilities in the "imaging" folder, and toggle the NDVI in feature_toggles,json(more on this next), which is an image analysis technique that can be used to diagnose plant health in the near-infrared using the Pi Noir Camera. 
 
 Finally, edit "feature_toggles.json" in 'configs' to tell the system what capabilities you are using (and which ones you are not, as they are not set up). The ones listed here are currently available. Please see the minions folder for compatible microcontroller programs.
 
@@ -213,7 +213,7 @@ Finally, edit "feature_toggles.json" in 'configs' to tell the system what capabi
 Now run your configuration of the core program with
 
 '''
-cd oasis-cpu
+cd oasis-rpi
 source oasis_venv_pi/bin/activate
 python3 main.py run
 '''
@@ -239,7 +239,7 @@ sudo reboot
 **4. Use with Local API & Button Interface (internet not required)**
 
 To start the core process and begin collecting data + contolling your environment, you can press the 'start_stop' button on your system.
-Alternatively, open up a python3 shell in the oasis-cpu directory and run:
+Alternatively, open up a python3 shell in the oasis-rpi directory and run:
 
 ```
 import api
@@ -255,7 +255,7 @@ dir(api)
 
 **5. Use with Oasis Network for Dashboard, Remote Monitoring, & AI (internet required)**
 
-Press the 'connect_internet' button on your system. Alternatively, you may open up a python3 shell in the oasis-cpu directory and run:
+Press the 'connect_internet' button on your system. Alternatively, you may open up a python3 shell in the oasis-rpi directory and run:
 
 ```
 import api
@@ -269,7 +269,7 @@ Once connected, open up a new tab and navigate to http://192.168.4.1/ Enter your
 Rejoin your normal internet and go to https://dashboard.oasis-x.io/ to view and control your device.
 
 ## Sample Projects
-oasis-cpu provides a highly modular interface with countless possible applications. Forthcoming instructions will provide detailed instructions for common projects as well as a gallery of existing oasis-cpu applications:
+oasis-rpi provides a highly modular interface with countless possible applications. Forthcoming instructions will provide detailed instructions for common projects as well as a gallery of existing oasis-rpi applications:
 - time-lapse cameras
 - incubators
 - mushroom growing chambers

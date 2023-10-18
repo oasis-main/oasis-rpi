@@ -3,7 +3,7 @@
 
 import sys
 
-sys.path.append("/home/pi/oasis-cpu")
+sys.path.append("/home/pi/oasis-rpi")
 
 import rusty_pins
 

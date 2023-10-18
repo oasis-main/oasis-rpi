@@ -2,7 +2,7 @@
 import sys
 
 #set proper path for modules
-sys.path.append('/home/pi/oasis-cpu')
+sys.path.append('/home/pi/oasis-rpi')
 
 #import and test everything
 import main
@@ -18,20 +18,20 @@ import time
 def test_state_handlers():
     print("Testing state handlers...")
     main.cs.load_state()
-    main.cs.write_state("/home/pi/oasis-cpu/configs/device_state.json", "running", str("1"), dbt.patch_firebase)
-    main.cs.write_state("/home/pi/oasis-cpu/configs/device_state.json", "running", str("0"), dbt.patch_firebase)
+    main.cs.write_state("/home/pi/oasis-rpi/configs/device_state.json", "running", str("1"), dbt.patch_firebase)
+    main.cs.write_state("/home/pi/oasis-rpi/configs/device_state.json", "running", str("0"), dbt.patch_firebase)
 
     core.cs.load_state()
-    core.cs.write_state("/home/pi/oasis-cpu/configs/device_state.json", "running", str("1"), dbt.patch_firebase)
-    core.cs.write_state("/home/pi/oasis-cpu/configs/device_state.json", "running", str("0"), dbt.patch_firebase)
+    core.cs.write_state("/home/pi/oasis-rpi/configs/device_state.json", "running", str("1"), dbt.patch_firebase)
+    core.cs.write_state("/home/pi/oasis-rpi/configs/device_state.json", "running", str("0"), dbt.patch_firebase)
 
     camera.cs.load_state()
-    camera.cs.write_state("/home/pi/oasis-cpu/configs/device_state.json", "running", str("1"), dbt.patch_firebase)
-    camera.cs.write_state("/home/pi/oasis-cpu/configs/device_state.json", "running", str("0"), dbt.patch_firebase)
+    camera.cs.write_state("/home/pi/oasis-rpi/configs/device_state.json", "running", str("1"), dbt.patch_firebase)
+    camera.cs.write_state("/home/pi/oasis-rpi/configs/device_state.json", "running", str("0"), dbt.patch_firebase)
 
     update.cs.load_state()
-    update.cs.write_state("/home/pi/oasis-cpu/configs/device_state.json", "running", str("1"), dbt.patch_firebase)
-    update.cs.write_state("/home/pi/oasis-cpu/configs/device_state.json", "running", str("0"), dbt.patch_firebase)
+    update.cs.write_state("/home/pi/oasis-rpi/configs/device_state.json", "running", str("1"), dbt.patch_firebase)
+    update.cs.write_state("/home/pi/oasis-rpi/configs/device_state.json", "running", str("0"), dbt.patch_firebase)
 
     print("All state handlers working.")
 
@@ -60,7 +60,7 @@ def test_save_csv():
     temperature = str(70)
     humidity = str(50)
     water_low = str(0)
-    core.write_sensor_csv('/home/pi/oasis-cpu/data_out/sensor_feed/sensor_data.csv', {"time": tod, "temperature": temperature, "humidity": humidity, "water_low": water_low})
+    core.write_sensor_csv('/home/pi/oasis-rpi/data_out/sensor_feed/sensor_data.csv', {"time": tod, "temperature": temperature, "humidity": humidity, "water_low": water_low})
     reset_model.reset_data_out()
     print("wrote data to csv")
 
@@ -108,17 +108,17 @@ def test_led():
     print("Testing LED Array")
     
     print("connected_running")
-    cs.write_state("/home/pi/oasis-cpu/configs/device_state.json", "led_status", "connected_running", dbt.patch_firebase)
+    cs.write_state("/home/pi/oasis-rpi/configs/device_state.json", "led_status", "connected_running", dbt.patch_firebase)
     cs.check_state("onboard_led", main.start_onboard_led, main.update_minion_led)
     time.sleep(5)
 
     print("error")
-    cs.write_state("/home/pi/oasis-cpu/configs/device_state.json", "led_status", "error", dbt.patch_firebase)
+    cs.write_state("/home/pi/oasis-rpi/configs/device_state.json", "led_status", "error", dbt.patch_firebase)
     cs.check_state("onboard_led", None, main.update_minion_led)
     time.sleep(5)
     
     print("offline_idle")
-    cs.write_state("/home/pi/oasis-cpu/configs/device_state.json", "led_status", "offline_idle", dbt.patch_firebase)
+    cs.write_state("/home/pi/oasis-rpi/configs/device_state.json", "led_status", "offline_idle", dbt.patch_firebase)
     cs.check_state("onboard_led", None, main.update_minion_led)
     time.sleep(5)
 

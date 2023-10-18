@@ -268,7 +268,7 @@ pub fn lock(lock_filepath: String, resource_key: String, loop_limit: Option<u64>
 
         } else {
             println!("Loop limit expired: lock(). Was not able to acquire {}.", &resource_key);
-            let default_filepath = String::from("/home/pi/oasis-cpu/defaults/locks_default_template.json");
+            let default_filepath = String::from("/home/pi/oasis-rpi/defaults/locks_default_template.json");
             reset_locks(lock_filepath,default_filepath);
             return
         }
@@ -335,7 +335,7 @@ pub fn unlock(lock_filepath: String, resource_key: String, loop_limit: Option<u6
             
         } else {
             println!("Loop limit expired: unlock(). Was not able to free {}", &resource_key);
-            let default_filepath = String::from("/home/pi/oasis-cpu/defaults/locks_default_template.json");
+            let default_filepath = String::from("/home/pi/oasis-rpi/defaults/locks_default_template.json");
             reset_locks(lock_filepath,default_filepath);
             return
         }

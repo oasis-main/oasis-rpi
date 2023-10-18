@@ -3,7 +3,7 @@ import os.path
 import multiprocessing
 
 #set proper path for modules
-sys.path.append("/home/pi/oasis-cpu")
+sys.path.append("/home/pi/oasis-rpi")
 
 import main
 from networking import connect_oasis
