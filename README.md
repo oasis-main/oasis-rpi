@@ -1,21 +1,23 @@
-## Introduction
+## Overview
 
 oasis-rpi, developed by Oasis-X, is an open-source toolkit for IoT applications. It is a configurable nervous system that provides sensing, data collection, environmental control, equipment automation, and remote monitoring functionality. This codebase is maintained with the goal to offer these capabilities to everyone. Users are encouraged to contribute data, projects, and technical expertise. See [Contributing](#contributing) for details. Note: this software is currently under active development.
 All functions can be deployed with a RaspberryPi (scheduling, PID control, data & networking management) + an Arduino (real-time analog & digital sensors).
 
-This repository contains:
-1. Python setup_scripts for collecting environmental data, manage feedback and timer regimes, and dispatching information to the relative sources.
-2. Configuration files for grow parameters, peripheral hardware, access control, and device_state
-3. Arduino/microcontroller "minion" files for use with sensors and LEDs
-4. Shell setup_scripts for installing and configuring necessary packages
+
+This toolkit can be deployed using a RaspberryPi (for scheduling, PID control, data & networking management) + an Arduino (for real-time analog & digital sensors). 
+
 
 The active system is controllable via web interface at https://dashboard.oasis-x.io, where we offer additional cloud tools.
 Alternatively, all oasis-rpi instances can be managed asynchronously through the importable python API.
 
-Breaking changes may be merged into master until the official 1.0.0 release
-Connect your devices to oasis-network view data remotely, control connected appliances, and get over-the-air updates. 
+The repository includes:
+1. Python setup scripts 
+2. Configuration files 
+3. Arduino/microcontroller "minion" files 
+4. Shell setup scripts 
 
-## Raspberry Pi Quick-Start
+## Quick-Start Guide for Raspberry Pi
+
 
 ```
 sudo raspi-config
@@ -66,7 +68,7 @@ Users may using the [setup scripts](scripts) to build the repository and its req
 ### Using Setup Scripts
 
 Install Raspbian Lite onto your Raspberry Pi:
-1. Download Raspbian Lite from [official download site](https://www.raspberrypi.org/software/operating-systems/). The firmware will not work on newer releases which utilize LibCamera instead of raspi-still.
+1. Download Buster Lite from [official download site](https://www.raspberrypi.org/software/operating-systems/). The firmware will not work on newer releases which utilize LibCamera instead of raspi-still.
 2. Download [Balena Etcher](https://www.balena.io/etcher/).
 3. Connect a microSD card to your personal computer.
 4. Format the microSD card in the MS-DOS (FAT) style using your operating system's disk formatting utility.
@@ -81,7 +83,6 @@ Password: raspberry
 ```
 When the prompt appears, enter `sudo raspi-config`. Using the arrow keys to navigate, set `Localisation Options > WLAN Country` according to your locale. Next, select `Interface Options > Camera` and turn the camera on. Finally, select `System Options > Wireless LAN` and enter the name and password for your home WiFi network.
 
-
 **1. Setup Rasppberry Pi**
 
 Download 32-bit Raspberry Pi OS Lite and double click to uncompress: 
@@ -91,20 +92,24 @@ Use Disk Utility or an equivalent tool to format a micro SD card to MS-DOS(FAT),
 
 Connect to the Raspberry Pi via HDMI monitor & keyboard (or your preferred setup), plug it in, and log in with the default password ('pi', 'raspberry') on RPiOS Buster or set your own password (default in RPiOS Bullseye). Enter:
 
+1. Setup your Raspberry Pi:
+
+
 ```
 sudo raspi-config
 ```
-- setup your internet: System Options -> Wireless LAN -> follow prompt
-- setup your camera: Interface Options -> Legacy Camera  -> Yes
-- (optional, recommended) security: System Options -> Password  -> follow prompt
-- (optional) remote access: Interface Options -> SSH  -> Yes
-- (optional) remote acess: Interface Options -> Remote GPIO  -> Enable
-- (opional) on-device peripherals: Interface Options -> I2C  -> Yes  
-- (opional) on-device peripherals: Interface Options -> SPI  -> Yes  
+
 
 **2. Install oasis-rpi**
 
-Open a terminal on the pi and run, in order:
+- Set up your internet: System Options -> Wireless LAN -> follow prompt
+- Set up your camera: Interface Options -> Legacy Camera  -> Yes
+- (Optional, recommended) security: System Options -> Password  -> follow prompt
+- (Optional) remote access: Interface Options -> SSH  -> Yes
+- (Optional) remote access: Interface Options -> Remote GPIO  -> Enable
+- (Optional) on-device peripherals: Interface Options -> I2C  -> Yes  
+- (Optional) on-device peripherals: Interface Options -> SPI  -> Yes  
+
 
 ```
 sudo apt-get update -y
@@ -114,14 +119,14 @@ cd oasis-rpi
 . install.sh
 ```
 
-To validate everything went smoothly, start the virtual env and test the main process with:
+To test if the installation went smoothly:
 
 ```
 cd oasis-rpi
 . start.sh
 ```
 
-If successful, the above should run a ~15-30 second setup flow that ends with a statement indicating the "core process is deactivated."
+If successful, the above should run a second setup flow that ends with a statement indicating the "core process is deactivated."
 
 **3. Configure Microcontroller, Peripheral Devices, Activated Features, and Startup**
 
@@ -269,7 +274,7 @@ Once connected, open up a new tab and navigate to http://192.168.4.1/ Enter your
 Rejoin your normal internet and go to https://dashboard.oasis-x.io/ to view and control your device.
 
 ## Sample Projects
-oasis-rpi provides a highly modular interface with countless possible applications. Forthcoming instructions will provide detailed instructions for common projects as well as a gallery of existing oasis-rpi applications:
+oasis-rpi provides a highly modular interface with countless possible applications as well as a gallery of existing oasis-rpi applications:
 - time-lapse cameras
 - incubators
 - mushroom growing chambers
@@ -279,5 +284,8 @@ oasis-rpi provides a highly modular interface with countless possible applicatio
 - automated irrigation
 - much more!
 
+If successful, the above should run a setup flow that ends with a statement indicating the "core process is deactivated."
+
 ## Contributing
-Open-source contributors are welcome, we are currently accepting pull requests! Contact hello@oasis-x.com with questions or proposals.
+
+We encourage users to contribute data, projects, and technical expertise. Open-source contributors are welcome, and we are currently accepting pull requests! Contact hello@oasis-x.com with questions or proposals.
